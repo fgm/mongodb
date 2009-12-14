@@ -6,28 +6,6 @@
  */
 
 /**
- * Implement hook_help().
- */
-function mongodb_watchdog_help($path, $arg) {
-  switch ($path) {
-    case 'admin/help#mongodb_watchdog':
-      $output = '<p>' . t('<a href="!project">MongoDB watchdog</a> logs events by inserting messages in a collection in the designated <a href="!mongo">MongoDB</a> store.',
-        array(
-          '!project' => 'http://drupal.org/project/mongodb_watchdog',
-          '!mongo' => 'http://www.mongodb.org/',
-        )) . "</p>\n"
-        . '<p>' . t('Its settings are integrated with the <a href="!logging">standard logging settings form</a>.',
-          array('!logging' => url('admin/config/development/logging'))) . "</p>\n";
-      break;
-
-    default:
-      $output = NULL;
-      break;
-  }
-  return $output;
-}
-
-/**
  * Implement hook_menu().
  */
 function mongodb_watchdog_menu() {
@@ -56,7 +34,7 @@ function mongodb_watchdog_form_system_logging_settings_alter(&$form, &$form_stat
   $form['mongodb_watchdog']['mongodb_watchdog_connection'] = array(
     '#title' => t('MongoDB Connection URL'),
     '#type' => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_connection', ''),
+    '#default_value' => variable_get('mongodb_watchdog_connection', NULL),
   );
   $form['mongodb_watchdog']['mongodb_watchdog_dbname'] = array(
     '#title' => t('MongoDB Database name'),
@@ -75,16 +53,7 @@ function mongodb_watchdog_form_system_logging_settings_alter(&$form, &$form_stat
 /**
  * Implement hook_watchdog().
  */
-function mongodb_watchdog_watchdog($log_entry) {
-  // TODO Figure out how to use a static but also close the session at the end.
-  //static $mongo;
-
-  $mongo = new Mongo(variable_get('mongodb_watchdog_connection', 'localhost'));
-
-  $collection = $mongo
-    ->selectDB(variable_get('mongodb_watchdog_dbname', 'drupal'))
-    ->selectCollection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+function mongodb_watchdog_watchdog(array $log_entry) {
+  $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
   $collection->insert((array) $log_entry);
-
-  $mongo->close();
 }

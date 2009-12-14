@@ -1,2 +1,34 @@
 <?php
 // $Id$
+
+/**
+ * Implement hook_help().
+ */
+function mongodb_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#mongodb':
+      return '<p>' . t('<a href="!project">MongoDB</a> implements a generic <a href="!mongo">MongoDB</a> interface.',
+        array(
+          '!project' => 'http://drupal.org/project/mongodb',
+          '!mongo' => 'http://www.mongodb.org/',
+        ));
+      break;
+  }
+}
+
+/**
+ * Returns a the mongodb watchdog collection.
+ */
+function mongodb_collection($collection_name) {
+  static $mongo, $connections;
+  if (!isset($mongo)) {
+    $server_name  = variable_get('mongodb_connection', 'localhost');
+    $db_name = variable_get('mongodb_dbname', 'drupal');
+    $mongo = new Mongo($server_name);
+    $mongo = $mongo->selectDB($db_name);
+  }
+  if (!isset($collections[$collection_name])) {
+    $collections[$collection_name] = $mongo->selectCollection($collection_name);
+  }
+  return $collections[$collection_name];
+}
