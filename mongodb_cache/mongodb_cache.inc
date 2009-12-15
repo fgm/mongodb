@@ -174,8 +174,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
           $collection->remove();
         }
         else {
-          // TODO needs special test.
-          $collection->remove(array('cid' => "/$cid.*/"));
+          $collection->remove(array('cid' => new MongoRegex('/'. preg_quote($cid) .'.*/')));
         }
       }
       elseif (is_array($cid)) {
