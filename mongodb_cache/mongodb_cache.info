@@ -1,0 +1,7 @@
+; $Id$;
+name = MongoDB Cache
+description = Integration between MongoDB as Cache.
+package = MongoDB
+version = VERSION
+core = 7.x
+files[] = mongodb_cache.module

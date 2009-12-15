@@ -1,0 +1,11 @@
+<?php
+// $Id$
+
+function mongodb_cache_test_finished() {
+  $db = mongodb_collection('cache')->db;
+  foreach ($db->listCollections() as $collection) {
+    if (preg_match('/simpletest\d+cache/', $collection)) {
+      $db->dropCollection($collection);
+    }
+  }
+}

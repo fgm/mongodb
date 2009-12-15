@@ -227,7 +227,7 @@ function mongodb_watchdog_clear_log_form($form) {
  */
 function mongodb_watchdog_clear_log_submit() {
   try {
-    $collection = mongodb_watchdog_collection();
+    $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
     $collection->db->dropCollection($collection->getName());
 
     drupal_set_message(t('MongoDB log cleared.'));
