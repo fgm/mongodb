@@ -193,6 +193,6 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
   }
 
   function isEmpty() {
-    return mongodb_collection($this->prefix($this->bin))->findOne();
+    return !mongodb_collection($this->prefix($this->bin))->findOne();
   }
 }
