@@ -1,0 +1,6 @@
+; $Id$
+
+name = MongoDB Session
+description = Store session information in MongoDB 
+package = MongoDB
+core = 7.x
