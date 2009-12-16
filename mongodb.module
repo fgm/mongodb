@@ -20,7 +20,13 @@ function mongodb_help($path, $arg) {
  * Returns a the mongodb watchdog collection.
  */
 function mongodb_collection($collection_name) {
+  global $db_prefix;
   static $mongo, $connections;
+  // We do not need perfect prefixing emulation, it's enough to deal with
+  // simpletest.
+  if (is_string($db_prefix)) {
+    $collection_name = $db_prefix . $collection_name;
+  }
   if (!isset($mongo)) {
     $server_name  = variable_get('mongodb_connection', 'localhost');
     $db_name = variable_get('mongodb_dbname', 'drupal');
@@ -31,4 +37,13 @@ function mongodb_collection($collection_name) {
     $collections[$collection_name] = $mongo->selectCollection($collection_name);
   }
   return $collections[$collection_name];
+}
+
+function mongodb_test_group_finished() {
+  $db = mongodb_collection('cache')->db;
+  foreach ($db->listCollections() as $collection) {
+    if (preg_match('/\.simpletest\d+/', $collection)) {
+      $db->dropCollection($collection);
+    }
+  }
 }

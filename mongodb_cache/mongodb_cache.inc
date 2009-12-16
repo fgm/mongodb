@@ -20,28 +20,18 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
     return new MongoID(substr(md5($cid), 0, 24));
   }
 
-  static function prefix($bin) {
-    global $db_prefix;
-    // We do not need perfect prefixing emulation, it's enough to deal with
-    // simpletest.
-    if (is_string($db_prefix)) {
-      return $db_prefix . $bin;
-    }
-    return $bin;
-  }
-
   function get($cid) {
-    $collection = mongodb_collection($this->prefix($this->bin));
+    $collection = mongodb_collection($this->bin);
     // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $this->garbageCollection($this->prefix($this->bin));
+    $this->garbageCollection($this->bin);
     $cache = $collection->findOne(array('_id' => $this->mongoId($cid)));
     return $this->prepareItem($cache);
   }
 
   function getMultiple(&$cids) {
-    $collection = mongodb_collection($this->prefix($this->bin));
+    $collection = mongodb_collection($this->bin);
     // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $this->garbageCollection($this->prefix($this->bin));
+    $this->garbageCollection($this->bin);
     $find = array();
     $find['_id']['$in'] = array_map(array('DrupalMongoDBCache', 'MongoId'), $cids);
     $result = $collection->find($find);
@@ -64,13 +54,13 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
    */
   protected function garbageCollection() {
     global $user;
-    $collection = mongodb_collection($this->prefix($this->bin));
+    $collection = mongodb_collection($this->bin);
 
     // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $cache_flush = variable_get('cache_flush_' . $this->prefix($this->bin), 0);
+    $cache_flush = variable_get('cache_flush_' . $this->bin, 0);
     if ($cache_flush && ($cache_flush + variable_get('cache_lifetime', 0) <= REQUEST_TIME)) {
       // Reset the variable immediately to prevent a meltdown in heavy load situations.
-      variable_set('cache_flush_' . $this->prefix($this->bin), 0);
+      variable_set('cache_flush_' . $this->bin, 0);
       // Time to flush old cache data
 
 
@@ -132,7 +122,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
       'data' => $scalar ? $data : serialize($data),
     );
 
-    $collection = mongodb_collection($this->prefix($this->bin));
+    $collection = mongodb_collection($this->bin);
 
     $collection->save($entry);
   }
@@ -140,7 +130,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
   function clear($cid = NULL, $wildcard = FALSE) {
     global $user;
 
-    $collection = mongodb_collection($this->prefix($this->bin));
+    $collection = mongodb_collection($this->bin);
 
     if (empty($cid)) {
       if (variable_get('cache_lifetime', 0)) {
@@ -150,17 +140,17 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
         // cached data that was cached before the timestamp.
         $user->cache = REQUEST_TIME;
 
-        $cache_flush = variable_get('cache_flush_' . $this->prefix($this->bin), 0);
+        $cache_flush = variable_get('cache_flush_' . $this->bin, 0);
         if ($cache_flush == 0) {
           // This is the first request to clear the cache, start a timer.
-          variable_set('cache_flush_' . $this->prefix($this->bin), REQUEST_TIME);
+          variable_set('cache_flush_' . $this->bin, REQUEST_TIME);
         }
         elseif (REQUEST_TIME > ($cache_flush + variable_get('cache_lifetime', 0))) {
           // Clear the cache for everyone, cache_lifetime seconds have
           // passed since the first request to clear the cache.
 
           $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$le' => REQUEST_TIME)));
-          variable_set('cache_flush_' . $this->prefix($this->bin), 0);
+          variable_set('cache_flush_' . $this->bin, 0);
         }
       }
       else {
@@ -192,6 +182,6 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
   }
 
   function isEmpty() {
-    return !mongodb_collection($this->prefix($this->bin))->findOne();
+    return !mongodb_collection($this->bin)->findOne();
   }
 }
