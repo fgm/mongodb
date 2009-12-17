@@ -122,9 +122,10 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
         if (!isset($values)) {
           $values = array();
         }
+
         foreach ($values as $delta => $column_values) {
           // We have to make sure we don't store invalid deltas.
-          if ($delta < 0 || ($field['cardinality'] && $delta >= $field['cardinality'])) {
+          if ($delta < 0 || ($field['cardinality'] > 0 && $delta >= $field['cardinality'])) {
             unset($object->{$field_name}[$language][$delta]);
           }
         }
