@@ -32,6 +32,11 @@ function mongodb_collection($collection_name) {
       $simpletest_prefix = '';
     }
   }
+  // However, once $db_prefix is filled by the database, the simpletest_prefix
+  // is no longer needed.
+  if ($simpletest_prefix && $db_prefix && strpos($db_prefix, $simpletest_prefix) !== FALSE) {
+    $simpletest_prefix = '';
+  }
   $collection_name = $db_prefix . $simpletest_prefix . $collection_name;
   if (!isset($mongo)) {
     $server_name  = variable_get('mongodb_connection', 'localhost');
