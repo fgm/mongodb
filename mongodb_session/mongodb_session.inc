@@ -100,7 +100,6 @@ function _drupal_session_read($sid) {
   else {
     $r = $collection->find(array('sid' => $sid));
     foreach ($r as $user);
-    file_put_contents('/tmp/log1', "\nread $sid" . $GLOBALS['db_prefix'] . (string)$collection . "\n". var_export($user, TRUE), FILE_APPEND);
     $user = (object)$user;
   }
 
@@ -168,10 +167,8 @@ function _drupal_session_write($sid, $value) {
   }
 
   $collection = mongodb_collection(variable_get('mongodb_session', 'session'));
-  file_put_contents('/tmp/log1', "\nwriting " . $GLOBALS['db_prefix'] ."\n". var_export($key + $fields + (array)$user, TRUE) . (string)$collection, FILE_APPEND);
   $collection
     ->update($key, $key + $fields + (array)$user, array('upsert' => TRUE));
-  file_put_contents('/tmp/log1', var_export($collection->db->lastError(), TRUE), FILE_APPEND);
 
   // Last access time is updated no more frequently than once every 180 seconds.
   // This reduces contention in the users table.
