@@ -16,15 +16,11 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
     $this->bin = $bin;
   }
 
-  static function mongoId($cid) {
-    return new MongoID(substr(md5($cid), 0, 24));
-  }
-
   function get($cid) {
     $collection = mongodb_collection($this->bin);
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection($this->bin);
-    $cache = $collection->findOne(array('_id' => $this->mongoId($cid)));
+    $cache = $collection->findOne(array('_id' => (string)$cid));
     return $this->prepareItem($cache);
   }
 
@@ -113,7 +109,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
   function set($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
     $scalar = is_scalar($data);
     $entry = array(
-      '_id' => $this->MongoId($cid),
+      '_id' => (string)$cid,
       'cid' => (string)$cid,
       'created' => REQUEST_TIME,
       'expire' => $expire,
@@ -176,7 +172,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
         while (count($cid));
       }
       else {
-        $collection->remove(array('_id' => $this->mongoId($cid)));
+        $collection->remove(array('_id' => (string)$cid));
       }
     }
   }
