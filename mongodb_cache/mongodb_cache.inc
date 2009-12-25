@@ -29,7 +29,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection($this->bin);
     $find = array();
-    $find['_id']['$in'] = array_map(array('DrupalMongoDBCache', 'MongoId'), $cids);
+    $find['_id']['$in'] = array_map('strval', $cids);
     $result = $collection->find($find);
     $cache = array();
     foreach ($result as $item) {
