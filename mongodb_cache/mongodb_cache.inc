@@ -145,13 +145,13 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
           // Clear the cache for everyone, cache_lifetime seconds have
           // passed since the first request to clear the cache.
 
-          $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$le' => REQUEST_TIME)));
+          $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$lte' => REQUEST_TIME)));
           variable_set('cache_flush_' . $this->bin, 0);
         }
       }
       else {
         // No minimum cache lifetime, flush all temporary cache entries now.
-        $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$le' => REQUEST_TIME)));
+        $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$lte' => REQUEST_TIME)));
       }
     }
     else {
