@@ -1,9 +1,0 @@
-; $Id$
-
-name = MongoDB
-description = Integration between Drupal and MongoDB.
-package = MongoDB
-version = VERSION
-core = 7.x
-files[] = mongodb.module
-files[] = mongodb.install
