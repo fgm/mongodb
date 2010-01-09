@@ -1,0 +1,41 @@
+<?php
+// $Id$
+/**
+ * @file
+ *   Test mongodb session implementation.
+ */
+
+class MongoDBSessionHttpsTestCase extends SessionHttpsTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Session https handling (MongoDB)',
+      'description' => 'Ensure that when running under https two session cookies are generated.',
+      'group' => 'MongoDB',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $this->collection = mongodb_collection(variable_get('mongodb_session', 'session'));
+  }
+
+  /**
+   * Test that there exists a session with two specific session IDs.
+   *
+   * @param $sid
+   *   The insecure session ID to search for.
+   * @param $ssid
+   *   The secure session ID to search for.
+   * @param $assertion_text
+   *   The text to display when we perform the assertion.
+   *
+   * @return
+   *   The result of assertTrue() that there's a session in the system that
+   *   has the given insecure and secure session IDs.
+   */
+  protected function assertSessionIds($sid, $ssid, $assertion_text) {
+    return $this->assertTrue($this->collection->findOne(array('sid' => $sid, 'ssid' => $ssid), array('sid')), $assertion_text);
+  }
+}
+
