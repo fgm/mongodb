@@ -21,7 +21,7 @@ function mongodb_field_storage_field_storage_info() {
 /**
  * Implement hook_field_storage_details().
  */
-function mongodb_field_storage_field_storage_details($field, $instance) {
+function mongodb_field_storage_field_storage_details($field) {
   // We probably want to implement that at one point, but this is informative only.
 }
 
