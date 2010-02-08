@@ -2,6 +2,7 @@
 // $Id$
 
 /**
+ * @file
  * Fires watchdog messages to mongodb.
  */
 
@@ -9,51 +10,56 @@
  * Implement hook_menu().
  */
 function mongodb_watchdog_menu() {
-  $items['admin/reports/mongodb'] = array(
+  $items['admin/reports/dblog/mongodb'] = array(
     'title' => 'Recent log entries in MongoDB',
     'description' => 'View events that have recently been logged in MongoDB.',
-    'page callback' => 'mongodb_watchdog_overview',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mongodb_watchdog_overview'),
     'access arguments' => array('access site reports'),
     'file'  => 'mongodb_watchdog.admin.inc',
   );
+
+  $items['admin/reports/settings/mongodb'] = array(
+    'title' => 'MongoDB logging settings',
+    'description' => 'MongoDB log settings',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mongodb_watchdog_access_logging_settings'),
+    'access arguments' => array('administer site configuration'),
+    'file'  => 'mongodb_watchdog.admin.inc',
+    'weight' => 4,
+  );
+
   return $items;
 }
+
 /**
- * Implement hook_form_<form_id>_alter for the system logging form.
+ * Implement hook_menu_alter().
  *
- * @param array $form
- * @param array $form_state
- * @return void
+ * @param $items array
  */
-function mongodb_watchdog_form_system_logging_settings_alter(&$form, &$form_state) {
-  $form['mongodb_watchdog'] = array(
-    '#type'  => 'fieldset',
-    '#title' => t('MongoDB settings'),
-    '#collapsible' => TRUE,
-  );
-  $form['mongodb_watchdog']['mongodb_watchdog_connection'] = array(
-    '#title' => t('MongoDB Connection URL'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_connection', NULL),
-  );
-  $form['mongodb_watchdog']['mongodb_watchdog_dbname'] = array(
-    '#title' => t('MongoDB Database name'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_dbname', 'drupal'),
-    '#description' => t('In which database should the watchdog be stored'),
-  );
-  $form['mongodb_watchdog']['mongodb_watchdog_collectionname'] = array(
-    '#title' => t('MongoDB Collection name'),
-    '#type'  => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_collectionname', 'watchdog'),
-    '#description' => t('In which collection should the watchdog be stored'),
-  );
+function mongodb_watchdog_menu_alter(&$items) {
+  $items['admin/reports/dblog/list'] = $items['admin/reports/dblog'];
+  $items['admin/reports/dblog/list']['type'] = MENU_DEFAULT_LOCAL_TASK;
+  $items['admin/reports/dblog/list']['title'] = 'Recent log entries in database';
+
+  if (array_key_exists('admin/reports/settings', $items)) {
+    $items['admin/reports/settings/list'] = $items['admin/reports/settings'];
+    $items['admin/reports/settings/list']['type'] = MENU_DEFAULT_LOCAL_TASK;
+    $items['admin/reports/settings/list']['title'] = 'Database log settings';
+  }
+  else {
+    $items['admin/reports/settings/mongodb']['type'] = MENU_NORMAL_ITEM;
+  }
+  return $items;
 }
 
 /**
  * Implement hook_watchdog().
  */
 function mongodb_watchdog_watchdog(array $log_entry) {
+  module_load_include('module', 'mongodb');
   $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
   $collection->insert((array) $log_entry);
 }
