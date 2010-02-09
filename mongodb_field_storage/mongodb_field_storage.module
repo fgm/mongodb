@@ -84,15 +84,22 @@ function mongodb_field_storage_field_storage_load($obj_type, $objects, $age, $fi
   $result = $collection->find(array('_id' => array('$in' => array_keys($keys))));
 
   foreach ($result as $id => $object) {
-    list($object_type, $object_id) = explode(':', $object['_entity_id'], 2);
+    $object_type = $object['_type'];
+    $entity_id = $object['_entity_id'];
     foreach ($saved_fields as $field_id => $field) {
       $field_name = $field['field_name'];
-      if (isset($object[$field_name])) {
-        $objects[$object_id]->{$field_name} = $object[$field_name];
+      $object[$field_name] = isset($object[$field_name]) ? $object[$field_name] : array();
+      foreach ($object[$field_name] as $language => &$values) {
+        $new_values = array();
+        foreach ($values as $column => $column_values) {
+          foreach ($column_values as $delta => $value) {
+            $new_values[$delta][$column] = $value;
+          }
+        }
+        $values = $new_values;
       }
-      else {
-        $objects[$object_id]->{$field_name} = array();
-      }
+
+      $objects[$entity_id]->{$field_name} = $object[$field_name];
     }
   }
 }
@@ -108,9 +115,13 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
 
   $object = clone $object;
   $object->_id = $obj_type . ':' . $entity_id;
-  $object->_entity_id = $obj_type . ':' . $entity_id;
-  $object->_obj_type = $obj_type;
+  $object->_entity_id = $entity_id;
+  $object->_type = $obj_type;
   $object->_bundle = $bundle;
+
+  if (isset($revision_id)) {
+    $object->_revision_id = $revision_id;
+  }
 
   // Prepare the field structure.
   foreach ($fields as $field_id) {
@@ -118,46 +129,18 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
     $field_name = $field['field_name'];
 
     if (isset($object->$field_name)) {
-      foreach ($object->$field_name as $language => $values) {
-        if (!isset($values)) {
-          $values = array();
-        }
-
+      foreach ($object->$field_name as $language => &$values) {
+        $new_values = array();
         foreach ($values as $delta => $column_values) {
-          // We have to make sure we don't store invalid deltas.
-          if ($delta < 0 || ($field['cardinality'] > 0 && $delta >= $field['cardinality'])) {
-            unset($object->{$field_name}[$language][$delta]);
+          foreach ($column_values as $column => $value) {
+            $new_values[$column][$delta] = $value;
           }
         }
+        $values = $new_values;
       }
     }
     else {
       $object->$field_name = array();
-    }
-
-    // Store each field value in the query db too.
-    _mongodb_field_storage_collection('query')->remove(array('type' => $obj_type, 'entity_id' => $entity_id));
-    if (isset($revision_id)) {
-      _mongodb_field_storage_collection('query_revision')->remove(array('type' => $obj_type, 'entity_id' => $entity_id, 'revision_id' => $revision_id));
-    }
-    foreach ($object->$field_name as $language => $values) {
-      if (!isset($values)) {
-        $values = array();
-      }
-      foreach ($values as $delta => $column_values) {
-        $column_values += array(
-          'field' => $field_name,
-          'type' => $obj_type,
-          'bundle' => $bundle,
-          'entity_id' => $entity_id,
-          'revision_id' => $revision_id,
-          'language' => $language,
-          'delta' => $delta,
-        );
-
-        _mongodb_field_storage_collection('query')->save($column_values);
-        _mongodb_field_storage_collection('query_revision')->save($column_values);
-      }
     }
   }
 
@@ -179,11 +162,9 @@ function mongodb_field_storage_field_storage_delete($obj_type, $object, $fields)
     '_id' => $obj_type . ':' . $entity_id,
   ));
   _mongodb_field_storage_collection('revision')->remove(array(
-    '_entity_id' => $obj_type . ':' . $entity_id,
+    '_type' => $obj_type,
+    '_entity_id' => $entity_id,
   ));
-
-  _mongodb_field_storage_collection('query')->remove(array('type' => $obj_type, 'entity_id' => $entity_id));
-  _mongodb_field_storage_collection('query_revision')->remove(array('type' => $obj_type, 'entity_id' => $entity_id, 'revision_id' => $revision_id));
 }
 
 /**
@@ -195,9 +176,7 @@ function mongodb_field_storage_field_storage_delete_revision($obj_type, $object,
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($obj_type, $object);
   _mongodb_field_storage_collection('revision')->remove(array(
     '_id' => $obj_type . ':' . $revision_id,
-    '_entity_id' => $obj_type . ':' . $entity_id,
   ));
-  _mongodb_field_storage_collection('query_revision')->remove(array('type' => $obj_type, 'entity_id' => $entity_id, 'revision_id' => $revision_id));
 }
 
 /**
@@ -218,11 +197,9 @@ function mongodb_field_storage_field_storage_query($field_id, $conditions, $opti
   $field = field_info_field_by_id($field_id);
   $field_name = $field['field_name'];
 
-  $collection = $load_current ? _mongodb_field_storage_collection('query') : _mongodb_field_storage_collection('query_revision');
+  $collection = $load_current ? _mongodb_field_storage_collection('current') : _mongodb_field_storage_collection('revision');
 
-  $query = array(
-    'field' => $field_name,
-  );
+  $partial_query = array();
 
   foreach ($conditions as $condition) {
     // A condition is either a (column, value, operator) triple, or a
@@ -230,8 +207,13 @@ function mongodb_field_storage_field_storage_query($field_id, $conditions, $opti
     @list($column, $value, $operator) = $condition;
 
     // MongoDB doesn't easily supports multiple conditions on the same field.
-    if (isset($query[$column])) {
+    if (isset($partial_query[$column])) {
       throw new FieldQueryException(t("Unsupported query: MongoDB doesn't support multiple conditions on the same column."));
+    }
+
+    if ($column == 'language') {
+      // Language is stored in a private field.
+      $column = '_language';
     }
 
     if (!$operator) {
@@ -249,43 +231,54 @@ function mongodb_field_storage_field_storage_query($field_id, $conditions, $opti
     );
 
     if ($operator == '=') {
-      $query[$column] = $value;
+      $partial_query[$column] = $value;
     }
     elseif (isset($simple_operators[$operator])) {
-      $query[$column][$simple_operators[$operator]] = $value;
+      $partial_query[$column][$simple_operators[$operator]] = $value;
     }
     elseif ($operator == 'BETWEEN') {
-      $query[$column] = array(
+      $partial_query[$column] = array(
         '$lte' => $value[0],
-        '$gte' => $value[1]
+        '$gte' => $value[1],
       );
     }
     else if ($operator == 'STARTS_WITH') {
-      $query[$column] = new MongoRegex('/^' . preg_quote($value) . '/');
+      $partial_query[$column] = new MongoRegex('/^' . preg_quote($value) . '/');
     }
     else if ($operator == 'ENDS_WITH') {
-      $query[$column] = new MongoRegex('/' . preg_quote($value) . '$/');
+      $partial_query[$column] = new MongoRegex('/' . preg_quote($value) . '$/');
     }
     else if ($operator == 'CONTAINS') {
-      $query[$column] = new MongoRegex('/' . preg_quote($value) . '/');
+      $partial_query[$column] = new MongoRegex('/' . preg_quote($value) . '/');
     }
     else {
       throw new FieldQueryException(t("Unsupported query: unsupported opperator %operator.", array('%operator' => $operator)));
     }
   }
 
+  $partial_query = (object) $partial_query;
+
+  // Build a query with a partial match to the field.
+  $query = array();
+
+  // Type, Bundle and Entity ID are special cases: they apply to the parent object.
+  foreach (array('type', 'bundle', 'entity_id', 'revision_id') as $special_property) {
+    if (isset($partial_query->$special_property)) {
+      $query['_' . $special_property] = $partial_query->$special_property;
+      unset($partial_query->$special_property);
+    }
+  }
+
+  // Build the partial query.
+  if (!empty($partial_query)) {
+    $query[$field_name] = array(
+      '$elemMatch' => &$partial_query,
+    );
+  }
+
   // For a count query, return the count now.
   if ($options['count']) {
-    $cursor = $collection->find($query);
-    $results = array();
-    foreach ($cursor as $record) {
-      // If querying all revisions and the entity type has revisions, we need
-      // to key the results by revision_ids.
-      $entity_type = entity_get_info($record['type']);
-      $id = ($load_current || empty($entity_type['object keys']['revision'])) ? $record['entity_id'] : $record['revision_id'];
-      $results[$id] = TRUE;
-    }
-    return count($results);
+    return $collection->count($query);
   }
 
   $cursor = $collection->find($query);
@@ -303,13 +296,8 @@ function mongodb_field_storage_field_storage_query($field_id, $conditions, $opti
   $obj_count = 0;
   foreach ($cursor as $record) {
     $options['cursor']++;
-
-    // If querying all revisions and the entity type has revisions, we need
-    // to key the results by revision_ids.
-    $entity_type = entity_get_info($record['type']);
-    $id = ($load_current || empty($entity_type['object keys']['revision'])) ? $record['entity_id'] : $record['revision_id'];
-
-    $return[$record['type']][$id] = entity_create_stub_entity($record['type'], array($record['entity_id'], $record['revision_id'], $record['bundle']));
+    list($object_type, $object_key) = explode(':', $record['_id'], 2);
+    $return[$record['_type']][$object_key] = entity_create_stub_entity($record['_type'], array($record['_entity_id'], $record['_revision_id'], $record['_bundle']));
     $obj_count++;
   }
 
