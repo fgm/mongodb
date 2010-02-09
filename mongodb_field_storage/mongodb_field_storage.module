@@ -88,18 +88,21 @@ function mongodb_field_storage_field_storage_load($obj_type, $objects, $age, $fi
     $entity_id = $object['_entity_id'];
     foreach ($saved_fields as $field_id => $field) {
       $field_name = $field['field_name'];
-      $object[$field_name] = isset($object[$field_name]) ? $object[$field_name] : array();
-      foreach ($object[$field_name] as $language => &$values) {
-        $new_values = array();
-        foreach ($values as $column => $column_values) {
-          foreach ($column_values as $delta => $value) {
-            $new_values[$delta][$column] = $value;
-          }
+      if (isset($object[$field_name])) {
+        // Restore the field structure.
+        $field_values = array();
+        foreach ($object[$field_name] as $column_values) {
+          $language = $column_values['_language'];
+          $delta = $column_values['_delta'];
+          unset($column_values['_language'], $column_values['_delta']);
+          $field_values[$language][$delta] = $column_values;
         }
-        $values = $new_values;
-      }
 
-      $objects[$entity_id]->{$field_name} = $object[$field_name];
+        $objects[$entity_id]->{$field_name} = $field_values;
+      }
+      else {
+        $objects[$entity_id]->{$field_name} = array();
+      }
     }
   }
 }
@@ -129,15 +132,27 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
     $field_name = $field['field_name'];
 
     if (isset($object->$field_name)) {
-      foreach ($object->$field_name as $language => &$values) {
-        $new_values = array();
+      $flat_field_values = array();
+
+      foreach ($object->$field_name as $language => $values) {
+        if (!isset($values)) {
+          $values = array();
+        }
+
         foreach ($values as $delta => $column_values) {
-          foreach ($column_values as $column => $value) {
-            $new_values[$column][$delta] = $value;
+          // We have to make sure we don't store invalid deltas.
+          if ($delta < 0 || ($field['cardinality'] > 0 && $delta >= $field['cardinality'])) {
+            unset($object->{$field_name}[$language][$delta]);
+          }
+          else {
+            // Collapse the field structure.
+            $column_values['_language'] = $language;
+            $column_values['_delta'] = $delta;
+            $flat_field_values[] = $column_values;
           }
         }
-        $values = $new_values;
       }
+      $object->$field_name = $flat_field_values;
     }
     else {
       $object->$field_name = array();
