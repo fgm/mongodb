@@ -17,11 +17,37 @@ function mongodb_help($path, $arg) {
 }
 
 /**
- * Returns a the mongodb watchdog collection.
+ * Returns a the MongoDB object.
+ */
+function mongodb() {
+  static $mongo;
+  if (!isset($mongo)) {
+    $server_name  = variable_get('mongodb_connection', 'localhost');
+    $db_name = variable_get('mongodb_dbname', 'drupal');
+    $mongo = new Mongo($server_name);
+    $mongo = $mongo->selectDB($db_name);
+  }
+  return $mongo;
+}
+
+/**
+ * Returns a the MongoCollection object.
  */
 function mongodb_collection($collection_name) {
+  static $collections;
+  $collection_name = mongodb_collection_name($collection_name);
+  if (!isset($collections[$collection_name])) {
+    $collections[$collection_name] = mongodb()->selectCollection($collection_name);
+  }
+  return $collections[$collection_name];
+}
+
+/**
+ * Returns the name to use for the collection, which works with prefixes and simpletest.
+ */
+function mongodb_collection_name($name) {
   global $db_prefix;
-  static $mongo, $connections, $simpletest_prefix;
+  static $simpletest_prefix;
   // We call this function earlier than the database is initalized so we would
   // read the parent collection without this.
   if (!isset($simpletest_prefix)) {
@@ -32,22 +58,13 @@ function mongodb_collection($collection_name) {
       $simpletest_prefix = '';
     }
   }
+  $db_prefix_string = is_array($db_prefix) ? $db_prefix['default'] : $db_prefix;
   // However, once $db_prefix is filled by the database, the simpletest_prefix
   // is no longer needed.
-  if ($simpletest_prefix && $db_prefix && strpos($db_prefix, $simpletest_prefix) !== FALSE) {
+  if ($simpletest_prefix && $db_prefix_string && strpos($db_prefix_string, $simpletest_prefix) !== FALSE) {
     $simpletest_prefix = '';
   }
-  $collection_name = $db_prefix . $simpletest_prefix . $collection_name;
-  if (!isset($mongo)) {
-    $server_name  = variable_get('mongodb_connection', 'localhost');
-    $db_name = variable_get('mongodb_dbname', 'drupal');
-    $mongo = new Mongo($server_name);
-    $mongo = $mongo->selectDB($db_name);
-  }
-  if (!isset($collections[$collection_name])) {
-    $collections[$collection_name] = $mongo->selectCollection($collection_name);
-  }
-  return $collections[$collection_name];
+  return $db_prefix_string . $simpletest_prefix . $name;
 }
 
 function mongodb_test_group_finished() {
@@ -57,4 +74,23 @@ function mongodb_test_group_finished() {
       $db->dropCollection($collection);
     }
   }
+}
+
+/**
+ * Return the next id in a sequence.
+ */
+function mongodb_next_id($name) {
+  // Make sure that the sequence key exists.
+  mongodb_collection('sequence')->insert(array('_id' => $name, 'value' => 0));
+
+  // Atomitcaly get the next id in the sequence.
+  $cursor = mongodb();
+  $cmd = array(
+    'findandmodify' => mongodb_collection_name('sequence'),
+    'query' => array('_id' => $name),
+    'update' => array('$inc' => array('value' => 1)),
+    'new' => TRUE,
+  );
+  $sequence = $cursor->command($cmd);
+  return isset($sequence['value']) ? $sequence['value'] : 0;
 }
