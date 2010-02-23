@@ -106,9 +106,13 @@ function mongodb_field_storage_field_storage_load($obj_type, $objects, $age, $fi
 /**
  * Implement hook_field_storage_write().
  */
-function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fields) {
+function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fields, $only_empty = FALSE) {
   // Create a new object.
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($obj_type, $object);
+  // Do not write a fielded entity when called from entity_insert/update.
+  if ($only_empty && field_info_instances($obj_type, $bundle)) {
+    return;
+  }
   $new_object = new stdClass();
   $new_object->_id = $obj_type . ':' . $entity_id;
   $new_object->_entity_id = intval($entity_id);
@@ -354,13 +358,13 @@ function mongodb_field_storage_field_attach_rename_bundle($obj_type, $bundle_old
 /**
  * Implements hook_entity_insert().
  */
-function mongodb_field_storage_entity_insert($entity, $type) {
-  mongodb_field_storage_field_storage_write($type, $entity, NULL, array());
+function mongodb_field_storage_entity_insert($entity, $entity_type) {
+  mongodb_field_storage_field_storage_write($type, $entity, NULL, array(), TRUE);
 }
 
 /**
  * Implements hook_entity_update().
  */
-function mongodb_field_storage_entity_update($entity, $type) {
-  mongodb_field_storage_field_storage_write($type, $entity, NULL, array());
+function mongodb_field_storage_entity_update($entity, $entity_type) {
+  mongodb_field_storage_field_storage_write($entity_type, $entity, NULL, array(), TRUE);
 }
