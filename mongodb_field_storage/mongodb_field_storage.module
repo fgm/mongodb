@@ -359,7 +359,7 @@ function mongodb_field_storage_field_attach_rename_bundle($obj_type, $bundle_old
  * Implements hook_entity_insert().
  */
 function mongodb_field_storage_entity_insert($entity, $entity_type) {
-  mongodb_field_storage_field_storage_write($type, $entity, NULL, array(), TRUE);
+  mongodb_field_storage_field_storage_write($entity_type, $entity, NULL, array(), TRUE);
 }
 
 /**
