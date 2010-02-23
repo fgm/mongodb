@@ -106,13 +106,25 @@ function mongodb_field_storage_field_storage_load($obj_type, $objects, $age, $fi
 /**
  * Implement hook_field_storage_write().
  */
-function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fields, $only_empty = FALSE) {
-  // Create a new object.
+function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fields, $entity_write = FALSE) {
+  $wrote = &drupal_static(__FUNCTION__, array());
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($obj_type, $object);
-  // Do not write a fielded entity when called from entity_insert/update.
-  if ($only_empty && field_info_instances($obj_type, $bundle)) {
-    return;
+  // There is always a field_attach_insert/update call followed by an
+  // entity_insert/update. field_attach does not call storage_write needlessly
+  // so we need to make sure if the entity was not saved during field_attach,
+  // it will be during entity write. The static is set during attach write if
+  // one happened and always unset on entity write.
+  if ($entity_write) {
+    if (isset($wrote[$obj_type][$entity_id])) {
+      unset($wrote[$obj_type][$entity_id]);
+      return;
+    }
   }
+  else {
+    $wrote[$obj_type][$entity_id] = TRUE;
+  }
+
+  // Create a new object.
   $new_object = new stdClass();
   $new_object->_id = $obj_type . ':' . $entity_id;
   $new_object->_entity_id = intval($entity_id);
