@@ -29,13 +29,7 @@ function mongodb_field_storage_field_storage_details($field) {
  * Get the collection used to store fields current values.
  */
 function _mongodb_field_storage_collection($type = 'current') {
-  static $collections = array();
-  if (!isset($collections[$type])) {
-    $m = new Mongo();
-    $db = $m->selectDB("drupal");
-    $collections[$type] = $db->selectCollection("fields_" . $type);
-  }
-  return $collections[$type];
+  return mongodb_collection("fields_" . $type);
 }
 
 /**
