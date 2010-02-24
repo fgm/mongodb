@@ -28,6 +28,8 @@
  *   - 'pages': an array of menu paths where the block should appear.
  *     Example: array('admin', 'node/%/edit') will display the block on admin,
  *     admin/structure etc. and the node edit pages.
+ *   - 'node_type': List of node types. The block will appear only on node/%
+ *     pages with the specified node types.
  *   - 'cache': A bitmask of flags describing how the block should behave with
  *     respect to block caching. The following shortcut bitmasks are provided
  *     as constants in common.inc:
