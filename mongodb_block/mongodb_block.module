@@ -36,6 +36,12 @@ function mongodb_block_theme() {
 function mongodb_block_page_build(&$page) {
   global $theme;
 
+  // The theme system might not yet be initialized. We need $theme.
+  drupal_theme_initialize();
+
+  // Grab only the current regions.
+  $all_regions = system_region_list($theme);
+
   $collection = mongodb_collection('block');
   if (!$collection->findOne()) {
     mongodb_block_rehash();
@@ -48,6 +54,7 @@ function mongodb_block_page_build(&$page) {
   $ancestors = menu_get_ancestors($parts);
   $ancestors[] = '%';
   $query['pages']['$in'] = $ancestors;
+  $query['region']['$in'] = $all_regions;
   $blocks = mongodb_block_render_blocks($collection->find($query));
   foreach ($blocks as $region => $region_blocks) {
     $page[$region] = mongodb_block_get_renderable_array($region_blocks);

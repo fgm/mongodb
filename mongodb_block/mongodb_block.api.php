@@ -68,9 +68,13 @@ function hook_block_info() {
  *
  * @param $blocks
  *   Assocative array, key is the module name, value is the hook_block_info
- *   returned by the module.
+ *   returned by the module. As Drupal core and contrib rarely sets status
+ *   and region this hook should be used to enable those.
  */
 function hook_mongodb_block_info_alter(&$blocks) {
+  // Enable the management block.
+  $blocks['system']['management']['status'] = 1;
+  $blocks['system']['management']['region'] = 'sidebar_first';
 }
 
 /**
