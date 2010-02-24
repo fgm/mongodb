@@ -84,13 +84,13 @@ function mongodb_next_id($name) {
   mongodb_collection('sequence')->insert(array('_id' => $name, 'value' => 0));
 
   // Atomitcaly get the next id in the sequence.
-  $cursor = mongodb();
+  $mongo = mongodb();
   $cmd = array(
     'findandmodify' => mongodb_collection_name('sequence'),
     'query' => array('_id' => $name),
     'update' => array('$inc' => array('value' => 1)),
     'new' => TRUE,
   );
-  $sequence = $cursor->command($cmd);
-  return isset($sequence['value']) ? $sequence['value'] : 0;
+  $sequence = $mongo->command($cmd);
+  return isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
 }
