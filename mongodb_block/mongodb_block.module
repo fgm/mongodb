@@ -29,6 +29,16 @@ function mongodb_block_theme() {
 }
 
 /**
+ * Implements hook_form_system_modules_alter().
+ *
+ * Hide block, dashboard module.
+ */
+function mongodb_block_form_system_modules_alter(&$form, &$form_state) {
+  unset($form['modules']['Core']['block']);
+  unset($form['modules']['Core']['dashboard']);
+}
+
+/**
  * Implements hook_page_build().
  *
  * Render blocks into their regions.
