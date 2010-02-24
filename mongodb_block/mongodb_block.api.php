@@ -25,8 +25,9 @@
  *   key-value pairs:
  *   - 'status': TRUE, otherwise this block is ignored.
  *   - 'region': Required name of the region this block is in.
- *   - 'pages': an array of menu masks where the block should appear.
- *     Example: 'admin' will display the block on admin, admin/structure etc.
+ *   - 'pages': an array of menu paths where the block should appear.
+ *     Example: array('admin', 'node/%/edit') will display the block on admin,
+ *     admin/structure etc. and the node edit pages.
  *   - 'cache': A bitmask of flags describing how the block should behave with
  *     respect to block caching. The following shortcut bitmasks are provided
  *     as constants in common.inc:
