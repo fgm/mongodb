@@ -13,7 +13,7 @@
  */
 function mongodb_block_menu() {
   return array(
-    'admin/structure/block_rebuild' => array(
+    'admin/structure/block-rebuild' => array(
       'title' => t('Block rebuild'),
       'description' => 'Rebuilds blocks in MongoDB',
       'page callback' => 'mongodb_block_rehash',
@@ -203,7 +203,10 @@ function mongodb_block_rehash($redirect = FALSE) {
         if (!isset($block['pages'])) {
           $block['pages']  = array('%');
         }
-        if (!isset($block['node_type'])) {
+        if (isset($block['node_type'])) {
+          $block['pages'] = array('node/%');
+        }
+        else {
           $block['node_type']  = array('*');
         }
         $collection->save($block);
