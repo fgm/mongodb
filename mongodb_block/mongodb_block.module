@@ -8,6 +8,20 @@
  * Resembles very closely the core block module but without an UI.
  */
 
+/**
+ * Implements hook_menu().
+ */
+function mongodb_block_menu() {
+  return array(
+    'admin/structure/block_rebuild' => array(
+      'title' => t('Block rebuild'),
+      'description' => 'Rebuilds blocks in MongoDB',
+      'page callback' => 'mongodb_block_rehash',
+      'page arguments' => array(TRUE),
+      'access arguments' => array('administer site configuration'),
+    ),
+  );
+}
 
 /**
  * Implements hook_flush_caches().
@@ -172,7 +186,7 @@ function mongodb_block_get_renderable_array($region_blocks) {
   return $build;
 }
 
-function mongodb_block_rehash() {
+function mongodb_block_rehash($redirect = FALSE) {
   $collection = mongodb_collection('block');
   foreach (module_implements('block_info') as $module) {
     $blocks[$module] = module_invoke($module, 'block_info');
@@ -198,6 +212,10 @@ function mongodb_block_rehash() {
   }
   variable_set('mongodb_block_version', $version);
   $collection->remove(array('version' => array('$lt' => $version)));
+  if ($redirect) {
+    drupal_set_message('Blocks rebuild done.');
+    drupal_goto('admin/structure');
+  }
 }
 
 /**
