@@ -79,7 +79,7 @@ function mongodb_block_page_build(&$page) {
   $ancestors[] = '%';
   $query['pages']['$in'] = $ancestors;
   $query['region']['$in'] = array_keys($all_regions);
-  $blocks = mongodb_block_render_blocks($collection->find($query));
+  $blocks = mongodb_block_render_blocks($collection->find($query)->sort(array('weight' => 1)));
   foreach ($blocks as $region => $region_blocks) {
     $page[$region] = mongodb_block_get_renderable_array($region_blocks);
   }
@@ -208,6 +208,9 @@ function mongodb_block_rehash($redirect = FALSE) {
         }
         else {
           $block['node_type']  = array('*');
+        }
+        if (!isset($block['weight'])) {
+          $block['weight'] = 0;
         }
         $collection->save($block);
       }
