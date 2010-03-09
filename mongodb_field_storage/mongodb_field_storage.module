@@ -374,3 +374,16 @@ function mongodb_field_storage_entity_insert($entity, $entity_type) {
 function mongodb_field_storage_entity_update($entity, $entity_type) {
   mongodb_field_storage_field_storage_write($entity_type, $entity, NULL, array(), TRUE);
 }
+
+/**
+ * Implements hook_field_attach_delete.
+ */
+function mongodb_field_storage_field_attach_delete($entity_type, $entity) {
+  list($entity_id, $revision_id) = entity_extract_ids($obj_type, $object);
+  $_id = $entity_type . ':' . $entity_id;
+  _mongodb_field_storage_collection()->remove(array('_id' => $_id));
+  if ($revision_id) {
+    $_id = $entity_type . ':' . $revision_id;
+    _mongodb_field_storage_collection('revision')->remove(array('_id' => $_id));
+  }
+}
