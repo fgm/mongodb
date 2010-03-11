@@ -21,7 +21,7 @@ function mongodb_watchdog_overview() {
     WATCHDOG_ERROR    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error'))),
     WATCHDOG_CRITICAL => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical'))),
     WATCHDOG_ALERT    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert'))),
-    WATCHDOG_EMERG    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency'))),
+    WATCHDOG_EMERGENCY    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency'))),
   );
   $classes = array(
     WATCHDOG_DEBUG    => 'mongodb_watchdog-debug',
@@ -31,7 +31,7 @@ function mongodb_watchdog_overview() {
     WATCHDOG_ERROR    => 'mongodb_watchdog-error',
     WATCHDOG_CRITICAL => 'mongodb_watchdog-critical',
     WATCHDOG_ALERT    => 'mongodb_watchdog-alert',
-    WATCHDOG_EMERG    => 'mongodb_watchdog-emerg',
+    WATCHDOG_EMERGENCY => 'mongodb_watchdog-emergency',
   );
 
   $per_page = 50;

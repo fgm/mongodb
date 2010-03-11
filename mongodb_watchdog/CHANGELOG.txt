@@ -1,0 +1,1 @@
+o rename WATCHDOG_EMERG to WATCHDOG_EMERGENCY, see http://drupal.org/node/739450
