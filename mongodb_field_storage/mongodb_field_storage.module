@@ -379,7 +379,7 @@ function mongodb_field_storage_entity_update($entity, $entity_type) {
  * Implements hook_field_attach_delete.
  */
 function mongodb_field_storage_field_attach_delete($entity_type, $entity) {
-  list($entity_id, $revision_id) = entity_extract_ids($obj_type, $object);
+  list($entity_id, $revision_id) = entity_extract_ids($entity_type, $entity);
   $_id = $entity_type . ':' . $entity_id;
   _mongodb_field_storage_collection()->remove(array('_id' => $_id));
   if ($revision_id) {
