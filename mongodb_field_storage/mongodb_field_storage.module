@@ -86,7 +86,36 @@ function mongodb_field_storage_field_storage_load($obj_type, $objects, $age, $fi
       if (isset($object[$field_name])) {
         // Restore the field structure.
         if ($field['cardinality'] == 1 && is_scalar($object[$field_name])) {
-          $field_values[LANGUAGE_NONE][0][current(array_keys($field['columns']))] = $object[$field_name];
+          if (count($field['columns']) == 1) {
+            $column_name = current(array_keys($field['columns']));
+          }
+          else {
+            // Let's figure out what column is this. We stored a scalar if the
+            // type is distinctive enough. For example, text fields have a value
+            // and a format but the format is not edited for simple textfields
+            // so we save the value as a scalar. And we know it belongs to
+            // value because it's a string. Format would be an integer.
+            $value = $object[$field_name];
+            $other = FALSE;
+            $special_types = array('int' => 0, 'float' => 1);
+            if (is_int($value)) {
+              $type = 'int';
+            }
+            elseif (is_float($value)) {
+              $type = 'float';
+            }
+            else {
+              $other = TRUE;
+            }
+            foreach ($field['columns'] as $_column_name => $_column_data) {
+              $_type = $_column_data['type'];
+              if ((!$other && $type == $_type) || ($other && !isset($special_types[$_type]))) {
+                $column_name = $_column_name;
+                break;
+              }
+            }
+          }
+          $field_values[LANGUAGE_NONE][0][$column_name] = $object[$field_name];
         }
         else {
           foreach ($object[$field_name] as $column_values) {
@@ -154,13 +183,39 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
     if (isset($object->$field_name)) {
       // Singular values are stored as scalars because MongoDB can't index
       // multiple arrays.
+      $stored = FALSE;
       if ($field['cardinality'] == 1 && count($object->$field_name) == 1 && isset($object->{$field_name}[LANGUAGE_NONE][0]) && count($object->{$field_name}[LANGUAGE_NONE][0]) == 1) {
         list ($column_name, $value) = each($object->{$field_name}[LANGUAGE_NONE][0]);
         if (isset($field['columns'][$column_name])) {
-          $field_values = _mongodb_field_storage_value($field['columns'][$column_name], $value);
+          // If the type is distinctive then we can go ahead even if there are
+          // multiple columns. For example, text fields have a value and a
+          // format but the format is not edited for simple textfields so we
+          // save the value as a scalar. And we know it belongs to value
+          // because it's a string. Format would be an integer.
+          $type = $field['columns'][$column_name]['type'];
+          $special_types = array('int' => 0, 'float' => 1);
+          $can_store = TRUE;
+          foreach ($field['columns'] as $_column_name => $_column_data) {
+            // Check the other columns.
+            if ($_column_name != $column_name) {
+              $_type = $_column_data['type'];
+              // There is a problem if both are int, if both are float, if
+              // neither is int or float.
+              if (($type == 'int' && $_type == 'int') ||
+                  ($type == 'float' && $_type == 'float') ||
+                  (!isset($special_types[$type]) && !isset($special_types[$_type]))) {
+                $can_store = FALSE;
+                break;
+              }
+            }
+          }
+          if ($can_store) {
+            $field_values = _mongodb_field_storage_value($field['columns'][$column_name], $value);
+            $stored = TRUE;
+          }
         }
       }
-      else {
+      if (!$stored) {
         foreach ($object->$field_name as $language => $values) {
           // According to field.test, we should not save anything for NULL.
           if (isset($values)) {
