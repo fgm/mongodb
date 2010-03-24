@@ -85,11 +85,16 @@ function mongodb_field_storage_field_storage_load($obj_type, $objects, $age, $fi
       $field_values = array();
       if (isset($object[$field_name])) {
         // Restore the field structure.
-        foreach ($object[$field_name] as $column_values) {
-          $language = isset($column_values['_language']) ? $column_values['_language'] : LANGUAGE_NONE;
-          $delta = isset($column_values['_delta']) ? $column_values['_delta'] : 0;
-          unset($column_values['_language'], $column_values['_delta']);
-          $field_values[$language][$delta] = $column_values;
+        if ($field['cardinality'] == 1 && is_scalar($object[$field_name])) {
+          $field_values[LANGUAGE_NONE][0][current(array_keys($field['columns']))] = $object[$field_name];
+        }
+        else {
+          foreach ($object[$field_name] as $column_values) {
+            $language = isset($column_values['_language']) ? $column_values['_language'] : LANGUAGE_NONE;
+            $delta = isset($column_values['_delta']) ? $column_values['_delta'] : 0;
+            unset($column_values['_language'], $column_values['_delta']);
+            $field_values[$language][$delta] = $column_values;
+          }
         }
       }
       $objects[$entity_id]->{$field_name} = $field_values;
@@ -147,25 +152,35 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
     $field_name = $field['field_name'];
     $field_values = array();
     if (isset($object->$field_name)) {
-      foreach ($object->$field_name as $language => $values) {
-        // According to field.test, we should not save anything for NULL.
-        if (isset($values)) {
-          foreach ($values as $delta => $column_values) {
-            // We have to make sure we don't store invalid deltas.
-            if ($delta >= 0 && ($field['cardinality'] <= 0 || $delta < $field['cardinality'])) {
-              foreach ($column_values as $column_name => $column_value) {
-                if (isset($field['columns'][$column_name])) {
-                  $column_values[$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_values[$column_name]);
+      // Singular values are stored as scalars because MongoDB can't index
+      // multiple arrays.
+      if ($field['cardinality'] == 1 && count($object->$field_name) == 1 && isset($object->{$field_name}[LANGUAGE_NONE][0]) && count($object->{$field_name}[LANGUAGE_NONE][0]) == 1) {
+        list ($column_name, $value) = each($object->{$field_name}[LANGUAGE_NONE][0]);
+        if (isset($field['columns'][$column_name])) {
+          $field_values = _mongodb_field_storage_value($field['columns'][$column_name], $value);
+        }
+      }
+      else {
+        foreach ($object->$field_name as $language => $values) {
+          // According to field.test, we should not save anything for NULL.
+          if (isset($values)) {
+            foreach ($values as $delta => $column_values) {
+              // We have to make sure we don't store invalid deltas.
+              if ($delta >= 0 && ($field['cardinality'] <= 0 || $delta < $field['cardinality'])) {
+                foreach ($column_values as $column_name => $column_value) {
+                  if (isset($field['columns'][$column_name])) {
+                    $column_values[$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_values[$column_name]);
+                  }
                 }
+                // Collapse the field structure.
+                if ($language != LANGUAGE_NONE) {
+                  $column_values['_language'] = $language;
+                }
+                if ($delta != 0) {
+                  $column_values['_delta'] = $delta;
+                }
+                $field_values[] = $column_values;
               }
-              // Collapse the field structure.
-              if ($language != LANGUAGE_NONE) {
-                $column_values['_language'] = $language;
-              }
-              if ($delta != 0) {
-                $column_values['_delta'] = $delta;
-              }
-              $field_values[] = $column_values;
             }
           }
         }
