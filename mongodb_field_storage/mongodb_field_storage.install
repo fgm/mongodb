@@ -2,8 +2,11 @@
 // $Id$
 
 function mongodb_field_storage_install() {
-  // Trash existing data on installation.
-  _mongodb_field_storage_collection('current')->drop();
-  _mongodb_field_storage_collection('revision')->drop();
   _mongodb_field_storage_collection('revision')->ensureIndex(array('_type' => 1, '_entity_id' => 1));
 }
+
+function mongodb_field_storage_uninstall() {
+  _mongodb_field_storage_collection('current')->drop();
+  _mongodb_field_storage_collection('revision')->drop();
+}
+
