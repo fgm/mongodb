@@ -1,6 +1,8 @@
 <?php
 // $Id$
 
+include_once dirname(__FILE__) . '/../mongodb.module';
+
 /**
  * Fires watchdog messages to mongodb.
  */
