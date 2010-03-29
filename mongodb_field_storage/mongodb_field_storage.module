@@ -77,56 +77,18 @@ function mongodb_field_storage_field_storage_load($obj_type, $objects, $age, $fi
   $collection = $load_current ? _mongodb_field_storage_collection('current') : _mongodb_field_storage_collection('revision');
   $result = $collection->find(array('_id' => array('$in' => array_keys($keys))));
 
-  foreach ($result as $id => $object) {
-    $object_type = $object['_type'];
-    $entity_id = $object['_entity_id'];
-    foreach ($saved_fields as $field_id => $field) {
-      $field_name = $field['field_name'];
-      $field_values = array();
-      if (isset($object[$field_name])) {
-        // Restore the field structure.
-        if ($field['cardinality'] == 1 && is_scalar($object[$field_name])) {
-          if (count($field['columns']) == 1) {
-            $column_name = current(array_keys($field['columns']));
-          }
-          else {
-            // Let's figure out what column is this. We stored a scalar if the
-            // type is distinctive enough. For example, text fields have a value
-            // and a format but the format is not edited for simple textfields
-            // so we save the value as a scalar. And we know it belongs to
-            // value because it's a string. Format would be an integer.
-            $value = $object[$field_name];
-            $other = FALSE;
-            $special_types = array('int' => 0, 'float' => 1);
-            if (is_int($value)) {
-              $type = 'int';
-            }
-            elseif (is_float($value)) {
-              $type = 'float';
-            }
-            else {
-              $other = TRUE;
-            }
-            foreach ($field['columns'] as $_column_name => $_column_data) {
-              $_type = $_column_data['type'];
-              if ((!$other && $type == $_type) || ($other && !isset($special_types[$_type]))) {
-                $column_name = $_column_name;
-                break;
-              }
-            }
-          }
-          $field_values[LANGUAGE_NONE][0][$column_name] = $object[$field_name];
-        }
-        else {
-          foreach ($object[$field_name] as $column_values) {
-            $language = isset($column_values['_language']) ? $column_values['_language'] : LANGUAGE_NONE;
-            $delta = isset($column_values['_delta']) ? $column_values['_delta'] : 0;
-            unset($column_values['_language'], $column_values['_delta']);
-            $field_values[$language][$delta] = $column_values;
-          }
+  foreach ($result as $id => $document) {
+    $object_type = $document['@type'];
+    $entity_id = $document['@entity_id'];
+    foreach ($document['@fields'] as $delta => $field_data) {
+      foreach ($saved_fields as $field_id => $field) {
+        $field_name = $field['field_name'];
+        if (isset($field_data[$field_name])) {
+          $language = isset($field_data[$field_name]['@language']) ? $field_data[$field_name]['@language'] : LANGUAGE_NONE;
+          unset($field_data[$field_name]['@language']);
+          $objects[$entity_id]->{$field_name}[$language][$delta] = $field_data[$field_name];
         }
       }
-      $objects[$entity_id]->{$field_name} = $field_values;
     }
   }
 }
@@ -152,14 +114,14 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
     $wrote[$obj_type][$entity_id] = TRUE;
   }
 
-  // Create a new object.
-  $new_object = new stdClass();
-  $new_object->_id = $obj_type . ':' . $entity_id;
-  $new_object->_entity_id = intval($entity_id);
-  $new_object->_type = $obj_type;
-  $new_object->_bundle = $bundle;
+  $save = array(
+    '_id' => $obj_type . ':' . $entity_id,
+    '@entity_id' => intval($entity_id),
+    '@type' => $obj_type,
+    '@bundle' => $bundle,
+  );
   if (isset($revision_id)) {
-    $new_object->_revision_id = intval($revision_id);
+    $save['_revision_id'] = intval($revision_id);
   }
 
   // Add the base table's fields to the new object.
@@ -170,7 +132,7 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
     $table_schema = drupal_get_schema($entity_info['base table']);
     foreach ($table_schema['fields'] as $field_name => $column_definition) {
       if (isset($object->$field_name)) {
-        $new_object->$field_name = _mongodb_field_storage_value($column_definition['type'], $object->$field_name);
+        $save[$field_name] = _mongodb_field_storage_value($column_definition['type'], $object->$field_name);
       }
     }
   }
@@ -181,74 +143,32 @@ function mongodb_field_storage_field_storage_write($obj_type, $object, $op, $fie
     $field_name = $field['field_name'];
     $field_values = array();
     if (isset($object->$field_name)) {
-      // Singular values are stored as scalars because MongoDB can't index
-      // multiple arrays.
-      $stored = FALSE;
-      if ($field['cardinality'] == 1 && count($object->$field_name) == 1 && isset($object->{$field_name}[LANGUAGE_NONE][0]) && count($object->{$field_name}[LANGUAGE_NONE][0]) == 1) {
-        list ($column_name, $value) = each($object->{$field_name}[LANGUAGE_NONE][0]);
-        if (isset($field['columns'][$column_name])) {
-          // If the type is distinctive then we can go ahead even if there are
-          // multiple columns. For example, text fields have a value and a
-          // format but the format is not edited for simple textfields so we
-          // save the value as a scalar. And we know it belongs to value
-          // because it's a string. Format would be an integer.
-          $type = $field['columns'][$column_name]['type'];
-          $special_types = array('int' => 0, 'float' => 1);
-          $can_store = TRUE;
-          foreach ($field['columns'] as $_column_name => $_column_data) {
-            // Check the other columns.
-            if ($_column_name != $column_name) {
-              $_type = $_column_data['type'];
-              // There is a problem if both are int, if both are float, if
-              // neither is int or float.
-              if (($type == 'int' && $_type == 'int') ||
-                  ($type == 'float' && $_type == 'float') ||
-                  (!isset($special_types[$type]) && !isset($special_types[$_type]))) {
-                $can_store = FALSE;
-                break;
+      foreach ($object->$field_name as $language => $values) {
+        // According to field.test, we should not save anything for NULL.
+        if (isset($values)) {
+          foreach ($values as $delta => $column_values) {
+            // We have to make sure we don't store invalid deltas.
+            if ($delta >= 0 && ($field['cardinality'] <= 0 || $delta < $field['cardinality'])) {
+              foreach ($column_values as $column_name => $column_value) {
+                if (isset($field['columns'][$column_name])) {
+                  $save['@fields'][$delta][$field_name][$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_values[$column_name]);
+                }
               }
-            }
-          }
-          if ($can_store) {
-            $field_values = _mongodb_field_storage_value($field['columns'][$column_name], $value);
-            $stored = TRUE;
-          }
-        }
-      }
-      if (!$stored) {
-        foreach ($object->$field_name as $language => $values) {
-          // According to field.test, we should not save anything for NULL.
-          if (isset($values)) {
-            foreach ($values as $delta => $column_values) {
-              // We have to make sure we don't store invalid deltas.
-              if ($delta >= 0 && ($field['cardinality'] <= 0 || $delta < $field['cardinality'])) {
-                foreach ($column_values as $column_name => $column_value) {
-                  if (isset($field['columns'][$column_name])) {
-                    $column_values[$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_values[$column_name]);
-                  }
-                }
-                // Collapse the field structure.
-                if ($language != LANGUAGE_NONE) {
-                  $column_values['_language'] = $language;
-                }
-                if ($delta != 0) {
-                  $column_values['_delta'] = $delta;
-                }
-                $field_values[] = $column_values;
+              if ($language != LANGUAGE_NONE) {
+                $save['@fields'][$delta][$field_name]['@language'] = $language;
               }
             }
           }
         }
       }
     }
-    $new_object->$field_name = $field_values;
   }
 
   // Save the object.
-  _mongodb_field_storage_collection('current')->save($new_object);
+  _mongodb_field_storage_collection('current')->save($save);
   if (isset($revision_id)) {
-    $new_object->_id = $obj_type . ':' . $revision_id;
-    _mongodb_field_storage_collection('revision')->save($new_object);
+    $save['_id'] = $obj_type . ':' . $revision_id;
+    _mongodb_field_storage_collection('revision')->save($save);
   }
 }
 
@@ -276,8 +196,8 @@ function mongodb_field_storage_field_storage_delete($obj_type, $object, $fields)
     '_id' => $obj_type . ':' . $entity_id,
   ));
   _mongodb_field_storage_collection('revision')->remove(array(
-    '_type' => $obj_type,
-    '_entity_id' => $entity_id,
+    '@type' => $obj_type,
+    '@entity_id' => $entity_id,
   ));
 }
 
@@ -427,8 +347,8 @@ function mongodb_field_storage_field_storage_query($field_id, $conditions, $opti
  * Implement hook_field_attach_rename_bundle().
  */
 function mongodb_field_storage_field_attach_rename_bundle($obj_type, $bundle_old, $bundle_new) {
-  _mongodb_field_storage_collection('current')->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE));
-  _mongodb_field_storage_collection('revision')->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE));
+  _mongodb_field_storage_collection('current')->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
+  _mongodb_field_storage_collection('revision')->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
 }
 
 /**
