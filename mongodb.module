@@ -17,29 +17,38 @@ function mongodb_help($path, $arg) {
 }
 
 /**
- * Returns a the MongoDB object.
+ * Returns an MongoDB object.
  */
-function mongodb() {
-  static $mongo;
-  if (!isset($mongo)) {
-    $server_name  = variable_get('mongodb_connection', 'localhost');
-    $db_name = variable_get('mongodb_dbname', 'drupal');
-    $mongo = new Mongo($server_name);
-    $mongo = $mongo->selectDB($db_name);
+function mongodb($alias = 'default') {
+  static $mongo_objects;
+  $connections = variable_get('mongodb_connections', array());
+  $connections += array('default' => array('host' => 'localhost', 'db' => 'drupal'));
+  if (!isset($connections[$alias])) {
+    $alias = 'default';
   }
-  return $mongo;
+  $connection = $connections[$alias];
+  $host = $connection['host'];
+  $db = $connection['db'];
+  if (!isset($mongo[$host][$db])) {
+    $mongo = new Mongo($host);
+    $mongo_objects[$host][$db] = $mongo->selectDB($db);
+  }
+  return $mongo_objects[$host][$db];
 }
 
 /**
- * Returns a the MongoCollection object.
+ * Returns a MongoCollection object.
  */
-function mongodb_collection($collection_name) {
-  static $collections;
-  $collection_name = mongodb_collection_name($collection_name);
-  if (!isset($collections[$collection_name])) {
-    $collections[$collection_name] = mongodb()->selectCollection($collection_name);
+function mongodb_collection($collection_name, $entity_type = '') {
+  if ($entity_type) {
+    $collection_name .= ".$entity_type";
   }
-  return $collections[$collection_name];
+  $collections = variable_get('mongodb_collections', array());
+  $alias = isset($collections[$collection_name]) ? $collections[$collection_name] : 'default';
+  // Prefix the collection name for simpletest. It will be in the same DB as the
+  // non-prefixed version so it's enough to prefix after choosing the mongodb
+  // object.
+  return mongodb($alias)->selectCollection(mongodb_collection_name($collection_name));
 }
 
 /**
