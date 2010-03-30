@@ -112,6 +112,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $object, $op, $
     '@entity_id' => intval($entity_id),
     '@type' => $entity_type,
     '@bundle' => $bundle,
+    '@fields' => array(),
   );
   if (isset($revision_id)) {
     $save['_revision_id'] = intval($revision_id);
