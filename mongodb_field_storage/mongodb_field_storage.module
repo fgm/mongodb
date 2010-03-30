@@ -162,7 +162,9 @@ function mongodb_field_storage_field_storage_write($entity_type, $object, $op, $
   mongodb_collection('fields_current', $entity_type)->save($save);
   if (isset($revision_id)) {
     $save['_id'] = $entity_type . ':' . $revision_id;
-    mongodb_collection('fields_revision', $entity_type)->save($save);
+    $collection = mongodb_collection('fields_revision', $entity_type);
+    $collection->ensureIndex(array('@type' => 1, '@entity_id' => 1));
+    $collection->save($save);
   }
 }
 
@@ -184,13 +186,14 @@ function _mongodb_field_storage_value($type, $value) {
  *
  * This function deletes data for all fields for an object from the database.
  */
-function mongodb_field_storage_field_storage_delete($obj_type, $object, $fields) {
-  list($entity_id, $revision_id, $bundle) = entity_extract_ids($obj_type, $object);
-  _mongodb_field_storage_collection('current')->remove(array(
-    '_id' => $obj_type . ':' . $entity_id,
+function mongodb_field_storage_field_storage_delete($entity_type, $object, $fields) {
+  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $object);
+
+  mongodb_collection('fields_current', $entity_type)->remove(array(
+    '_id' => $entity_type . ':' . $entity_id,
   ));
-  _mongodb_field_storage_collection('revision')->remove(array(
-    '@type' => $obj_type,
+  mongodb_collection('fields_revision', $entity_type)->remove(array(
+    '@type' => $entity_type,
     '@entity_id' => $entity_id,
   ));
 }
@@ -200,10 +203,10 @@ function mongodb_field_storage_field_storage_delete($obj_type, $object, $fields)
  *
  * This function actually deletes the data from the database.
  */
-function mongodb_field_storage_field_storage_delete_revision($obj_type, $object, $fields) {
-  list($entity_id, $revision_id, $bundle) = entity_extract_ids($obj_type, $object);
-  _mongodb_field_storage_collection('revision')->remove(array(
-    '_id' => $obj_type . ':' . $revision_id,
+function mongodb_field_storage_field_storage_delete_revision($entity_type, $object, $fields) {
+  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $object);
+  mongodb_collection('fields_revision', $entity_type)->remove(array(
+    '_id' => $entity_type . ':' . $revision_id,
   ));
 }
 
@@ -341,8 +344,8 @@ function mongodb_field_storage_field_storage_query($field_id, $conditions, $opti
  * Implement hook_field_attach_rename_bundle().
  */
 function mongodb_field_storage_field_attach_rename_bundle($obj_type, $bundle_old, $bundle_new) {
-  _mongodb_field_storage_collection('current')->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
-  _mongodb_field_storage_collection('revision')->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
+  mongodb_collection('fields_current', $entity_type)->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
+  mongodb_collection('fields_revision', $entity_type)->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
 }
 
 /**
@@ -365,9 +368,9 @@ function mongodb_field_storage_entity_update($entity, $entity_type) {
 function mongodb_field_storage_field_attach_delete($entity_type, $entity) {
   list($entity_id, $revision_id) = entity_extract_ids($entity_type, $entity);
   $_id = $entity_type . ':' . $entity_id;
-  _mongodb_field_storage_collection()->remove(array('_id' => $_id));
+  mongodb_collection('fields_current', $entity_type)->remove(array('_id' => $_id));
   if ($revision_id) {
     $_id = $entity_type . ':' . $revision_id;
-    _mongodb_field_storage_collection('revision')->remove(array('_id' => $_id));
+    mongodb_collection('fields_revision', $entity_type)->remove(array('_id' => $_id));
   }
 }
