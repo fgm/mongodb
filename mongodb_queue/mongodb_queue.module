@@ -1,0 +1,18 @@
+<?php
+// $Id$
+
+/**
+ * Implement hook_cron.
+ */
+function mongodb_queue_cron() {
+  // reset expired items.
+  foreach (mongodb()->listCollections() as $collection) {
+    if (substr($collection->getName(), 0, 6) == 'queue.') {
+      $query = array(
+        'expire' => array('$gt' => 0, '$lt' < REQUEST_TIME),
+      );
+      $collection
+        ->update($query, array('$set' => array('expire' => 0)));
+    }
+  }
+}
