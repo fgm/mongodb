@@ -160,6 +160,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $object, $op, $
   if (isset($revision_id)) {
     $save['@entity_id'] = $entity_id;
     $save['_id'] = $revision_id;
+    unset($save['@revision_id']);
     $collection = mongodb_collection('fields_revision', $entity_type);
     $collection->save($save);
   }
