@@ -17,7 +17,8 @@ function mongodb_queue_cron() {
     $db = mongodb($alias);
     $collection = $db->selectCollection('system.namespaces');
     $n = strlen($db) + 1;
-    // We skip system collections because those start with system.
+    // We won't need to check for system collections because those start with
+    // system. and we search for queue.
     $find = array('name' => new MongoRegex('/^' . $db .'\.queue\./'));
     $queues = $collection->find($find);
     foreach ($queues as $collection_data) {
