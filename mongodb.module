@@ -40,7 +40,8 @@ function mongodb($alias = 'default') {
  * Returns a MongoCollection object.
  */
 function mongodb_collection($collection_name) {
-  $collection_name = implode('.', func_get_args());
+  $args = func_get_args();
+  $collection_name = implode('.', $args);
   $collections = variable_get('mongodb_collections', array());
   $alias = isset($collections[$collection_name]) ? $collections[$collection_name] : 'default';
   // Prefix the collection name for simpletest. It will be in the same DB as the
