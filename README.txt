@@ -25,8 +25,9 @@ $conf['mongodb_collections'] = array(
 
 If a collection has no alias specified in 'mongodb_collections', then the 
 alias 'default' is used (as noted above, the 'default' connection alias
-always exists.) This way, if no variables are defined thenMongoDB writes
-everything in the drupal database on localhost.
+always exists.) If you want everything in one database, then there is no need
+to set up mongodb_collections. So for exampple, if no variables are defined at
+all, then MongoDB writes everything in the drupal database on localhost.
 
 mongodb_block uses the 'block' collection, mongodb_cache uses the name of the
 bin (cache_bootstrap, cache_menu etc), mongodb_session uses 'session' and
