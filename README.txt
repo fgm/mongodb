@@ -13,17 +13,20 @@ $conf['mongodb_connections'] = array(
   'logginghost' => array('host' => 'log.local', 'db' => 'drupalogs'),
 );
 
+The 'default' alias is special, if it's not defined then 
+'default' => array('host' => 'localhost', 'db' => 'drupal') is added
+automatically.
+
 Then mongodb_collections will allow mapping collections to aliases:
 
 $conf['mongodb_collections'] = array(
   'watchdog' => 'logginghost',
 )
 
-If a connection is not specified on mongodb_collections then default is
-presumed. If the default alias is not specified then
-array('host' => 'localhost', 'db' => 'drupal') is presumed. This way, if no
-variables are defined thenMongoDB writes everything in the drupal database on
-localhost.
+If a collection has no alias specified in 'mongodb_collections', then the 
+alias 'default' is used (as noted above, the 'default' connection alias
+always exists.) This way, if no variables are defined thenMongoDB writes
+everything in the drupal database on localhost.
 
 mongodb_block uses the 'block' collection, mongodb_cache uses the name of the
 bin (cache_bootstrap, cache_menu etc), mongodb_session uses 'session' and
