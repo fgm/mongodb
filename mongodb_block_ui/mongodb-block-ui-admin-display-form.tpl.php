@@ -30,7 +30,7 @@
   drupal_add_js(drupal_get_path('module', 'mongodb_block_ui') . '/mongodb_block_ui.js');
   foreach ($block_regions as $region => $title) {
     drupal_add_tabledrag('blocks', 'match', 'sibling', 'block-region-select', 'block-region-' . $region, NULL, FALSE);
-    drupal_add_tabledrag('blocks', 'order', 'sibling', 'block-weight', 'mongodb_block_ui-weight-' . $region);
+    drupal_add_tabledrag('blocks', 'order', 'sibling', 'block-weight', 'block-weight-' . $region);
   }
 ?>
 <table id="blocks" class="sticky-enabled">

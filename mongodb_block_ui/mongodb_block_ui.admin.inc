@@ -578,17 +578,17 @@ function template_preprocess_mongodb_block_ui_admin_display_form(&$variables) {
       $region = $block['region']['#default_value'];
 
       // Set special classes needed for table drag and drop.
-      $variables['form'][$i]['region']['#attributes']['class'] = array('mongodb_block_ui-region-select', 'mongodb_block_ui-region-' . $region);
-      $variables['form'][$i]['weight']['#attributes']['class'] = array('mongodb_block_ui-weight', 'mongodb_block_ui-weight-' . $region);
+      $variables['form'][$i]['region']['#attributes']['class'] = array('block-region-select', 'block-region-' . $region);
+      $variables['form'][$i]['weight']['#attributes']['class'] = array('block-weight', 'block-weight-' . $region);
 
       $variables['block_listing'][$region][$i] = new stdClass();
-      $variables['block_listing'][$region][$i]->row_class = !empty($block['#attributes']['class']) ? implode(' ', $mongodb_block_ui['#attributes']['class']) : '';
-      $variables['block_listing'][$region][$i]->block_modified = !empty($block['#attributes']['class']) && in_array('mongodb_block_ui-modified', $mongodb_block_ui['#attributes']['class']);
+      $variables['block_listing'][$region][$i]->row_class = !empty($block['#attributes']['class']) ? implode(' ', $block['#attributes']['class']) : '';
+      $variables['block_listing'][$region][$i]->block_modified = !empty($block['#attributes']['class']) && in_array('block-modified', $block['#attributes']['class']);
       $variables['block_listing'][$region][$i]->block_title =  drupal_render($block['info']);
-      $variables['block_listing'][$region][$i]->region_select = drupal_render($block['region']) . drupal_render($mongodb_block_ui['theme']);
+      $variables['block_listing'][$region][$i]->region_select = drupal_render($block['region']) . drupal_render($block['theme']);
       $variables['block_listing'][$region][$i]->weight_select = drupal_render($block['weight']);
       $variables['block_listing'][$region][$i]->configure_link = drupal_render($block['configure']);
-      $variables['block_listing'][$region][$i]->delete_link = !empty($block['delete']) ? drupal_render($mongodb_block_ui['delete']) : '';
+      $variables['block_listing'][$region][$i]->delete_link = !empty($block['delete']) ? drupal_render($block['delete']) : '';
       $variables['block_listing'][$region][$i]->printed = FALSE;
 
       $last_region = $region;
