@@ -49,7 +49,7 @@ function mongodb_field_storage_field_storage_delete_field($field) {
 /**
  * Implement hook_field_storage_load().
  */
-function mongodb_field_storage_field_storage_load($entity_type, $objects, $age, $fields, $options) {
+function mongodb_field_storage_field_storage_load($entity_type, $entities, $age, $fields, $options) {
   $load_current = $age == FIELD_LOAD_CURRENT;
 
   // Fetch information about the fields and prepare the keys.
@@ -66,7 +66,7 @@ function mongodb_field_storage_field_storage_load($entity_type, $objects, $age, 
     }
   }
 
-  // Execute the query and save the fields to the parent object.
+  // Execute the query and save the fields to the parent entity.
   $collection_name = $load_current ? 'fields_current' : 'fields_revision';
   $collection = mongodb_collection($collection_name, $entity_type);
   $result = $collection->find(array('_id' => array('$in' => $keys)));
@@ -78,7 +78,7 @@ function mongodb_field_storage_field_storage_load($entity_type, $objects, $age, 
         if (isset($field_data[$field_name])) {
           $language = isset($field_data[$field_name]['@language']) ? $field_data[$field_name]['@language'] : LANGUAGE_NONE;
           unset($field_data[$field_name]['@language']);
-          $objects[$entity_id]->{$field_name}[$language][$delta] = $field_data[$field_name];
+          $entities[$entity_id]->{$field_name}[$language][$delta] = $field_data[$field_name];
         }
       }
     }
@@ -88,9 +88,9 @@ function mongodb_field_storage_field_storage_load($entity_type, $objects, $age, 
 /**
  * Implement hook_field_storage_write().
  */
-function mongodb_field_storage_field_storage_write($entity_type, $object, $op, $fields, $entity_write = FALSE) {
+function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $fields, $entity_write = FALSE) {
   $wrote = &drupal_static(__FUNCTION__, array());
-  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $object);
+  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
   // There is always a field_attach_insert/update call followed by an
   // entity_insert/update. field_attach does not call storage_write needlessly
   // so we need to make sure if the entity was not saved during field_attach,
@@ -115,26 +115,26 @@ function mongodb_field_storage_field_storage_write($entity_type, $object, $op, $
     $save['@revision_id'] = intval($revision_id);
   }
 
-  // Add the base table's fields to the new object.
+  // Add the base table's fields to the new entity.
   $entity_info = entity_get_info($entity_type);
   // Although it's rare not to define a base table, test entities for sure
   // don't.
   if (isset($entity_info['base table'])) {
     $table_schema = drupal_get_schema($entity_info['base table']);
     foreach ($table_schema['fields'] as $field_name => $column_definition) {
-      if (isset($object->$field_name)) {
-        $save[$field_name] = _mongodb_field_storage_value($column_definition['type'], $object->$field_name);
+      if (isset($entity->$field_name)) {
+        $save[$field_name] = _mongodb_field_storage_value($column_definition['type'], $entity->$field_name);
       }
     }
   }
 
-  // Add the fieldapi fields to the new object
+  // Add the fieldapi fields to the new entity
   foreach ($fields as $field_id) {
     $field = field_info_field_by_id($field_id);
     $field_name = $field['field_name'];
     $field_values = array();
-    if (isset($object->$field_name)) {
-      foreach ($object->$field_name as $language => $values) {
+    if (isset($entity->$field_name)) {
+      foreach ($entity->$field_name as $language => $values) {
         // According to field.test, we should not save anything for NULL.
         if (isset($values)) {
           foreach ($values as $delta => $column_values) {
@@ -155,7 +155,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $object, $op, $
     }
   }
 
-  // Save the object.
+  // Save the entity.
   mongodb_collection('fields_current', $entity_type)->save($save);
   if (isset($revision_id)) {
     $save['@entity_id'] = $entity_id;
@@ -182,10 +182,10 @@ function _mongodb_field_storage_value($type, $value) {
 /**
  * Implement hook_field_storage_delete().
  *
- * This function deletes data for all fields for an object from the database.
+ * This function deletes data for all fields for an entity from the database.
  */
-function mongodb_field_storage_field_storage_delete($entity_type, $object, $fields) {
-  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $object);
+function mongodb_field_storage_field_storage_delete($entity_type, $entity, $fields) {
+  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
 
   mongodb_collection('fields_current', $entity_type)->remove(array(
     '_id' => $entity_id,
@@ -200,8 +200,8 @@ function mongodb_field_storage_field_storage_delete($entity_type, $object, $fiel
  *
  * This function actually deletes the data from the database.
  */
-function mongodb_field_storage_field_storage_delete_revision($entity_type, $object, $fields) {
-  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $object);
+function mongodb_field_storage_field_storage_delete_revision($entity_type, $entity, $fields) {
+  list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
   mongodb_collection('fields_revision', $entity_type)->remove(array(
     '_id' => $revision_id,
   ));
@@ -341,7 +341,7 @@ function mongodb_field_storage_field_storage_query($field_id, $conditions, $opti
 /**
  * Implement hook_field_attach_rename_bundle().
  */
-function mongodb_field_storage_field_attach_rename_bundle($obj_type, $bundle_old, $bundle_new) {
+function mongodb_field_storage_field_attach_rename_bundle($entity_type, $bundle_old, $bundle_new) {
   mongodb_collection('fields_current', $entity_type)->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
   mongodb_collection('fields_revision', $entity_type)->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
 }
