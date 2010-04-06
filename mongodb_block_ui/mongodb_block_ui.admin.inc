@@ -35,10 +35,10 @@ function mongodb_block_ui_admin_display($theme = NULL) {
   // Fetch and sort mongodb_block_uis.
   $current_blocks = mongodb_block_rehash();
   $blocks = array();
-  foreach ($current_blocks as $module => $module_blocks) {
-    foreach ($module_blocks as $delta => $block) {
-      $blocks[$module . '_' . $delta] = $block;
-    }
+  foreach ($current_blocks as $block) {
+    $module = $block['module'];
+    $delta = $block['delta'];
+    $blocks[$module . '_' . $delta] = $block;
   }
   $compare_theme = &drupal_static('_mongodb_block_ui_compare:theme');
   $compare_theme = $theme;
@@ -63,7 +63,7 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
 
   // Build the form tree.
   $form['edited_theme'] = array('#type' => 'value', '#value' => $theme);
-  $form['#action'] = arg(4) ? url('admin/structure/mongodb_block/list/' . $theme) : url('admin/structure/mongodb_block_ui');
+  $form['#action'] = arg(4) ? url('admin/structure/mongodb_block/list/' . $theme) : url('admin/structure/mongodb_block');
   $form['#tree'] = TRUE;
 
   foreach ($blocks as $key => $block) {
@@ -128,21 +128,23 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
  * Process main blocks administration form submissions.
  */
 function mongodb_block_ui_admin_display_form_submit($form, &$form_state) {
-  $txn = db_transaction();
-
   foreach ($form_state['values'] as $block) {
-    $block['status'] = (int) ($block['region'] != BLOCK_REGION_NONE);
-    $block['region'] = $block['status'] ? $block['region'] : '';
-    db_update('mongodb_block_ui')
-      ->fields(array(
-        'status' => $block['status'],
-        'weight' => $block['weight'],
-        'region' => $block['region'],
-      ))
-      ->condition('module', $block['module'])
-      ->condition('delta', $block['delta'])
-      ->condition('theme', $block['theme'])
-      ->execute();
+    if (is_array($block)) {
+      $block['status'] = (int) ($block['region'] != BLOCK_REGION_NONE);
+      $block['region'] = $block['status'] ? $block['region'] : '';
+      $collection = mongodb_collection('block');
+      $collection->update(array(
+        'module' => $block['module'],
+        'delta' => $block['delta'],
+  //       'theme' => $block['theme'],
+      ), array(
+        '$set' => array(
+          'status' => $block['status'],
+          'weight' => (int) $block['weight'],
+          'region' => $block['region'],
+        ),
+      ));
+    }
   }
   drupal_set_message(t('The block settings have been updated.'));
   cache_clear_all();
