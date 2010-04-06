@@ -41,7 +41,8 @@ function mongodb($alias = 'default') {
  */
 function mongodb_collection($collection_name) {
   $args = func_get_args();
-  $collection_name = implode('.', $args);
+  // Avoid something. collection names if NULLs are passed in.
+  $collection_name = implode('.', array_filter($args));
   $collections = variable_get('mongodb_collections', array());
   $alias = isset($collections[$collection_name]) ? $collections[$collection_name] : 'default';
   // Prefix the collection name for simpletest. It will be in the same DB as the
