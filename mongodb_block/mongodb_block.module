@@ -193,13 +193,15 @@ function mongodb_block_rehash($redirect = FALSE) {
     $old_blocks[$old_block['module']][$old_block['delta']] = $old_block;
   }
 
+  $theme = variable_get('theme_default', 'garland');
+  $regions = system_region_list($theme);
+
   foreach (module_implements('block_info') as $module) {
     if ($blocks_current = module_invoke($module, 'block_info')) {
       $implemented_blocks[$module] = $blocks_current;
     }
   }
   drupal_alter('mongodb_block_info', $blocks);
-  $version = mongodb_next_id('block');
   foreach ($implemented_blocks as $module => &$module_blocks) {
     foreach ($module_blocks as $delta => &$block) {
       if (empty($old_blocks[$module][$delta])) {
@@ -212,7 +214,6 @@ function mongodb_block_rehash($redirect = FALSE) {
         // Just store the block in the mongodb, if the status is enabled.
         if (!empty($block['status'])) {
           unset($block['status']);
-          $block['version'] = $version;
           if (!isset($block['pages'])) {
             $block['pages']  = array('%');
           }
@@ -222,9 +223,7 @@ function mongodb_block_rehash($redirect = FALSE) {
           else {
             $block['node_type']  = array('*');
           }
-          $block_copy = $block;
           $collection->save($block);
-          $block = $block_copy;
           $status = 1;
           // Add to the list of blocks we return.
           $blocks[] = $block;
@@ -260,8 +259,12 @@ function mongodb_block_rehash($redirect = FALSE) {
       }
     }
   }
-  variable_set('mongodb_block_version', $version);
-  $collection->remove(array('version' => array('$lt' => $version)));
+  // Remove blocks that are no longer defined by the code from the database.
+  foreach ($old_blocks as $module => $old_module_blocks) {
+    foreach ($old_module_blocks as $delta => $block) {
+      $collection->remove(array('module' => $module, 'delta' => $delta));
+    }
+  }
   if ($redirect) {
     drupal_set_message('Blocks rebuild done.');
     drupal_goto('admin/structure');
