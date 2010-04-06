@@ -209,6 +209,7 @@ function mongodb_block_rehash($redirect = FALSE) {
         if (!isset($block['weight'])) {
           $block['weight'] = 0;
         }
+        // Just store the block in the mongodb, if the status is enabled.
         if (!empty($block['status'])) {
           unset($block['status']);
           $block['version'] = $version;
