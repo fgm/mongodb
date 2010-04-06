@@ -188,39 +188,75 @@ function mongodb_block_get_renderable_array($region_blocks) {
 
 function mongodb_block_rehash($redirect = FALSE) {
   $collection = mongodb_collection('block');
+  // Store the old blocks to use it later.
+  foreach($collection->find() as $old_block) {
+    $old_blocks[$old_block['module']][$old_block['delta']] = $old_block;
+  }
+
   foreach (module_implements('block_info') as $module) {
     if ($blocks_current = module_invoke($module, 'block_info')) {
-      $blocks[$module] = $blocks_current;
+      $implemented_blocks[$module] = $blocks_current;
     }
   }
   drupal_alter('mongodb_block_info', $blocks);
   $version = mongodb_next_id('block');
-  foreach ($blocks as $module => &$module_blocks) {
+  foreach ($implemented_blocks as $module => &$module_blocks) {
     foreach ($module_blocks as $delta => &$block) {
-      $block['module'] = $module;
-      $block['delta']  = $delta;
-      if (!isset($block['weight'])) {
-        $block['weight'] = 0;
-      }
-      if (!empty($block['status'])) {
-        unset($block['status']);
-        $block['version'] = $version;
-        if (!isset($block['pages'])) {
-          $block['pages']  = array('%');
+      if (empty($old_blocks[$module][$delta])) {
+        // If it's a new block, add identifiers.
+        $block['module'] = $module;
+        $block['delta']  = $delta;
+        if (!isset($block['weight'])) {
+          $block['weight'] = 0;
         }
-        if (isset($block['node_type'])) {
-          $block['pages'] = array('node/%');
+        if (!empty($block['status'])) {
+          unset($block['status']);
+          $block['version'] = $version;
+          if (!isset($block['pages'])) {
+            $block['pages']  = array('%');
+          }
+          if (isset($block['node_type'])) {
+            $block['pages'] = array('node/%');
+          }
+          else {
+            $block['node_type']  = array('*');
+          }
+          $block_copy = $block;
+          $collection->save($block);
+          $block = $block_copy;
+          $status = 1;
+          // Add to the list of blocks we return.
+          $blocks[] = $block;
         }
         else {
-          $block['node_type']  = array('*');
+          $status = 0;
         }
-        $collection->save($block);
-        $status = 1;
+        $block['status'] = $status;
+        // Add to the list of blocks we return.
+        $blocks[] = $block;
       }
       else {
-        $status = 0;
+        // If it's an existing block, database settings should overwrite
+        // the code. But aside from 'info' everything that's definable in
+        // code is stored in the database and we do not store 'info', so we
+        // do not need to update the database here.
+        // Add 'info' to this block.
+        $old_blocks[$module][$delta]['info'] = $block['info'];
+        // If the region name does not exist, disable the block and assign it to none.
+        if (!empty($old_blocks[$module][$delta]['region']) && !isset($regions[$old_blocks[$module][$delta]['region']])) {
+          drupal_set_message(t('The block %info was assigned to the invalid region %region and has been disabled.', array('%info' => $old_blocks[$module][$delta]['info'], '%region' => $old_blocks[$module][$delta]['region'])), 'warning');
+          $old_blocks[$module][$delta]['status'] = 0;
+          $old_blocks[$module][$delta]['region'] = BLOCK_REGION_NONE;
+        }
+        else {
+          $old_blocks[$module][$delta]['status'] = isset($old_blocks[$module][$delta]['status']) ? $old_blocks[$module][$delta]['status'] : 0;
+          $old_blocks[$module][$delta]['region'] = $old_blocks[$module][$delta]['status'] ? $old_blocks[$module][$delta]['region'] : BLOCK_REGION_NONE;
+        }
+        // Add this block to the list of blocks we return.
+        $blocks[] = $old_blocks[$module][$delta];
+        // Remove this block from the list of blocks to be deleted.
+        unset($old_blocks[$module][$delta]);
       }
-      $block['status'] = $status;
     }
   }
   variable_set('mongodb_block_version', $version);
