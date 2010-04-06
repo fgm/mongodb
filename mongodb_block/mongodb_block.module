@@ -189,16 +189,21 @@ function mongodb_block_get_renderable_array($region_blocks) {
 function mongodb_block_rehash($redirect = FALSE) {
   $collection = mongodb_collection('block');
   foreach (module_implements('block_info') as $module) {
-    $blocks[$module] = module_invoke($module, 'block_info');
+    if ($blocks_current = module_invoke($module, 'block_info')) {
+      $blocks[$module] = $blocks_current;
+    }
   }
   drupal_alter('mongodb_block_info', $blocks);
   $version = mongodb_next_id('block');
-  foreach ($blocks as $module => $module_blocks) {
-    foreach ($module_blocks as $delta => $block) {
+  foreach ($blocks as $module => &$module_blocks) {
+    foreach ($module_blocks as $delta => &$block) {
+      $block['module'] = $module;
+      $block['delta']  = $delta;
+      if (!isset($block['weight'])) {
+        $block['weight'] = 0;
+      }
       if (!empty($block['status'])) {
         unset($block['status']);
-        $block['module'] = $module;
-        $block['delta']  = $delta;
         $block['version'] = $version;
         if (!isset($block['pages'])) {
           $block['pages']  = array('%');
@@ -209,11 +214,13 @@ function mongodb_block_rehash($redirect = FALSE) {
         else {
           $block['node_type']  = array('*');
         }
-        if (!isset($block['weight'])) {
-          $block['weight'] = 0;
-        }
         $collection->save($block);
+        $status = 1;
       }
+      else {
+        $status = 0;
+      }
+      $block['status'] = $status;
     }
   }
   variable_set('mongodb_block_version', $version);
@@ -222,6 +229,7 @@ function mongodb_block_rehash($redirect = FALSE) {
     drupal_set_message('Blocks rebuild done.');
     drupal_goto('admin/structure');
   }
+  return $blocks;
 }
 
 /**
