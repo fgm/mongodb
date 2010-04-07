@@ -90,34 +90,38 @@ function _drupal_session_read($sid) {
   // for an anonymous session wth the non-HTTPS-only cookie.
   $collection = mongodb_collection(variable_get('mongodb_session', 'session'));
   if ($is_https) {
-    $user = (object)$collection->findOne(array('ssid' => $sid));
-    if (!$user) {
+    $session = $collection->findOne(array('ssid' => $sid));
+    if (!$session) {
       if (isset($_COOKIE[$insecure_session_name])) {
-        $user = (object)$collection->findOne(array('sid' => $_COOKIE[$insecure_session_name], 'uid' => 0));
+        $session = $collection->findOne(array('sid' => $_COOKIE[$insecure_session_name], 'uid' => 0));
       }
     }
   }
   else {
-    $r = $collection->find(array('sid' => $sid));
-    foreach ($r as $user);
-    $user = (object)$user;
+    $session = $collection->findOne(array('sid' => $sid));
   }
 
   // We found the client's session record and they are an authenticated user.
-  if ($user && !empty($user->uid)) {
-    // This is done to unserialize the data member of $user.
-    $user = drupal_unpack($user);
+  if ($session && !empty($session['uid'])) {
+    $user = (object) mongodb_collection('fields_current', 'user')->findOne(array('_id' => $session['uid']));
+    // Copy from SQL.
+    if (!isset($user->uid)) {
+      include_once dirname(__FILE__) . '/mongodb_session.module';
+      $user = db_query("SELECT * FROM {users} u WHERE uid = :uid", array(':uid' => $session['uid']))->fetchObject();
+      $user->roles = mongodb_session_user_insert(array(), $user);
+    }
+    // If mongodb_fields_storage wrote this user object, we need to update it.
+    elseif (!isset($user->roles)) {
+      include_once dirname(__FILE__) . '/mongodb_session.module';
+      $user->roles = mongodb_session_user_update(array(), $user);
+    }
+    $user->session = $session['session'];
 
-    // Add roles element to $user.
-    $user->roles = array();
-    $user->roles[DRUPAL_AUTHENTICATED_RID] = 'authenticated user';
-    $user->roles += db_query("SELECT r.rid, r.name FROM {role} r INNER JOIN {users_roles} ur ON ur.rid = r.rid WHERE ur.uid = :uid", array(':uid' => $user->uid))->fetchAllKeyed(0, 1);
   }
   // We didn't find the client's record (session has expired), or they
   // are an anonymous user.
   else {
-    $session = isset($user->session) ? $user->session : '';
-    $user = drupal_anonymous_user($session);
+    $user = drupal_anonymous_user(!empty($session['session']) ? $session['session'] : '');
   }
 
   return $user->session;
@@ -148,7 +152,7 @@ function _drupal_session_write($sid, $value) {
   }
 
   $fields = array(
-    'uid' => $user->uid,
+    'uid' => (int)$user->uid,
     'cache' => isset($user->cache) ? (int)$user->cache : 0,
     'hostname' => ip_address(),
     'session' => $value,
@@ -173,12 +177,20 @@ function _drupal_session_write($sid, $value) {
   // Last access time is updated no more frequently than once every 180 seconds.
   // This reduces contention in the users table.
   if ($user->uid && REQUEST_TIME - $user->access > variable_get('session_write_interval', 180)) {
+    $fields = array(
+      'access' => REQUEST_TIME
+    );
+    // Update SQL because user_load() falls back to that.
     db_update('users')
-      ->fields(array(
-        'access' => REQUEST_TIME
-      ))
+      ->fields($fields)
       ->condition('uid', $user->uid)
       ->execute();
+    // Update MongoDB because we prefer that.
+    mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $user->uid), array('$set' => $fields));
+    // Throw a bone to entitycache, too.
+    if (variable_get('entitycache_enabled', TRUE)) {
+      cache_clear_all('cache_entity_user', $user->uid);
+    }
   }
 
   return TRUE;

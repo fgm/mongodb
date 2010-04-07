@@ -18,3 +18,28 @@ function mongodb_session_simpletest_alter(&$groups) {
   unset($groups['Session']);
 }
 
+function mongodb_session_user_update($edit, $account) {
+  $roles = array();
+  $roles[DRUPAL_AUTHENTICATED_RID] = 'authenticated user';
+  $result = db_query("SELECT r.rid, r.name FROM {role} r INNER JOIN {users_roles} ur ON ur.rid = r.rid WHERE ur.uid = :uid", array(':uid' => $account->uid));
+  foreach ($result as $role) {
+    $roles[(int) $role->rid] = $role->name;
+  }
+  $save = array('_id' => (int) $account->uid, 'roles' => $roles);
+  if (!function_exists('module_exists') || !module_exists('mongodb_field_storage')) {
+    $save += (array) $account + array(
+      '@bundle' => 'user',
+      '@fields' => array(),
+    );
+    foreach (array('uid', 'created', 'access', 'login', 'status', 'picture') as $key) {
+      $save[$key] = (int) $save[$key];
+    }
+  }
+  file_put_contents('/tmp/log', var_export($save, TRUE), FILE_APPEND);
+  mongodb_collection('fields_current', 'user')->save($save);
+  return $roles;
+}
+
+function mongodb_session_user_insert($edit, $account) {
+  return mongodb_session_user_update($edit, $account);
+}

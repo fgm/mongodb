@@ -77,10 +77,14 @@ function mongodb_collection_name($name) {
 }
 
 function mongodb_test_group_finished() {
-  $db = mongodb_collection('cache')->db;
-  foreach ($db->listCollections() as $collection) {
-    if (preg_match('/\.simpletest\d+/', $collection)) {
-      $db->dropCollection($collection);
+  $aliases = variable_get('mongodb_connections', array());
+  $aliases['default'] = TRUE;
+  foreach (array_keys($aliases) as $alias) {
+    $db = mongodb($alias);
+    foreach ($db->listCollections() as $collection) {
+      if (preg_match('/\.simpletest\d+/', $collection)) {
+        $db->dropCollection($collection);
+      }
     }
   }
 }
