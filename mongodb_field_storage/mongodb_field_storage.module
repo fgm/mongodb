@@ -62,7 +62,7 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
 
     // Add this fields' id to the list.
     foreach ($ids as $id) {
-      $keys[] = $id;
+      $keys[] = (int) $id;
     }
   }
 
@@ -107,12 +107,12 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
   }
 
   $save = array(
-    '_id' => $entity_id,
+    '_id' => (int) $entity_id,
     '@bundle' => $bundle,
     '@fields' => array(),
   );
   if (isset($revision_id)) {
-    $save['@revision_id'] = intval($revision_id);
+    $save['@revision_id'] = (int) $revision_id;
   }
 
   // Add the base table's fields to the new entity.
@@ -158,8 +158,8 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
   // Save the entity.
   mongodb_collection('fields_current', $entity_type)->save($save);
   if (isset($revision_id)) {
-    $save['@entity_id'] = $entity_id;
-    $save['_id'] = $revision_id;
+    $save['@entity_id'] = (int) $entity_id;
+    $save['_id'] = (int) $revision_id;
     unset($save['@revision_id']);
     $collection = mongodb_collection('fields_revision', $entity_type);
     $collection->save($save);
@@ -170,9 +170,9 @@ function _mongodb_field_storage_value($type, $value) {
   switch ($type) {
     case 'int':
     case 'serial':
-      return intval($value);
+      return (int) $value;
     case 'float':
-      return floatval($value);
+      return (float) $value;
     default:
       return $value;
   }
@@ -188,10 +188,10 @@ function mongodb_field_storage_field_storage_delete($entity_type, $entity, $fiel
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
 
   mongodb_collection('fields_current', $entity_type)->remove(array(
-    '_id' => $entity_id,
+    '_id' => (int) $entity_id,
   ));
   mongodb_collection('fields_revision', $entity_type)->remove(array(
-    '@entity_id' => $entity_id,
+    '@entity_id' => (int) $entity_id,
   ));
 }
 
@@ -203,7 +203,7 @@ function mongodb_field_storage_field_storage_delete($entity_type, $entity, $fiel
 function mongodb_field_storage_field_storage_delete_revision($entity_type, $entity, $fields) {
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
   mongodb_collection('fields_revision', $entity_type)->remove(array(
-    '_id' => $revision_id,
+    '_id' => (int) $revision_id,
   ));
 }
 
@@ -365,8 +365,8 @@ function mongodb_field_storage_entity_update($entity, $entity_type) {
  */
 function mongodb_field_storage_field_attach_delete($entity_type, $entity) {
   list($entity_id, $revision_id) = entity_extract_ids($entity_type, $entity);
-  mongodb_collection('fields_current', $entity_type)->remove(array('_id' => $entity_id));
+  mongodb_collection('fields_current', $entity_type)->remove(array('_id' => (int) $entity_id));
   if ($revision_id) {
-    mongodb_collection('fields_revision', $entity_type)->remove(array('_id' => $revision_id));
+    mongodb_collection('fields_revision', $entity_type)->remove(array('_id' => (int) $revision_id));
   }
 }
