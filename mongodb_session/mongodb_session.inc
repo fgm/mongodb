@@ -103,7 +103,8 @@ function _drupal_session_read($sid) {
 
   // We found the client's session record and they are an authenticated user.
   if ($session && !empty($session['uid'])) {
-    $user = (object) mongodb_collection('fields_current', 'user')->findOne(array('_id' => $session['uid']));
+    $collection = mongodb_collection('fields_current', 'user');
+    $user = (object) $collection->findOne(array('_id' => $session['uid']));
     // Copy from SQL.
     if (!isset($user->uid)) {
       include_once dirname(__FILE__) . '/mongodb_session.module';
@@ -113,10 +114,11 @@ function _drupal_session_read($sid) {
     // If mongodb_fields_storage wrote this user object, we need to update it.
     elseif (!isset($user->roles)) {
       include_once dirname(__FILE__) . '/mongodb_session.module';
-      $user->roles = mongodb_session_user_update(array(), $user);
+      $user->roles = _mongodb_session_get_roles($user);
+      $collection->update(array('_id' => (int) $user->uid), array('$set' => array('roles' => $user->roles)));
     }
     $user->session = $session['session'];
-
+if ($_GET['q'] == "session-test/id") file_put_contents('/tmp/log', var_export($user, TRUE), FILE_APPEND);
   }
   // We didn't find the client's record (session has expired), or they
   // are an anonymous user.
