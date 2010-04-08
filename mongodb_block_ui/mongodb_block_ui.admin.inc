@@ -131,12 +131,19 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
 function mongodb_block_ui_admin_display_form_submit($form, &$form_state) {
   $collection = mongodb_collection('block');
   foreach ($form_state['values'] as $key => $block) {
-    if (is_array($block) && $block['region'] != BLOCK_REGION_NONE) {
-      $set = array(
-        'weight' => (int) $block['weight'],
-        'region' => $block['region'],
-      );
-      mongodb_block_save_block($collection, $set + $form['#blocks'][$key]);
+    // Skip the buttons by checking for array and save only blocks that are not
+    // disabled.
+    if (is_array($block)) {
+      if ($block['region'] != BLOCK_REGION_NONE) {
+        $set = array(
+          'weight' => (int) $block['weight'],
+          'region' => $block['region'],
+        );
+        mongodb_block_save_block($collection, $set + $form['#blocks'][$key]);
+      }
+      elseif ($form['#blocks'][$key]['region'] != BLOCK_REGION_NONE) {
+        $collection->remove(array('_id' => $form['#blocks'][$key]['_id']));
+      }
     }
   }
   drupal_set_message(t('The block settings have been updated.'));
@@ -382,61 +389,58 @@ function mongodb_block_ui_admin_configure_validate($form, &$form_state) {
 }
 
 function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
-  debug(form_get_errors());
-  if (!form_get_errors()) {
-    // FIXME: this stores the visiblity settings, the title of the block etc.
+  // FIXME: this stores the visiblity settings, the title of the block etc.
 
-    $collection = mongodb_collection('block');
-    $query = array(
-      '_id' => array(
-        'module' => $form_state['values']['module'],
-        'delta' => $form_state['values']['delta'],
-      ),
-    );
-    $pages = array_map('trim', explode("\n", $form_state['values']['pages']));
-    if (!$pages) {
-      $pages = array('%');
-    }
-    $set = array(
-      'pages' => $pages,
-      'title' => $form_state['values']['title'],
-    );
-    $collection->update($query, array('$set' => $set));
-    var_dump($collection->findOne($query));
-    /*
-    db_delete('block_role')
-      ->condition('module', $form_state['values']['module'])
-      ->condition('delta', $form_state['values']['delta'])
-      ->execute();
-    $query = db_insert('block_role')->fields(array('rid', 'module', 'delta'));
-    foreach (array_filter($form_state['values']['roles']) as $rid) {
-      $query->values(array(
-        'rid' => $rid,
-        'module' => $form_state['values']['module'],
-        'delta' => $form_state['values']['delta'],
-      ));
-    }
-    $query->execute();
-    */
-    // TODO: convert this.
-/*
-    // Store regions per theme for this block
-    foreach ($form_state['values']['regions'] as $theme => $region) {
-      db_merge('block')
-        ->key(array('theme' => $theme, 'delta' => $form_state['values']['delta'], 'module' => $form_state['values']['module']))
-        ->fields(array(
-          'region' => ($region == BLOCK_REGION_NONE ? '' : $region),
-          'pages' => trim($form_state['values']['pages']),
-          'status' => (int) ($region != BLOCK_REGION_NONE),
-        ))
-        ->execute();
-    }
-    */
-    module_invoke($form_state['values']['module'], 'block_save', $form_state['values']['delta'], $form_state['values']);
-    drupal_set_message(t('The block configuration has been saved.'));
-    cache_clear_all();
-    $form_state['redirect'] = 'admin/structure/mongodb_block/manage/'. $form_state['values']['module'] .'/'. $form_state['values']['delta'];
+  $collection = mongodb_collection('block');
+  $query = array(
+    '_id' => array(
+      'module' => $form_state['values']['module'],
+      'delta' => $form_state['values']['delta'],
+    ),
+  );
+  $pages = array_map('trim', explode("\n", $form_state['values']['pages']));
+  if (!$pages) {
+    $pages = array('%');
   }
+  $set = array(
+    'pages' => $pages,
+    'title' => $form_state['values']['title'],
+  );
+  $collection->update($query, array('$set' => $set));
+  var_dump($collection->findOne($query));
+  /*
+  db_delete('block_role')
+    ->condition('module', $form_state['values']['module'])
+    ->condition('delta', $form_state['values']['delta'])
+    ->execute();
+  $query = db_insert('block_role')->fields(array('rid', 'module', 'delta'));
+  foreach (array_filter($form_state['values']['roles']) as $rid) {
+    $query->values(array(
+      'rid' => $rid,
+      'module' => $form_state['values']['module'],
+      'delta' => $form_state['values']['delta'],
+    ));
+  }
+  $query->execute();
+  */
+  // TODO: convert this.
+/*
+  // Store regions per theme for this block
+  foreach ($form_state['values']['regions'] as $theme => $region) {
+    db_merge('block')
+      ->key(array('theme' => $theme, 'delta' => $form_state['values']['delta'], 'module' => $form_state['values']['module']))
+      ->fields(array(
+        'region' => ($region == BLOCK_REGION_NONE ? '' : $region),
+        'pages' => trim($form_state['values']['pages']),
+        'status' => (int) ($region != BLOCK_REGION_NONE),
+      ))
+      ->execute();
+  }
+  */
+  module_invoke($form_state['values']['module'], 'block_save', $form_state['values']['delta'], $form_state['values']);
+  drupal_set_message(t('The block configuration has been saved.'));
+  cache_clear_all();
+  $form_state['redirect'] = 'admin/structure/mongodb_block/manage/'. $form_state['values']['module'] .'/'. $form_state['values']['delta'];
 }
 
 /**
