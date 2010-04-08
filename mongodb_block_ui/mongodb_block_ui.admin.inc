@@ -195,7 +195,8 @@ function _mongodb_block_ui_compare($a, $b) {
  * Menu callback; displays the mongodb_block_ui configuration form.
  */
 function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) {
-  $block = mongodb_block_ui_load($module, $delta);
+  $block = mongodb_block_load($module, $delta);
+  $block = (object) $block;
   $form['module'] = array(
     '#type' => 'value',
     '#value' => $block->module,
@@ -226,7 +227,9 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
       $form['settings'][$k] = $v;
     }
   }
-
+  $title = t('Pages');
+  $description = t("Specify pages by using their paths. Enter one path per line. The '%' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/%', '%front' => '<front>'));
+/*
   // Region settings.
   $form['regions'] = array(
     '#type' => 'fieldset',
@@ -235,30 +238,29 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
     '#description' => t('Specify in which themes and regions this block is displayed.'),
     '#tree' => TRUE,
   );
-//
-//   $theme_default = variable_get('theme_default', 'garland');
-//   foreach (list_themes() as $key => $theme) {
-//     // Only display enabled themes
-//     if ($theme->status) {
-//       $region = db_query("SELECT region FROM {mongodb_block_ui} WHERE module = :module AND delta = :delta AND theme = :theme", array(
-//         ':module' => $mongodb_block_ui->module,
-//         ':delta' => $mongodb_block_ui->delta,
-//         ':theme' => $key,
-//       ))->fetchField();
-//
-//       $form['regions'][$key] = array(
-//         '#type' => 'select',
-//         '#title' => $theme->info['name'],
-//         '#default_value' => (!empty($region) ? $region : BLOCK_REGION_NONE),
-//         '#options' => array(BLOCK_REGION_NONE => t('<none>')) + system_region_list($key, REGIONS_VISIBLE),
-//         '#expandable' => ($key !== $theme_default),
-//         '#weight' => ($key == $theme_default ? 9 : 10),
-//       );
-//     }
-//   }
+
+   $theme_default = variable_get('theme_default', 'garland');
+   foreach (list_themes() as $key => $theme) {
+     // Only display enabled themes
+     if ($theme->status) {
+       $region = db_query("SELECT region FROM {mongodb_block_ui} WHERE module = :module AND delta = :delta AND theme = :theme", array(
+         ':module' => $mongodb_block_ui->module,
+         ':delta' => $mongodb_block_ui->delta,
+         ':theme' => $key,
+       ))->fetchField();
+
+       $form['regions'][$key] = array(
+         '#type' => 'select',
+         '#title' => $theme->info['name'],
+         '#default_value' => (!empty($region) ? $region : BLOCK_REGION_NONE),
+         '#options' => array(BLOCK_REGION_NONE => t('<none>')) + system_region_list($key, REGIONS_VISIBLE),
+         '#expandable' => ($key !== $theme_default),
+         '#weight' => ($key == $theme_default ? 9 : 10),
+       );
+     }
+   }
 
   // Visibility settings.
-/*
   $form['visibility_title'] = array(
     '#type' => 'item',
     '#title' => t('Visibility settings'),
@@ -296,15 +298,11 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
       t('All pages except those listed'),
       t('Only the listed pages'),
     );
-    $description = t("Specify pages by using their paths. Enter one path per line. The '%' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/%', '%front' => '<front>'));
 
     if (module_exists('php') && $access) {
       $options[] = t('Pages on which this PHP code returns <code>TRUE</code> (experts only)');
       $title = t('Pages or PHP code');
       $description .= ' ' . t('If the PHP option is chosen, enter PHP code between %php. Note that executing incorrect PHP code can break your Drupal site.', array('%php' => '<?php ?>'));
-    }
-    else {
-      $title = t('Pages');
     }
     $form['visibility']['path']['visibility'] = array(
       '#type' => 'radios',
@@ -312,7 +310,7 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
       '#options' => $options,
       '#default_value' => isset($block->visibility) ? $block->visibility : 0,
     );
-        */
+*/
     $form['visibility']['path']['pages'] = array(
       '#type' => 'textarea',
       '#title' => '<span class="element-invisible">' . $title . '</span>',
@@ -377,11 +375,12 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
 
 function mongodb_block_ui_admin_configure_validate($form, &$form_state) {
   if ($form_state['values']['module'] == 'mongodb_block_ui') {
-    $collection = mongodb_collection('block_custom');
-    $custom_block_exists = (bool) $collection->findOne(array(
-      'bid' => array('ne' => $form_state['values']['delta']),
-      'info' => $form_state['values']['info']));
-
+    $collection = mongodb_collection('block');
+    $find = array(
+      '_id.delta' => array('$ne' => $form_state['values']['delta']),
+      'info' => $form_state['values']['info'],
+    );
+    $custom_block_exists = (bool) $collection->findOne($find);
     if (empty($form_state['values']['info']) || $custom_block_exists) {
       form_set_error('info', t('Ensure that each block description is unique.'));
     }
@@ -398,16 +397,11 @@ function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
       'delta' => $form_state['values']['delta'],
     ),
   );
-  $pages = array_map('trim', explode("\n", $form_state['values']['pages']));
-  if (!$pages) {
-    $pages = array('%');
-  }
   $set = array(
-    'pages' => $pages,
+    'pages' => _mongodb_block_ui_admin_pages($form_state['values']['pages']),
     'title' => $form_state['values']['title'],
   );
   $collection->update($query, array('$set' => $set));
-  var_dump($collection->findOne($query));
   /*
   db_delete('block_role')
     ->condition('module', $form_state['values']['module'])
@@ -451,7 +445,7 @@ function mongodb_block_ui_add_block_form($form, &$form_state) {
 }
 
 function mongodb_block_ui_add_block_form_validate($form, &$form_state) {
-  $collection = mongodb_collection('block_custom');
+  $collection = mongodb_collection('block');
   $custom_block_exists = (bool) $collection->findOne(array('info' => $form_state['values']['info']));
 
   if (empty($form_state['values']['info']) || $custom_block_exists) {
@@ -459,40 +453,40 @@ function mongodb_block_ui_add_block_form_validate($form, &$form_state) {
   }
 }
 
+function _mongodb_block_ui_admin_pages($pages) {
+  $pages = array_map('trim', explode("\n", trim($pages)));
+  if (!$pages[0]) {
+    $pages = array('%');
+  }
+  return $pages;
+}
+
 /**
  * Save the new custom block.
  */
 function mongodb_block_ui_add_block_form_submit($form, &$form_state) {
-  $collection = mongodb_collection('block_custom');
-  $delta = mongodb_next_id('block_custom');
-  $collection->insert(array(
+  $collection = mongodb_collection('block');
+  $delta = (string) mongodb_next_id('block');
+  // Store block delta to allow other modules to work with new mongodb_block_ui.
+  $form_state['values']['delta'] = $delta;
+  $block = array(
+    '_id' => array('module' => 'mongodb_block_ui', 'delta' => $delta),
     'body' => $form_state['values']['body'],
     'info' => $form_state['values']['info'],
     'format' => (int) $form_state['values']['format'],
-    'bid' => (int) $delta,
-  ));
-  // Store block delta to allow other modules to work with new mongodb_block_ui.
-  $form_state['values']['delta'] = $delta;
-
-  $block_collection = mongodb_collection('block');
+    'pages' => _mongodb_block_ui_admin_pages($form_state['values']['pages']),
+    'title' => $form_state['values']['title'],
+    'status' => 0,
+    'weight' => 0,
+    'cache' => DRUPAL_NO_CACHE,
+    'region' => BLOCK_REGION_NONE,
+  );
+  $collection->save($block);
+/*
   foreach (list_themes() as $key => $theme) {
     if ($theme->status) {
-      $block = array(
-        'visibility' => (int) $form_state['values']['visibility'],
-        'pages' => trim($form_state['values']['pages']),
-        'custom' => (int) $form_state['values']['custom'],
-        'title' => $form_state['values']['title'],
-        'module' => $form_state['values']['module'],
-        'theme' => $theme->name,
-        'status' => 0,
-        'weight' => 0,
-        'delta' => $delta,
-        'cache' => DRUPAL_NO_CACHE,
-      );
-      $block_collection->save($block);
     }
   }
-/*
   $query = db_insert('mongodb_block_ui_role')->fields(array('rid', 'module', 'delta'));
   foreach (array_filter($form_state['values']['roles']) as $rid) {
     $query->values(array(
@@ -537,15 +531,8 @@ function mongodb_block_ui_custom_block_delete($form, &$form_state, $module, $del
  * Deletion of custom mongodb_block_uis.
  */
 function mongodb_block_ui_custom_mongodb_block_ui_delete_submit($form, &$form_state) {
-$collection = mongodb_collection('block_custom');
-  $collection->delete(array('bid' => $form_state['values']['bid']));
-
   $collection = mongodb_collection('block');
-  $collection->delete(array('module' => 'block', 'delta' => $form_state['values']['bid']));
-//   db_delete('mongodb_block_ui_role')
-//     ->condition('module', 'mongodb_block_ui')
-//     ->condition('delta', $form_state['values']['bid'])
-//     ->execute();
+  $collection->delete(array('_id' => array('module' => 'mongodb_block_ui', 'delta' => (string) $form_state['values']['bid'])));
   drupal_set_message(t('The block %name has been removed.', array('%name' => $form_state['values']['info'])));
   cache_clear_all();
   $form_state['redirect'] = 'admin/structure/mongodb_block';

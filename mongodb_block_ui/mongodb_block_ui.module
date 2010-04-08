@@ -92,7 +92,7 @@ function mongodb_block_ui_menu() {
     'context' => MENU_CONTEXT_INLINE,
   );
   $items['admin/structure/mongodb_block/manage/%/%/delete'] = array(
-    'title' => 'Delete mongodb_block_ui',
+    'title' => 'Delete block',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mongodb_block_ui_custom_block_delete', 4, 5),
     'access arguments' => array('administer blocks'),
@@ -101,7 +101,7 @@ function mongodb_block_ui_menu() {
     'file' => 'mongodb_block_ui.admin.inc',
   );
   $items['admin/structure/mongodb_block/add'] = array(
-    'title' => 'Add mongodb_block_ui',
+    'title' => 'Add block',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mongodb_block_ui_add_block_form'),
     'access arguments' => array('administer blocks'),
@@ -120,7 +120,7 @@ function mongodb_block_ui_menu() {
     );
     if ($key != $default_theme) {
       $items['admin/structure/mongodb_block/list/' . $key . '/add'] = array(
-        'title' => 'Add mongodb_block_ui',
+        'title' => 'Add block',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('mongodb_block_ui_add_block_form'),
         'access arguments' => array('administer mongodb_blocks'),
@@ -191,17 +191,10 @@ function mongodb_block_ui_block_info() {
 function mongodb_block_ui_block_configure($delta = 0) {
   $custom_block = array('format' => filter_default_format());
   if ($delta) {
-    $custom_block = mongodb_block_ui_custom_block_get($delta);
+    $custom_block = mongodb_block_load('mongodb_block_ui', $delta);
   }
   $form = mongodb_block_ui_custom_block_form($custom_block);
   return $form;
-}
-
-/**
- * Implements hook_block_save().
- */
-function mongodb_block_ui_block_save($delta = 0, $edit = array()) {
-  mongodb_block_ui_custom_block_save($edit, $delta);
 }
 
 /**
@@ -210,29 +203,10 @@ function mongodb_block_ui_block_save($delta = 0, $edit = array()) {
  * Generates the administrator-defined block for display.
  */
 function mongodb_block_ui_block_view($delta = 0, $edit = array()) {
-  $collection = mongodb_collection('block_custom');
-  $block = $collection->findOne(array('bid' => (int) $delta), array('body', 'format'));
-  $data['content'] = check_markup($block->body, $block->format, '', TRUE);
+  $block = mongodb_block_load('mongodb_block_ui', $delta);
+  $data['subject'] = check_plain($block['title']);
+  $data['content'] = check_markup($block['body'], $block['format'], '', TRUE);
   return $data;
-}
-
-/**
- * Returns information from database about a user-created (custom) block.
- *
- * @param $bid
- *   ID of the mongodb_block_ui to get information for.
- * @return
- *   Associative array of information stored in the database for this block.
- *   Array keys:
- *   - bid: Block ID.
- *   - info: Block description.
- *   - body: Block contents.
- *   - format: Filter ID of the filter format for the body.
- */
-function mongodb_block_ui_custom_block_get($bid) {
-  $collection = mongodb_collection('block_custom');
-  $block = $collection->findOne(array('bid' => (int) $bid));
-  return $block ? $block : array();
 }
 
 /**
@@ -266,31 +240,6 @@ function mongodb_block_ui_custom_block_form($edit = array()) {
   );
 
   return $form;
-}
-
-/**
- * Saves a user-created block in the database.
- *
- * @param $edit
- *   Associative array of fields to save. Array keys:
- *   - info: Block description.
- *   - body: Block contents.
- *   - format: Filter ID of the filter format for the body.
- * @param $delta
- *   Block ID of the block to save.
- * @return
- *   Always returns TRUE.
- */
-function mongodb_block_ui_custom_block_save($edit, $delta) {
-  $collection = mongodb_collection('block_custom');
-  $block = array(
-    'body' => $edit['body'],
-    'info' => $edit['info'],
-    'format' => $edit['format'],
-    'bid' => (int) $delta,
-  );
-  $collection->update(array('bid' => $delta), $block);
-  return TRUE;
 }
 
 /**
@@ -400,35 +349,6 @@ function mongodb_block_ui_custom_block_save($edit, $delta) {
 //
 //   return $mongodb_block_uis[$region];
 // }
-
-/**
- * Load a block object from the database.
- *
- * @param $module
- *   Name of the module that implements the block to load.
- * @param $delta
- *   Unique ID of the block within the context of $module. Pass NULL to return
- *   an empty $block object for $module.
- *
- * @return
- *   A block object.
- */
-function mongodb_block_ui_load($module, $delta) {
-  if (isset($delta)) {
-    $collection = mongodb_collection('block');
-    $block = (object) $collection->findOne(array('module' => $module, 'delta' => (int) $delta));
-  }
-
-  // If the block does not exist in the database yet return a stub block
-  // object.
-  if (empty($block)) {
-    $block = new stdClass;
-    $block->module = $module;
-    $block->delta = $delta;
-  }
-
-  return $block;
-}
 
 /**
  * Implements hook_block_info_alter().
@@ -583,7 +503,9 @@ function mongodb_block_ui_mongodb_block_info_alter(&$blocks) {
     $index = $block['_id']['module'] . '_' . $block['_id']['delta'];
     // Add only those blocks which are defined still or are custom.
     if (isset($blocks[$index]) || $block['_id']['module'] == 'mongodb_block_ui') {
-      $block['info'] = $blocks[$index]['info'];
+      if (!isset($block['info'])) {
+        $block['info'] = $blocks[$index]['info'];
+      }
       $block['status'] = 1;
       $blocks[$index] = $block;
     }

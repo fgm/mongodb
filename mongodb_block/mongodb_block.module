@@ -204,10 +204,8 @@ function mongodb_block_rehash($redirect = FALSE) {
   foreach (module_implements('block_info') as $module) {
     if ($blocks_current = module_invoke($module, 'block_info')) {
       foreach ($blocks_current as $delta => $block) {
-        $id = array('module' => $module, 'delta' => $delta);
-        $ids[] = $id;
         $block = array(
-          '_id' => $id,
+          '_id' => array('module' => $module, 'delta' => $delta),
           'module' => $module,
           'delta' => $delta,
         ) + $block + array(
@@ -235,6 +233,7 @@ function mongodb_block_rehash($redirect = FALSE) {
       $blocks[$key]['region'] = BLOCK_REGION_NONE;
       $block = $blocks[$key];
     }
+    $ids[] = $block['_id'];
     if ($block['status']) {
       mongodb_block_save_block($collection, $block);
     }
@@ -248,8 +247,17 @@ function mongodb_block_rehash($redirect = FALSE) {
 }
 
 function mongodb_block_save_block($collection, $block) {
-  unset($block['info'], $block['module'], $block['delta'], $block['status']);
+  unset($block['module'], $block['delta'], $block['status']);
   $collection->save($block);
+}
+
+function mongodb_block_load($module, $delta) {
+  $find = array('module' => $module, 'delta' => $delta);
+  if ($block = mongodb_collection('block')->findOne(array('_id' => $find))) {
+    $block += $block['_id'];
+    return $block;
+  }
+  return $find;
 }
 
 /**
