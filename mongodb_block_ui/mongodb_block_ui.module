@@ -6,13 +6,6 @@
  * Controls the visual building mongodb_block_uis a page is constructed with.
  */
 
-if (!defined('BLOCK_REGION_NONE')) {
-  /**
-  * Denotes that a block is not enabled in any region and should not be shown.
-  */
-  define('BLOCK_REGION_NONE', -1);
-}
-
 /**
  * Implements hook_help().
  */
@@ -222,46 +215,6 @@ function mongodb_block_ui_block_view($delta = 0, $edit = array()) {
   $data['content'] = check_markup($block->body, $block->format, '', TRUE);
   return $data;
 }
-
-/**
- * Implements hook_page_build().
- *
- * Render blocks into their regions.
- */
-// function mongodb_block_ui_page_build(&$page) {
-//   global $theme;
-//
-//   // The theme system might not yet be initialized. We need $theme.
-//   drupal_theme_initialize();
-//
-//   // Populate all mongodb_block_ui regions
-//   $all_regions = system_region_list($theme);
-//
-//   $item = menu_get_item();
-//   if ($item['path'] != 'admin/structure/mongodb_block/demo/' . $theme) {
-//     // Load all region content assigned via blocks.
-//     foreach (array_keys($all_regions) as $region) {
-//       // Assign mongodb_block_uis to region.
-//       if ($mongodb_block_uis = mongodb_block_ui_get_mongodb_block_uis_by_region($region)) {
-//         $page[$region] = $mongodb_block_uis;
-//       }
-//     }
-//   }
-//   else {
-//     // Append region description if we are rendering the regions demo page.
-//     $item = menu_get_item();
-//     if ($item['path'] == 'admin/structure/mongodb_block/demo/' . $theme) {
-//       $visible_regions = array_keys(system_region_list($theme, REGIONS_VISIBLE));
-//       foreach ($visible_regions as $region) {
-//         $description = '<div class="mongodb_block_ui-region">' . $all_regions[$region] . '</div>';
-//         $page[$region]['mongodb_block_ui_description'] = array(
-//           '#markup' => $description,
-//           '#weight' => 15,
-//         );
-//       }
-//     }
-//   }
-// }
 
 /**
  * Returns information from database about a user-created (custom) block.
@@ -476,34 +429,6 @@ function mongodb_block_ui_load($module, $delta) {
 
   return $block;
 }
-/**
- * Load blocks information from the database.
- */
-// function _mongodb_block_ui_load_blocks() {
-//   global $theme_key;
-//
-//   $query = db_select('mongodb_block_ui', 'b');
-//   $result = $query
-//     ->fields('b')
-//     ->condition('b.theme', $theme_key)
-//     ->condition('b.status', 1)
-//     ->orderBy('b.region')
-//     ->orderBy('b.weight')
-//     ->orderBy('b.module')
-//     ->addTag('mongodb_block_ui_load')
-//     ->addTag('translatable')
-//     ->execute();
-//
-//   $mongodb_block_ui_info = $result->fetchAllAssoc('bid');
-//   // Allow modules to modify the mongodb_block_ui list.
-//   drupal_alter('mongodb_block_ui_info', $mongodb_block_ui_info);
-//
-//   $mongodb_block_uis = array();
-//   foreach ($mongodb_block_ui_info as $mongodb_block_ui) {
-//     $mongodb_block_uis[$mongodb_block_ui->region]["{$mongodb_block_ui->module}_{$mongodb_block_ui->delta}"] = $mongodb_block_ui;
-//   }
-//   return $mongodb_block_uis;
-// }
 
 /**
  * Implements hook_block_info_alter().
@@ -649,3 +574,18 @@ function mongodb_block_ui_form_system_performance_settings_alter(&$form, &$form_
 //     ->condition('module', $modules, 'IN')
 //     ->execute();
 // }
+
+function mongodb_block_ui_mongodb_block_info_alter(&$blocks) {
+  $collection = mongodb_collection('block');
+  foreach ($collection->find() as $block) {
+    // Copy module and delta out of the _id.
+    $block += $block['_id'];
+    $index = $block['_id']['module'] . '_' . $block['_id']['delta'];
+    // Add only those blocks which are defined still or are custom.
+    if (isset($blocks[$index]) || $block['_id']['module'] == 'mongodb_block_ui') {
+      $block['info'] = $blocks[$index]['info'];
+      $block['status'] = 1;
+      $blocks[$index] = $block;
+    }
+  }
+}

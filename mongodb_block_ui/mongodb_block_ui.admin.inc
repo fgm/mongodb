@@ -64,6 +64,7 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
   // Build the form tree.
   $form['edited_theme'] = array('#type' => 'value', '#value' => $theme);
   $form['#action'] = arg(4) ? url('admin/structure/mongodb_block/list/' . $theme) : url('admin/structure/mongodb_block');
+  $form['#blocks'] = $blocks;
   $form['#tree'] = TRUE;
 
   foreach ($blocks as $key => $block) {
@@ -92,7 +93,7 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
     );
     $form[$key]['region'] = array(
       '#type' => 'select',
-      '#default_value' => isset($block['region']) ? $block['region'] : BLOCK_REGION_NONE,
+      '#default_value' => $block['region'],
       '#options' => $blocks_regions,
     );
     $form[$key]['configure'] = array(
@@ -105,7 +106,7 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
         '#type' => 'link',
         '#title' => t('delete'),
         '#href' => "$path_prefix/delete",
-     );
+      );
     }
   }
   // Do not allow disabling the main system content mongodb_block_ui.
@@ -128,22 +129,14 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
  * Process main blocks administration form submissions.
  */
 function mongodb_block_ui_admin_display_form_submit($form, &$form_state) {
-  foreach ($form_state['values'] as $block) {
-    if (is_array($block)) {
-      $block['status'] = (int) ($block['region'] != BLOCK_REGION_NONE);
-      $block['region'] = $block['status'] ? $block['region'] : '';
-      $collection = mongodb_collection('block');
-      $collection->update(array(
-        'module' => $block['module'],
-        'delta' => $block['delta'],
-  //       'theme' => $block['theme'],
-      ), array(
-        '$set' => array(
-          'status' => $block['status'],
-          'weight' => (int) $block['weight'],
-          'region' => $block['region'],
-        ),
-      ));
+  $collection = mongodb_collection('block');
+  foreach ($form_state['values'] as $key => $block) {
+    if (is_array($block) && $block['region'] != BLOCK_REGION_NONE) {
+      $set = array(
+        'weight' => (int) $block['weight'],
+        'region' => $block['region'],
+      );
+      mongodb_block_save_block($collection, $set + $form['#blocks'][$key]);
     }
   }
   drupal_set_message(t('The block settings have been updated.'));
@@ -258,6 +251,7 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
 //   }
 
   // Visibility settings.
+/*
   $form['visibility_title'] = array(
     '#type' => 'item',
     '#title' => t('Visibility settings'),
@@ -295,7 +289,7 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
       t('All pages except those listed'),
       t('Only the listed pages'),
     );
-    $description = t("Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>'));
+    $description = t("Specify pages by using their paths. Enter one path per line. The '%' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/%', '%front' => '<front>'));
 
     if (module_exists('php') && $access) {
       $options[] = t('Pages on which this PHP code returns <code>TRUE</code> (experts only)');
@@ -307,17 +301,18 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
     }
     $form['visibility']['path']['visibility'] = array(
       '#type' => 'radios',
-      '#title' => t('Show mongodb_block_ui on specific pages'),
+      '#title' => t('Show block on specific pages'),
       '#options' => $options,
       '#default_value' => isset($block->visibility) ? $block->visibility : 0,
     );
+        */
     $form['visibility']['path']['pages'] = array(
       '#type' => 'textarea',
       '#title' => '<span class="element-invisible">' . $title . '</span>',
       '#default_value' => isset($block->pages) ? $block->pages : '',
       '#description' => $description,
     );
-  }
+  //}
 
   /*
 
@@ -387,21 +382,27 @@ function mongodb_block_ui_admin_configure_validate($form, &$form_state) {
 }
 
 function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
+  debug(form_get_errors());
   if (!form_get_errors()) {
     // FIXME: this stores the visiblity settings, the title of the block etc.
 
-    $txn = db_transaction();
     $collection = mongodb_collection('block');
-    $collection->update(array(
-      'module' => $form_state['values']['module'],
-      'delta' => (int) $form_state['values']['delta'],
-    ),
-    array('$set' => array(
-      'visibility' => (int) $form_state['values']['visibility'],
-      'pages' => trim($form_state['values']['pages']),
-      'custom' => (int) $form_state['values']['custom'],
+    $query = array(
+      '_id' => array(
+        'module' => $form_state['values']['module'],
+        'delta' => $form_state['values']['delta'],
+      ),
+    );
+    $pages = array_map('trim', explode("\n", $form_state['values']['pages']));
+    if (!$pages) {
+      $pages = array('%');
+    }
+    $set = array(
+      'pages' => $pages,
       'title' => $form_state['values']['title'],
-    )));
+    );
+    $collection->update($query, array('$set' => $set));
+    var_dump($collection->findOne($query));
     /*
     db_delete('block_role')
       ->condition('module', $form_state['values']['module'])

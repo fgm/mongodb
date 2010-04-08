@@ -8,6 +8,13 @@
  * Resembles very closely the core block module but without an UI.
  */
 
+if (!defined('BLOCK_REGION_NONE')) {
+  /**
+  * Denotes that a block is not enabled in any region and should not be shown.
+  */
+  define('BLOCK_REGION_NONE', -1);
+}
+
 /**
  * Implements hook_menu().
  */
@@ -70,7 +77,7 @@ function mongodb_block_page_build(&$page) {
   if (!$collection->findOne()) {
     mongodb_block_rehash();
   }
-  $query['version'] = variable_get('mongodb_block_version', 0);
+  $query = array();
   if ($node = menu_get_object()) {
     $query['node_type']['$in'] = array('*', $node->type);
   }
@@ -88,6 +95,8 @@ function mongodb_block_page_build(&$page) {
 function mongodb_block_render_blocks($blocks_result) {
   $return = array();
   foreach ($blocks_result as $block) {
+    // Copy module and delta out of the _id.
+    $block += $block['_id'];
     $block = (object)$block;
     // Render the block content if it has not been created already.
     if (!isset($block->content)) {
@@ -188,88 +197,59 @@ function mongodb_block_get_renderable_array($region_blocks) {
 
 function mongodb_block_rehash($redirect = FALSE) {
   $collection = mongodb_collection('block');
-  // Store the old blocks to use it later.
-  foreach($collection->find() as $old_block) {
-    $old_blocks[$old_block['module']][$old_block['delta']] = $old_block;
-  }
-
   $theme = variable_get('theme_default', 'garland');
   $regions = system_region_list($theme);
+  $ids = array();
 
   foreach (module_implements('block_info') as $module) {
     if ($blocks_current = module_invoke($module, 'block_info')) {
-      $implemented_blocks[$module] = $blocks_current;
+      foreach ($blocks_current as $delta => $block) {
+        $id = array('module' => $module, 'delta' => $delta);
+        $ids[] = $id;
+        $block = array(
+          '_id' => $id,
+          'module' => $module,
+          'delta' => $delta,
+        ) + $block + array(
+          'weight' => 0,
+          'pages' => array('%'),
+          'status' => 0,
+          'region' => BLOCK_REGION_NONE,
+        );
+        if (isset($block['node_type'])) {
+          $block['pages'] = array('node/%');
+        }
+        else {
+          $block['node_type']  = array('*');
+        }
+        $blocks[$module . '_' . $delta] = $block;
+      }
     }
   }
   drupal_alter('mongodb_block_info', $blocks);
-  foreach ($implemented_blocks as $module => &$module_blocks) {
-    foreach ($module_blocks as $delta => &$block) {
-      if (empty($old_blocks[$module][$delta])) {
-        // If it's a new block, add identifiers.
-        $block['module'] = $module;
-        $block['delta']  = $delta;
-        if (!isset($block['weight'])) {
-          $block['weight'] = 0;
-        }
-        // Just store the block in the mongodb, if the status is enabled.
-        if (!empty($block['status'])) {
-          unset($block['status']);
-          if (!isset($block['pages'])) {
-            $block['pages']  = array('%');
-          }
-          if (isset($block['node_type'])) {
-            $block['pages'] = array('node/%');
-          }
-          else {
-            $block['node_type']  = array('*');
-          }
-          $collection->save($block);
-          $status = 1;
-          // Add to the list of blocks we return.
-          $blocks[] = $block;
-        }
-        else {
-          $status = 0;
-        }
-        $block['status'] = $status;
-        // Add to the list of blocks we return.
-        $blocks[] = $block;
-      }
-      else {
-        // If it's an existing block, database settings should overwrite
-        // the code. But aside from 'info' everything that's definable in
-        // code is stored in the database and we do not store 'info', so we
-        // do not need to update the database here.
-        // Add 'info' to this block.
-        $old_blocks[$module][$delta]['info'] = $block['info'];
-        // If the region name does not exist, disable the block and assign it to none.
-        if (!empty($old_blocks[$module][$delta]['region']) && !isset($regions[$old_blocks[$module][$delta]['region']])) {
-          drupal_set_message(t('The block %info was assigned to the invalid region %region and has been disabled.', array('%info' => $old_blocks[$module][$delta]['info'], '%region' => $old_blocks[$module][$delta]['region'])), 'warning');
-          $old_blocks[$module][$delta]['status'] = 0;
-          $old_blocks[$module][$delta]['region'] = BLOCK_REGION_NONE;
-        }
-        else {
-          $old_blocks[$module][$delta]['status'] = isset($old_blocks[$module][$delta]['status']) ? $old_blocks[$module][$delta]['status'] : 0;
-          $old_blocks[$module][$delta]['region'] = $old_blocks[$module][$delta]['status'] ? $old_blocks[$module][$delta]['region'] : BLOCK_REGION_NONE;
-        }
-        // Add this block to the list of blocks we return.
-        $blocks[] = $old_blocks[$module][$delta];
-        // Remove this block from the list of blocks to be deleted.
-        unset($old_blocks[$module][$delta]);
-      }
+  // Only store the block in the mongodb, if the status is enabled.
+  foreach ($blocks as $key => $block) {
+    if ($block['region'] != BLOCK_REGION_NONE && !isset($regions[$block['region']])) {
+      drupal_set_message(t('The block %info was assigned to the invalid region %region and has been disabled.', array('%info' => $block['info'], '%region' => $block['region'])), 'warning');
+      $blocks[$key]['status'] = 0;
+      $blocks[$key]['region'] = BLOCK_REGION_NONE;
+      $block = $blocks[$key];
+    }
+    if ($block['status']) {
+      mongodb_block_save_block($collection, $block);
     }
   }
-  // Remove blocks that are no longer defined by the code from the database.
-  foreach ($old_blocks as $module => $old_module_blocks) {
-    foreach ($old_module_blocks as $delta => $block) {
-      $collection->remove(array('module' => $module, 'delta' => $delta));
-    }
-  }
+  $collection->remove(array('_id' => array('$nin' => $ids)));
   if ($redirect) {
     drupal_set_message('Blocks rebuild done.');
     drupal_goto('admin/structure');
   }
   return $blocks;
+}
+
+function mongodb_block_save_block($collection, $block) {
+  unset($block['info'], $block['module'], $block['delta'], $block['status']);
+  $collection->save($block);
 }
 
 /**
