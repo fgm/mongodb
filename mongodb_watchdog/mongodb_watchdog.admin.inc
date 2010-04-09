@@ -34,8 +34,11 @@ function mongodb_watchdog_overview() {
     WATCHDOG_EMERGENCY => 'mongodb_watchdog-emergency',
   );
 
+  global $pager_page_array, $pager_total, $pager_total_items, $pager_limits;
   $per_page = 50;
-  $on_page = isset($_GET['page']) ? $_GET['page'] : 0;
+  $page = isset($_GET['page']) ? $_GET['page'] : '';
+  $pager_page_array = explode(',', $page);
+  $on_page = $pager_page_array[0];
 
   $cursor = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))
     ->find(mongodb_watchdog_build_filter_query())
@@ -61,7 +64,7 @@ function mongodb_watchdog_overview() {
       $icons[$value['severity']],
       t($value['type']),
       format_date($value['timestamp'], 'short'),
-      truncate_utf8(_mongodb_watchdog_format_message((object) $value), 56, TRUE, TRUE),
+      l(truncate_utf8(_mongodb_watchdog_format_message((object) $value), 56, TRUE, TRUE), "admin/reports/mongodb-event/$id", array('html' => TRUE)),
       theme('username', array('account' => (object) $value['user'])),
       $value['link'],
     );
@@ -74,6 +77,70 @@ function mongodb_watchdog_overview() {
     '#attributes' => array('id' => 'admin-mongodb_watchdog'),
   );
 
+  // Add the pager.
+  if ($on_page > 0 || count($rows) >= $per_page) {
+    $pager_total_items[0] = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))
+      ->find(mongodb_watchdog_build_filter_query())
+      ->count();
+    $pager_total[0] = ceil($pager_total_items[0] / $per_page);
+    $pager_page_array[0] = max(0, min((int) $pager_page_array[0], ((int)$pager_total[0]) - 1));
+    $pager_limits[0] = $per_page;
+    $build['pager'] = array(
+      '#theme' => 'pager',
+    );
+  }
+
+  return $build;
+}
+
+/**
+ * Display watchdogs entry details in mongodb.
+ */
+function mongodb_watchdog_event($dblog) {
+  $severity = watchdog_severity_levels();
+  $rows = array(
+    array(
+      array('data' => t('Type'), 'header' => TRUE),
+      t($dblog['type']),
+    ),
+    array(
+      array('data' => t('Date'), 'header' => TRUE),
+      format_date($dblog['timestamp'], 'long'),
+    ),
+    array(
+      array('data' => t('User'), 'header' => TRUE),
+      theme('username', array('account' => (object) $dblog['user'])),
+    ),
+    array(
+      array('data' => t('Location'), 'header' => TRUE),
+      l($dblog['request_uri'], $dblog['request_uri']),
+    ),
+    array(
+      array('data' => t('Referrer'), 'header' => TRUE),
+      l($dblog['referer'], $dblog['referer']),
+    ),
+    array(
+      array('data' => t('Message'), 'header' => TRUE),
+      _mongodb_watchdog_format_message((object) $dblog),
+    ),
+    array(
+      array('data' => t('Severity'), 'header' => TRUE),
+      $severity[$dblog['severity']],
+    ),
+    array(
+      array('data' => t('Hostname'), 'header' => TRUE),
+      check_plain($dblog['ip']),
+    ),
+    array(
+      array('data' => t('Operations'), 'header' => TRUE),
+      $dblog['link'],
+    ),
+  );
+  $build['mongodb_watchdog_event_table'] = array(
+    '#theme' => 'table',
+    '#rows' => $rows,
+    '#attributes' => array('class' => array('dblog-event')),
+  );
   return $build;
 }
 

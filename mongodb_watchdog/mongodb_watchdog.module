@@ -18,8 +18,26 @@ function mongodb_watchdog_menu() {
     'access arguments' => array('access site reports'),
     'file'  => 'mongodb_watchdog.admin.inc',
   );
+  $items['admin/reports/mongodb-event/%mongodb_watchdog_event'] = array(
+    'title' => 'MongoDB log details',
+    'page callback' => 'mongodb_watchdog_event',
+    'page arguments' => array(3),
+    'access arguments' => array('access site reports'),
+    'type' => MENU_CALLBACK,
+    'file' => 'mongodb_watchdog.admin.inc',
+  );
   return $items;
 }
+
+/**
+ * Load the MongoDB watchdog event.
+ */
+function mongodb_watchdog_event_load($id) {
+  $result = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))
+    ->findOne(array('_id' => new MongoId($id)));
+  return $result ? $result : FALSE;
+}
+
 /**
  * Implement hook_form_<form_id>_alter for the system logging form.
  *
