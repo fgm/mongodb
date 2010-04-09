@@ -29,7 +29,7 @@ function mongodb($alias = 'default') {
   $connection = $connections[$alias];
   $host = $connection['host'];
   $db = $connection['db'];
-  if (!isset($mongo[$host][$db])) {
+  if (!isset($mongo_objects[$host][$db])) {
     $mongo = new Mongo($host);
     $mongo_objects[$host][$db] = $mongo->selectDB($db);
   }
