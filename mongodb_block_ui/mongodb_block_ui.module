@@ -167,25 +167,6 @@ function _mongodb_block_ui_themes_access($theme) {
 // }
 
 /**
- * Implements hook_block_info().
- */
-function mongodb_block_ui_block_info() {
-  $blocks = array();
-
-  $collection = mongodb_collection('block_custom');
-  $result = $collection->find(array(), array('info', 'bid'))
-    ->sort(array('info'));
-  foreach ($result as $block) {
-    $blocks[$block['bid']]['info'] = $block['info'];
-    // Not worth caching.
-    $blocks[$block['bid']]['cache'] = DRUPAL_NO_CACHE;
-    $blocks[$block['bid']]['status'] = TRUE;
-//     $blocks[$block['bid']]['region'] = 'header';
-  }
-  return $blocks;
-}
-
-/**
  * Implements hook_block_configure().
  */
 function mongodb_block_ui_block_configure($delta = 0) {
