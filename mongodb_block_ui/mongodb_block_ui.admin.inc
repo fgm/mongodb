@@ -526,20 +526,19 @@ function mongodb_block_ui_add_block_form_submit($form, &$form_state) {
  * Menu callback; confirm deletion of custom block.
  */
 function mongodb_block_ui_custom_block_delete($form, &$form_state, $module, $delta) {
-  $block = mongodb_block_ui_load($module, $delta);
-  $custom_block = mongodb_block_ui_custom_block_get($block->delta);
-  $form['info'] = array('#type' => 'hidden', '#value' => $custom_block['info'] ? $custom_block['info'] : $custom_block['title']);
-  $form['bid'] = array('#type' => 'hidden', '#value' => $block->delta);
+  $block = mongodb_block_load($module, $delta);
+  $form['info'] = array('#type' => 'hidden', '#value' => $block['info'] ? $block['info'] : $block['title']);
+  $form['bid'] = array('#type' => 'hidden', '#value' => $block['delta']);
 
-  return confirm_form($form, t('Are you sure you want to delete the block %name?', array('%name' => $custom_block['info'])), 'admin/structure/block', '', t('Delete'), t('Cancel'));
+  return confirm_form($form, t('Are you sure you want to delete the block %name?', array('%name' => $block['info'])), 'admin/structure/block', '', t('Delete'), t('Cancel'));
 }
 
 /**
  * Deletion of custom mongodb_block_uis.
  */
-function mongodb_block_ui_custom_mongodb_block_ui_delete_submit($form, &$form_state) {
+function mongodb_block_ui_custom_block_delete_submit($form, &$form_state) {
   $collection = mongodb_collection('block');
-  $collection->delete(array('_id' => array('module' => 'mongodb_block_ui', 'delta' => (string) $form_state['values']['bid'])));
+  $collection->remove(array('_id' => array('module' => 'mongodb_block_ui', 'delta' => (string) $form_state['values']['bid'])));
   drupal_set_message(t('The block %name has been removed.', array('%name' => $form_state['values']['info'])));
   cache_clear_all();
   $form_state['redirect'] = 'admin/structure/mongodb_block';
