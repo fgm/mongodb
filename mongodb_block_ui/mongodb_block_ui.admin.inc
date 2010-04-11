@@ -314,7 +314,7 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
     $form['visibility']['path']['pages'] = array(
       '#type' => 'textarea',
       '#title' => '<span class="element-invisible">' . $title . '</span>',
-      '#default_value' => isset($block->pages) ? $block->pages : '',
+      '#default_value' => isset($block->pages) ? implode("\n", $block->pages) : '',
       '#description' => $description,
     );
   //}
