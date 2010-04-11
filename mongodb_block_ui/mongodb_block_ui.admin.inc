@@ -401,6 +401,13 @@ function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
     'pages' => _mongodb_block_ui_admin_pages($form_state['values']['pages']),
     'title' => $form_state['values']['title'],
   );
+  
+  if ($form_state['values']['module'] == 'mongodb_block_ui') {
+    $set['body'] = $form_state['values']['body'];
+    $set['format'] = $form_state['values']['format'];
+    $set['info'] = $form_state['values']['info'];
+  }
+
   $collection->update($query, array('$set' => $set));
   /*
   db_delete('block_role')
