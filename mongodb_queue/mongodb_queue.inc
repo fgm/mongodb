@@ -30,10 +30,25 @@ class MongoDBQueue implements DrupalQueueInterface {
   }
 
   public function claimItem($lease_time = 30) {
+    $query = array(
+      'expire' => array('$lt' => REQUEST_TIME),
+    );
+    $newobj = array(
+      'expire' => 0,
+    );
+    mongodb_collection($this->collection)
+      ->update($query, array('$set' => $newobj));
+
+    $query = array(
+      'expire' => 0,
+    );
+    $newobj = array(
+      'expire' => time() + $lease_time,
+    );
     $cmd = array(
       'findandmodify' => mongodb_collection_name($this->collection),
-      'query' => array('expire' => 0),
-      'update' => array('$set' => array('expire' => time() + $lease_time)),
+      'query' => $query,
+      'update' => array('$set' => $newobj),
       'sort' => array('created' => 1),
     );
     if (($result = mongodb()->command($cmd)) && $result['ok'] == 1) {
