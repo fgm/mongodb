@@ -68,12 +68,56 @@ function mongodb_watchdog_form_system_logging_settings_alter(&$form, &$form_stat
     '#default_value' => variable_get('mongodb_watchdog_collectionname', 'watchdog'),
     '#description' => t('In which collection should the watchdog be stored'),
   );
+  $form['mongodb_watchdog']['mongodb_watchdog_flood_expire'] = array(
+    '#title' => t('MongoDB flood expiration'),
+    '#type' => 'textfield',
+    '#defualt_value' => variable_get('mongodb_watchdog_flood_expire', 15),
+    '#description' => t('If an identical entry occurs within this number of seconds, update the count rather than create a new record, helps with capped collections. Set to -1 to disable flood expiration.'),
+  );
 }
 
 /**
  * Implement hook_watchdog().
  */
 function mongodb_watchdog_watchdog(array $log_entry) {
+  $log_entry = (array) $log_entry;
+
+  // Create list of functions to ignore in backtrace.
+  static $ignore = array(
+    'mongodb_watchdog_watchdog' => 1,
+    'call_user_func_array' => 1,
+    'module_invoke' => 1,
+    'watchdog' => 1,
+    '_drupal_log_error' => 1,
+    '_drupal_error_handler' => 1,
+    '_drupal_error_handler_real' => 1,
+    'theme_render_template' => 1,
+  );
+
+  // Find the function that generated this error.
+  foreach (debug_backtrace() as $bt) {
+    if (isset($bt['function']) && isset($bt['line']) && !isset($ignore[$bt['function']])) {
+      if (isset($bt['file'])) {
+        $log_entry['file'] = $bt['file'];
+      }
+      $log_entry['function'] = $bt['function'];
+      $log_entry['line'] = $bt['line'];
+      break;
+    }
+  }
+
+  // Write to watchdog, avoid watchdog spamming by skippng the  write and
+  // maintaining a count for similar entries that occur within 10 seconds.
+  // We sacrifice accuracy for speed by using only the timestamp and line as
+  // the index, and not timestamp, file, and line.
   $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
-  $collection->insert((array) $log_entry);
+  $newobj = array(
+    '$set' => $log_entry,
+    '$inc' => array('count' => 1),
+  );
+  $query = array(
+    'line' => $log_entry['line'],
+    'timestamp' => array('$gt' => REQUEST_TIME - variable_get('mongodb_watchdog_flood_expire', 15)),
+  );
+  $collection->update($query, $newobj, array('upsert' => TRUE, 'multiple' => FALSE));
 }

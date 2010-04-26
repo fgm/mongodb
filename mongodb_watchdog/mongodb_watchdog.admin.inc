@@ -51,6 +51,7 @@ function mongodb_watchdog_overview() {
 
   $header = array(
     '', // Icon column.
+    t('#'),
     array('data' => t('Type')),
     array('data' => t('Date')),
     t('Message'),
@@ -60,11 +61,13 @@ function mongodb_watchdog_overview() {
 
   $rows = array();
   foreach ($cursor as $id => $value) {
+    $message = truncate_utf8(strip_tags(_mongodb_watchdog_format_message($value)), 56, TRUE, TRUE);
     $rows[$id] = array(
       $icons[$value['severity']],
+      isset($value['count']) && $value['count'] > 1 ? $value['count'] : '',
       t($value['type']),
       format_date($value['timestamp'], 'short'),
-      l(truncate_utf8(_mongodb_watchdog_format_message((object) $value), 56, TRUE, TRUE), "admin/reports/mongodb-event/$id", array('html' => TRUE)),
+      l($message, "admin/reports/mongodb-event/$id"),
       theme('username', array('account' => (object) $value['user'])),
       $value['link'],
     );
@@ -121,7 +124,7 @@ function mongodb_watchdog_event($dblog) {
     ),
     array(
       array('data' => t('Message'), 'header' => TRUE),
-      _mongodb_watchdog_format_message((object) $dblog),
+      _mongodb_watchdog_format_message($dblog),
     ),
     array(
       array('data' => t('Severity'), 'header' => TRUE),
@@ -134,6 +137,22 @@ function mongodb_watchdog_event($dblog) {
     array(
       array('data' => t('Operations'), 'header' => TRUE),
       $dblog['link'],
+    ),
+    array(
+      array('data' => t('Function'), 'header' => TRUE),
+      isset($dblog['function']) ? $dblog['function'] : '',
+    ),
+    array(
+      array('data' => t('File'), 'header' => TRUE),
+      isset($dblog['file']) ? $dblog['file'] : '',
+    ),
+    array(
+      array('data' => t('Line'), 'header' => TRUE),
+      isset($dblog['line']) ? $dblog['line'] : '',
+    ),
+    array(
+      array('data' => t('Count'), 'header' => TRUE),
+      isset($dblog['count']) ? $dblog['count'] : '',
     ),
   );
   $build['mongodb_watchdog_event_table'] = array(
@@ -150,14 +169,14 @@ function mongodb_watchdog_event($dblog) {
  * @param $dblog
  *   An object with at least the message and variables properties
  */
-function _mongodb_watchdog_format_message($mongodb_watchdog) {
+function _mongodb_watchdog_format_message($dblog) {
   // Legacy messages and user specified text
-  if (!$mongodb_watchdog->variables) {
-    return $mongodb_watchdog->message;
+  if (!isset($dblog['variables'])) {
+    return $dblog['message'];
   }
   // Message to translate with injected variables
   else {
-    return t($mongodb_watchdog->message, $mongodb_watchdog->variables);
+    return t($dblog['message'], $dblog['variables']);
   }
 }
 
