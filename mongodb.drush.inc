@@ -39,7 +39,7 @@ function mongodb_drush_command() {
   $items['mongodb-conf'] = array(
     'description' => 'Print mongodb connection details using print_r().',
     'arguments' => array(
-      'all' => 'Show all database connections, instead of just one.',
+      'all' => 'Show all mongodb connections, instead of just one.',
     ),
     'arguments' => array(
        'alias' => 'The connection',
@@ -78,16 +78,17 @@ function mongodb_drush_help($section) {
       return dt('A string which connects to the current database.');
     case 'drush:mongodb-cli':
       return dt('Quickly enter the mongodb shell.');
+    // TODO
     case 'drush:mongodb-dump':
       return dt('Prints the whole database to STDOUT or save to a file.');
     case 'drush:mongodb-query':
-      return dt("Usage: drush [options] mongodb-query <query>...\n<query> is a single js command.");
+      return dt("Usage: drush [options] mongodb-query <query>...\n<query> is a single js command. It does not print the result by default, see the example");
 
   }
 }
 
 /**
- * Drush callback;
+ * Drush callback; Start the mongodb shell.
  */
 function drush_mongodb_cli($alias = 'default') {
   $command = _drush_mongodb_connect($alias);
@@ -95,7 +96,7 @@ function drush_mongodb_cli($alias = 'default') {
 }
 
 /**
- * Drush callback;
+ * Drush callback; Return the connect string.
  */
 function drush_mongodb_connect($alias = 'default') {
   $command = _drush_mongodb_connect($alias);
@@ -103,7 +104,7 @@ function drush_mongodb_connect($alias = 'default') {
 }
 
 /**
- * Drush callback;
+ * Drush callback; Execute a query against a mongodb.
  */
 function drush_mongodb_query($alias = 'default', $query = '') {
   $command = _drush_mongodb_connect($alias);
@@ -112,6 +113,9 @@ function drush_mongodb_query($alias = 'default', $query = '') {
   drush_print(proc_close(proc_open(escapeshellcmd($command), array(0 => STDIN, 1 => STDOUT, 2 => STDERR), $pipes)));
 }
 
+/**
+ * Returns the basic shell commando string.
+ */
 function _drush_mongodb_connect($alias) {
   $connections = variable_get('mongodb_connections', array());
   $connections += array('default' => array('host' => 'localhost', 'db' => 'drupal'));
@@ -130,7 +134,7 @@ function _drush_mongodb_connect($alias) {
 }
 
 /**
- * Drush callback;
+ * Drush callback; Print the config of the mongodb.
  */
 function drush_mongodb_conf($alias = 'default') {
   $connections = variable_get('mongodb_connections', array());
