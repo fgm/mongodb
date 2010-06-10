@@ -45,6 +45,7 @@ function mongodb_block_theme() {
     'block' => array(
       'render element' => 'elements',
       'template' => 'block',
+      'path' => drupal_get_path('module', 'block'),
     ),
   );
 }
@@ -193,6 +194,16 @@ function mongodb_block_get_renderable_array($region_blocks) {
   }
   $build['#sorted'] = TRUE;
   return $build;
+}
+
+/**
+ * Implements hook_mongodb_block_info_alter().
+ */
+function mongodb_block_mongodb_block_info_alter(&$blocks) {
+  // Enable the main content block.
+  $blocks['system_main']['region'] = 'content';
+  $blocks['system_main']['weight'] = 0;
+  $blocks['system_main']['status'] = 1;
 }
 
 function mongodb_block_rehash($redirect = FALSE) {
