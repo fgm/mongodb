@@ -227,8 +227,7 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
       $form['settings'][$k] = $v;
     }
   }
-  $title = t('Pages');
-  $description = t("Specify pages by using their paths. Enter one path per line. The '%' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/%', '%front' => '<front>'));
+
 /*
   // Region settings.
   $form['regions'] = array(
@@ -311,6 +310,18 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
       '#default_value' => isset($block->visibility) ? $block->visibility : 0,
     );
 */
+
+    // TODO Use states to hide the pages form.
+    $form['visibility']['path']['node_type'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Node types'),
+      '#options' => node_type_get_names(),
+      '#default_value' => isset($block->node_type) ? $block->node_type : array(),
+      '#description' => t('Select a single/multiple nodetypes where this block should appear.'),
+    );
+
+    $title = t('Pages');
+    $description = t("Specify pages by using their paths. Enter one path per line. The '%' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/%', '%front' => '<front>'));
     $form['visibility']['path']['pages'] = array(
       '#type' => 'textarea',
       '#title' => '<span class="element-invisible">' . $title . '</span>',
@@ -400,6 +411,7 @@ function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
   $set = array(
     'pages' => _mongodb_block_ui_admin_pages($form_state['values']['pages']),
     'title' => $form_state['values']['title'],
+    'node_type' => array_keys(array_filter($form_state['values']['node_type'])),
   );
   
   if ($form_state['values']['module'] == 'mongodb_block_ui') {
@@ -483,6 +495,7 @@ function mongodb_block_ui_add_block_form_submit($form, &$form_state) {
     'format' => (int) $form_state['values']['format'],
     'pages' => _mongodb_block_ui_admin_pages($form_state['values']['pages']),
     'title' => $form_state['values']['title'],
+    'node_type' => array_keys(array_filter($form_state['values']['node_type'])),
     'status' => 0,
     'weight' => 0,
     'cache' => DRUPAL_NO_CACHE,
