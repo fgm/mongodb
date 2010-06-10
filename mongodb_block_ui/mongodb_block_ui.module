@@ -482,8 +482,8 @@ function mongodb_block_ui_mongodb_block_info_alter(&$blocks) {
     // Copy module and delta out of the _id.
     $block += $block['_id'];
     $index = $block['_id']['module'] . '_' . $block['_id']['delta'];
-    // Add only those blocks which are defined still or are custom.
-    if (isset($blocks[$index]) || $block['_id']['module'] == 'mongodb_block_ui') {
+    // Add custom blocks.
+    if ($block['_id']['module'] == 'mongodb_block_ui') {
       if (!isset($block['info'])) {
         $block['info'] = $blocks[$index]['info'];
       }
