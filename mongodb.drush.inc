@@ -33,7 +33,7 @@ function mongodb_drush_command() {
     'arguments' => array(
        'alias' => 'The connection',
     ),
-    'aliases' => array('mc'),
+    'aliases' => array('mdbc'),
   );
 
   $items['mongodb-conf'] = array(
@@ -61,7 +61,7 @@ function mongodb_drush_command() {
 //     'options' => array(
 //       '--extra' => 'Add custom options to the mongodb command.',
 //     ) + $options,
-    'aliases' => array('mq'),
+    'aliases' => array('mdbq'),
   );
 
   return $items;
