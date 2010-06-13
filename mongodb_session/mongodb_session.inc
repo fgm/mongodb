@@ -191,7 +191,7 @@ function _drupal_session_write($sid, $value) {
     mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $user->uid), array('$set' => $fields));
     // Throw a bone to entitycache, too.
     if (variable_get('entitycache_enabled', TRUE)) {
-      cache_clear_all('cache_entity_user', $user->uid);
+      cache_clear_all($user->uid, 'cache_entity_user');
     }
   }
 
