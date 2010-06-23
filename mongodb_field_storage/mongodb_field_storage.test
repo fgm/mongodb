@@ -507,9 +507,12 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->propertyCondition('ftid', 1, 'CONTAINS');
+      ->propertyCondition('fttype', 'undle1', 'CONTAINS');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 1),
+      array('test_entity_bundle_key', 2),
+      array('test_entity_bundle_key', 3),
+      array('test_entity_bundle_key', 4),
     ), t('Test the "contains" operation on a property.'));
 
     $query = new EntityFieldQuery();
