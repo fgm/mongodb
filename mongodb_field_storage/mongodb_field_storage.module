@@ -62,25 +62,35 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
 
     // Add this fields' id to the list.
     foreach ($ids as $id) {
-      $keys[] = (int) $id;
+      $keys[$id] = TRUE;
     }
   }
 
-  // Execute the query and save the fields to the parent entity.
-  $collection_name = $load_current ? 'fields_current' : 'fields_revision';
-  $collection = mongodb_collection($collection_name, $entity_type);
-  $result = $collection->find(array('_id' => array('$in' => $keys)));
+  // Execute the query and save the fields to the parent object.
+  $collection = mongodb_collection($load_current ? 'fields_current' : 'fields_revision', $entity_type);
+  $result = $collection->find(array('_id' => array('$in' => array_keys($keys))));
 
-  foreach ($result as $entity_id => $document) {
-    foreach ($document['@fields'] as $delta => $field_data) {
-      foreach ($saved_fields as $field_id => $field) {
-        $field_name = $field['field_name'];
-        if (isset($field_data[$field_name])) {
-          $language = isset($field_data[$field_name]['@language']) ? $field_data[$field_name]['@language'] : LANGUAGE_NONE;
-          unset($field_data[$field_name]['@language']);
-          $entities[$entity_id]->{$field_name}[$language][$delta] = $field_data[$field_name];
+  foreach ($result as $row) {
+    $entity_id = $row['_id'];
+    foreach ($saved_fields as $field_id => $field) {
+      $field_name = $field['field_name'];
+      $field_values = array();
+      if (isset($row[$field_name])) {
+        // Restore the field structure.
+        if ($field['cardinality'] == 1) {
+          $language = isset($row[$field_name]['_language']) ? $row[$field_name]['_language'] : LANGUAGE_NONE;
+          unset($row[$field_name]['_language']);
+          $field_values[$language][0] = $row[$field_name];
+        }
+        else {
+          foreach ($row[$field_name] as $delta => $column_values) {
+            $language = isset($column_values['_language']) ? $column_values['_language'] : LANGUAGE_NONE;
+            unset($column_values['_language']);
+            $field_values[$language][$delta] = $column_values;
+          }
         }
       }
+      $entities[$entity_id]->{$field_name} = $field_values;
     }
   }
 }
@@ -106,16 +116,16 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
     $wrote[$entity_type][$entity_id] = TRUE;
   }
 
-  $save = array(
-    '_id' => (int) $entity_id,
-    '@bundle' => $bundle,
-    '@fields' => array(),
-  );
+  // Create a new object.
+  $new_entity = new stdClass();
+  $new_entity->_id = intval($entity_id);
+  $new_entity->_type = $entity_type;
+  $new_entity->_bundle = $bundle;
   if (isset($revision_id)) {
-    $save['@revision_id'] = (int) $revision_id;
+    $new_entity->_revision_id = intval($revision_id);
   }
 
-  // Add the base table's fields to the new entity.
+  // Add the base table's fields to the new object.
   $entity_info = entity_get_info($entity_type);
   // Although it's rare not to define a base table, test entities for sure
   // don't.
@@ -123,12 +133,12 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
     $table_schema = drupal_get_schema($entity_info['base table']);
     foreach ($table_schema['fields'] as $field_name => $column_definition) {
       if (isset($entity->$field_name)) {
-        $save[$field_name] = _mongodb_field_storage_value($column_definition['type'], $entity->$field_name);
+        $new_entity->$field_name = _mongodb_field_storage_value($column_definition['type'], $entity->$field_name);
       }
     }
   }
 
-  // Add the fieldapi fields to the new entity
+  // Add the fieldapi fields to the new object
   foreach ($fields as $field_id) {
     $field = field_info_field_by_id($field_id);
     $field_name = $field['field_name'];
@@ -137,32 +147,46 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
       foreach ($entity->$field_name as $language => $values) {
         // According to field.test, we should not save anything for NULL.
         if (isset($values)) {
-          foreach ($values as $delta => $column_values) {
-            // We have to make sure we don't store invalid deltas.
-            if ($delta >= 0 && ($field['cardinality'] <= 0 || $delta < $field['cardinality'])) {
-              foreach ($column_values as $column_name => $column_value) {
-                if (isset($field['columns'][$column_name])) {
-                  $save['@fields'][$delta][$field_name][$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_values[$column_name]);
-                }
+          if ($field['cardinality'] == 1) {
+            foreach ($values[0] as $column_name => $column_value) {
+              if (isset($field['columns'][$column_name])) {
+                $field_values[$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_value);
               }
               if ($language != LANGUAGE_NONE) {
-                $save['@fields'][$delta][$field_name]['@language'] = $language;
+                $field_values['_language'] = $language;
               }
+            }
+          }
+          else {
+            // Collapse deltas.
+            $values = array_values($values);
+            if ($field['cardinality'] > 1 && count($values) > $field['cardinality']) {
+              throw new MongodbStorageException('Invalid delta, not saving');
+            }
+            foreach ($values as $delta => $column_values) {
+              foreach ($column_values as $column_name => $column_value) {
+                if (isset($field['columns'][$column_name])) {
+                  $column_values[$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_values[$column_name]);
+                }
+              }
+              // Collapse the field structure.
+              if ($language != LANGUAGE_NONE) {
+                $column_values['_language'] = $language;
+              }
+              $field_values[] = $column_values;
             }
           }
         }
       }
     }
+    $new_entity->$field_name = $field_values;
   }
 
-  // Save the entity.
-  mongodb_collection('fields_current', $entity_type)->save($save);
+  // Save the object.
+  mongodb_collection('fields_current', $entity_type)->save($new_entity);
   if (isset($revision_id)) {
-    $save['@entity_id'] = (int) $entity_id;
-    $save['_id'] = (int) $revision_id;
-    unset($save['@revision_id']);
-    $collection = mongodb_collection('fields_revision', $entity_type);
-    $collection->save($save);
+    $new_entity->_id = $revision_id;
+    mongodb_collection('fields_revision', $entity_type)->save($new_entity);
   }
 }
 
@@ -216,11 +240,96 @@ function mongodb_field_storage_field_storage_delete_instance($instance) {
   // TODO: figure out what to do.
 }
 
+class MongodbStorageException extends Exception {}
+
 /**
- * Implement hook_field_storage_query().
+ * Implements hook_entity_query_alter().
  */
-function mongodb_field_storage_field_storage_query($field_id, $conditions, $options) {
-  return array();
+function mongodb_field_storage_entity_query_alter($query) {
+  $query->executeCallback = 'mongodb_field_storage_query';
+}
+
+function mongodb_field_storage_query($query) {
+  $find = array();
+  if (isset($query->entityConditions['entity_type'])) {
+    $entity_type = $query->entityConditions['entity_type']['value'];
+    unset($query->entityConditions['entity_type']);
+  }
+  else {
+    throw new EntityFieldQueryException('No entity_type');
+  }
+  $entity_map = array('entity_id' => '_id', 'revision_id' => '_revision_id', 'bundle' => '_bundle');
+  foreach ($query->entityConditions as $field => $data) {
+    $value = $field == 'bundle' ? $data['value'] : intval($data['value']);
+    $find[$entity_map[$field]] = _mongodb_field_storage_query_value($value, $data['operator']);
+  }
+  foreach ($query->fieldConditions as $data) {
+    $find[$data['field']['field_name'] . '.' . $data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
+  }
+  foreach ($query->propertyConditions as $data) {
+    $find[$data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
+  }
+  if ($query->age == FIELD_LOAD_CURRENT) {
+    $collection = mongodb_collection('fields_current', $entity_type);
+    $id_key = '_id';
+  }
+  else {
+    $collection = mongodb_collection('fields_revision', $entity_type);
+    $id_key = '_revision_id';
+  }
+  $collection = mongodb_collection($query->age == FIELD_LOAD_CURRENT ? 'fields_current' : 'fields_revision', $entity_type);
+  if ($query->count && !$query->range) {
+    return $collection->count($find);
+  }
+  $cursor = $collection->find($find);
+  if ($query->range) {
+    $cursor->skip($query->range['start'])->limit($query->range['length']);
+  }
+  if ($query->count) {
+    return $cursor->count();
+  }
+  else {
+    $sort = array();
+    foreach ($query->entityOrder as $name => $direction) {
+      $sort[$entity_map[$name]] = $direction == 'ASC' ? 1 : -1;
+    }
+    foreach ($query->propertyOrder as $data) {
+      $sort[$data['column']] = $data['direction'] == 'ASC' ? 1 : -1;
+    }
+    foreach ($query->fieldOrder as $data) {
+      $sort[$data['field']['field_name'] . '.' . $data['column']] = $data['direction'] == 'ASC' ? 1 : -1;
+    }
+    if ($sort) {
+      $cursor->sort($sort);
+    }
+  }
+  $return = array();
+  foreach ($cursor as $row) {
+    $row += array('_revision_id' => NULL);
+    $entity = entity_create_stub_entity($entity_type, array($row['_id'], $row['_revision_id'], $row['_bundle']));
+    $return[$entity_type][$row[$id_key]] = $entity;
+  }
+  return $return;
+}
+
+function _mongodb_field_storage_query_value($value, $operator) {
+  if (!isset($operator)) {
+    $operator = is_array($value) ? 'IN' : '=';
+  }
+  switch ($operator) {
+    case '='           : return $value;
+    case 'IN'          : return array('$in' => $value);
+    case 'NOT IN'      : return array('$nin' => $value);
+    case '<'           : return array('$lt' => $value);
+    case '>'           : return array('$gt' => $value);
+    case '<='          : return array('$lte' => $value);
+    case '>='          : return array('$gte' => $value);
+    case '!='          : return array('$ne' => $value);
+    case 'STARTS_WITH' : return new MongoRegex('/^' . $value . '/');
+    case 'CONTAINS'    : return new MongoRegex('/' . $value . '/');
+    case 'BETWEEN'     : return array('$gte' => $value[0], '$lte' => $value[1]);
+    default : throw new EntityFieldQueryException("$operator not implemented");
+  }
 }
 
 /**
