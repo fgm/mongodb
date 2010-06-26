@@ -277,7 +277,6 @@ function mongodb_field_storage_query($query) {
     $collection = mongodb_collection('fields_revision', $entity_type);
     $id_key = '_revision_id';
   }
-  $collection = mongodb_collection($query->age == FIELD_LOAD_CURRENT ? 'fields_current' : 'fields_revision', $entity_type);
   if ($query->count && !$query->range) {
     return $collection->count($find);
   }
