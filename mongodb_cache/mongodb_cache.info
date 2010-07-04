@@ -5,3 +5,4 @@ package = MongoDB
 version = VERSION
 core = 7.x
 files[] = mongodb_cache.module
+files[] = mongodb_cache.inc
