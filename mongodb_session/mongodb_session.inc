@@ -1,6 +1,9 @@
 <?php
 // $Id$
 
+
+if (!function_exists('_drupal_session_open')) {
+
 include_once dirname(__FILE__) . '/../mongodb.module';
 
 /**
@@ -417,4 +420,6 @@ function drupal_save_session($status = NULL) {
     $save_session = $status;
   }
   return $save_session;
+}
+
 }
