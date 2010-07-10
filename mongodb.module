@@ -39,16 +39,23 @@ function mongodb($alias = 'default') {
 /**
  * Returns a MongoCollection object.
  */
-function mongodb_collection($collection_name) {
-  $args = func_get_args();
-  // Avoid something. collection names if NULLs are passed in.
-  $collection_name = implode('.', array_filter($args));
+function mongodb_collection() {
+  $args = array_filter(func_get_args());
+  if (is_array($args[0])) {
+    list($collection_name, $prefixed) = $args[0];
+    $prefixed .= $collection_name;
+  }
+  else {
+    // Avoid something. collection names if NULLs are passed in.
+    $collection_name = implode('.', array_filter($args));
+    $prefixed = mongodb_collection_name($collection_name);
+  }
   $collections = variable_get('mongodb_collections', array());
   $alias = isset($collections[$collection_name]) ? $collections[$collection_name] : 'default';
   // Prefix the collection name for simpletest. It will be in the same DB as the
   // non-prefixed version so it's enough to prefix after choosing the mongodb
   // object.
-  return mongodb($alias)->selectCollection(mongodb_collection_name($collection_name));
+  return mongodb($alias)->selectCollection($prefixed);
 }
 
 /**
@@ -92,7 +99,7 @@ function mongodb_test_group_finished() {
 /**
  * Return the next id in a sequence.
  */
-function mongodb_next_id($name) {
+function mongodb_next_id($name, $existing_id = 0) {
   // Make sure that the sequence key exists.
   mongodb_collection('sequence')->insert(array('_id' => $name, 'value' => 0));
 
@@ -105,5 +112,16 @@ function mongodb_next_id($name) {
     'new' => TRUE,
   );
   $sequence = $mongo->command($cmd);
-  return isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
+  $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
+  if (0 < $existing_id - $value + 1) {
+    $cmd = array(
+      'findandmodify' => mongodb_collection_name('sequence'),
+      'query' => array('_id' => $name),
+      'update' => array('$inc' => array('value' => $existing_id - $value + 1)),
+      'new' => TRUE,
+    );
+    $sequence = $mongo->command($cmd);
+    $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
+  }
+  return $value;
 }

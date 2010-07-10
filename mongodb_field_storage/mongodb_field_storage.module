@@ -256,7 +256,40 @@ function mongodb_field_storage_query($query) {
     unset($query->entityConditions['entity_type']);
   }
   else {
-    throw new EntityFieldQueryException('No entity_type');
+    $entity_types = array();
+    foreach ($query->fields as $field) {
+      if (!isset($field['entity types'])) {
+        static $debug;
+        debug($field['field_name']);
+        if (!$debug) {
+          $debug = TRUE;
+          foreach (db_query('SELECT field_name, bundle FROM {field_config_instance}') as $row) {
+            debug($row);
+          }
+        }
+        throw new EntityFieldQueryException("Can't query a field without entity types.");
+      }
+      $entity_types = array_merge($field['entity types'], $entity_types);
+    }
+    if (count($entity_types) == 1) {
+      $entity_type = $entity_types[0];
+    }
+    else {
+      $results = array();
+      $sorted = !empty($query->entityOrder) || !empty($query->propertyOrder) || !empty($query->fieldOrder);
+      foreach (array_keys($entity_types) as $entity_type) {
+        $new_query = clone $query;
+        $current_results = $new_query->entityCondition('entity_type', $entity_type)->execute();
+        if ($sorted && $results && $current_results) {
+          throw new EntityFieldQueryException("Can't sort across entity types");
+        }
+        foreach ($current_results as $result_type => $data) {
+          $results += array($result_type => array());
+          $results[$result_type] += $data;
+        }
+      }
+      return $results;
+    }
   }
   $entity_map = array('entity_id' => '_id', 'revision_id' => '_revision_id', 'bundle' => '_bundle');
   foreach ($query->entityConditions as $field => $data) {
@@ -285,7 +318,7 @@ function mongodb_field_storage_query($query) {
     $cursor->skip($query->range['start'])->limit($query->range['length']);
   }
   if ($query->count) {
-    return $cursor->count();
+    return $cursor->count(TRUE);
   }
   else {
     $sort = array();
@@ -315,19 +348,35 @@ function _mongodb_field_storage_query_value($value, $operator) {
   if (!isset($operator)) {
     $operator = is_array($value) ? 'IN' : '=';
   }
+  if ($operator == 'LIKE') {
+    $percent = strpos($value, '%');
+    if ($percent == strlen($value) - 1) {
+      return new MongoRegex('/^' . substr($value, 0, -1) . '/');
+    }
+    elseif ($percent === FALSE) {
+      return new MongoRegex('/^' . $value . '$/');
+    }
+    else {
+      return new MongoRegex('/' . str_replace('%', '.*', $value) . '$/');
+    }
+  }
   switch ($operator) {
     case '='           : return $value;
     case 'IN'          : return array('$in' => $value);
     case 'NOT IN'      : return array('$nin' => $value);
+    case 'ALL'         : return array('$all' => $value);
     case '<'           : return array('$lt' => $value);
     case '>'           : return array('$gt' => $value);
     case '<='          : return array('$lte' => $value);
     case '>='          : return array('$gte' => $value);
-    case '!='          : return array('$ne' => $value);
+    case '!=':case '<>': return array('$ne' => $value);
     case 'STARTS_WITH' : return new MongoRegex('/^' . $value . '/');
     case 'CONTAINS'    : return new MongoRegex('/' . $value . '/');
     case 'BETWEEN'     : return array('$gte' => $value[0], '$lte' => $value[1]);
-    default : throw new EntityFieldQueryException("$operator not implemented");
+    case 'IS NULL'     : return NULL;
+    default :
+      debug_print_backtrace();
+      throw new EntityFieldQueryException("$operator not implemented");
   }
 }
 

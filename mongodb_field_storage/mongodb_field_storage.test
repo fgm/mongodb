@@ -195,7 +195,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->entityCondition('entity_id', 3);
+      ->entityCondition('entity_id', '3');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 3),
     ), t('Test entity entity_id condition.'));
@@ -203,7 +203,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->propertyCondition('ftid', 3);
+      ->propertyCondition('ftid', '3');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 3),
     ), t('Test entity entity_id condition and entity_id property condition.'));
@@ -242,7 +242,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity')
-      ->entityCondition('revision_id', 3);
+      ->entityCondition('revision_id', '3');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity', 3),
     ), t('Test entity revision_id condition.'));
@@ -250,7 +250,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity')
-      ->propertyCondition('ftvid', 3);
+      ->propertyCondition('ftvid', '3');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity', 3),
     ), t('Test entity revision_id condition and revision_id property condition.'));
@@ -395,9 +395,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test sort entity revision_id property in descending order.'), TRUE);
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->entityCondition('bundle', 'bundle1');
+    $query->entityCondition('entity_type', 'test_entity_bundle_key');
     $query->fieldOrderBy($this->fields[0], 'value', 'ASC');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 1),
@@ -407,9 +405,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test sort field in ascending order without field condition.'), TRUE);
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->entityCondition('bundle', 'bundle1');
+    $query->entityCondition('entity_type', 'test_entity_bundle_key');
     $query->fieldOrderBy($this->fields[0], 'value', 'DESC');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 4),
@@ -419,9 +415,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test sort field in descending order without field condition.'), TRUE);
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->entityCondition('bundle', 'bundle1');
+    $query->entityCondition('entity_type', 'test_entity_bundle_key');
     $query->fieldCondition($this->fields[0], 'value', 0, '>');
     $query->fieldOrderBy($this->fields[0], 'value', 'ASC');
     $this->assertEntityFieldQuery($query, array(
@@ -432,9 +426,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test sort field in ascending order.'), TRUE);
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->entityCondition('bundle', 'bundle1');
+    $query->entityCondition('entity_type', 'test_entity_bundle_key');
     $query->fieldCondition($this->fields[0], 'value', 0, '>');
     $query->fieldOrderBy($this->fields[0], 'value', 'DESC');
     $this->assertEntityFieldQuery($query, array(
@@ -449,7 +441,6 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->entityCondition('bundle', 'bundle1')
       ->propertyCondition('ftid', array(1, 3, 4), 'IN');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 1),
@@ -462,7 +453,6 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->entityCondition('bundle', 'bundle1')
       ->propertyCondition('ftid', array(1, 3, 4), 'IN')
       ->propertyOrderBy('ftid', 'DESC');
     $this->assertEntityFieldQuery($query, array(
@@ -482,7 +472,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query_count = $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->propertyCondition('ftid', 1)
+      ->propertyCondition('ftid', '1')
       ->count()
       ->execute();
     $this->assertEqual($query_count, 1, t('Test query count on entity and property condition.'));
@@ -490,7 +480,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query_count = $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->propertyCondition('ftid', 4, '>')
+      ->propertyCondition('ftid', '4', '>')
       ->count()
       ->execute();
     $this->assertEqual($query_count, 2, t('Test query count on entity and property condition with operator.'));
@@ -507,21 +497,22 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->propertyCondition('fttype', 'undle1', 'CONTAINS');
+      ->propertyCondition('fttype', 'undle2', 'CONTAINS');
     $this->assertEntityFieldQuery($query, array(
-      array('test_entity_bundle_key', 1),
-      array('test_entity_bundle_key', 2),
-      array('test_entity_bundle_key', 3),
-      array('test_entity_bundle_key', 4),
+      array('test_entity_bundle_key', 5),
+      array('test_entity_bundle_key', 6),
     ), t('Test the "contains" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', 3, 'CONTAINS');
+    $query->fieldCondition($this->fields[1], 'shape', 'quar', 'CONTAINS');
     $this->assertEntityFieldQuery($query, array(
-      array('test_entity', 3),
-    ), t('Test the "contains" operation on a field.'));
+      array('test_entity_bundle', 5),
+    ), t('Test the "contains" operation on a field finds appropriately.'));
+
+    $query = new EntityFieldQuery();
+    $query->fieldCondition($this->fields[1], 'shape', 'foobar', 'CONTAINS');
+    $this->assertEntityFieldQuery($query, array(
+    ), t('Test the "contains" operation on a field does not find more than necessary.'));
 
     $query = new EntityFieldQuery();
     $query
@@ -532,10 +523,9 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "equal to" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', 3, '=');
+    $query->fieldCondition($this->fields[0], 'value', 3, '=');
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 3),
       array('test_entity', 3),
     ), t('Test the "equal to" operation on a field.'));
 
@@ -552,10 +542,11 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "not equal to" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', 3, '!=');
+    $query->fieldCondition($this->fields[0], 'value', 3, '!=');
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 1),
+      array('test_entity_bundle_key', 2),
+      array('test_entity_bundle_key', 4),
       array('test_entity', 1),
       array('test_entity', 2),
       array('test_entity', 4),
@@ -570,10 +561,9 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "less than" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', 2, '<');
+    $query->fieldCondition($this->fields[0], 'value', 2, '<');
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 1),
       array('test_entity', 1),
     ), t('Test the "less than" operation on a field.'));
 
@@ -587,10 +577,10 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "less than or equal to" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', 2, '<=');
+    $query->fieldCondition($this->fields[0], 'value', 2, '<=');
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 1),
+      array('test_entity_bundle_key', 2),
       array('test_entity', 1),
       array('test_entity', 2),
     ), t('Test the "less than or equal to" operation on a field.'));
@@ -605,17 +595,16 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "greater than" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', 2, '>');
+    $query->fieldCondition($this->fields[0], 'value', 2, '>');
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 3),
+      array('test_entity_bundle_key', 4),
       array('test_entity', 3),
       array('test_entity', 4),
     ), t('Test the "greater than" operation on a field.'));
 
     $query = new EntityFieldQuery();
     $query
-      ->entityCondition('entity_type', 'test_entity')
       ->entityCondition('entity_type', 'test_entity_bundle_key')
       ->propertyCondition('ftid', 4, '>=');
     $this->assertEntityFieldQuery($query, array(
@@ -625,10 +614,10 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "greater than or equal to" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', 3, '>=');
+    $query->fieldCondition($this->fields[0], 'value', 3, '>=');
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 3),
+      array('test_entity_bundle_key', 4),
       array('test_entity', 3),
       array('test_entity', 4),
     ), t('Test the "greater than or equal to" operation on a field.'));
@@ -645,10 +634,10 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "not in" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', array(3, 4, 100, 101), 'NOT IN');
+    $query->fieldCondition($this->fields[0], 'value', array(3, 4, 100, 101), 'NOT IN');
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 1),
+      array('test_entity_bundle_key', 2),
       array('test_entity', 1),
       array('test_entity', 2),
     ), t('Test the "not in" operation on a field.'));
@@ -663,10 +652,10 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "in" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', array(2, 3), 'IN');
+    $query->fieldCondition($this->fields[0], 'value', array(2, 3), 'IN');
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 2),
+      array('test_entity_bundle_key', 3),
       array('test_entity', 2),
       array('test_entity', 3),
     ), t('Test the "in" operation on a field.'));
@@ -682,13 +671,14 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "between" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->fieldCondition($this->fields[0], 'value', array(1, 3), 'BETWEEN');
+    $query->fieldCondition($this->fields[0], 'value', array(1, 3), 'BETWEEN');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 1),
       array('test_entity_bundle_key', 2),
       array('test_entity_bundle_key', 3),
+      array('test_entity', 1),
+      array('test_entity', 2),
+      array('test_entity', 3),
     ), t('Test the "between" operation on a field.'));
 
     $query = new EntityFieldQuery();
@@ -705,28 +695,25 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "starts_with" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle')
-      ->fieldCondition($this->fields[1], 'shape', 'squ', 'STARTS_WITH');
+    $query->fieldCondition($this->fields[1], 'shape', 'squ', 'STARTS_WITH');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle', 5),
     ), t('Test the "starts_with" operation on a field.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity')
-      ->fieldCondition($this->fields[0], 'value', 3);
+    $query->fieldCondition($this->fields[0], 'value', 3);
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 3),
       array('test_entity', 3),
     ), t('Test omission of an operator with a single item.'));
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->fieldCondition($this->fields[0], 'value', array(2, 3));
+    $query->fieldCondition($this->fields[0], 'value', array(2, 3));
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 2),
       array('test_entity_bundle_key', 3),
+      array('test_entity', 2),
+      array('test_entity', 3),
     ), t('Test omission of an operator with multiple items.'));
 
     $query = new EntityFieldQuery();
@@ -778,11 +765,10 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test offset on a property.'), TRUE);
 
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->fieldCondition($this->fields[0], 'value', 0, '>')
-      ->fieldOrderBy($this->fields[0], 'value', 'ASC')
-      ->range(2, 4);
+    $query->entityCondition('entity_type', 'test_entity_bundle_key');
+    $query->fieldCondition($this->fields[0], 'value', 0, '>');
+    $query->fieldOrderBy($this->fields[0], 'value', 'ASC');
+    $query->range(2, 4);
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 3),
       array('test_entity_bundle_key', 4),
@@ -796,31 +782,51 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
       field_attach_insert('test_entity_bundle', $entity);
     }
 
+    $query = new EntityFieldQuery();
+    $query->fieldCondition($this->fields[0], 'value', 2, '>');
+    $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 3),
+      array('test_entity_bundle_key', 4),
+      array('test_entity', 3),
+      array('test_entity', 4),
+      array('test_entity_bundle', 8),
+      array('test_entity_bundle', 9),
+    ), t('Select a field across multiple entities.'));
+
+    $query = new EntityFieldQuery();
+    $query->fieldCondition($this->fields[1], 'shape', 'square');
+    $query->fieldCondition($this->fields[1], 'color', 'blue');
+    $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle', 5),
+    ), t('Test without a delta group.'));
+
+    $query = new EntityFieldQuery();
+    $query->fieldCondition($this->fields[1], 'shape', 'square', '=', 'group');
+    $query->fieldCondition($this->fields[1], 'color', 'blue', '=', 'group');
+    $this->assertEntityFieldQuery($query, array(), t('Test with a delta group.'));
+
     // Test query on a deleted field.
     field_attach_delete_bundle('test_entity_bundle_key', 'bundle1');
     field_attach_delete_bundle('test_entity', 'test_bundle');
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle')
-      ->fieldCondition($this->fields[0], 'value', 3);
+    $query->fieldCondition($this->fields[0], 'value', '3');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle', 8),
     ), t('Test query on a field after deleting field from some entities.'));
 
     field_attach_delete_bundle('test_entity_bundle', 'test_entity_bundle');
     $query = new EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'test_entity_bundle')
-      ->fieldCondition($this->fields[0], 'value', 3);
+    $query->fieldCondition($this->fields[0], 'value', '3');
     $this->assertEntityFieldQuery($query, array(), t('Test query on a field after deleting field from all entities.'));
 
     $query = new EntityFieldQuery();
     $query
-      ->entityCondition('entity_type', 'test_entity_bundle')
-      ->fieldCondition($this->fields[0], 'value', 3)
+      ->fieldCondition($this->fields[0], 'value', '3')
       ->deleted(TRUE);
     $this->assertEntityFieldQuery($query, array(
+      array('test_entity_bundle_key', 3),
       array('test_entity_bundle', 8),
+      array('test_entity', 3),
     ), t('Test query on a deleted field with deleted option set to TRUE.'));
   }
 
