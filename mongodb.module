@@ -74,13 +74,12 @@ function mongodb_collection_name($name) {
       $simpletest_prefix = '';
     }
   }
-  $db_prefix_string = is_array($db_prefix) ? $db_prefix['default'] : $db_prefix;
-  // However, once $db_prefix is filled by the database, the simpletest_prefix
+  // However, once the test information is initialized, simpletest_prefix
   // is no longer needed.
-  if ($simpletest_prefix && $db_prefix_string && strpos($db_prefix_string, $simpletest_prefix) !== FALSE) {
-    $simpletest_prefix = '';
+  if (!empty($GLOBALS['drupal_test_info']['test_run_id'])) {
+    $simpletest_prefix = $GLOBALS['drupal_test_info']['test_run_id'];
   }
-  return $db_prefix_string . $simpletest_prefix . $name;
+  return $simpletest_prefix . $name;
 }
 
 function mongodb_test_group_finished() {
