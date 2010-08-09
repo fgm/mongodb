@@ -5,6 +5,31 @@
  *   Test mongodb session implementation.
  */
 
+/**
+ * Override for SessionTestCase.
+ *
+ * Enable the MongoDB session module that is required to catch changes
+ * made to users.
+ */
+class MongoDBSessionTestCase extends SessionTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Session tests',
+      'description' => 'Drupal session handling tests.',
+      'group' => 'MongoDB'
+    );
+  }
+
+  function setUp() {
+    // Skip SessionTestCase::setUp() and call the DrupalWebTestCase directly.
+    // Yes, this is valid. Ugly, but valid.
+    DrupalWebTestCase::setUp('mongodb_session', 'mongodb', 'session_test');
+  }
+}
+
+/**
+ * Override for SessionHttpsTestCase.
+ */
 class MongoDBSessionHttpsTestCase extends SessionHttpsTestCase {
 
   public static function getInfo() {
