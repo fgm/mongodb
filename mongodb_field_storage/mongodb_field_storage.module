@@ -274,20 +274,24 @@ function mongodb_field_storage_query($query) {
     if (count($query->fields) == 1) {
       $field = $query->fields[0];
       $field_has_data_query = new EntityFieldQuery;
+      // Compile the same query as field_has_data().
       $field_has_data_query
         ->fieldCondition($field)
         ->range(0, 1)
         ->count();
       $field_has_data_query->executeCallback = 'mongodb_field_storage_query';
       $success = TRUE;
+      // Check that the original query is identical to this one.
       foreach (get_object_vars($field_has_data_query) as $key => $value) {
         if ($value != $query->$key) {
           $success = FALSE;
         }
       }
+      // If the query is coming from field_has_data() then try it with every
+      // entity type.
       if ($success) {
         foreach ($field['bundles'] as $entity_type => $data) {
-          if (mongodb_collection('fields_current', $entity_type)->find()->limit(1)->count()) {
+          if (mongodb_collection('fields_current', $entity_type)->find()->limit(1)->count(TRUE)) {
             return TRUE;
           }
         }
