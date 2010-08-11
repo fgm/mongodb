@@ -164,16 +164,17 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
               throw new MongodbStorageException('Invalid delta, not saving');
             }
             foreach ($values as $delta => $column_values) {
+              $store_values = array();
               foreach ($column_values as $column_name => $column_value) {
                 if (isset($field['columns'][$column_name])) {
-                  $column_values[$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_values[$column_name]);
+                  $store_values[$column_name] = _mongodb_field_storage_value($field['columns'][$column_name]['type'], $column_values[$column_name]);
                 }
               }
               // Collapse the field structure.
               if ($language != LANGUAGE_NONE) {
-                $column_values['_language'] = $language;
+                $store_values['_language'] = $language;
               }
-              $field_values[] = $column_values;
+              $field_values[] = $store_values;
             }
           }
         }
@@ -183,7 +184,20 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
   }
 
   // Save the object.
-  mongodb_collection('fields_current', $entity_type)->save($new_entity);
+  $collection = mongodb_collection('fields_current', $entity_type);
+  $collection->save($new_entity);
+  $slaves = variable_get('mongodb_slave');
+  if ($slaves) {
+    $return = $collection->db->runCommand(array(
+      'getlasterror' => 1,
+      'w' => $slaves,
+      'wtimeout' => 3000,
+    ));
+    if ($return['wtimeout']) {
+      header('HTTP/1.0 500 Database write failed');
+      exit;
+    }
+  }
   if (isset($revision_id)) {
     $new_entity->_id = $revision_id;
     mongodb_collection('fields_revision', $entity_type)->save($new_entity);
@@ -214,8 +228,9 @@ function mongodb_field_storage_field_storage_delete($entity_type, $entity, $fiel
   mongodb_collection('fields_current', $entity_type)->remove(array(
     '_id' => (int) $entity_id,
   ));
+  $entity_info = entity_get_info($entity_type);
   mongodb_collection('fields_revision', $entity_type)->remove(array(
-    '@entity_id' => (int) $entity_id,
+    $entity_info['entity keys']['id'] => (int) $entity_id,
   ));
 }
 
@@ -384,8 +399,8 @@ function _mongodb_field_storage_query_value($value, $operator) {
  * Implement hook_field_attach_rename_bundle().
  */
 function mongodb_field_storage_field_attach_rename_bundle($entity_type, $bundle_old, $bundle_new) {
-  mongodb_collection('fields_current', $entity_type)->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
-  mongodb_collection('fields_revision', $entity_type)->update(array('@bundle' => $bundle_old), array('@bundle' => $bundle_new), array('multiple' => TRUE));
+  mongodb_collection('fields_current', $entity_type)->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE));
+  mongodb_collection('fields_revision', $entity_type)->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE));
 }
 
 /**
