@@ -271,40 +271,30 @@ function mongodb_field_storage_query($query) {
     unset($query->entityConditions['entity_type']);
   }
   else {
-    $entity_types = array();
-    foreach ($query->fields as $field) {
-      if (!isset($field['entity types'])) {
-        static $debug;
-        debug($field['field_name']);
-        if (!$debug) {
-          $debug = TRUE;
-          foreach (db_query('SELECT field_name, bundle FROM {field_config_instance}') as $row) {
-            debug($row);
+    if (count($query->fields) == 1) {
+      $field = $query->fields[0];
+      $field_has_data_query = new EntityFieldQuery;
+      $field_has_data_query
+        ->fieldCondition($field)
+        ->range(0, 1)
+        ->count();
+      $field_has_data_query->executeCallback = 'mongodb_field_storage_query';
+      $success = TRUE;
+      foreach (get_object_vars($field_has_data_query) as $key => $value) {
+        if ($value != $query->$key) {
+          $success = FALSE;
+        }
+      }
+      if ($success) {
+        foreach ($field['bundles'] as $entity_type => $data) {
+          if (mongodb_collection('fields_current', $entity_type)->find()->limit(1)->count()) {
+            return TRUE;
           }
         }
-        throw new EntityFieldQueryException("Can't query a field without entity types.");
+        return FALSE;
       }
-      $entity_types = array_merge($field['entity types'], $entity_types);
     }
-    if (count($entity_types) == 1) {
-      $entity_type = $entity_types[0];
-    }
-    else {
-      $results = array();
-      $sorted = !empty($query->entityOrder) || !empty($query->propertyOrder) || !empty($query->fieldOrder);
-      foreach (array_keys($entity_types) as $entity_type) {
-        $new_query = clone $query;
-        $current_results = $new_query->entityCondition('entity_type', $entity_type)->execute();
-        if ($sorted && $results && $current_results) {
-          throw new EntityFieldQueryException("Can't sort across entity types");
-        }
-        foreach ($current_results as $result_type => $data) {
-          $results += array($result_type => array());
-          $results[$result_type] += $data;
-        }
-      }
-      return $results;
-    }
+    throw new EntityFieldQueryException('No entity_type');
   }
   $entity_map = array('entity_id' => '_id', 'revision_id' => '_revision_id', 'bundle' => '_bundle');
   foreach ($query->entityConditions as $field => $data) {
