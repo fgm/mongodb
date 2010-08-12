@@ -180,7 +180,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
         }
       }
     }
-    $new_entity->$field_name = $field_values;
+    $new_entity->$field_name = empty($field_values) ? NULL : $field_values;
   }
 
   // Save the object.
