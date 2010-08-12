@@ -35,9 +35,40 @@ function mongodb_watchdog_update_7000() {
  * numbers should be much faster to create than one with a string included.
  */
 function mongodb_watchdog_ensure_indexes() {
+  // Index for adding/updating increments.
   $index = array(
     'line' => 1,
     'timestamp' => -1
   );
   mongodb_collection('watchdog')->ensureIndex($index);
+
+  // Index for admin page without filters.
+  $index = array(
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+
+/*// Not adding admin page filter indexes, trying to keep writes fast.
+  // Index for admin page filtering by type.
+  $index = array(
+    'type' => 1,
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+
+  // Index for admin page filtering by severity.
+  $index = array(
+    'severity' => 1,
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+
+  // Index for admin page filtering by type and severity.
+  $index = array(
+    'type' => 1,
+    'severity' => 1,
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+*/
 }
