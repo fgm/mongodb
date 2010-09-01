@@ -55,7 +55,39 @@ function mongodb_collection() {
   // Prefix the collection name for simpletest. It will be in the same DB as the
   // non-prefixed version so it's enough to prefix after choosing the mongodb
   // object.
-  return mongodb($alias)->selectCollection($prefixed);
+  $collection = mongodb($alias)->selectCollection(mongodb_collection_name($collection_name));
+  return variable_get('mongodb_debug', FALSE) ? new mongoDebugCollection($collection) : $collection;
+}
+
+class mongoDebugCollection {
+  function __construct($collection) {
+    $this->collection = $collection;
+  }
+
+  function find($query = array(), $fields = array()) {
+    debug('find');
+    debug($query);
+    debug($fields);
+    return mongoDebugCursor($this->collection->find($query, $fields));
+  }
+
+  function __call($name, $arguments) {
+    debug($name);
+    debug($arguments);
+    return call_user_func_array(array($this->collection, $name), $arguments);
+  }
+}
+
+class mongoDebugCursor {
+  function __construct($collection) {
+    $this->collection = $collection;
+  }
+
+  function __call($name, $arguments) {
+    debug($name);
+    debug($arguments);
+    return call_user_func_array(array($this->collection, $name), $arguments);
+  }
 }
 
 /**
@@ -93,6 +125,19 @@ function mongodb_test_group_finished() {
       }
     }
   }
+}
+
+/**
+ * Allow for the database connection we are using to be changed.
+ *
+ * @param $alias
+ *   String the alias that we want to change the connection for.
+ * @param $connection_name
+ *   String the name of the connection we will use.
+ */
+function mongodb_set_active_connection($alias, $connection_name = 'default') {
+  // No need to check if the connection is valid as mongodb() does this.
+  $GLOBALS['conf']['mongodb_collections'][$alias] = $connection_name;
 }
 
 /**
