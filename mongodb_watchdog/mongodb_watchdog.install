@@ -72,7 +72,10 @@ function mongodb_watchdog_ensure_indexes() {
 function mongodb_watchdog_update_7000() {
   mongodb_watchdog_ensure_indexes();
 }
- 
+
+/**
+ * Rename watchhdog to watchdog_backup and recreate capped tightly.
+ */ 
 function mongodb_watchdog_update_7001() {
   $collection = mongodb_collection('watchdog');
   $collection->connection->admin->command(array('renameCollection' => (string)$collection, 'to' => $collection . '_backup'));
