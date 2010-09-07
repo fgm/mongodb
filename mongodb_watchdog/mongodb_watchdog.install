@@ -21,13 +21,6 @@ function mongodb_watchdog_enable() {
 }
  
 /**
- * Add the watchdog index.
- */
-function mongodb_watchdog_update_7000() {
-  mongodb_watchdog_ensure_indexes();
-}
- 
-/**
  * Create an index for the watchdog table.
  *
  * This index is on <line, timestamp> instead of <function, line, timestamp>,
@@ -73,7 +66,14 @@ function mongodb_watchdog_ensure_indexes() {
 */
 }
 
+/**
+ * Add the watchdog index.
+ */
 function mongodb_watchdog_update_7000() {
+  mongodb_watchdog_ensure_indexes();
+}
+ 
+function mongodb_watchdog_update_7001() {
   $collection = mongodb_collection('watchdog');
   $collection->connection->admin->command(array('renameCollection' => (string)$collection, 'to' => $collection . '_backup'));
   $collection->db->createCollection($collection->getName(), TRUE, 10000000, 5000);
