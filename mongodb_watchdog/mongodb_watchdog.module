@@ -33,47 +33,8 @@ function mongodb_watchdog_menu() {
  * Load the MongoDB watchdog event.
  */
 function mongodb_watchdog_event_load($id) {
-  $result = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))
-    ->findOne(array('_id' => new MongoId($id)));
+  $result = mongodb_collection('watchdog')->findOne(array('_id' => $id));
   return $result ? $result : FALSE;
-}
-
-/**
- * Implement hook_form_<form_id>_alter for the system logging form.
- *
- * @param array $form
- * @param array $form_state
- * @return void
- */
-function mongodb_watchdog_form_system_logging_settings_alter(&$form, &$form_state) {
-  $form['mongodb_watchdog'] = array(
-    '#type'  => 'fieldset',
-    '#title' => t('MongoDB settings'),
-    '#collapsible' => TRUE,
-  );
-  $form['mongodb_watchdog']['mongodb_watchdog_connection'] = array(
-    '#title' => t('MongoDB Connection URL'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_connection', NULL),
-  );
-  $form['mongodb_watchdog']['mongodb_watchdog_dbname'] = array(
-    '#title' => t('MongoDB Database name'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_dbname', 'drupal'),
-    '#description' => t('In which database should the watchdog be stored'),
-  );
-  $form['mongodb_watchdog']['mongodb_watchdog_collectionname'] = array(
-    '#title' => t('MongoDB Collection name'),
-    '#type'  => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_collectionname', 'watchdog'),
-    '#description' => t('In which collection should the watchdog be stored'),
-  );
-  $form['mongodb_watchdog']['mongodb_watchdog_flood_expire'] = array(
-    '#title' => t('MongoDB flood expiration'),
-    '#type' => 'textfield',
-    '#defualt_value' => variable_get('mongodb_watchdog_flood_expire', 15),
-    '#description' => t('If an identical entry occurs within this number of seconds, update the count rather than create a new record, helps with capped collections. Set to -1 to disable flood expiration.'),
-  );
 }
 
 /**
@@ -82,22 +43,29 @@ function mongodb_watchdog_form_system_logging_settings_alter(&$form, &$form_stat
 function mongodb_watchdog_watchdog(array $log_entry) {
   // Find the function that generated this error.
   $log_entry = (array) $log_entry;
+  $variables = $log_entry['variables'];
+  $variables['timestamp'] = $log_entry['timestamp'];
+  unset($log_entry['variables'], $log_entry['timestamp']);
   _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
-
-  // Write to watchdog, avoid watchdog spamming by skippng the  write and
-  // maintaining a count for similar entries that occur within 10 seconds.
-  // We sacrifice accuracy for speed by using only the timestamp and line as
-  // the index, and not timestamp, file, and line.
-  $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
+  $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
+  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $account = $log_entry['user'];
+  // No need to store the whole user object.
+  $log_entry['user'] = l($account->name, "user/$account->uid");
   $newobj = array(
     '$set' => $log_entry,
     '$inc' => array('count' => 1),
   );
-  $query = array(
-    'line' => $log_entry['line'],
-    'timestamp' => array('$gt' => REQUEST_TIME - variable_get('mongodb_watchdog_flood_expire', 15)),
-  );
-  $collection->update($query, $newobj, array('upsert' => TRUE, 'multiple' => FALSE));
+  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE));
+  if ($variables) {
+    $result = $collection->db->command(array('getlasterror' => 1));
+    $collection = mongodb_collection($id);
+    if (empty($result['updatedExisting'])) {
+      $max = variable_get('mongodb_watchdog_items', 10000);
+      $collection->db->createcollection($collection->getName(), TRUE, $max * 1000, $max);
+    }
+    $collection->insert($variables);
+  }
 }
 
 /**

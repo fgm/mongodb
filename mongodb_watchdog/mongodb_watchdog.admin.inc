@@ -66,7 +66,6 @@ function mongodb_watchdog_overview() {
       $icons[$value['severity']],
       isset($value['count']) && $value['count'] > 1 ? $value['count'] : '',
       t($value['type']),
-      format_date($value['timestamp'], 'short'),
       l($message, "admin/reports/mongodb-event/$id"),
       theme('username', array('account' => (object) $value['user'])),
       $value['link'],
@@ -107,12 +106,8 @@ function mongodb_watchdog_event($dblog) {
       t($dblog['type']),
     ),
     array(
-      array('data' => t('Date'), 'header' => TRUE),
-      format_date($dblog['timestamp'], 'long'),
-    ),
-    array(
       array('data' => t('User'), 'header' => TRUE),
-      theme('username', array('account' => (object) $dblog['user'])),
+      $dblog['user']
     ),
     array(
       array('data' => t('Location'), 'header' => TRUE),
@@ -121,10 +116,6 @@ function mongodb_watchdog_event($dblog) {
     array(
       array('data' => t('Referrer'), 'header' => TRUE),
       l($dblog['referer'], $dblog['referer']),
-    ),
-    array(
-      array('data' => t('Message'), 'header' => TRUE),
-      _mongodb_watchdog_format_message($dblog),
     ),
     array(
       array('data' => t('Severity'), 'header' => TRUE),
@@ -155,12 +146,49 @@ function mongodb_watchdog_event($dblog) {
       isset($dblog['count']) ? $dblog['count'] : '',
     ),
   );
-  $build['mongodb_watchdog_event_table'] = array(
+  $build['mongodb_watchdog_event_table']['header'] = array(
     '#theme' => 'table',
     '#rows' => $rows,
     '#attributes' => array('class' => array('dblog-event')),
   );
+  $total = min($dblog['count'], variable_get('mongodb_watchdog_items', 10000));
+  $limit = 20;
+  $pagenumber = ex_potpourri_pager_init(0, $limit, $total);
+  $result = mongodb_collection($dblog['_id'])->find()->skip($pagenumber * $total)->limit($limit);
+  $severity = watchdog_severity_levels();
+  $rows = array();
+  $header = array(
+    array('data' => t('Date'), 'header' => TRUE),
+    array('data' => t('message'), 'header' => TRUE),
+  );
+  foreach ($result as $variables) {
+    $dblog['variables'] = $variables;
+    $rows[] = array(
+        format_date($variables['timestamp'], 'short'),
+        _mongodb_watchdog_format_message($dblog),
+    );
+  }
+  $build['mongodb_watchdog_event_table']['messages'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
   return $build;
+}
+
+function ex_potpourri_pager_init($element, $limit, $total) {
+  global $pager_page_array, $pager_total, $pager_total_items;
+
+  // Initialize pager, see pager.inc.
+  $page = isset($_GET['page']) ? $_GET['page'] : '';
+  $pager_page_array = explode(',', $page);
+  if (!isset($pager_page_array[$element])) {
+    $pager_page_array[$element] = 0;
+  }
+  $pager_total_items[$element] = $total;
+  $pager_total[$element] = ceil($pager_total_items[$element] / $limit);
+  $pager_page_array[$element] = max(0, min((int)$pager_page_array[$element], ((int)$pager_total[$element]) - 1));
+  return isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
 }
 
 /**
