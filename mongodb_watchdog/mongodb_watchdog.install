@@ -72,3 +72,9 @@ function mongodb_watchdog_ensure_indexes() {
   mongodb_collection('watchdog')->ensureIndex($index);
 */
 }
+
+function mongodb_watchdog_update_7000() {
+  $collection = mongodb_collection('watchdog');
+  $collection->connection->admin->command(array('renameCollection' => (string)$collection, 'to' => $collection . '_backup'));
+  $collection->db->createCollection($collection->getName(), TRUE, 10000000, 5000);
+}
