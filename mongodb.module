@@ -32,6 +32,7 @@ function mongodb($alias = 'default') {
   if (!isset($mongo_objects[$host][$db])) {
     $mongo = new Mongo($host);
     $mongo_objects[$host][$db] = $mongo->selectDB($db);
+    $mongo_objects[$host][$db]->connection = $mongo;
   }
   return $mongo_objects[$host][$db];
 }
@@ -55,7 +56,9 @@ function mongodb_collection() {
   // Prefix the collection name for simpletest. It will be in the same DB as the
   // non-prefixed version so it's enough to prefix after choosing the mongodb
   // object.
-  $collection = mongodb($alias)->selectCollection(mongodb_collection_name($collection_name));
+  $mongodb_object = mongodb($alias);
+  $collection = $mongodb_object->selectCollection(mongodb_collection_name($collection_name));
+  $collection->connection = $mongodb_object->connection;
   return variable_get('mongodb_debug', FALSE) ? new mongoDebugCollection($collection) : $collection;
 }
 
