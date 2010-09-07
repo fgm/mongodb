@@ -153,7 +153,7 @@ function mongodb_watchdog_event($dblog) {
   );
   $total = min($dblog['count'], variable_get('mongodb_watchdog_items', 10000));
   $limit = 20;
-  $pagenumber = ex_potpourri_pager_init(0, $limit, $total);
+  $pagenumber = mongodb_watchdog_pager_init(0, $limit, $total);
   $result = mongodb_collection($dblog['_id'])->find()->skip($pagenumber * $total)->limit($limit);
   $severity = watchdog_severity_levels();
   $rows = array();
@@ -176,7 +176,10 @@ function mongodb_watchdog_event($dblog) {
   return $build;
 }
 
-function ex_potpourri_pager_init($element, $limit, $total) {
+/**
+ * Initialize the global pager variables for use in a mongodb_watchdog list. 
+ */
+function mongodb_watchdog_pager_init($element, $limit, $total) {
   global $pager_page_array, $pager_total, $pager_total_items;
 
   // Initialize pager, see pager.inc.
