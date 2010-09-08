@@ -7,3 +7,4 @@ version = VERSION
 dependencies[] = mongodb
 core = 7.x
 files[] = mongodb_block.module
+files[] = mongodb_block.install

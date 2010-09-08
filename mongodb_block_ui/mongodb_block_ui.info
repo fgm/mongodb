@@ -7,3 +7,4 @@ core = 7.x
 dependencies[] = mongodb_block
 files[] = mongodb_block_ui.module
 files[] = mongodb_block_ui.admin.inc
+files[] = mongodb_block_ui.install
