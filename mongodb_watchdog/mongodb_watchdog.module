@@ -48,7 +48,7 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   unset($log_entry['variables'], $log_entry['timestamp']);
   _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
   $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
-  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $collection = mongodb_collection('watchdog');
   $account = $log_entry['user'];
   // No need to store the whole user object.
   $log_entry['user'] = l($account->name, "user/$account->uid");
@@ -59,7 +59,7 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE));
   if ($variables) {
     $result = $collection->db->command(array('getlasterror' => 1));
-    $collection = mongodb_collection($id);
+    $collection = $collection->db->selectCollection($id);
     if (empty($result['updatedExisting'])) {
       $max = variable_get('mongodb_watchdog_items', 10000);
       $collection->db->createcollection($collection->getName(), TRUE, $max * 1000, $max);
