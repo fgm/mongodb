@@ -61,6 +61,11 @@ function mongodb_watchdog_overview() {
 
   $rows = array();
   foreach ($cursor as $id => $value) {
+    if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).' && ($result = mongodb_collection('watchdog_event_' . $value['_id'])->find()->sort(array('timestamp' => -1))->limit(1)->getNext())) {
+      $value['file'] = basename($result['variables']['%file']);
+      $value['line'] = $result['variables']['%line'];
+      $value['message'] = $result['variables']['%function'] . ': ' . $result['variables']['%type'];
+    }
     $message = truncate_utf8(strip_tags(_mongodb_watchdog_format_message($value)), 56, TRUE, TRUE);
     $rows[$id] = array(
       $icons[$value['severity']],
