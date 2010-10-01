@@ -33,7 +33,7 @@ function mongodb_watchdog_menu() {
  * Load the MongoDB watchdog event.
  */
 function mongodb_watchdog_event_load($id) {
-  $result = mongodb_collection('watchdog')->findOne(array('_id' => $id));
+  $result = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))->findOne(array('_id' => $id));
   return $result ? $result : FALSE;
 }
 
