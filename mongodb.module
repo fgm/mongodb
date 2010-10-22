@@ -147,9 +147,6 @@ function mongodb_set_active_connection($alias, $connection_name = 'default') {
  * Return the next id in a sequence.
  */
 function mongodb_next_id($name, $existing_id = 0) {
-  // Make sure that the sequence key exists.
-  mongodb_collection('sequence')->insert(array('_id' => $name, 'value' => 0));
-
   // Atomitcaly get the next id in the sequence.
   $mongo = mongodb();
   $cmd = array(
@@ -158,8 +155,14 @@ function mongodb_next_id($name, $existing_id = 0) {
     'update' => array('$inc' => array('value' => 1)),
     'new' => TRUE,
   );
-  $sequence = $mongo->command($cmd);
-  $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
+  try {
+    $sequence = $mongo->command($cmd);
+    $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
+  }
+  catch (Exception $e) {
+    mongodb_collection('sequence')->insert(array('_id' => $name, 'value' => $existing_id + 1));
+    return $existing_id + 1;
+  }
   if (0 < $existing_id - $value + 1) {
     $cmd = array(
       'findandmodify' => mongodb_collection_name('sequence'),
