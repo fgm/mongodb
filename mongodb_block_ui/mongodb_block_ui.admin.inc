@@ -328,6 +328,13 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $module, $delta) 
       '#default_value' => isset($block->pages) ? implode("\n", $block->pages) : '',
       '#description' => $description,
     );
+    $title = t('Excluded pages');
+    $form['visibility']['path']['pages_exclude'] = array(
+      '#type' => 'textarea',
+      '#title' => $title,
+      '#default_value' => isset($block->pages_exclude) ? implode("\n", $block->pages_exclude) : '',
+      '#description' => $description,
+    );
   //}
 
   /*
@@ -410,10 +417,11 @@ function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
   );
   $set = array(
     'pages' => _mongodb_block_ui_admin_pages($form_state['values']['pages']),
+    'pages_exclude' => _mongodb_block_ui_admin_pages($form_state['values']['pages_exclude']),
     'title' => $form_state['values']['title'],
     'node_type' => array_keys(array_filter($form_state['values']['node_type'])),
   );
-  
+
   if ($form_state['values']['module'] == 'mongodb_block_ui') {
     $set['body'] = $form_state['values']['body'];
     $set['format'] = $form_state['values']['format'];
@@ -494,6 +502,7 @@ function mongodb_block_ui_add_block_form_submit($form, &$form_state) {
     'info' => $form_state['values']['info'],
     'format' => (int) $form_state['values']['format'],
     'pages' => _mongodb_block_ui_admin_pages($form_state['values']['pages']),
+    'pages_exclude' => _mongodb_block_ui_admin_pages($form_state['values']['pages_exclude']),
     'title' => $form_state['values']['title'],
     'node_type' => array_keys(array_filter($form_state['values']['node_type'])),
     'status' => 0,
