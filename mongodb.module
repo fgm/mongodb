@@ -155,19 +155,21 @@ function mongodb_next_id($name, $existing_id = 0) {
     'update' => array('$inc' => array('value' => 1)),
     'new' => TRUE,
   );
+  // It's very likely that this is not necessary as command returns an array
+  // not an exception. The increment will, however, will fix the problem of
+  // the sequence not existing. Still, better safe than sorry.
   try {
     $sequence = $mongo->command($cmd);
     $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
   }
   catch (Exception $e) {
-    mongodb_collection('sequence')->insert(array('_id' => $name, 'value' => $existing_id + 1));
-    return $existing_id + 1;
   }
   if (0 < $existing_id - $value + 1) {
     $cmd = array(
       'findandmodify' => mongodb_collection_name('sequence'),
       'query' => array('_id' => $name),
       'update' => array('$inc' => array('value' => $existing_id - $value + 1)),
+      'upsert' => TRUE,
       'new' => TRUE,
     );
     $sequence = $mongo->command($cmd);
