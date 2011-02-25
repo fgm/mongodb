@@ -1,4 +1,3 @@
-; $Id$;
 name = MongoDB Cache
 description = Integration between MongoDB as Cache.
 package = MongoDB
