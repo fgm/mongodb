@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 
 if (!function_exists('_drupal_session_open')) {

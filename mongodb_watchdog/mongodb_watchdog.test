@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class MongoDBLogTestCase extends DrupalWebTestCase {
   protected $big_user;

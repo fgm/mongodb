@@ -1,4 +1,3 @@
-; $Id$
 
 name = MongoDB Storage
 description = Store Field content on MongoDB.

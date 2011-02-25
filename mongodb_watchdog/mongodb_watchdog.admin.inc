@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *   Settings for mongodb. Moved back to module file.

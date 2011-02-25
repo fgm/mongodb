@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Execute all the Field storage unit test with MongoDB-based field storage.

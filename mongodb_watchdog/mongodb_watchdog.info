@@ -1,4 +1,3 @@
-;$Id$
 name = MongoDB watchdog
 description = 'A watchdog implementation using MongoDB'
 package = MongoDB
