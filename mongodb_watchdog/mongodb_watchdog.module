@@ -30,6 +30,15 @@ function mongodb_watchdog_menu() {
     'weight' => 4,
   );
 
+  $items['admin/reports/dblog/mongodb/event/%'] = array(
+    'title' => 'Details',
+    'page callback' => 'mongodb_watchdog_event',
+    'page arguments' => array(5),
+    'access arguments' => array('access site reports'),
+    'type' => MENU_CALLBACK,
+    'file' => 'mongodb_watchdog.admin.inc',
+  );
+
   return $items;
 }
 
