@@ -1,0 +1,12 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the mongodb field storage module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function mongodb_field_storage_install() {
+  variable_set('field_storage_default', 'mongodb_field_storage');
+}

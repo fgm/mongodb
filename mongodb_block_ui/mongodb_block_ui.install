@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Install, update and uninstall functions for the block module.
+ * Install, update and uninstall functions for the MongoDB block UI module.
  */
 
 /**
