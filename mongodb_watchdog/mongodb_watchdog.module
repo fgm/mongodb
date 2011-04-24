@@ -42,29 +42,34 @@ function mongodb_watchdog_event_load($id) {
 function mongodb_watchdog_watchdog(array $log_entry) {
   // Find the function that generated this error.
   $log_entry = (array) $log_entry;
-  $variables = $log_entry['variables'];
-  $variables['timestamp'] = $log_entry['timestamp'];
-  unset($log_entry['variables'], $log_entry['timestamp']);
   _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
-  $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
-  $collection = mongodb_collection('watchdog');
   $account = $log_entry['user'];
-  // No need to store the whole user object.
-  $log_entry['user'] = l($account->name, "user/$account->uid");
+  $event = array(
+    'variables' => $log_entry['variables'],
+    'timestamp' => $log_entry['timestamp'],
+    'user' => array('name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')), 'uid' => $account->uid),
+    'ip' => $log_entry['ip'],
+    'request_uri' => $log_entry['request_uri'],
+    'referer' => $log_entry['referer'],
+    'link' => $log_entry['link'],
+  );
+  unset($log_entry['variables'], $log_entry['user'], $log_entry['ip'], $log_entry['request_uri'], $log_entry['referer'], $log_entry['link']);
+
   $newobj = array(
     '$set' => $log_entry,
     '$inc' => array('count' => 1),
   );
+  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
   $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE));
-  if ($variables) {
-    $result = $collection->db->command(array('getlasterror' => 1));
-    $collection = $collection->db->selectCollection($id);
-    if (empty($result['updatedExisting'])) {
-      $max = variable_get('mongodb_watchdog_items', 10000);
-      $collection->db->createcollection($collection->getName(), TRUE, $max * 1000, $max);
-    }
-    $collection->insert($variables);
+  $result = $collection->db->command(array('getlasterror' => 1));
+  $collection = $collection->db->selectCollection('watchdog_event_' . $id);
+  if (empty($result['updatedExisting'])) {
+    $max = variable_get('mongodb_watchdog_items', 10000);
+    $command = array('create' => $collection->getName(), 'capped' => TRUE, 'size' => $max * 1000, "max" => $max);
+    $collection->db->command($command);
   }
+  $collection->insert($event);
 }
 
 /**

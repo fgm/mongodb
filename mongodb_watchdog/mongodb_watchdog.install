@@ -40,7 +40,6 @@ function mongodb_watchdog_ensure_indexes() {
   );
   mongodb_collection('watchdog')->ensureIndex($index);
 
-/*// Not adding admin page filter indexes, trying to keep writes fast.
   // Index for admin page filtering by type.
   $index = array(
     'type' => 1,
@@ -62,21 +61,4 @@ function mongodb_watchdog_ensure_indexes() {
     'timestamp' => -1
   );
   mongodb_collection('watchdog')->ensureIndex($index);
-*/
-}
-
-/**
- * Add the watchdog index.
- */
-function mongodb_watchdog_update_7000() {
-  mongodb_watchdog_ensure_indexes();
-}
-
-/**
- * Rename watchhdog to watchdog_backup and recreate capped tightly.
- */ 
-function mongodb_watchdog_update_7001() {
-  $collection = mongodb_collection('watchdog');
-  $collection->connection->admin->command(array('renameCollection' => (string)$collection, 'to' => $collection . '_backup'));
-  $collection->db->createCollection($collection->getName(), TRUE, 10000000, 5000);
 }
