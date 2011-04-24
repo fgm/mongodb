@@ -103,8 +103,9 @@ function _drupal_session_read($sid) {
     $session = $collection->findOne(array('sid' => $sid));
   }
 
-  // We found the client's session record and they are an authenticated user.
-  if ($session && !empty($session['uid'])) {
+  // We found the client's session record and they are an authenticated,
+  // active user.
+  if ($session && !empty($session['uid']) && $session['status'] == 1) {
     $collection = mongodb_collection('fields_current', 'user');
     $user = (object) $collection->findOne(array('_id' => $session['uid']));
     // Copy from SQL.
@@ -121,8 +122,8 @@ function _drupal_session_read($sid) {
     }
     $user->session = $session['session'];
   }
-  // We didn't find the client's record (session has expired), or they
-  // are an anonymous user.
+  // We didn't find the client's record (session has expired), or they are
+  // blocked, or they are an anonymous user.
   else {
     $user = drupal_anonymous_user();
     $user->session = !empty($session['session']) ? $session['session'] : '';
