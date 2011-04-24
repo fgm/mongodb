@@ -120,12 +120,12 @@ function _drupal_session_read($sid) {
       $collection->update(array('_id' => (int) $user->uid), array('$set' => array('roles' => $user->roles)));
     }
     $user->session = $session['session'];
-if ($_GET['q'] == "session-test/id") file_put_contents('/tmp/log', var_export($user, TRUE), FILE_APPEND);
   }
   // We didn't find the client's record (session has expired), or they
   // are an anonymous user.
   else {
-    $user = drupal_anonymous_user(!empty($session['session']) ? $session['session'] : '');
+    $user = drupal_anonymous_user();
+    $user->session = !empty($session['session']) ? $session['session'] : '';
   }
 
   return $user->session;
@@ -172,11 +172,14 @@ function _drupal_session_write($sid, $value) {
     if (variable_get('https', FALSE) && isset($_COOKIE[$insecure_session_name])) {
       $key['sid'] = $_COOKIE[$insecure_session_name];
     }
+    else {
+      unset($key['sid']);
+    }
   }
 
   $collection = mongodb_collection(variable_get('mongodb_session', 'session'));
   $collection
-    ->update($key, $key + $fields + (array)$user, array('upsert' => TRUE));
+    ->update($key, $key + $fields, array('upsert' => TRUE));
 
   // Last access time is updated no more frequently than once every 180 seconds.
   // This reduces contention in the users table.
