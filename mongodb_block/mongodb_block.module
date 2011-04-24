@@ -23,7 +23,6 @@ function mongodb_block_menu() {
       'title' => t('Block rebuild'),
       'description' => 'Rebuilds blocks in MongoDB',
       'page callback' => 'mongodb_block_rehash',
-      'page arguments' => array(TRUE),
       'access arguments' => array('administer site configuration'),
     ),
   );
@@ -73,9 +72,9 @@ function mongodb_block_page_build(&$page) {
   // Grab only the current regions.
   $all_regions = system_region_list($theme);
 
-  $collection = mongodb_collection('block');
+  $collection = mongodb_collection('block', $theme);
   if (!$collection->findOne()) {
-    mongodb_block_rehash();
+    _mongodb_block_rehash($theme);
   }
   $query = array();
   if ($node = menu_get_object()) {
@@ -83,8 +82,13 @@ function mongodb_block_page_build(&$page) {
   }
   $parts = array_slice(arg(), 0, MENU_MAX_PARTS);
   $ancestors = menu_get_ancestors($parts);
+  if ($_GET['q'] != request_path()) {
+    $request_parts = array_slice(explode('/', request_path()), 0, MENU_MAX_PARTS);
+    $ancestors = array_merge($ancestors, menu_get_ancestors($request_parts));
+  }
   $ancestors[] = '%';
   $query['pages']['$in'] = $ancestors;
+  $query['pages_exclude']['$nin'] = $ancestors;
   $query['region']['$in'] = array_keys($all_regions);
   $blocks = mongodb_block_render_blocks($collection->find($query)->sort(array('weight' => 1)));
   foreach ($blocks as $region => $region_blocks) {
@@ -164,6 +168,11 @@ function mongodb_block_render_blocks($blocks_result) {
 function mongodb_block_get_cache_id($block) {
   global $user;
 
+  // Not all block definitions define caching.
+  if (!isset($block->cache)) {
+    $block->cache = DRUPAL_NO_CACHE;
+  }
+
   // User 1 being out of the regular 'roles define permissions' schema,
   // it brings too many chances of having unwanted output get in the cache
   // and later be served to other users. We therefore exclude user 1 from
@@ -172,7 +181,7 @@ function mongodb_block_get_cache_id($block) {
     // Start with common sub-patterns: block identification, theme, language.
     $cid_parts[] = $block->module;
     $cid_parts[] = $block->delta;
-    $cid_parts += drupal_render_cid_parts($block->cache);
+    $cid_parts = array_merge($cid_parts, drupal_render_cid_parts($block->cache));
 
     return implode(':', $cid_parts);
   }
@@ -205,9 +214,14 @@ function mongodb_block_mongodb_block_info_alter(&$blocks) {
   $blocks['system_main']['status'] = 1;
 }
 
-function mongodb_block_rehash($redirect = FALSE) {
-  $collection = mongodb_collection('block');
-  $theme = variable_get('theme_default', 'garland');
+function mongodb_block_rehash() {
+  _mongodb_block_rehash(variable_get('theme_default', 'garland'));
+  drupal_set_message('Blocks rebuild done.');
+  drupal_goto('admin/structure');
+}
+
+function _mongodb_block_rehash($theme) {
+  $collection = mongodb_collection('block', $theme);
   $regions = system_region_list($theme);
   $ids = array();
 
@@ -221,6 +235,7 @@ function mongodb_block_rehash($redirect = FALSE) {
         ) + $block + array(
           'weight' => 0,
           'pages' => array('%'),
+          'pages_exclude' => array(),
           'status' => 0,
           'region' => BLOCK_REGION_NONE,
         );
@@ -234,40 +249,26 @@ function mongodb_block_rehash($redirect = FALSE) {
       }
     }
   }
-  drupal_alter('mongodb_block_info', $blocks);
+  drupal_alter('mongodb_block_info', $blocks, $theme);
   // Only store the block in the mongodb, if the status is enabled.
   foreach ($blocks as $key => $block) {
     if ($block['region'] != BLOCK_REGION_NONE && !isset($regions[$block['region']])) {
-      drupal_set_message(t('The block %info was assigned to the invalid region %region and has been disabled.', array('%info' => $block['info'], '%region' => $block['region'])), 'warning');
       $blocks[$key]['status'] = 0;
       $blocks[$key]['region'] = BLOCK_REGION_NONE;
       $block = $blocks[$key];
     }
-    $ids[] = $block['_id'];
     if ($block['status']) {
+      $ids[] = $block['_id'];
       mongodb_block_save_block($collection, $block);
     }
   }
   $collection->remove(array('_id' => array('$nin' => $ids)));
-  if ($redirect) {
-    drupal_set_message('Blocks rebuild done.');
-    drupal_goto('admin/structure');
-  }
   return $blocks;
 }
 
 function mongodb_block_save_block($collection, $block) {
   unset($block['module'], $block['delta'], $block['status']);
   $collection->save($block);
-}
-
-function mongodb_block_load($module, $delta) {
-  $find = array('module' => $module, 'delta' => $delta);
-  if ($block = mongodb_collection('block')->findOne(array('_id' => $find))) {
-    $block += $block['_id'];
-    return $block;
-  }
-  return $find;
 }
 
 /**
