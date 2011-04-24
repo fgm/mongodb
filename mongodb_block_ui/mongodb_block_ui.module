@@ -54,8 +54,8 @@ function mongodb_block_ui_theme() {
  */
 function mongodb_block_ui_permission() {
   return array(
-    'administer mongodb_blocks' => array(
-      'title' => t('Administer mongodb blocks'),
+    'administer mongodb blocks' => array(
+      'title' => t('administer mongodb blocks'),
     ),
   );
 }
@@ -78,33 +78,25 @@ function mongodb_block_ui_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
-  $items['admin/structure/mongodb_block/manage/%/%'] = array(
+  $items['admin/structure/mongodb_block/manage/%/%/%'] = array(
     'title' => 'Configure mongodb_block',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mongodb_block_ui_admin_configure', 4, 5),
+    'page arguments' => array('mongodb_block_ui_admin_configure', 4, 5, 6),
     'access arguments' => array('administer mongodb blocks'),
     'file' => 'mongodb_block_ui.admin.inc',
   );
-  $items['admin/structure/mongodb_block/manage/%/%/configure'] = array(
+  $items['admin/structure/mongodb_block/manage/%/%/%/configure'] = array(
     'title' => 'Configure mongodb_blocks',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
   );
-  $items['admin/structure/mongodb_block/manage/%/%/delete'] = array(
+  $items['admin/structure/mongodb_block/manage/%/%/%/delete'] = array(
     'title' => 'Delete block',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mongodb_block_ui_custom_block_delete', 4, 5),
+    'page arguments' => array('mongodb_block_ui_custom_block_delete', 4, 5, 6),
     'access arguments' => array('administer mongodb blocks'),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_NONE,
-    'file' => 'mongodb_block_ui.admin.inc',
-  );
-  $items['admin/structure/mongodb_block/add'] = array(
-    'title' => 'Add block',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mongodb_block_ui_add_block_form'),
-    'access arguments' => array('administer mongodb blocks'),
-    'type' => MENU_LOCAL_ACTION,
     'file' => 'mongodb_block_ui.admin.inc',
   );
   foreach (list_themes() as $key => $theme) {
@@ -117,16 +109,14 @@ function mongodb_block_ui_menu() {
       'access arguments' => array($theme),
       'file' => 'mongodb_block_ui.admin.inc',
     );
-    if ($key != $default_theme) {
-      $items['admin/structure/mongodb_block/list/' . $key . '/add'] = array(
-        'title' => 'Add block',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('mongodb_block_ui_add_block_form'),
-        'access arguments' => array('administer mongodb blocks'),
-        'type' => MENU_LOCAL_ACTION,
-        'file' => 'mongodb_block_ui.admin.inc',
-      );
-    }
+    $items['admin/structure/mongodb_block/list/' . $key . '/add'] = array(
+      'title' => 'Add block',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('mongodb_block_ui_add_block_form', $key),
+      'access arguments' => array('administer mongodb blocks'),
+      'type' => MENU_LOCAL_ACTION,
+      'file' => 'mongodb_block_ui.admin.inc',
+    );
     $items['admin/structure/mongodb_block/demo/' . $key] = array(
       'title' => check_plain($theme->info['name']),
       'page callback' => 'mongodb_block_ui_admin_demo',
@@ -166,15 +156,46 @@ function _mongodb_block_ui_themes_access($theme) {
 // }
 
 /**
- * Implements hook_block_configure().
+ * Implements hook_block_info().
+ *
+ * This function loads custom blocks.
  */
-function mongodb_block_ui_block_configure($delta = 0) {
-  $custom_block = array('format' => filter_default_format());
-  if ($delta) {
-    $custom_block = mongodb_block_load('mongodb_block_ui', $delta);
+function mongodb_block_ui_block_info() {
+  $blocks = array();
+
+  $collection = mongodb_collection('block_custom');
+  $result = $collection->find(array(), array('info', '_id'))
+    ->sort(array('info'));
+  $blocks = new stdClass;
+  foreach ($result as $block) {
+    $delta = $block['_id'];
+    // Here comes the magic... by using an object we can have string array
+    // keys later when we cast to array.
+    $blocks->$delta = array(
+      'info' => $block['info'],
+      // Not worth caching.
+      'cache' => DRUPAL_NO_CACHE,
+      'status' => TRUE,
+    );
   }
-  $form = mongodb_block_ui_custom_block_form($custom_block);
-  return $form;
+  // Here , the $delta becomes a string.
+  return (array) $blocks;
+}
+
+/**
+ * Implements hook_mongodb_block_info_alter().
+ *
+ * This function loads block customizations.
+ */
+function mongodb_block_ui_mongodb_block_info_alter(&$blocks, $theme) {
+  foreach (mongodb_collection('block_customized', $theme)->find() as $block) {
+    $index = $block['_id']['module'] . '_' . $block['_id']['delta'];
+    unset($block['_id']);
+    if (isset($block['region']) && $block['region'] != BLOCK_REGION_NONE) {
+      $block['status'] = TRUE;
+    }
+    $blocks[$index] = $block + $blocks[$index];
+  }
 }
 
 /**
@@ -183,10 +204,14 @@ function mongodb_block_ui_block_configure($delta = 0) {
  * Generates the administrator-defined block for display.
  */
 function mongodb_block_ui_block_view($delta = 0, $edit = array()) {
-  $block = mongodb_block_load('mongodb_block_ui', $delta);
+  $block = mongodb_block_ui_load($delta);
   $data['subject'] = check_plain($block['title']);
-  $data['content'] = check_markup($block['body'], $block['format'], '', TRUE);
+  $data['content'] = check_markup($block['body']['value'], $block['body']['format'], '', TRUE);
   return $data;
+}
+
+function mongodb_block_ui_load($delta) {
+  return mongodb_collection('block_custom')->findOne(array('_id' => (string) $delta));
 }
 
 /**
@@ -195,7 +220,7 @@ function mongodb_block_ui_block_view($delta = 0, $edit = array()) {
 function mongodb_block_ui_custom_block_form($edit = array()) {
   $edit += array(
     'info' => '',
-    'body' => '',
+    'body' => array('value' => '', 'format' => filter_default_format()),
   );
   $form['info'] = array(
     '#type' => 'textfield',
@@ -210,13 +235,13 @@ function mongodb_block_ui_custom_block_form($edit = array()) {
   $form['body_field']['body'] = array(
     '#type' => 'text_format',
     '#title' => t('Block body'),
-    '#default_value' => $edit['body'],
-    '#format' => isset($edit['format']) ? $edit['format'] : NULL,
+    '#default_value' => $edit['body']['value'],
+    '#format' => $edit['body']['format'],
     '#rows' => 15,
     '#description' => t('The content of the block as shown to the user.'),
     '#required' => TRUE,
     '#weight' => -17,
-    '#access' => filter_access(filter_format_load($edit['format'])),
+    '#access' => filter_access(filter_format_load($edit['body']['format'])),
   );
 
   return $form;
@@ -420,15 +445,6 @@ function mongodb_block_ui_custom_block_form($edit = array()) {
 // }
 
 /**
- * Implements hook_filter_format_delete().
- */
-function mongodb_block_ui_filter_format_delete($format, $fallback) {
-  $collection = mongodb_collection('block_custom');
-
-  $collection->update(array('format' => $fomat->format), array('format' => $fallback->format));
-}
-
-/**
  * Implements hook_menu_delete().
  */
 function mongodb_block_ui_menu_delete($menu) {
@@ -475,19 +491,3 @@ function mongodb_block_ui_form_system_performance_settings_alter(&$form, &$form_
 //     ->execute();
 // }
 
-function mongodb_block_ui_mongodb_block_info_alter(&$blocks) {
-  $collection = mongodb_collection('block');
-  foreach ($collection->find() as $block) {
-    // Copy module and delta out of the _id.
-    $block += $block['_id'];
-    $index = $block['_id']['module'] . '_' . $block['_id']['delta'];
-    // Add custom blocks.
-    if ($block['_id']['module'] == 'mongodb_block_ui') {
-      if (!isset($block['info'])) {
-        $block['info'] = $blocks[$index]['info'];
-      }
-      $block['status'] = 1;
-      $blocks[$index] = $block;
-    }
-  }
-}
