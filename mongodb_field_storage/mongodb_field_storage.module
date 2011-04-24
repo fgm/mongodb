@@ -74,7 +74,7 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
     foreach ($saved_fields as $field_id => $field) {
       $field_name = $field['field_name'];
       $field_values = array();
-      if (isset($row[$field_name])) {
+      if (!empty($row[$field_name])) {
         // Restore the field structure.
         if ($field['cardinality'] == 1) {
           $language = isset($row[$field_name]['_language']) ? $row[$field_name]['_language'] : LANGUAGE_NONE;
@@ -160,7 +160,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
             // Collapse deltas.
             $values = array_values($values);
             if ($field['cardinality'] > 1 && count($values) > $field['cardinality']) {
-              throw new MongodbStorageException('Invalid delta, not saving');
+              throw new MongodbStorageException(t('Invalid delta for @field_name, not saving @entity_type @entity_id', array('@field_name' => $field_name, '@entity_type' => $entity_type, '@entity_id' => $entity_id)));
             }
             foreach ($values as $delta => $column_values) {
               $store_values = array();
@@ -184,7 +184,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
 
   // Save the object.
   $collection = mongodb_collection('fields_current', $entity_type);
-  $collection->save($new_entity);
+  $collection->save($new_entity, array('safe' => TRUE));
   $slaves = variable_get('mongodb_slave');
   if ($slaves) {
     $return = $collection->db->runCommand(array(
@@ -198,7 +198,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
     }
   }
   if (isset($revision_id)) {
-    $new_entity->_id = $revision_id;
+    $new_entity->_id = (int) $revision_id;
     mongodb_collection('fields_revision', $entity_type)->save($new_entity);
   }
 }
@@ -273,21 +273,19 @@ function mongodb_field_storage_query($query) {
     if (count($query->fields) == 1) {
       $field = $query->fields[0];
       $field_has_data_query = new EntityFieldQuery;
-      // Compile the same query as field_has_data().
       $field_has_data_query
         ->fieldCondition($field)
         ->range(0, 1)
         ->count();
       $field_has_data_query->executeCallback = 'mongodb_field_storage_query';
       $success = TRUE;
-      // Check that the original query is identical to this one.
       foreach (get_object_vars($field_has_data_query) as $key => $value) {
-        if (is_array($value) && $value != $query->$key) {
+        // we rebuild the has_data query and then compare with the received query structure
+        // but by this point the query is altered so it's alwass failing.
+        if ($key != 'altered' && $value != $query->$key) {
           $success = FALSE;
         }
       }
-      // If the query is coming from field_has_data() then try it with every
-      // entity type.
       if ($success) {
         foreach ($field['bundles'] as $entity_type => $data) {
           if (mongodb_collection('fields_current', $entity_type)->find()->limit(1)->count(TRUE)) {
@@ -304,12 +302,20 @@ function mongodb_field_storage_query($query) {
     $value = $field == 'bundle' ? $data['value'] : intval($data['value']);
     $find[$entity_map[$field]] = _mongodb_field_storage_query_value($value, $data['operator']);
   }
-  foreach ($query->fieldConditions as $data) {
+  foreach ($query->fieldConditions as $index => $data) {
     $find[$data['field']['field_name'] . '.' . $data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
+    unset($query->fields[$index]);
   }
+  /*
+  foreach ($query->fields as $field) {
+    $find[$field['field_name']]['$exists'] = TRUE;
+  }
+  */
   foreach ($query->propertyConditions as $data) {
     $find[$data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
   }
+  // unset propertyConditions to please execute()
+  unset($query->propertyConditions);
   if ($query->age == FIELD_LOAD_CURRENT) {
     $collection = mongodb_collection('fields_current', $entity_type);
     $id_key = '_id';
@@ -318,10 +324,14 @@ function mongodb_field_storage_query($query) {
     $collection = mongodb_collection('fields_revision', $entity_type);
     $id_key = '_revision_id';
   }
+  $collection = mongodb_collection($query->age == FIELD_LOAD_CURRENT ? 'fields_current' : 'fields_revision', $entity_type);
   if ($query->count && !$query->range) {
     return $collection->count($find);
   }
   $cursor = $collection->find($find);
+  if (isset($query->hint)) {
+    $cursor->hint($query->hint);
+  }
   if ($query->range) {
     $cursor->skip($query->range['start'])->limit($query->range['length']);
   }
@@ -330,14 +340,19 @@ function mongodb_field_storage_query($query) {
   }
   else {
     $sort = array();
-    foreach ($query->entityOrder as $name => $direction) {
-      $sort[$entity_map[$name]] = $direction == 'ASC' ? 1 : -1;
-    }
-    foreach ($query->propertyOrder as $data) {
-      $sort[$data['column']] = $data['direction'] == 'ASC' ? 1 : -1;
-    }
-    foreach ($query->fieldOrder as $data) {
-      $sort[$data['field']['field_name'] . '.' . $data['column']] = $data['direction'] == 'ASC' ? 1 : -1;
+    foreach ($query->order as $order) {
+      switch ($order['type']) {
+        case 'field':
+          $key = $order['specifier']['field']['field_name'] . '.' . $order['specifier']['column'];
+          break;
+        case 'property':
+          $key = $order['specifier'];
+          break;
+        case 'entity':
+          $key = $entity_map[$order['specifier']];
+          break;
+      }
+      $sort[$key] = $order['direction'] == 'ASC' ? 1 : -1;
     }
     if ($sort) {
       $cursor->sort($sort);
@@ -356,18 +371,6 @@ function _mongodb_field_storage_query_value($value, $operator) {
   if (!isset($operator)) {
     $operator = is_array($value) ? 'IN' : '=';
   }
-  if ($operator == 'LIKE') {
-    $percent = strpos($value, '%');
-    if ($percent == strlen($value) - 1) {
-      return new MongoRegex('/^' . substr($value, 0, -1) . '/');
-    }
-    elseif ($percent === FALSE) {
-      return new MongoRegex('/^' . $value . '$/');
-    }
-    else {
-      return new MongoRegex('/' . str_replace('%', '.*', $value) . '$/');
-    }
-  }
   switch ($operator) {
     case '='           : return $value;
     case 'IN'          : return array('$in' => $value);
@@ -377,14 +380,11 @@ function _mongodb_field_storage_query_value($value, $operator) {
     case '>'           : return array('$gt' => $value);
     case '<='          : return array('$lte' => $value);
     case '>='          : return array('$gte' => $value);
-    case '!=':case '<>': return array('$ne' => $value);
+    case '!='          : return array('$ne' => $value);
     case 'STARTS_WITH' : return new MongoRegex('/^' . $value . '/');
     case 'CONTAINS'    : return new MongoRegex('/' . $value . '/');
     case 'BETWEEN'     : return array('$gte' => $value[0], '$lte' => $value[1]);
-    case 'IS NULL'     : return NULL;
-    default :
-      debug_print_backtrace();
-      throw new EntityFieldQueryException("$operator not implemented");
+    default : throw new EntityFieldQueryException("$operator not implemented");
   }
 }
 
