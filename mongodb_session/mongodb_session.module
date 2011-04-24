@@ -14,8 +14,12 @@ function mongodb_session_simpletest_alter(&$groups) {
   unset($groups['Session']);
 }
 
+/**
+ * Implements hook_user_update().
+ */
 function mongodb_session_user_update($edit, $account) {
-  if (!module_exists('mongodb_field_storage')) {
+  // Update field values for changed values of the user.
+  if (module_exists('mongodb_field_storage')) {
     $roles = _mongodb_session_get_roles($account);
     $save = (array) $account + array(
       '_id' => (int) $account->uid,
@@ -28,7 +32,6 @@ function mongodb_session_user_update($edit, $account) {
     }
     mongodb_collection('fields_current', 'user')->save($save);
   }
-  return $roles;
 }
 
 function mongodb_session_user_insert($edit, $account) {
