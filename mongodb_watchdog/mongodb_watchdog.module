@@ -68,6 +68,6 @@ function mongodb_watchdog_menu_alter(&$items) {
  */
 function mongodb_watchdog_watchdog(array $log_entry) {
   module_load_include('module', 'mongodb');
-  $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
+  $collection = mongodb_collection('watchdog');
   $collection->insert((array) $log_entry);
 }

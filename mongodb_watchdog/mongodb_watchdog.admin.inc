@@ -40,7 +40,7 @@ function mongodb_watchdog_overview() {
   $on_page = isset($_GET['page']) ? $_GET['page'] : 0;
 
   module_load_include('module', 'mongodb');
-  $cursor = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))
+  $cursor = mongodb_collection('watchdog')
     ->find(mongodb_watchdog_build_filter_query())
     ->limit($per_page)
     ->skip($on_page * $per_page)
@@ -219,7 +219,7 @@ function mongodb_watchdog_filter_form_submit($form, &$form_state) {
 function _mongodb_watchdog_get_message_types() {
   // As of version 1.0.1, the PHP driver doesn't expose the 'distinct' command.
   module_load_include('module', 'mongodb');
-  $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
+  $collection = mongodb_collection('watchdog');
   $result = $collection->db->command(array('distinct' => $collection->getName(), 'key' => 'type'));
   return $result['values'];
 }
@@ -259,7 +259,7 @@ function mongodb_watchdog_clear_log_form($form_state = array()) {
  */
 function mongodb_watchdog_clear_log_submit() {
   try {
-    $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
+    $collection = mongodb_collection('watchdog');
     $collection->db->dropCollection($collection->getName());
 
     drupal_set_message(t('MongoDB log cleared.'));
@@ -305,14 +305,12 @@ function mongodb_watchdog_build_filter_query() {
 // function mongodb_watchdog_form_system_logging_settings_alter(&$form, &$form_state) {
 function mongodb_watchdog_access_logging_settings() {
 
-  $form['mongodb_watchdog_collectionname'] = array(
-    '#title' => t('MongoDB Collection name'),
-    '#type'  => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_collectionname', 'watchdog'),
-    '#description' => t('In which collection should the watchdog be stored'),
+  $form[] = array(
+    '#value' => t('There are no MongoDB settings at this time.'),
   );
 
-  return system_settings_form($form);
+  return $form;
+  // return system_settings_form($form);
 }
 
 
@@ -325,7 +323,7 @@ function mongodb_watchdog_event($id) {
   module_load_include('module', 'mongodb');
 
   try {
-    $event = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'))
+    $event = mongodb_collection('watchdog')
       ->findOne( array('_id' => new MongoId( (string)$id ) ) );
 
     $severity = watchdog_severity_levels();
