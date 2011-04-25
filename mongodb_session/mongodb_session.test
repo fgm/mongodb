@@ -16,7 +16,7 @@ class MongoDBSessionHttpsTestCase extends SessionHttpsTestCase {
 
   function setUp() {
     parent::setUp();
-    $this->collection = mongodb_collection(variable_get('mongodb_session', 'session'));
+    $this->collection = mongodb_collection('session');
   }
 
   /**
