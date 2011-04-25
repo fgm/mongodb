@@ -305,17 +305,6 @@ function mongodb_watchdog_build_filter_query() {
 // function mongodb_watchdog_form_system_logging_settings_alter(&$form, &$form_state) {
 function mongodb_watchdog_access_logging_settings() {
 
-  $form['mongodb_watchdog_connection'] = array(
-    '#title' => t('MongoDB Connection URL'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_connection', NULL),
-  );
-  $form['mongodb_watchdog_dbname'] = array(
-    '#title' => t('MongoDB Database name'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('mongodb_watchdog_dbname', 'drupal'),
-    '#description' => t('In which database should the watchdog be stored'),
-  );
   $form['mongodb_watchdog_collectionname'] = array(
     '#title' => t('MongoDB Collection name'),
     '#type'  => 'textfield',
