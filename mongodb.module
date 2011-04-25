@@ -20,7 +20,7 @@ function mongodb_help($path, $arg) {
  */
 function mongodb_collection($collection_name) {
   global $db_prefix;
-  static $mongo, $connections, $simpletest_prefix;
+  static $mongo, $collections, $simpletest_prefix;
   // We call this function earlier than the database is initalized so we would
   // read the parent collection without this.
   if (!isset($simpletest_prefix)) {
