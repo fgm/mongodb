@@ -90,7 +90,7 @@ function _drupal_session_read($sid) {
   // client's session in the database. If it's HTTPS then we are either have
   // a HTTPS session or we are about to log in so we check the sessions table
   // for an anonymous session wth the non-HTTPS-only cookie.
-  $collection = mongodb_collection(variable_get('mongodb_session', 'session'));
+  $collection = mongodb_collection('session');
   if ($is_https) {
     $session = $collection->findOne(array('ssid' => $sid));
     if (!$session) {
@@ -177,7 +177,7 @@ function _drupal_session_write($sid, $value) {
     }
   }
 
-  $collection = mongodb_collection(variable_get('mongodb_session', 'session'));
+  $collection = mongodb_collection('session');
   $collection
     ->update($key, $key + $fields, array('upsert' => TRUE));
 
@@ -323,7 +323,7 @@ function drupal_session_regenerate() {
 
   if (isset($old_session_id)) {
     $field = $is_https ? 'ssid' : 'sid';
-    mongodb_collection(variable_get('mongodb_session', 'session'))
+    mongodb_collection('session')
       ->update(array('sid' => $old_session_id), array('$set' => array($field => session_id())));
   }
 }
@@ -340,7 +340,7 @@ function _drupal_session_destroy($sid) {
   global $user, $is_https;
 
   $field = $is_https ? 'ssid' : 'sid';
-  mongodb_collection(variable_get('mongodb_session', 'session'))
+  mongodb_collection('session')
     ->remove(array($field => $sid));
 
   // Reset $_SESSION and $user to prevent a new session from being started
@@ -378,7 +378,7 @@ function _drupal_session_delete_cookie($name, $force_insecure = FALSE) {
  *   User ID.
  */
 function drupal_session_destroy_uid($uid) {
-  mongodb_collection(variable_get('mongodb_session', 'session'))
+  mongodb_collection('session')
     ->remove(array('uid' => $uid));
 }
 
@@ -397,7 +397,7 @@ function _drupal_session_garbage_collection($lifetime) {
   // for three weeks before deleting them, you need to set gc_maxlifetime
   // to '1814400'. At that value, only after a user doesn't log in after
   // three weeks (1814400 seconds) will his/her session be removed.
-  mongodb_collection(variable_get('mongodb_session', 'session'))
+  mongodb_collection('session')
     ->remove(array('timestamp' => array('$lt' => REQUEST_TIME - $lifetime)));
   return TRUE;
 }

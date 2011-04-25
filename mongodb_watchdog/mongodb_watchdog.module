@@ -32,7 +32,7 @@ function mongodb_watchdog_menu() {
  * Load the MongoDB watchdog event.
  */
 function mongodb_watchdog_event_load($id) {
-  $result = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))->findOne(array('_id' => $id));
+  $result = mongodb_collection('watchdog')->findOne(array('_id' => $id));
   return $result ? $result : FALSE;
 }
 
@@ -59,7 +59,7 @@ function mongodb_watchdog_watchdog(array $log_entry) {
     '$set' => $log_entry,
     '$inc' => array('count' => 1),
   );
-  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $collection = mongodb_collection('watchdog');
   $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
   $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE));
   $result = $collection->db->command(array('getlasterror' => 1));

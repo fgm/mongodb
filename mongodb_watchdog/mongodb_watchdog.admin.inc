@@ -39,7 +39,7 @@ function mongodb_watchdog_overview() {
   $pager_page_array = explode(',', $page);
   $on_page = $pager_page_array[0];
 
-  $cursor = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))
+  $cursor = mongodb_collection('watchdog')
     ->find(mongodb_watchdog_build_filter_query())
     ->limit($per_page)
     ->skip($on_page * $per_page)
@@ -60,7 +60,7 @@ function mongodb_watchdog_overview() {
   $rows = array();
   foreach ($cursor as $id => $value) {
     if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
-      $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+      $collection = mongodb_collection('watchdog');
       $collection = $collection->db->selectCollection('watchdog_event_' . $value['_id']);
       if ($result = $collection->find()->sort(array('$natural' => -1))->limit(1)->getNext()) {
         $value['file'] = basename($result['variables']['%file']);
@@ -89,7 +89,7 @@ function mongodb_watchdog_overview() {
 
   // Add the pager.
   if ($on_page > 0 || count($rows) >= $per_page) {
-    $pager_total_items[0] = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'))
+    $pager_total_items[0] = mongodb_collection('watchdog')
       ->find(mongodb_watchdog_build_filter_query())
       ->count();
     $pager_total[0] = ceil($pager_total_items[0] / $per_page);
@@ -145,7 +145,7 @@ function mongodb_watchdog_event($dblog) {
   );
   // @todo: the count is unreliable, so just get the actual number of entries.
 //$total = min($dblog['count'], variable_get('mongodb_watchdog_items', 10000));
-  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $collection = mongodb_collection('watchdog');
   $collection = $collection->db->selectCollection('watchdog_event_' . $dblog['_id']);
   $total = $collection->count();
   $limit = 20;
@@ -340,7 +340,7 @@ function mongodb_watchdog_filter_form_submit($form, &$form_state) {
  */
 function _mongodb_watchdog_get_message_types() {
   // As of version 1.0.1, the PHP driver doesn't expose the 'distinct' command.
-  $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
+  $collection = mongodb_collection('watchdog');
   $result = $collection->db->command(array('distinct' => $collection->getName(), 'key' => 'type'));
   return $result['values'];
 }
@@ -374,7 +374,7 @@ function mongodb_watchdog_clear_log_form($form) {
 function mongodb_watchdog_clear_log_submit() {
   try {
     // Drop the watchdog collection.
-    $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
+    $collection = mongodb_collection('watchdog');
     $collection->db->dropCollection($collection->getName());
 
     // Recreate the indexes.
