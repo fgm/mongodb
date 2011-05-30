@@ -1,24 +1,55 @@
 <?php
- 
+
 /**
  * @file
  * MongoDB watchdog install file.
  */
- 
+
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function mongodb_watchdog_install() {
   mongodb_watchdog_ensure_indexes();
 }
- 
+
 /**
- * Implement hook_enable().
+ * Implements hook_enable().
  */
 function mongodb_watchdog_enable() {
   mongodb_watchdog_ensure_indexes();
 }
- 
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Drop /all/ the watchdog collections.
+ */
+function mongodb_watchdog_uninstall() {
+  // Drop the base watchdog collection
+  $watchdog_name = variable_get('mongodb_watchdog', 'watchdog');
+  $watchdog = mongodb_collection($watchdog_name);
+  $watchdog->drop();
+
+  // Then drop all watchdog event collections in all known database aliases.
+  $aliases = variable_get('mongodb_connections', array());
+  $aliases['default'] = TRUE;
+  $regex = '/\.watchdog_event_[[:xdigit:]]{32}$/';
+  foreach (array_keys($aliases) as $alias) {
+    $db = mongodb($alias);
+    foreach ($db->listCollections() as $collection) {
+      if (preg_match($regex, $collection)) {
+        $collection->drop();
+      }
+    }
+  }
+  if ($count) {
+    drupal_set_message(format_plural($count, 'Dropped 1 watchdog collection', 'Dropped @count watchdog collections'));
+  }
+
+  variable_del('mongodb_watchdog');
+  variable_del('mongodb_watchdog_items');
+}
+
 /**
  * Create an index for the watchdog table.
  *
@@ -27,32 +58,34 @@ function mongodb_watchdog_enable() {
  * numbers should be much faster to create than one with a string included.
  */
 function mongodb_watchdog_ensure_indexes() {
+  $watchdog = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
+
   // Index for adding/updating increments.
   $index = array(
     'line' => 1,
     'timestamp' => -1
   );
-  mongodb_collection('watchdog')->ensureIndex($index);
+  $watchdog->ensureIndex($index);
 
   // Index for admin page without filters.
   $index = array(
     'timestamp' => -1
   );
-  mongodb_collection('watchdog')->ensureIndex($index);
+  $watchdog->ensureIndex($index);
 
   // Index for admin page filtering by type.
   $index = array(
     'type' => 1,
     'timestamp' => -1
   );
-  mongodb_collection('watchdog')->ensureIndex($index);
+  $watchdog->ensureIndex($index);
 
   // Index for admin page filtering by severity.
   $index = array(
     'severity' => 1,
     'timestamp' => -1
   );
-  mongodb_collection('watchdog')->ensureIndex($index);
+  $watchdog->ensureIndex($index);
 
   // Index for admin page filtering by type and severity.
   $index = array(
@@ -60,5 +93,18 @@ function mongodb_watchdog_ensure_indexes() {
     'severity' => 1,
     'timestamp' => -1
   );
-  mongodb_collection('watchdog')->ensureIndex($index);
+  $watchdog->ensureIndex($index);
 }
+
+/**
+ * Changes a variable name that defines a collection to store events.
+ */
+function mongodb_watchdog_update_7000() {
+  $collection_name = variable_get('mongodb_collectionname', 'watchdog');
+  if ($collection_name !== 'watchdog') {
+    variable_set('mongodb_watchdog', $collection_name);
+  }
+  variable_del('mongodb_collectionname');
+  variable_del('mongodb_watchdog_collectionname');
+}
+

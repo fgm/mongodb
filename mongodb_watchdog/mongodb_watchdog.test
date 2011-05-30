@@ -159,7 +159,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
     // Logout user.
     $this->drupalLogout();
     // Fetch row ids in watchdog that relate to the user.
-    $collection = mongodb_collection(variable_get('mongodb_collectionname', 'watchdog'));
+    $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
     $query = array('uid' => $user->uid);
     $result = $collection->find($query, array('_id' => 1));
     foreach ($result as $row) {
