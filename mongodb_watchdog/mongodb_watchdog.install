@@ -1,0 +1,64 @@
+<?php
+ 
+/**
+ * @file
+ * MongoDB watchdog install file.
+ */
+ 
+/**
+ * Implement hook_install().
+ */
+function mongodb_watchdog_install() {
+  mongodb_watchdog_ensure_indexes();
+}
+ 
+/**
+ * Implement hook_enable().
+ */
+function mongodb_watchdog_enable() {
+  mongodb_watchdog_ensure_indexes();
+}
+ 
+/**
+ * Create an index for the watchdog table.
+ *
+ * This index is on <line, timestamp> instead of <function, line, timestamp>,
+ * because we write to this collection alot, and the smaller index on two
+ * numbers should be much faster to create than one with a string included.
+ */
+function mongodb_watchdog_ensure_indexes() {
+  // Index for adding/updating increments.
+  $index = array(
+    'line' => 1,
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+
+  // Index for admin page without filters.
+  $index = array(
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+
+  // Index for admin page filtering by type.
+  $index = array(
+    'type' => 1,
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+
+  // Index for admin page filtering by severity.
+  $index = array(
+    'severity' => 1,
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+
+  // Index for admin page filtering by type and severity.
+  $index = array(
+    'type' => 1,
+    'severity' => 1,
+    'timestamp' => -1
+  );
+  mongodb_collection('watchdog')->ensureIndex($index);
+}

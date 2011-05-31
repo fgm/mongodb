@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * A library of common mechanisms for modules using MongoDB.
+ */
 
 /**
  * Implement hook_help().
@@ -16,11 +20,101 @@ function mongodb_help($path, $arg) {
 }
 
 /**
- * Returns a the mongodb watchdog collection.
+ * Returns a MongoDB object.
+ *
+ * @param string $alias
+ *   An optional alias for the connection.
  */
-function mongodb_collection($collection_name) {
+function mongodb($alias = 'default') {
+  static $mongo_objects;
+  $connections = variable_get('mongodb_connections', array());
+  $connections += array('default' => array('host' => 'localhost', 'db' => 'drupal'));
+  if (!isset($connections[$alias])) {
+    $alias = 'default';
+  }
+  $connection = $connections[$alias];
+  $host = $connection['host'];
+  $db = $connection['db'];
+  if (!isset($mongo_objects[$host][$db])) {
+    $mongo = new Mongo($host);
+    $mongo_objects[$host][$db] = $mongo->selectDB($db);
+    $mongo_objects[$host][$db]->connection = $mongo;
+  }
+  return $mongo_objects[$host][$db];
+}
+
+/**
+ * Returns a MongoCollection object.
+ *
+ * @param mixed $collection_name
+ *   Can be either a plain collection name or 0-based array containing a
+ *   collection name and a prefix.
+ */
+function mongodb_collection() {
+  // Avoid something. collection names if NULLs are passed in.
+  $args = array_filter(func_get_args());
+  if (is_array($args[0])) {
+    list($collection_name, $prefixed) = $args[0];
+    $prefixed .= $collection_name;
+  }
+  else {
+    $collection_name = implode('.',$args);
+    $prefixed = mongodb_collection_name($collection_name);
+  }
+  $collections = variable_get('mongodb_collections', array());
+  $alias = isset($collections[$collection_name]) ? $collections[$collection_name] : 'default';
+  // Prefix the collection name for simpletest. It will be in the same DB as the
+  // non-prefixed version so it's enough to prefix after choosing the mongodb
+  // object.
+  $mongodb_object = mongodb($alias);
+  $collection = $mongodb_object->selectCollection(mongodb_collection_name($collection_name));
+  $collection->connection = $mongodb_object->connection;
+  return variable_get('mongodb_debug', FALSE) ? new mongoDebugCollection($collection) : $collection;
+}
+
+class mongoDebugCollection {
+  function __construct($collection) {
+    $this->collection = $collection;
+  }
+
+  function find($query = array(), $fields = array()) {
+    debug('find');
+    debug($query);
+    debug($fields);
+    return mongoDebugCursor($this->collection->find($query, $fields));
+  }
+
+  function __call($name, $arguments) {
+    debug($name);
+    debug($arguments);
+    return call_user_func_array(array($this->collection, $name), $arguments);
+  }
+}
+
+class mongoDebugCursor {
+  function __construct($collection) {
+    $this->collection = $collection;
+  }
+
+  function __call($name, $arguments) {
+    debug($name);
+    debug($arguments);
+    return call_user_func_array(array($this->collection, $name), $arguments);
+  }
+}
+
+/**
+ * Returns the name to use for the collection.
+ *
+ * @param string $name
+ *   The base name for the collection
+ *
+ * @return string
+ *   Unlike the base name, the returned name works with prefixes and simpletest.
+ */
+function mongodb_collection_name($name) {
   global $db_prefix;
-  static $mongo, $collections, $simpletest_prefix;
+  static $simpletest_prefix;
   // We call this function earlier than the database is initalized so we would
   // read the parent collection without this.
   if (!isset($simpletest_prefix)) {
@@ -31,29 +125,80 @@ function mongodb_collection($collection_name) {
       $simpletest_prefix = '';
     }
   }
-  // However, once $db_prefix is filled by the database, the simpletest_prefix
+  // However, once the test information is initialized, simpletest_prefix
   // is no longer needed.
-  if ($simpletest_prefix && $db_prefix && strpos($db_prefix, $simpletest_prefix) !== FALSE) {
-    $simpletest_prefix = '';
+  if (!empty($GLOBALS['drupal_test_info']['test_run_id'])) {
+    $simpletest_prefix = $GLOBALS['drupal_test_info']['test_run_id'];
   }
-  $collection_name = $db_prefix . $simpletest_prefix . $collection_name;
-  if (!isset($mongo)) {
-    $server_name  = variable_get('mongodb_connection', 'localhost');
-    $db_name = variable_get('mongodb_dbname', 'drupal');
-    $mongo = new Mongo($server_name);
-    $mongo = $mongo->selectDB($db_name);
-  }
-  if (!isset($collections[$collection_name])) {
-    $collections[$collection_name] = $mongo->selectCollection($collection_name);
-  }
-  return $collections[$collection_name];
+  return $simpletest_prefix . $name;
 }
 
+/**
+ * Testing helper: cleanup after test group.
+ */
 function mongodb_test_group_finished() {
-  $db = mongodb_collection('cache')->db;
-  foreach ($db->listCollections() as $collection) {
-    if (preg_match('/\.simpletest\d+/', $collection)) {
-      $db->dropCollection($collection);
+  $aliases = variable_get('mongodb_connections', array());
+  $aliases['default'] = TRUE;
+  foreach (array_keys($aliases) as $alias) {
+    $db = mongodb($alias);
+    foreach ($db->listCollections() as $collection) {
+      if (preg_match('/\.simpletest\d+/', $collection)) {
+        $db->dropCollection($collection);
+      }
     }
   }
+}
+
+/**
+ * Allow for the database connection we are using to be changed.
+ *
+ * @param $alias
+ *   String the alias that we want to change the connection for.
+ * @param $connection_name
+ *   String the name of the connection we will use.
+ */
+function mongodb_set_active_connection($alias, $connection_name = 'default') {
+  // No need to check if the connection is valid as mongodb() does this.
+  $GLOBALS['conf']['mongodb_collections'][$alias] = $connection_name;
+}
+
+/**
+ * Return the next id in a sequence.
+ *
+ * @param string $name
+ *   The name of the sequence
+ * @param int $existing_id
+ *   The minimal value to be generated
+ *
+ * @return int
+ */
+function mongodb_next_id($name, $existing_id = 0) {
+  $mongo = mongodb();
+  $cmd = array(
+    'findandmodify' => mongodb_collection_name('sequence'),
+    'query' => array('_id' => $name),
+    'update' => array('$inc' => array('value' => 1)),
+    'new' => TRUE,
+  );
+  // It's very likely that this is not necessary as command returns an array
+  // not an exception. The increment will, however, will fix the problem of
+  // the sequence not existing. Still, better safe than sorry.
+  try {
+    $sequence = $mongo->command($cmd);
+    $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
+  }
+  catch (Exception $e) {
+  }
+  if (0 < $existing_id - $value + 1) {
+    $cmd = array(
+      'findandmodify' => mongodb_collection_name('sequence'),
+      'query' => array('_id' => $name),
+      'update' => array('$inc' => array('value' => $existing_id - $value + 1)),
+      'upsert' => TRUE,
+      'new' => TRUE,
+    );
+    $sequence = $mongo->command($cmd);
+    $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
+  }
+  return $value;
 }

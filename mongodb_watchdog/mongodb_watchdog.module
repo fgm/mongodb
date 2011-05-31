@@ -9,65 +9,109 @@
  * Implement hook_menu().
  */
 function mongodb_watchdog_menu() {
-  $items['admin/reports/dblog/mongodb'] = array(
+  $items['admin/reports/mongodb'] = array(
     'title' => 'Recent log entries in MongoDB',
     'description' => 'View events that have recently been logged in MongoDB.',
-    'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mongodb_watchdog_overview'),
     'access arguments' => array('access site reports'),
     'file'  => 'mongodb_watchdog.admin.inc',
   );
-
-  $items['admin/reports/settings/mongodb'] = array(
-    'title' => 'MongoDB logging settings',
-    'description' => 'MongoDB log settings',
-    'type' => MENU_LOCAL_TASK,
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mongodb_watchdog_access_logging_settings'),
-    'access arguments' => array('administer site configuration'),
-    'file'  => 'mongodb_watchdog.admin.inc',
-    'weight' => 4,
-  );
-
-  $items['admin/reports/dblog/mongodb/event/%'] = array(
-    'title' => 'Details',
+  $items['admin/reports/mongodb-event/%mongodb_watchdog_event'] = array(
+    'title' => 'MongoDB log details',
     'page callback' => 'mongodb_watchdog_event',
-    'page arguments' => array(5),
+    'page arguments' => array(3),
     'access arguments' => array('access site reports'),
     'type' => MENU_CALLBACK,
     'file' => 'mongodb_watchdog.admin.inc',
   );
-
   return $items;
 }
 
 /**
- * Implement hook_menu_alter().
+ * Load a MongoDB watchdog event.
  *
- * @param $items array
+ * @param string $id
+ *
+ * @return object|FALSE
  */
-function mongodb_watchdog_menu_alter(&$items) {
-  $items['admin/reports/dblog/list'] = $items['admin/reports/dblog'];
-  $items['admin/reports/dblog/list']['type'] = MENU_DEFAULT_LOCAL_TASK;
-  $items['admin/reports/dblog/list']['title'] = 'Recent log entries in database';
-
-  if (array_key_exists('admin/reports/settings', $items)) {
-    $items['admin/reports/settings/list'] = $items['admin/reports/settings'];
-    $items['admin/reports/settings/list']['type'] = MENU_DEFAULT_LOCAL_TASK;
-    $items['admin/reports/settings/list']['title'] = 'Database log settings';
-  }
-  else {
-    $items['admin/reports/settings/mongodb']['type'] = MENU_NORMAL_ITEM;
-  }
-  return $items;
+function mongodb_watchdog_event_load($id) {
+  $result = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'))
+    ->findOne(array('_id' => $id));
+  return $result ? $result : FALSE;
 }
 
 /**
- * Implement hook_watchdog().
+ * Implements hook_watchdog().
  */
 function mongodb_watchdog_watchdog(array $log_entry) {
-  module_load_include('module', 'mongodb');
-  $collection = mongodb_collection('watchdog');
-  $collection->insert((array) $log_entry);
+  // Find the function that generated this error.
+  $log_entry = (array) $log_entry;
+  _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
+  $account = $log_entry['user'];
+  $event = array(
+    'variables' => $log_entry['variables'],
+    'timestamp' => $log_entry['timestamp'],
+    'user' => array('name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')), 'uid' => $account->uid),
+    'ip' => $log_entry['ip'],
+    'request_uri' => $log_entry['request_uri'],
+    'referer' => $log_entry['referer'],
+    'link' => $log_entry['link'],
+  );
+  unset($log_entry['variables'], $log_entry['user'], $log_entry['ip'], $log_entry['request_uri'], $log_entry['referer'], $log_entry['link']);
+
+  $newobj = array(
+    '$set' => $log_entry,
+    '$inc' => array('count' => 1),
+  );
+  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
+  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE));
+  $result = $collection->db->command(array('getlasterror' => 1));
+  $collection = $collection->db->selectCollection('watchdog_event_' . $id);
+  if (empty($result['updatedExisting'])) {
+    $max = variable_get('mongodb_watchdog_items', 10000);
+    $command = array('create' => $collection->getName(), 'capped' => TRUE, 'size' => $max * 1000, "max" => $max);
+    $collection->db->command($command);
+  }
+  $collection->insert($event);
+}
+
+/**
+ * Fill in the log_entry function, file, and line.
+ *
+ * @param array $log_entry
+ * @param array $backtrace
+ *
+ * @return void
+ */
+function _mongodb_watchdog_enhance_log_entry(&$log_entry, $backtrace) {
+  // Create list of functions to ignore in backtrace.
+  static $ignore = array(
+    'mongodb_watchdog_watchdog' => 1,
+    'call_user_func_array' => 1,
+    'module_invoke' => 1,
+    'watchdog' => 1,
+    '_drupal_log_error' => 1,
+    '_drupal_error_handler' => 1,
+    '_drupal_error_handler_real' => 1,
+    'theme_render_template' => 1,
+  );
+
+  foreach ($backtrace as $bt) {
+    if (isset($bt['function'])) {
+      if (isset($bt['line']) && !isset($ignore[$bt['function']])) {
+        if (isset($bt['file'])) {
+          $log_entry['file'] = $bt['file'];
+        }
+        $log_entry['function'] = $bt['function'];
+        $log_entry['line'] = $bt['line'];
+        break;
+      }
+      elseif ($bt['function'] == '_drupal_exception_handler') {
+        $e = $bt['args'][0];
+        _mongodb_watchdog_enhance_log_entry($log_entry, $e->getTrace());
+      }
+    }
+  }
 }
