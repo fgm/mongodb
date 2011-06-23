@@ -17,7 +17,12 @@ function mongodb_watchdog_menu() {
     'access arguments' => array('access site reports'),
     'file'  => 'mongodb_watchdog.admin.inc',
   );
-  $items['admin/reports/mongodb-event/%mongodb_watchdog_event'] = array(
+
+  $items['admin/reports/mongodb/overview'] = array(
+    'title' => 'Overview',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/reports/mongodb/%mongodb_watchdog_event'] = array(
     'title' => 'MongoDB log details',
     'page callback' => 'mongodb_watchdog_event',
     'page arguments' => array(3),
@@ -25,6 +30,25 @@ function mongodb_watchdog_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'mongodb_watchdog.admin.inc',
   );
+  $items['admin/reports/mongodb/access-denied'] = array(
+    'title' => "Top 'access denied' errors'",
+    'type' => MENU_LOCAL_TASK,
+    'description' => "View 'access denied' errors (403s).",
+    'page callback' => 'mongodb_watchdog_page_top',
+    'page arguments' => array('access denied'),
+    'access arguments' => array('access site reports'),
+    'file' => 'mongodb_watchdog.admin.inc',
+  );
+  $items['admin/reports/mongodb/page-not-found'] = array(
+    'title' => "Top 'page not found' errors",
+    'type' => MENU_LOCAL_TASK,
+    'description' => "View 'page not found' errors (404s).",
+    'page callback' => 'mongodb_watchdog_page_top',
+    'page arguments' => array('page not found'),
+    'access arguments' => array('access site reports'),
+    'file' => 'mongodb_watchdog.admin.inc',
+  );
+
   return $items;
 }
 
@@ -36,7 +60,7 @@ function mongodb_watchdog_menu() {
  * @return object|FALSE
  */
 function mongodb_watchdog_event_load($id) {
-  $result = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'))
+  $result = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
     ->findOne(array('_id' => $id));
   return $result ? $result : FALSE;
 }
@@ -45,10 +69,25 @@ function mongodb_watchdog_event_load($id) {
  * Implements hook_watchdog().
  */
 function mongodb_watchdog_watchdog(array $log_entry) {
+
   // Find the function that generated this error.
   $log_entry = (array) $log_entry;
   _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
   $account = $log_entry['user'];
+
+  // Special handling for core bug #904994:
+  if (!isset($log_entry['variables'])) {
+    $special_messages = array(
+      'page not found' => 'Page not found: @param',
+      'access denied'  => 'Access denied: @param',
+    );
+    $type = $log_entry['type'];
+    $log_entry['variables'] = array('@param' => $log_entry['message']);
+    $log_entry['message'] = isset($special_messages[$type])
+      ? $special_messages[$log_entry['type']]
+      : '@param';
+  }
+
   $event = array(
     'variables' => $log_entry['variables'],
     'timestamp' => $log_entry['timestamp'],
@@ -64,7 +103,7 @@ function mongodb_watchdog_watchdog(array $log_entry) {
     '$set' => $log_entry,
     '$inc' => array('count' => 1),
   );
-  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
   $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
   $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE));
   $result = $collection->db->command(array('getlasterror' => 1));

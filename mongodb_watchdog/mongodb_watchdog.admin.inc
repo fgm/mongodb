@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Settings for mongodb. Moved back to module file.
+ * Settings for mongodb. Moved back to module file.
  */
 
 /**
@@ -42,7 +42,7 @@ function mongodb_watchdog_overview() {
   $pager_page_array = explode(',', $page);
   $on_page = $pager_page_array[0];
 
-  $cursor = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'))
+  $cursor = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
     ->find(mongodb_watchdog_build_filter_query())
     ->limit($per_page)
     ->skip($on_page * $per_page)
@@ -63,7 +63,7 @@ function mongodb_watchdog_overview() {
   $rows = array();
   foreach ($cursor as $id => $value) {
     if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
-      $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+      $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
       $collection = $collection->db->selectCollection('watchdog_event_' . $value['_id']);
       if ($result = $collection->find()->sort(array('$natural' => -1))->limit(1)->getNext()) {
         $value['file'] = basename($result['variables']['%file']);
@@ -79,7 +79,7 @@ function mongodb_watchdog_overview() {
       t($value['type']),
       empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
       empty($value['file']) ? '' : truncate_utf8(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
-      l($message, "admin/reports/mongodb-event/$id"),
+      l($message, "admin/reports/mongodb/$id"),
     );
   }
 
@@ -91,7 +91,7 @@ function mongodb_watchdog_overview() {
 
   // Add the pager.
   if ($on_page > 0 || count($rows) >= $per_page) {
-    $pager_total_items[0] = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'))
+    $pager_total_items[0] = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
       ->find(mongodb_watchdog_build_filter_query())
       ->count();
     $pager_total[0] = ceil($pager_total_items[0] / $per_page);
@@ -142,15 +142,11 @@ function mongodb_watchdog_event($dblog) {
     ),
   );
 
-  $bc = drupal_get_breadcrumb();
-  $bc[] = l(t('Recent log entries in MongoDB'), 'admin/reports/mongodb');
-  drupal_set_breadcrumb($bc);
-
   $output .= theme('table', NULL, $rows, array('class' => 'dblog-event'));
 
   // @todo: the count is unreliable, so just get the actual number of entries.
 //$total = min($dblog['count'], variable_get('mongodb_watchdog_items', 10000));
-  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
   $collection = $collection->db->selectCollection('watchdog_event_' . $dblog['_id']);
   $total = $collection->count();
   $limit = 20;
@@ -191,7 +187,7 @@ function mongodb_watchdog_event($dblog) {
     }
     $rows[] = array(
       format_date($event['timestamp'], 'short'),
-      l($account['name'], 'user/' . $account['uid']),
+      theme('username', (object) $account),
       $request_uri ? l(truncate_utf8(basename(($request_uri)), 20), $request_uri) : '',
       $referer ? l(truncate_utf8(basename(($referer)), 20), $referer) : '',
       check_plain($ip),
@@ -283,7 +279,7 @@ function mongodb_watchdog_filter_form($form_state = array()) {
     '#type' => 'fieldset',
     '#title' => t('Filter log messages'),
     '#collapsible' => TRUE,
-    '#collapsed' => empty($session),
+    '#collapsed' => empty($_SESSION),
   );
 
   foreach ($filters as $key => $filter) {
@@ -356,7 +352,7 @@ function mongodb_watchdog_filter_form_submit($form, &$form_state) {
  */
 function _mongodb_watchdog_get_message_types() {
   // As of version 1.0.1, the PHP driver doesn't expose the 'distinct' command.
-  $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+  $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
   $result = $collection->db->command(array('distinct' => $collection->getName(), 'key' => 'type'));
   return $result['values'];
 }
@@ -395,7 +391,7 @@ function mongodb_watchdog_clear_log_form($form_state = array()) {
 function mongodb_watchdog_clear_log_submit() {
   try {
     // Drop the watchdog collection.
-    $collection = mongodb_collection(variable_get('mongodb_watchdog_collectionname', 'watchdog'));
+    $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
     $collection->db->dropCollection($collection->getName());
 
     // Recreate the indexes.
@@ -442,4 +438,105 @@ function mongodb_watchdog_build_filter_query() {
     $find['severity'] = array('$in' => array_map('intval', $severities));
   }
   return $find;
+}
+
+/**
+ * Page callback for "admin/reports/[access-denied|page-not-found]".
+ *
+ * @return array
+ */
+function mongodb_watchdog_page_top($type) {
+  $ret = '';
+  $message_wrapper = array(
+    '#prefix' => '<div class="mongodb-watchdog-message">',
+    '#suffix' => '</div>',
+  );
+
+  $type_param = array('%type' => $type);
+  $limit = 50;
+
+  // Safety net
+  $types = array(
+    'page not found',
+    'access denied',
+  );
+  if (!in_array($type, $types)) {
+    $message = t('Unknown top report type: %type', $type_param);
+    drupal_set_message($message, 'error');
+    watchdog('mongodb_watchdog', 'Unknown top report type: %type', $type_param, WATCHDOG_ERROR);
+    $ret = $message;
+    return $ret;
+  }
+
+  // Find _id for the error type.
+  $watchdog = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
+  $template = $watchdog->findOne(array('type' => $type), array('_id'));
+  // findOne() will return NULL if no row is found
+  if (empty($template)) {
+    $ret['empty'] = array(
+      '#value' => t('No "%type" message found', $type_param),
+    ) + $message_wrapper;
+    return drupal_render($ret);
+  }
+
+  // Find occurrences of error type.
+  $key = $template['_id'];
+  $event_collection = mongodb_collection('watchdog_event_' . $key);
+  $reduce = <<<EOT
+function (doc, accumulator) {
+  var param = doc.variables['@param'];
+  accumulator.count[param] = accumulator.count[param]
+    ? accumulator.count[param] + 1
+    : 1 ;
+}
+EOT;
+
+  $counts = $event_collection->group(
+    array('variables.@param' => 1),
+    array('count' => array()),
+    $reduce
+  );
+  if (!$counts['ok']) {
+    $message = t('No "%type" occurrence found', $type_param);
+    $ret = array(
+      '#value' => $message,
+    ) + $message_wrapper;
+    $ret = drupal_render($ret);
+    return $ret;
+  }
+  $counts = $counts['retval'];
+  usort($counts, '_mongodb_watchdog_sort_top');
+  $counts = array_slice($counts, 0, $limit);
+
+  $header = array(
+    t('#'),
+    t('Path'),
+  );
+  $rows = array();
+  foreach ($counts as $count) {
+    $rows[] = array(
+      reset($count['count']),
+      key($count['count']),
+    );
+  }
+
+  $ret = array(
+    '#value' => theme('table', $header, $rows),
+  ) + $message_wrapper;
+  $ret = drupal_render($ret);
+  return $ret;
+}
+
+/**
+ * usort() helper function to sort top entries returned from a group query.
+ *
+ * @param array $x
+ * @param array $y
+ *
+ * @return boolean
+ */
+function _mongodb_watchdog_sort_top($x,$y) {
+  $cx = reset($x['count']);
+  $cy = reset($y['count']);
+  return $cy - $cx;
 }
