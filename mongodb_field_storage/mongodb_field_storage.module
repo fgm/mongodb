@@ -420,3 +420,70 @@ function mongodb_field_storage_field_attach_delete($entity_type, $entity) {
     mongodb_collection('fields_revision', $entity_type)->remove(array('_id' => (int) $revision_id));
   }
 }
+
+function mongodb_field_storage_entity_info_alter(&$entity_info) {
+  foreach ($entity_info as &$info) {
+#    $info['controller class'] = 'MongoDb' . $info['controller class'];
+  }
+}
+
+class MongoDbEntityLoader {
+  function __construct($entityType, $ids, $conditions) {
+    $this->entityType = $entityType;
+    $this->ids = $ids;
+    $this->conditions = $conditions;
+  }
+  function execute() {
+    $entities = array();
+    if ($this->ids) {
+      $this->conditions['_id']['$in'] = array_map('intval', $this->ids);
+      foreach ($this->ids as $id) {
+        $entities[$id] = FALSE;
+      }
+    }
+    foreach (mongodb_collection('fields_current', $this->entityType)->find($this->conditions) as $result) {
+      $entities[$result['_id']] = (object) $result;
+    }
+    $this->result = array_filter($entities);
+    return $this;
+  }
+  function fetchAllAssoc() {
+    return $this->result;
+  }
+}
+
+class MongoDbDrupalDefaultEntityController extends DrupalDefaultEntityController {
+  function buildQuery($ids, $conditions = array(), $revision_id) {
+    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+  }
+}
+
+class MongodbCommentController extends CommentController {
+  function buildQuery($ids, $conditions = array(), $revision_id) {
+    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+  }
+}
+
+class MongoDbNodeController extends NodeController {
+  function buildQuery($ids, $conditions = array(), $revision_id) {
+    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+  }
+}
+
+class MongoDbTaxonomyTermController extends TaxonomyTermController {
+  function buildQuery($ids, $conditions = array(), $revision_id) {
+    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+  }
+}
+
+class MongoDbTaxonomyVocabularyController extends TaxonomyVocabularyController {
+  function buildQuery($ids, $conditions = array(), $revision_id) {
+    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+  }
+}
+
+class MongoDbUserController extends UserController {
+  function buildQuery($ids, $conditions = array(), $revision_id) {
+    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+  }
+}
