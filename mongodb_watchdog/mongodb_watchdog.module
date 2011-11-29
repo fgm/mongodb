@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Fires watchdog messages to mongodb.
@@ -67,8 +66,16 @@ function mongodb_watchdog_event_load($id) {
 
 /**
  * Implements hook_watchdog().
+ *
+ * Refer to issue #1355808 regarding filtering.
+ *
+ * @link http://drupal.org/node/1355808 @endlink
  */
 function mongodb_watchdog_watchdog(array $log_entry) {
+  $watchdog_limit = variable_get('watchdog_limit', WATCHDOG_DEBUG);
+  if (isset($log_entry['severity']) && $log_entry['severity'] > $watchdog_limit) {
+    return;
+  }
 
   // Find the function that generated this error.
   $log_entry = (array) $log_entry;

@@ -6,14 +6,14 @@
  */
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function mongodb_watchdog_install() {
   mongodb_watchdog_ensure_indexes();
 }
 
 /**
- * Implement hook_enable().
+ * Implements hook_enable().
  */
 function mongodb_watchdog_enable() {
   mongodb_watchdog_ensure_indexes();
@@ -27,8 +27,9 @@ function mongodb_watchdog_enable() {
  * numbers should be much faster to create than one with a string included.
  */
 function mongodb_watchdog_ensure_indexes() {
-  // Index for adding/updating increments.
   $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
+
+  // Index for adding/updating increments.
   $index = array(
     'line' => 1,
     'timestamp' => -1
