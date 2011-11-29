@@ -1,10 +1,10 @@
 <?php
-
-include_once dirname(__FILE__) . '/../mongodb.module';
-
 /**
+ * @file
  * Fires watchdog messages to mongodb.
  */
+
+include_once dirname(__FILE__) . '/../mongodb.module';
 
 /**
  * Implement hook_menu().
@@ -29,17 +29,31 @@ function mongodb_watchdog_menu() {
 }
 
 /**
- * Load the MongoDB watchdog event.
+ * Load a MongoDB watchdog event.
+ *
+ * @param string $id
+ *
+ * @return object|FALSE
  */
 function mongodb_watchdog_event_load($id) {
-  $result = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))->findOne(array('_id' => $id));
+  $result = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
+    ->findOne(array('_id' => $id));
   return $result ? $result : FALSE;
 }
 
 /**
- * Implement hook_watchdog().
+ * Implements hook_watchdog().
+ *
+ * Refer to issue #1355808 regarding filtering.
+ *
+ * @link http://drupal.org/node/1355808 @endlink
  */
 function mongodb_watchdog_watchdog(array $log_entry) {
+  $watchdog_limit = variable_get('watchdog_limit', WATCHDOG_DEBUG);
+  if (isset($log_entry['severity']) && $log_entry['severity'] > $watchdog_limit) {
+    return;
+  }
+
   // Find the function that generated this error.
   $log_entry = (array) $log_entry;
   _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
@@ -74,6 +88,11 @@ function mongodb_watchdog_watchdog(array $log_entry) {
 
 /**
  * Fill in the log_entry function, file, and line.
+ *
+ * @param array $log_entry
+ * @param array $backtrace
+ *
+ * @return void
  */
 function _mongodb_watchdog_enhance_log_entry(&$log_entry, $backtrace) {
   // Create list of functions to ignore in backtrace.

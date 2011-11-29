@@ -1,10 +1,8 @@
 name = MongoDB watchdog
 description = 'A watchdog implementation using MongoDB'
 package = MongoDB
-version = VERSION
+
 core = 7.x
 dependencies[] = mongodb
-files[] = mongodb_watchdog.module
-files[] = mongodb_watchdog.admin.inc
+
 files[] = mongodb_watchdog.test
-files[] = mongodb_watchdog.install

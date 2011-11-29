@@ -83,6 +83,12 @@ This variable holds an array of the slaves used for the mongodb field storage.
 It defaults to array(). 
 
 
+watchdog_limit (watchdog)
+--------------
+
+This is a proposed variable for D8 core watchdog, as per issue #1268636. 
+Until core implements it, it has to be used by watchdog implementations instead.
+
  
 Collection names
 ================

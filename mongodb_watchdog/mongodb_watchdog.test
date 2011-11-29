@@ -1,13 +1,61 @@
 <?php
 
 class MongoDBLogTestCase extends DrupalWebTestCase {
+  /**
+   * Name of the test helper module invoking watchdog for test.
+   */
+  const MODULE = 'watchdog_test';
+
+  /**
+   * The name of the variable holding the system watchdog limit level.
+   *
+   * @var string
+   */
+  const LIMIT_VARIABLE = 'watchdog_limit';
+
+  /**
+   * Override the default "standard" profile for this test, we need to include
+   * a test-specific module, which should not be present on a standard install.
+   *
+   * @var string
+   */
+  protected $profile = 'testing';
+
+  /**
+   * An administrator-type user account
+   *
+   * @var stdClass
+   */
   protected $big_user;
+
+  /**
+   * A basic authenticated user account
+   *
+   * @var stdClass
+   */
   protected $any_user;
+
+  /**
+   * The current MongoDB collection.
+   *
+   * @var MongoCollection
+   */
+  protected $collection;
+
+  /**
+   * The current test group.
+   *
+   * @var string
+   */
+  protected $group = 'Before setUp()';
+
+  // Drupal 6 does not have REQUEST_TIME, use a custom value to minimize D6/D7 differences
+  protected $request_time;
 
   public static function getInfo() {
     return array(
       'name' => 'MongoDB log functionality',
-      'description' => 'Generate events and verify dblog entries; verify user access to log reports based on persmissions.',
+      'description' => 'Generate events and verify dblog entries; verify user access to log reports based on permissions.',
       'group' => 'MongoDB',
     );
   }
@@ -16,22 +64,132 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
    * Enable modules and create users with specific permissions.
    */
   function setUp() {
+    $this->group = t('Setup');
     parent::setUp('mongodb', 'mongodb_watchdog', 'blog', 'poll');
+
     // Create users.
     $this->big_user = $this->drupalCreateUser(array('administer site configuration', 'access administration pages', 'access site reports', 'administer users'));
-    $this->any_user = $this->drupalCreateUser(array());
+    $this->any_user = $this->drupalCreateUser(array('access content'));
+
+    $this->request_time = REQUEST_TIME;
+
+    try {
+      $this->collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
+    }
+    catch (Exception $e) {
+      $this->collection = NULL;
+    }
+    $this->assertNotNull($this->collection, t('Access MongoDB watchdog collection'), $this->group);
   }
+
+  /**
+   * Clear the MongoDB data: simpletest only clears the main SQL database.
+   *
+   * (non-PHPdoc)
+   * @see DrupalWebTestCase::tearDown()
+   */
+  function tearDown() {
+    $this->group = t('Teardown');
+    $this->pass('Clear watchdog collections', $this->group);
+    module_load_include('inc', 'mongodb_watchdog', 'mongodb_watchdog.admin');
+    mongodb_watchdog_clear_log_submit();
+
+    parent::tearDown();
+  }
+
+  /**
+   * Simplified query to look for a logged message.
+   *
+   * @param string $message
+   *
+   * @return string|NULL
+   */
+  protected function find($message) {
+    $ret = $this->collection->findOne(array('message' => $message));
+    return $ret;
+  }
+
+  /**
+   * Assert that a given entry is present in the watchdog.
+   *
+   * @param string $message
+   *
+   * @return void
+   */
+  function assertEntry($message) {
+    $logged = $this->find($message);
+    $this->assertNotNull($logged, t('Event %message is logged', array('%message' => $message)), $this->group);
+    $this->assertTrue(isset($logged['message']) && $logged['message'] == $message, t('Logged message is unchanged'), $this->group);
+  }
+
+  /**
+   * Assert that a given entry is not present in the watchdog.
+   *
+   * @param string $message
+   *
+   * @return void
+   */
+  function assertNoEntry($message) {
+    $logged = $this->find($message);
+    $this->assertNull($logged, t('Event %message is not logged', array('%message' => $message)), $this->group);
+  }
+
+  /**
+   * Test the default and non-default mongodb_watchdog insertion behaviours.
+   *
+   * Make sure the module applies the watchdog_limit variable,
+   */
+  function testWatchdogLimit() {
+    $this->group = t('Defaults');
+
+    // Default limit should be WATCHDOG_DEBUG
+    $this->assertEqual(variable_get(self::LIMIT_VARIABLE, WATCHDOG_DEBUG), WATCHDOG_DEBUG,
+      t('%name defaults to WATCHDOG_DEBUG', array('%name' => self::LIMIT_VARIABLE)),
+      $this->group);
+
+    // Test at this default level
+    $message = $this->randomString(32);
+    $this->pass(t('Logging %message', array('%message' => $message)), $this->group);
+    watchdog(self::MODULE, $message, array(), WATCHDOG_DEBUG);
+    $this->assertEntry($message);
+
+    // Now request a higher level: unimportant events should be ignored...
+    $this->group = t('Ignoring');
+    variable_set(self::LIMIT_VARIABLE, WATCHDOG_NOTICE);
+    $message = $this->randomString(32);
+    $this->pass(t('Logging %message', array('%message' => $message)), $this->group);
+    watchdog(self::MODULE, $message, array(), WATCHDOG_DEBUG);
+    $this->assertNoEntry($message);
+
+    // ... but events at the limit or more important should be logged
+    $this->group = t('Logging');
+    $message = $this->randomString(32);
+    $this->pass(t('Logging %message', array('%message' => $message)), $this->group);
+    watchdog(self::MODULE, $message, array(), WATCHDOG_NOTICE);
+    $this->assertEntry($message);
+
+    $message = $this->randomString(32);
+    $this->pass(t('Logging %message', array('%message' => $message)), $this->group);
+    watchdog(self::MODULE, $message, array(), WATCHDOG_ERROR);
+    $this->assertEntry($message);
+  }
+
+  // @FIXME Below this line is older broken code inherited from dblog tests
 
   /**
    * Login users, create dblog events, and test dblog functionality through the admin and user interfaces.
    */
-  function testDBLog() {
+  function ZtestDBLog() {
     // Login the admin user.
     $this->drupalLogin($this->big_user);
 
-    $row_limit = 100;
-    $this->verifyRowLimit($row_limit);
-    $this->verifyCron($row_limit);
+    // No implementation
+    // $row_limit = 100;
+    // $this->verifyRowLimit($row_limit);
+
+    // No implementation
+    // $this->verifyCron($row_limit);
+
     $this->verifyEvents();
     $this->verifyReports();
 
@@ -64,7 +222,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
       'request_uri' => $base_root . request_uri(),
       'referer'     => $_SERVER['HTTP_REFERER'],
       'ip'          => ip_address(),
-      'timestamp'   => REQUEST_TIME,
+      'timestamp'   => $this->request_time,
       );
     $message = 'Log entry added to test the dblog row limit.';
     for ($i = 0; $i < $count; $i++) {
@@ -170,7 +328,8 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
 
     // Login the admin user.
     $this->drupalLogin($this->big_user);
-    // Delete user.
+
+    // On D6, delete user. On D7, cancel it.
     // We need to POST here to invoke batch_process() in the internal browser.
     $this->drupalPost('user/' . $user->uid . '/cancel', array('user_cancel_method' => 'user_cancel_reassign'), t('Cancel account'));
 
@@ -179,7 +338,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
     $this->assertTrue($count == 0, t('DBLog contains @count records for @name', array('@count' => $count, '@name' => $user->name)));
 
     // Count rows in watchdog that previously related to the deleted user.
-    if ($ids) {
+    if (!empty($ids)) {
       $query['_id']['$in'] = $ids;
     }
     $count_after = $collection->find($query)->count();
@@ -223,8 +382,10 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
 
     // Create node using form to generate add content event (which is not triggered by drupalCreateNode).
     $edit = $this->getContent($type);
+
     $langcode = LANGUAGE_NONE;
     $title = $edit["title[$langcode][0][value]"];
+
     $this->drupalPost('node/add/' . $type, $edit, t('Save'));
     $this->assertResponse(200);
     // Retrieve node object.
@@ -326,7 +487,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   /**
    * Login an admin user, create dblog event, and test clearing dblog functionality through the admin interface.
    */
-  protected function testDBLogAddAndClear() {
+  protected function ZtestDBLogAddAndClear() {
     global $base_root;
     // Get a count of how many watchdog entries there are.
     $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
@@ -340,7 +501,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
       'request_uri' => $base_root . request_uri(),
       'referer'     => $_SERVER['HTTP_REFERER'],
       'ip'          => ip_address(),
-      'timestamp'   => REQUEST_TIME,
+      'timestamp'   => $this->request_time,
     );
     // Add a watchdog entry.
     dblog_watchdog($log);
@@ -358,7 +519,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   /**
    * Test the dblog filter on admin/reports/dblog.
    */
-  protected function testFilter() {
+  protected function ZtestFilter() {
     $this->drupalLogin($this->big_user);
 
     // Clear log to ensure that only generated entries are found.
