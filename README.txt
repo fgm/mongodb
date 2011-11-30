@@ -7,7 +7,7 @@ Configuration
 =============
 
 
-MongoDB uses five variables for configuration. These are not exposed in any UI
+MongoDB uses six variables for configuration. These are not exposed in any UI
 currently.
 
 
@@ -67,6 +67,13 @@ mongodb_watchdog_collectionname (watchdog)
 
 This variable holds the name of the collection used by the mongodb_watchdog 
 module. It defaults to "watchdog".
+
+
+watchdog_limit (watchdog)
+--------------
+
+This is a proposed variable for D8 core watchdog, as per issue #1268636. 
+Until core implements it, it has to be used by watchdog implementations instead.
 
  
 Collection names
