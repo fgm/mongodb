@@ -142,14 +142,38 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Ensure collection availability and inform on behalf of caller if if does not.
+   *
+  * @return boolean
+   */
+  protected function checkCollection() {
+    if (!empty($this->collection)) {
+      return TRUE;
+    }
+    $stack = debug_backtrace();
+    $method = $stack[1]['function'];
+    if (strtolower(substr($method, 0, 4)) == 'test') {
+      $this->pass(t('%test test skipped: no collection.', array(
+        '%test' => substr($method, 4),
+      )), $this->group);
+    }
+    return FALSE;
+  }
+
+  /**
    * Test the default and non-default mongodb_watchdog insertion behaviours.
    *
    * Make sure the module applies the watchdog_limit variable,
    */
   function testWatchdogLimit() {
-    $this->group = t('Defaults');
+
+    // Bypass test if testing system does not have a MongoDB connection
+    if (!$this->checkCollection()) {
+      return;
+    };
 
     // Default limit should be WATCHDOG_DEBUG
+    $this->group = t('Defaults');
     $this->assertEqual(variable_get(self::LIMIT_VARIABLE, WATCHDOG_DEBUG), WATCHDOG_DEBUG,
       t('%name defaults to WATCHDOG_DEBUG', array('%name' => self::LIMIT_VARIABLE)),
       $this->group);
