@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *   Settings for mongodb. Moved back to module file.
+ * Settings for mongodb. Moved back to module file.
  */
 
 /**
@@ -9,6 +9,9 @@
  * @TODO
  *   Use theme function.
  *   Use exposed filter like dblog.
+ *
+ * @return array
+ *   a form array
  */
 function mongodb_watchdog_overview() {
   $rows = array();
@@ -104,7 +107,9 @@ function mongodb_watchdog_overview() {
 }
 
 /**
- * Display watchdogs entry details in mongodb.
+ * Display watchdogs entry details in MongoDB.
+ *
+ * @param array $dblog
  */
 function mongodb_watchdog_event($dblog) {
   $severity = watchdog_severity_levels();
@@ -230,6 +235,8 @@ function mongodb_watchdog_pager_init($element, $limit, $total) {
  *
  * @param $dblog
  *   An object with at least the message and variables properties
+ *
+ * @return string
  */
 function _mongodb_watchdog_format_message($dblog) {
   // Legacy messages and user specified text
@@ -242,6 +249,9 @@ function _mongodb_watchdog_format_message($dblog) {
 
 /*
  * List mongodb_watchdog administration filters that can be applied.
+ *
+ * @return array
+ *   A form array
  */
 function mongodb_watchdog_filters() {
   $filters = array();
@@ -267,6 +277,9 @@ function mongodb_watchdog_filters() {
 
 /**
  * Build the filter form.
+ *
+ * @return array
+ *   A form array
  */
 function mongodb_watchdog_filter_form($form) {
   $filters = mongodb_watchdog_filters();
@@ -275,7 +288,7 @@ function mongodb_watchdog_filter_form($form) {
     '#type' => 'fieldset',
     '#title' => t('Filter log messages'),
     '#collapsible' => TRUE,
-    '#collapsed' => empty($session),
+    '#collapsed' => empty($_SESSION),
   );
 
   foreach ($filters as $key => $filter) {
@@ -328,6 +341,7 @@ function mongodb_watchdog_filter_form_submit($form, &$form_state) {
         }
       }
       break;
+
     case t('Reset'):
       $_SESSION['mongodb_watchdog_overview_filter'] = array();
       break;
@@ -337,6 +351,9 @@ function mongodb_watchdog_filter_form_submit($form, &$form_state) {
 
 /**
  * Gets all available filter types.
+ *
+ * @return array
+ *   An array of message type names.
  */
 function _mongodb_watchdog_get_message_types() {
   // As of version 1.0.1, the PHP driver doesn't expose the 'distinct' command.
@@ -350,6 +367,9 @@ function _mongodb_watchdog_get_message_types() {
  *
  * @ingroup forms
  * @see dblog_clear_log_submit()
+ *
+ * @return array
+ *   A form array.
  */
 function mongodb_watchdog_clear_log_form($form) {
   $form['mongodb_watchdog_clear'] = array(
@@ -359,6 +379,7 @@ function mongodb_watchdog_clear_log_form($form) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
+
   $form['mongodb_watchdog_clear']['clear'] = array(
     '#type' => 'submit',
     '#value' => t('Clear log messages'),
@@ -398,6 +419,9 @@ function mongodb_watchdog_clear_log_submit() {
 
 /**
  * Build a MongoDB query based on the selected filters.
+ *
+ * @return array
+ *   An array to build a MongoDB query.
  */
 function mongodb_watchdog_build_filter_query() {
   if (empty($_SESSION['mongodb_watchdog_overview_filter'])) {
@@ -418,4 +442,101 @@ function mongodb_watchdog_build_filter_query() {
     $find['severity'] = array('$in' => array_map('intval', $severities));
   }
   return $find;
+}
+
+/**
+ * Page callback for "admin/reports/[access-denied|page-not-found]".
+ *
+ * @return array
+ */
+function mongodb_watchdog_page_top($type) {
+  $ret = array();
+  $type_param = array('%type' => $type);
+  $limit = 50;
+
+  // Safety net
+  $types = array(
+    'page not found',
+    'access denied',
+  );
+  if (!in_array($type, $types)) {
+    drupal_set_message(t('Unknown top report type: %type', $type_param), 'error');
+    watchdog('mongodb_watchdog', 'Unknown top report type: %type', $type_param, WATCHDOG_WARNING);
+    $ret = '';
+    return $ret;
+  }
+
+  // Find _id for the error type.
+  $watchdog = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
+  $template = $watchdog->findOne(array('type' => $type), array('_id'));
+
+  // findOne() will return NULL if no row is found
+  if (empty($template)) {
+    $ret['empty'] = array(
+      '#markup' => t('No "%type" message found', $type_param),
+      '#prefix' => '<div class="mongodb-watchdog-message">',
+      '#suffix' => '</div>',
+    );
+    $ret = drupal_render($ret);
+    return $ret;
+  }
+
+  // Find occurrences of error type.
+  $key = $template['_id'];
+  $event_collection = mongodb_collection('watchdog_event_' . $key);
+  $reduce = <<<EOT
+function (doc, accumulator) {
+  var param = doc.variables['@param'];
+  accumulator.count[param] = accumulator.count[param]
+    ? accumulator.count[param] + 1
+    : 1 ;
+}
+EOT;
+
+  $counts = $event_collection->group(
+    array('variables.@param' => 1),
+    array('count' => array()),
+    $reduce
+  );
+  if (!$counts['ok']) {
+    drupal_set_message(t('No "%type" occurrence found', $type_param), 'error');
+    $ret = '';
+    return $ret;
+  }
+  $counts = $counts['retval'];
+  usort($counts, '_mongodb_watchdog_sort_top');
+  $counts = array_slice($counts, 0, $limit);
+
+  $header = array(
+    t('#'),
+    t('Paths'),
+  );
+  $rows = array();
+  foreach ($counts as $count) {
+    $rows[] = array(
+      reset($count['count']),
+      key($count['count']),
+    );
+  }
+
+  $ret = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+  return $ret;
+}
+
+/**
+ * usort() helper function to sort top entries returned from a group query.
+ *
+ * @param array $x
+ * @param array $y
+ *
+ * @return boolean
+ */
+function _mongodb_watchdog_sort_top($x,$y) {
+  $cx = reset($x['count']);
+  $cy = reset($y['count']);
+  return $cy - $cx;
 }
