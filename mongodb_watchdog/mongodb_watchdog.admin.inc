@@ -79,7 +79,7 @@ function mongodb_watchdog_overview() {
       t($value['type']),
       empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
       empty($value['file']) ? '' : truncate_utf8(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
-      l($message, "admin/reports/mongodb-event/$id"),
+      l($message, "admin/reports/mongodb/$id"),
     );
   }
 
