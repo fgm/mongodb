@@ -14,6 +14,8 @@
  *   a form array
  */
 function mongodb_watchdog_overview() {
+  drupal_add_css(drupal_get_path('module', 'mongodb_watchdog') .'/mongodb_watchdog.css', 'module', 'all', FALSE);
+
   $rows = array();
   $icons = array(
     WATCHDOG_DEBUG    => '',
