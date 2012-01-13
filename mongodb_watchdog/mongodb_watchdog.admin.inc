@@ -79,7 +79,7 @@ function mongodb_watchdog_overview() {
       $icons[$value['severity']],
       isset($value['count']) && $value['count'] > 1 ? $value['count'] : '',
       t($value['type']),
-      empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
+      empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'small'),
       empty($value['file']) ? '' : truncate_utf8(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
       l($message, "admin/reports/mongodb/$id"),
     );
@@ -188,7 +188,7 @@ function mongodb_watchdog_event($dblog) {
       $dblog['variables'] = $event['variables'];
     }
     $rows[] = array(
-      format_date($event['timestamp'], 'short'),
+      format_date($event['timestamp'], 'small'),
       theme('username', (object) $account),
       $request_uri ? l(truncate_utf8(basename(($request_uri)), 20), $request_uri) : '',
       $referer ? l(truncate_utf8(basename(($referer)), 20), $referer) : '',
