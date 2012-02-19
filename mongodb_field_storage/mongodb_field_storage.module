@@ -98,6 +98,9 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
  * Implement hook_field_storage_write().
  */
 function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $fields, $entity_write = FALSE) {
+  if (strpos($entity_type, "rules") === 0) {
+    return;
+  }
   $wrote = &drupal_static(__FUNCTION__, array());
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
   // There is always a field_attach_insert/update call followed by an
