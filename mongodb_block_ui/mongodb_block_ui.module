@@ -450,7 +450,7 @@ function mongodb_block_ui_custom_block_form($edit = array()) {
 function mongodb_block_ui_menu_delete($menu) {
   $collection = mongodb_collection('block_custom');
 
-  $collection->delete(array(
+  $collection->remove(array(
     'module' => 'menu',
     'delta' => $menu['menu_name'],
   ));
