@@ -299,7 +299,7 @@ function mongodb_field_storage_query($query) {
   }
   $entity_map = array('entity_id' => '_id', 'revision_id' => '_revision_id', 'bundle' => '_bundle');
   foreach ($query->entityConditions as $field => $data) {
-    $value = $field == 'bundle' ? $data['value'] : intval($data['value']);
+    $value = $data['value'];
     $find[$entity_map[$field]] = _mongodb_field_storage_query_value($value, $data['operator']);
   }
   foreach ($query->fieldConditions as $index => $data) {
