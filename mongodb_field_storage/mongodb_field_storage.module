@@ -287,9 +287,12 @@ function mongodb_field_storage_query($query) {
         }
       }
       if ($success) {
-        foreach ($field['bundles'] as $entity_type => $data) {
-          if (mongodb_collection('fields_current', $entity_type)->find()->limit(1)->count(TRUE)) {
-            return TRUE;
+        if (is_array($field['bundles']))
+        {
+          foreach ($field['bundles'] as $entity_type => $data) {
+            if (mongodb_collection('fields_current', $entity_type)->find()->limit(1)->count(TRUE)) {
+              return TRUE;
+            }
           }
         }
         return FALSE;
