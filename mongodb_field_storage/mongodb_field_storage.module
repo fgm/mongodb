@@ -382,7 +382,7 @@ function _mongodb_field_storage_query_value($value, $operator) {
     case '>='          : return array('$gte' => $value);
     case '!='          : return array('$ne' => $value);
     case 'STARTS_WITH' : return new MongoRegex('/^' . $value . '/');
-    case 'CONTAINS'    : return new MongoRegex('/' . $value . '/');
+    case 'CONTAINS'    : return new MongoRegex('/' . $value . '/i');
     case 'BETWEEN'     : return array('$gte' => $value[0], '$lte' => $value[1]);
     default : throw new EntityFieldQueryException("$operator not implemented");
   }
