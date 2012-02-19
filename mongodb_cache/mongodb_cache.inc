@@ -98,6 +98,9 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
       // This cache data is too old and thus not valid for us, ignore it.
       return FALSE;
     }
+    if ($cache->data instanceof MongoBinData) {
+      $cache->data = $cache->data->bin;
+    }
     if ($cache->serialized) {
       $cache->data = unserialize($cache->data);
     }
@@ -105,21 +108,29 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
     return $cache;
   }
 
-  function set($cid, $data, $expire = CACHE_PERMANENT, array $headers = NULL) {
+  function set($cid, $data, $expire = CACHE_PERMANENT) {
     $scalar = is_scalar($data);
     $entry = array(
       '_id' => (string)$cid,
       'cid' => (string)$cid,
       'created' => REQUEST_TIME,
       'expire' => $expire,
-      'headers' => $headers,
       'serialized' => !$scalar,
       'data' => $scalar ? $data : serialize($data),
     );
 
-    $collection = mongodb_collection($this->bin);
+    // Use MongoBinData for non-UTF8 strings.
+    if (is_string($entry['data']) && !drupal_validate_utf8($entry['data'])) {
+      $entry['data'] = new MongoBinData($entry['data']);
+    }
 
-    $collection->save($entry);
+    try {
+      $collection = mongodb_collection($this->bin);
+      $collection->save($entry);
+    }
+    catch (Exception $e) {
+      // The database may not be available, so we'll ignore cache_set requests.
+    }
   }
 
   function clear($cid = NULL, $wildcard = FALSE) {
