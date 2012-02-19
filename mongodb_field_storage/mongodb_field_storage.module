@@ -462,32 +462,42 @@ class MongoDbDrupalDefaultEntityController extends DrupalDefaultEntityController
   }
 }
 
-class MongodbCommentController extends CommentController {
-  function buildQuery($ids, $conditions = array(), $revision_id) {
-    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+if (class_exists('CommentController')) {
+  class MongodbCommentController extends CommentController {
+    function buildQuery($ids, $conditions = array(), $revision_id) {
+      return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+    }
   }
 }
 
-class MongoDbNodeController extends NodeController {
-  function buildQuery($ids, $conditions = array(), $revision_id) {
-    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+if (class_exists('NodeController')) {
+  class MongoDbNodeController extends NodeController {
+    function buildQuery($ids, $conditions = array(), $revision_id) {
+      return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+    }
   }
 }
 
-class MongoDbTaxonomyTermController extends TaxonomyTermController {
-  function buildQuery($ids, $conditions = array(), $revision_id) {
-    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+if (class_exists('TaxonomyTermController')) {
+  class MongoDbTaxonomyTermController extends TaxonomyTermController {
+    function buildQuery($ids, $conditions = array(), $revision_id) {
+      return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+    }
   }
 }
 
-class MongoDbTaxonomyVocabularyController extends TaxonomyVocabularyController {
-  function buildQuery($ids, $conditions = array(), $revision_id) {
-    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+if (class_exists('TaxonomyVocabularyController')) {
+  class MongoDbTaxonomyVocabularyController extends TaxonomyVocabularyController {
+    function buildQuery($ids, $conditions = array(), $revision_id) {
+      return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+    }
   }
 }
 
-class MongoDbUserController extends UserController {
-  function buildQuery($ids, $conditions = array(), $revision_id) {
-    return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+if (class_exists('UserController')) {
+  class MongoDbUserController extends UserController {
+    function buildQuery($ids, $conditions = array(), $revision_id) {
+      return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
+    }
   }
 }
