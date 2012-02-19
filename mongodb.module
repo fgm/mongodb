@@ -70,7 +70,7 @@ class mongoDebugCollection {
     debug('find');
     debug($query);
     debug($fields);
-    return mongoDebugCursor($this->collection->find($query, $fields));
+    return new mongoDebugCursor($this->collection->find($query, $fields));
   }
 
   function __call($name, $arguments) {
