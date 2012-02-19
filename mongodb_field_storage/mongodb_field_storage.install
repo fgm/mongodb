@@ -10,3 +10,7 @@
 function mongodb_field_storage_install() {
   variable_set('field_storage_default', 'mongodb_field_storage');
 }
+
+function mongodb_field_storage_disable() {
+  variable_del('field_storage_default');
+}
