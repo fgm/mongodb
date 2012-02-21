@@ -6,7 +6,7 @@
  */
 
 /**
- * Implement hook_field_storage_info().
+ * Implements hook_field_storage_info().
  */
 function mongodb_field_storage_field_storage_info() {
   return array(
@@ -18,35 +18,35 @@ function mongodb_field_storage_field_storage_info() {
 }
 
 /**
- * Implement hook_field_storage_details().
+ * Implements hook_field_storage_details().
  */
 function mongodb_field_storage_field_storage_details($field) {
   // We probably want to implement that at one point, but this is informative only.
 }
 
 /**
- * Implement hook_field_storage_create_field().
+ * Implements hook_field_storage_create_field().
  */
 function mongodb_field_storage_field_storage_create_field($field) {
   // Nothing to do?
 }
 
 /**
- * Implement hook_field_storage_update_field().
+ * Implements hook_field_storage_update_field().
  */
 function mongodb_field_storage_field_storage_update_field($field, $prior_field, $has_data) {
   // Nothing to do?
 }
 
 /**
- * Implement hook_field_storage_delete_field().
+ * Implements hook_field_storage_delete_field().
  */
 function mongodb_field_storage_field_storage_delete_field($field) {
   // Nothing to do?
 }
 
 /**
- * Implement hook_field_storage_load().
+ * Implements hook_field_storage_load().
  */
 function mongodb_field_storage_field_storage_load($entity_type, $entities, $age, $fields, $options) {
   $load_current = $age == FIELD_LOAD_CURRENT;
@@ -95,7 +95,7 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
 }
 
 /**
- * Implement hook_field_storage_write().
+ * Implements hook_field_storage_write().
  */
 function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $fields, $entity_write = FALSE) {
   if (strpos($entity_type, "rules") === 0) {
@@ -140,7 +140,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
     }
   }
 
-  // Add the fieldapi fields to the new object
+  // Add the fieldapi fields to the new object.
   foreach ($fields as $field_id) {
     $field = field_info_field_by_id($field_id);
     $field_name = $field['field_name'];
@@ -206,6 +206,16 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
   }
 }
 
+/**
+ * Setting the type of field value.
+ *
+ * @param string $type
+ *   Type of field
+ * @param string $value
+ *   Vaule of field
+ *
+ * @return string
+ */
 function _mongodb_field_storage_value($type, $value) {
   switch ($type) {
     case 'int':
@@ -261,11 +271,18 @@ class MongodbStorageException extends Exception {}
 
 /**
  * Implements hook_entity_query_alter().
+ *
+ * Alter the entity info.
  */
 function mongodb_field_storage_entity_query_alter($query) {
   $query->executeCallback = 'mongodb_field_storage_query';
 }
 
+/**
+ * Implements hook_field_storage_query().
+ *
+ * Execute an EntityFieldQuery.
+ */
 function mongodb_field_storage_query($query) {
   $find = array();
   if (isset($query->entityConditions['entity_type'])) {
@@ -301,8 +318,9 @@ function mongodb_field_storage_query($query) {
       $field_has_data_query->executeCallback = 'mongodb_field_storage_query';
       $success = TRUE;
       foreach (get_object_vars($field_has_data_query) as $key => $value) {
-        // we rebuild the has_data query and then compare with the received query structure
-        // but by this point the query is altered so it's always failing.
+        // We rebuild the has_data query and then compare with the received
+        // query structure but by this point the query is altered so it's
+        // always failing.
         if ($key != 'altered' && $value != $query->$key) {
           $success = FALSE;
         }
@@ -312,8 +330,7 @@ function mongodb_field_storage_query($query) {
           // This field not yet attached to any bundles.
           return FALSE;
         }
-        if (is_array($field['bundles']))
-        {
+        if (is_array($field['bundles'])) {
           foreach ($field['bundles'] as $entity_type => $data) {
             if (mongodb_collection('fields_current', $entity_type)->find()->limit(1)->count(TRUE)) {
               return TRUE;
@@ -425,7 +442,7 @@ function _mongodb_field_storage_query_value($value, $operator) {
 }
 
 /**
- * Implement hook_field_attach_rename_bundle().
+ * Implements hook_field_attach_rename_bundle().
  */
 function mongodb_field_storage_field_attach_rename_bundle($entity_type, $bundle_old, $bundle_new) {
   mongodb_collection('fields_current', $entity_type)->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE));
@@ -457,9 +474,12 @@ function mongodb_field_storage_field_attach_delete($entity_type, $entity) {
   }
 }
 
+/**
+ * Implements hook_entity_info_alter().
+ */
 function mongodb_field_storage_entity_info_alter(&$entity_info) {
   foreach ($entity_info as &$info) {
-#    $info['controller class'] = 'MongoDb' . $info['controller class'];
+    // $info['controller class'] = 'MongoDb' . $info['controller class'];
   }
 }
 
