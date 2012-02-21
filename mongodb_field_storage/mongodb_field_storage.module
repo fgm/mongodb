@@ -1,4 +1,4 @@
-  <?php
+<?php
 
 /**
  * @file
@@ -393,12 +393,12 @@ function mongodb_field_storage_query($query) {
   }
   $return = array();
   if (isset($cursor)) {
-  foreach ($cursor as $row) {
-    $row += array('_revision_id' => NULL);
-    $entity = entity_create_stub_entity($entity_type, array($row['_id'], $row['_revision_id'], $row['_bundle']));
-    $return[$entity_type][$row[$id_key]] = $entity;
-  }
-  return $return;
+    foreach ($cursor as $row) {
+      $row += array('_revision_id' => NULL);
+      $entity = entity_create_stub_entity($entity_type, array($row['_id'], $row['_revision_id'], $row['_bundle']));
+      $return[$entity_type][$row[$id_key]] = $entity;
+    }
+    return $return;
   }
 }
 
