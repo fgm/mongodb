@@ -1,4 +1,4 @@
-<?php
+  <?php
 
 /**
  * @file
@@ -273,23 +273,45 @@ function mongodb_field_storage_query($query) {
     unset($query->entityConditions['entity_type']);
   }
   else {
+    // It looks like we are performing a 'has_data' query as we aren't being
+    // passed any entity conditions - we try to be sure of this by rebuilding
+    // a has data query and comparing that to our query
     if (count($query->fields) == 1) {
       $field = $query->fields[0];
       $field_has_data_query = new EntityFieldQuery;
+      $column = $values = NULL;
+      $count = TRUE;
+      // We need to ascertain if the query we're being passed is a 'has data'
+      // query that is concerned with listing the allowed values, eg list
+      // module's _list_values_in_use function
+      if (!empty($query->fieldConditions[0]['column'])) {
+        // We are using a field condition, not just a general has data so we
+        // need our has_data query to mimic this by adding a column to the field
+        // condition
+        $column = $query->fieldConditions[0]['column'];
+        $values = $query->fieldConditions[0]['value'];
+        $count = $query->count;
+      }
       $field_has_data_query
-        ->fieldCondition($field)
-        ->range(0, 1)
-        ->count();
+        ->fieldCondition($field, $column, $values)
+        ->range(0, 1);
+      if ($count) {
+        $field_has_data_query->count();
+      }
       $field_has_data_query->executeCallback = 'mongodb_field_storage_query';
       $success = TRUE;
       foreach (get_object_vars($field_has_data_query) as $key => $value) {
         // we rebuild the has_data query and then compare with the received query structure
-        // but by this point the query is altered so it's alwass failing.
+        // but by this point the query is altered so it's always failing.
         if ($key != 'altered' && $value != $query->$key) {
           $success = FALSE;
         }
       }
       if ($success) {
+        if (!is_array($field['bundles'])) {
+          // This field not yet attached to any bundles.
+          return FALSE;
+        }
         if (is_array($field['bundles']))
         {
           foreach ($field['bundles'] as $entity_type => $data) {
@@ -301,7 +323,7 @@ function mongodb_field_storage_query($query) {
         return FALSE;
       }
     }
-    throw new EntityFieldQueryException('No entity_type');
+   // throw new EntityFieldQueryException('No entity_type');
   }
   $entity_map = array('entity_id' => '_id', 'revision_id' => '_revision_id', 'bundle' => '_bundle');
   foreach ($query->entityConditions as $field => $data) {
@@ -323,54 +345,61 @@ function mongodb_field_storage_query($query) {
   // unset propertyConditions to please execute()
   unset($query->propertyConditions);
   if ($query->age == FIELD_LOAD_CURRENT) {
-    $collection = mongodb_collection('fields_current', $entity_type);
-    $id_key = '_id';
+    if (isset($entity_type)) {
+      $collection = mongodb_collection('fields_current', $entity_type);
+      $id_key = '_id';
+    }
   }
   else {
     $collection = mongodb_collection('fields_revision', $entity_type);
     $id_key = '_revision_id';
   }
-  $collection = mongodb_collection($query->age == FIELD_LOAD_CURRENT ? 'fields_current' : 'fields_revision', $entity_type);
-  if ($query->count && !$query->range) {
-    return $collection->count($find);
-  }
-  $cursor = $collection->find($find);
-  if (isset($query->hint)) {
-    $cursor->hint($query->hint);
-  }
-  if ($query->range) {
-    $cursor->skip($query->range['start'])->limit($query->range['length']);
-  }
-  if ($query->count) {
-    return $cursor->count(TRUE);
-  }
-  else {
-    $sort = array();
-    foreach ($query->order as $order) {
-      switch ($order['type']) {
-        case 'field':
-          $key = $order['specifier']['field']['field_name'] . '.' . $order['specifier']['column'];
-          break;
-        case 'property':
-          $key = $order['specifier'];
-          break;
-        case 'entity':
-          $key = $entity_map[$order['specifier']];
-          break;
-      }
-      $sort[$key] = $order['direction'] == 'ASC' ? 1 : -1;
+  if (isset($entity_type)) {
+    $collection = mongodb_collection($query->age == FIELD_LOAD_CURRENT ? 'fields_current' : 'fields_revision', $entity_type);
+
+    if ($query->count && !$query->range) {
+      return $collection->count($find);
     }
-    if ($sort) {
-      $cursor->sort($sort);
+    $cursor = $collection->find($find);
+    if (isset($query->hint)) {
+      $cursor->hint($query->hint);
+    }
+    if ($query->range) {
+      $cursor->skip($query->range['start'])->limit($query->range['length']);
+    }
+    if ($query->count) {
+      return $cursor->count(TRUE);
+    }
+    else {
+      $sort = array();
+      foreach ($query->order as $order) {
+        switch ($order['type']) {
+          case 'field':
+            $key = $order['specifier']['field']['field_name'] . '.' . $order['specifier']['column'];
+            break;
+          case 'property':
+            $key = $order['specifier'];
+            break;
+          case 'entity':
+            $key = $entity_map[$order['specifier']];
+            break;
+        }
+        $sort[$key] = $order['direction'] == 'ASC' ? 1 : -1;
+      }
+      if ($sort) {
+        $cursor->sort($sort);
+      }
     }
   }
   $return = array();
+  if (isset($cursor)) {
   foreach ($cursor as $row) {
     $row += array('_revision_id' => NULL);
     $entity = entity_create_stub_entity($entity_type, array($row['_id'], $row['_revision_id'], $row['_bundle']));
     $return[$entity_type][$row[$id_key]] = $entity;
   }
   return $return;
+  }
 }
 
 function _mongodb_field_storage_query_value($value, $operator) {
