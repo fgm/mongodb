@@ -215,6 +215,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
  *   Vaule of field
  *
  * @return string
+ *   Returns the value
  */
 function _mongodb_field_storage_value($type, $value) {
   switch ($type) {
@@ -264,7 +265,7 @@ function mongodb_field_storage_field_storage_delete_revision($entity_type, $enti
  * This function simply marks for deletion all data associated with the field.
  */
 function mongodb_field_storage_field_storage_delete_instance($instance) {
-  // TODO: figure out what to do.
+  // @todo: figure out what to do.
 }
 
 class MongodbStorageException extends Exception {}
