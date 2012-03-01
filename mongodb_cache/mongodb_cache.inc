@@ -1,6 +1,8 @@
 <?php
 
-include_once dirname(__FILE__) . '/../mongodb.module';
+if (!drupal_load('module', 'mongodb')) {
+  include_once dirname(__FILE__) . '/../mongodb.module';
+}
 
 /**
  * MonogoDB cache implementation.
