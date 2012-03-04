@@ -1,9 +1,6 @@
 <?php
-
-
 if (!function_exists('_drupal_session_open')) {
-
-include_once dirname(__FILE__) . '/../mongodb.module';
+  include_once dirname(__FILE__) . '/../mongodb.module';
 
 /**
  * @file
@@ -21,6 +18,7 @@ include_once dirname(__FILE__) . '/../mongodb.module';
  * data should instead be accessed via the $_SESSION superglobal.
  */
 
+
 /**
  * Session handler assigned by session_set_save_handler().
  *
@@ -30,7 +28,7 @@ include_once dirname(__FILE__) . '/../mongodb.module';
  *
  * This function should not be called directly.
  *
- * @return
+ * @return boolean
  *   This function will always return TRUE.
  */
 function _drupal_session_open() {
@@ -46,7 +44,7 @@ function _drupal_session_open() {
  *
  * This function should not be called directly.
  *
- * @return
+ * @return boolean
  *   This function will always return TRUE.
  */
 function _drupal_session_close() {
@@ -63,9 +61,10 @@ function _drupal_session_close() {
  * This function should not be called directly. Session data should
  * instead be accessed via the $_SESSION superglobal.
  *
- * @param $sid
+ * @param string $sid
  *   Session ID.
- * @return
+ *
+ * @return array|string
  *   Either an array of the session data, or an empty string, if no data
  *   was found or the user is anonymous.
  */
@@ -111,9 +110,9 @@ function _drupal_session_read($sid) {
     }
     // We found the client's session record and they are an authenticated,
     // active user.
-
     if ($session && !empty($session['uid']) && $user->status == 1) {
-      // Add roles element to $user, first we need to include function from module
+      // Add roles element to $user, first we need to include function from
+      // module.
       include_once dirname(__FILE__) . '/mongodb_session.module';
       $user->roles = array();
       $user->roles = mongodb_session_user_insert(array(), $user);
@@ -144,11 +143,12 @@ function _drupal_session_read($sid) {
  * This function should not be called directly. Session data should
  * instead be accessed via the $_SESSION superglobal.
  *
- * @param $sid
+ * @param string $sid
  *   Session ID.
- * @param $value
+ * @param array $value
  *   Serialized array of the session data.
- * @return
+ *
+ * @return boolean
  *   This function will always return TRUE.
  */
 function _drupal_session_write($sid, $value) {
@@ -160,8 +160,8 @@ function _drupal_session_write($sid, $value) {
   }
 
   $fields = array(
-    'uid' => (int)$user->uid,
-    'cache' => isset($user->cache) ? (int)$user->cache : 0,
+    'uid' => (int) $user->uid,
+    'cache' => isset($user->cache) ? (int) $user->cache : 0,
     'hostname' => ip_address(),
     'session' => $value,
     'timestamp' => REQUEST_TIME,
@@ -189,7 +189,7 @@ function _drupal_session_write($sid, $value) {
   // This reduces contention in the users table.
   if ($user->uid && REQUEST_TIME - $user->access > variable_get('session_write_interval', 180)) {
     $fields = array(
-      'access' => REQUEST_TIME
+      'access' => REQUEST_TIME,
     );
     // Update SQL because user_load() falls back to that.
     db_update('users')
@@ -363,10 +363,10 @@ function _drupal_session_destroy($sid) {
 /**
  * Deletes the session cookie.
  *
- * @param $name
+ * @param sting $name
  *   Name of session cookie to delete.
- * @param $force_insecure
- *   Fornce cookie to be insecure.
+ * @param boolean $force_insecure
+ *   Force cookie to be insecure.
  */
 function _drupal_session_delete_cookie($name, $force_insecure = FALSE) {
   if (isset($_COOKIE[$name])) {
@@ -415,10 +415,11 @@ function _drupal_session_garbage_collection($lifetime) {
  * dangerous operations, such as manipulating the global $user object.
  * See http://drupal.org/node/218104 for usage.
  *
- * @param $status
+ * @param boolean $status
  *   Disables writing of session data when FALSE, (re-)enables
  *   writing when TRUE.
- * @return
+ *
+ * @return boolean
  *   FALSE if writing session data has been disabled. Otherwise, TRUE.
  */
 function drupal_save_session($status = NULL) {
