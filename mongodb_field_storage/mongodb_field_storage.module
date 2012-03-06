@@ -510,14 +510,14 @@ class MongoDbEntityLoader {
 }
 
 class MongoDbDrupalDefaultEntityController extends DrupalDefaultEntityController {
-  function buildQuery($ids, $conditions = array(), $revision_id) {
+  function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
     return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
   }
 }
 
 if (class_exists('CommentController')) {
   class MongodbCommentController extends CommentController {
-    function buildQuery($ids, $conditions = array(), $revision_id) {
+    function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
       return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
     }
   }
@@ -525,7 +525,7 @@ if (class_exists('CommentController')) {
 
 if (class_exists('NodeController')) {
   class MongoDbNodeController extends NodeController {
-    function buildQuery($ids, $conditions = array(), $revision_id) {
+    function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
       return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
     }
   }
@@ -533,7 +533,7 @@ if (class_exists('NodeController')) {
 
 if (class_exists('TaxonomyTermController')) {
   class MongoDbTaxonomyTermController extends TaxonomyTermController {
-    function buildQuery($ids, $conditions = array(), $revision_id) {
+    function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
       return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
     }
   }
@@ -541,7 +541,7 @@ if (class_exists('TaxonomyTermController')) {
 
 if (class_exists('TaxonomyVocabularyController')) {
   class MongoDbTaxonomyVocabularyController extends TaxonomyVocabularyController {
-    function buildQuery($ids, $conditions = array(), $revision_id) {
+    function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
       return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
     }
   }
@@ -549,7 +549,7 @@ if (class_exists('TaxonomyVocabularyController')) {
 
 if (class_exists('UserController')) {
   class MongoDbUserController extends UserController {
-    function buildQuery($ids, $conditions = array(), $revision_id) {
+    function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
       return new MongoDbEntityLoader($this->entityType, $ids, $conditions);
     }
   }
