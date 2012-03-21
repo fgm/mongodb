@@ -262,10 +262,10 @@ function _mongodb_block_rehash($theme) {
           'status' => 0,
           'region' => BLOCK_REGION_NONE,
         );
-        if (isset($block['node_type'])) {
+        if (isset($block['node_type']) && $block['pages'] == array('%')) {
           $block['pages'] = array('node/%');
         }
-        else {
+        else if (!isset($block['node_type'])) {
           $block['node_type']  = array('*');
         }
         $blocks[$module . '_' . $delta] = $block;
