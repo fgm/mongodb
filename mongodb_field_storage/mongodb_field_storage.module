@@ -70,7 +70,12 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
   $result = $collection->find(array('_id' => array('$in' => array_keys($keys))));
 
   foreach ($result as $row) {
-    $entity_id = $row['_id'];
+    if ($row['nid']) {
+      $entity_id = $row['nid'];
+    }
+    else {
+      $entity_id = $row['_id'];
+    }
     foreach ($saved_fields as $field_id => $field) {
       $field_name = $field['field_name'];
       $field_values = array();
