@@ -105,7 +105,7 @@ class MongoDBQueue implements DrupalQueueInterface {
   public function createQueue() {
     // Create the index.
     mongodb_collection($this->collection)
-      ->ensureIndex(array('expire' => 1));
+      ->ensureIndex(array('expire' => 1, 'created' => 1));
   }
 
   /**
