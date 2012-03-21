@@ -5,11 +5,14 @@
  * Default theme implementation to configure mongodb_block_uis.
  *
  * Available variables:
- * - $mongodb_block_ui_regions: An array of regions. Keyed by name with the title as value.
- * - $mongodb_block_ui_listing: An array of mongodb_block_uis keyed by region and then delta.
+ * - $mongodb_block_ui_regions: An array of regions. Keyed by name with the
+ *   title as value.
+ * - $mongodb_block_ui_listing: An array of mongodb_block_uis keyed by region
+ *   and then delta.
  * - $form_submit: Form submit button.
  *
- * Each $mongodb_block_ui_listing[$region] contains an array of mongodb_block_uis for that region.
+ * Each $mongodb_block_ui_listing[$region] contains an array of
+ * mongodb_block_uis for that region.
  *
  * Each $data in $mongodb_block_ui_listing[$region] contains:
  * - $data->region_title: Region title for the listed mongodb_block_ui.
@@ -27,10 +30,10 @@
   // Add table javascript.
   drupal_add_js('misc/tableheader.js');
   drupal_add_js(drupal_get_path('module', 'mongodb_block_ui') . '/mongodb_block_ui.js');
-  foreach ($block_regions as $region => $title) {
+  foreach ($block_regions as $region => $title):
     drupal_add_tabledrag('blocks', 'match', 'sibling', 'block-region-select', 'block-region-' . $region, NULL, FALSE);
     drupal_add_tabledrag('blocks', 'order', 'sibling', 'block-weight', 'block-weight-' . $region);
-  }
+  endforeach;
 ?>
 <table id="blocks" class="sticky-enabled">
   <thead>
