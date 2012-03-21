@@ -1,10 +1,15 @@
 <?php
 
 /**
- * Implement hook_cron.
+ * @file
+ * MonngoDB Queue.
+ */
+
+/**
+ * Implements hook_cron().
  */
 function mongodb_queue_cron() {
-  // reset expired items.
+  // Reset expired items.
   $aliases = variable_get('mongodb_connections', array());
   $aliases['default'] = TRUE;
   $update_query = array(
@@ -18,7 +23,7 @@ function mongodb_queue_cron() {
     $n = strlen($db) + 1;
     // We won't need to check for system collections because those start with
     // system. and we search for queue.
-    $find = array('name' => new MongoRegex('/^' . $db .'\.queue\./'));
+    $find = array('name' => new MongoRegex('/^' . $db . '\.queue\./'));
     $queues = $collection->find($find);
     foreach ($queues as $collection_data) {
       $collection_name = $collection_data['name'];
