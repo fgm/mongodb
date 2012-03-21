@@ -17,7 +17,7 @@
  * the _block hook. This hook is called by theme.inc to display a block,
  * and also by block.module to procure the list of available blocks.
  *
- * @return
+ * @return array
  *   An associative array whose keys define the $delta
  *   for each block and whose values contain the block descriptions. Each
  *   block description is itself an associative array, with the following
@@ -68,7 +68,7 @@ function hook_block_info() {
  * The core hook_block_info_alter is run-time, not supported. This is build
  * time.
  *
- * @param $blocks
+ * @param array $blocks
  *   Assocative array, key is the module name, value is the hook_block_info
  *   returned by the module. As Drupal core and contrib rarely sets status
  *   and region this hook should be used to enable those.
@@ -82,12 +82,13 @@ function hook_mongodb_block_info_alter(&$blocks) {
 /**
  * Process the block when enabled in a region in order to view its contents.
  *
- * @param $delta
+ * @param array $delta
  *   Which block to return. This is a descriptive string used to identify
  *   blocks within each module and also within the theme system.
  *   The $delta for each block is defined within the array that your module
  *   returns when the hook_block_info() implementation is called.
- * @return
+ *
+ * @return array
  *   An array which must define a 'subject' element and a 'content' element
  *   defining the block indexed by $delta.
  *
@@ -126,14 +127,14 @@ function hook_block_view($delta = '') {
  * blocks, you can also use hook_block_view_MODULE_DELTA_alter() to alter a
  * specific block.
  *
- * @param $data
+ * @param array $data
  *   An array of data, as returned from the hook_block_view() implementation of
  *   the module that defined the block:
  *   - subject: The localized title of the block.
  *   - content: Either a string or a renderable array representing the content
  *     of the block. You should check that the content is an array before trying
  *     to modify parts of the renderable structure.
- * @param $block
+ * @param object $block
  *   The block object, as loaded from the database, having the main properties:
  *   - module: The name of the module that defined the block.
  *   - delta: The identifier for the block within that module, as defined within
@@ -164,14 +165,14 @@ function hook_block_view_alter(&$data, $block) {
  * implementations of hook_block_view_MODULE_DELTA_alter() will run before all
  * implementations of hook_block_view_alter(), regardless of the module order.
  *
- * @param $data
+ * @param array $data
  *   An array of data, as returned from the hook_block_view() implementation of
  *   the module that defined the block:
  *   - subject: The localized title of the block.
  *   - content: Either a string or a renderable array representing the content
  *     of the block. You should check that the content is an array before trying
  *     to modify parts of the renderable structure.
- * @param $block
+ * @param object $block
  *   The block object, as loaded from the database, having the main properties:
  *   - module: The name of the module that defined the block.
  *   - delta: The identifier for the block within that module, as defined within
@@ -184,7 +185,6 @@ function hook_block_view_MODULE_DELTA_alter(&$data, $block) {
   // This code will only run for a specific block. For example, if MODULE_DELTA
   // in the function definition above is set to "mymodule_somedelta", the code
   // will only run on the "somedelta" block provided by the "mymodule" module.
-
   // Change the title of the "somedelta" block provided by the "mymodule"
   // module.
   $data['subject'] = t('New title of the block');
