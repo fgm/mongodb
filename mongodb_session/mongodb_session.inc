@@ -233,7 +233,9 @@ function drupal_session_initialize() {
     $user = drupal_anonymous_user();
     session_id(md5(uniqid('', TRUE)));
   }
-  date_default_timezone_set(drupal_get_user_timezone());
+  if (isset($user->timezone)) {
+    date_default_timezone_set(drupal_get_user_timezone());
+  }
 }
 
 /**
@@ -325,7 +327,9 @@ function drupal_session_regenerate() {
     drupal_session_start();
     $user = $account;
   }
-
+  if (isset($user->timezone)) {
+    date_default_timezone_set(drupal_get_user_timezone());
+  }
   if (isset($old_session_id)) {
     $field = $is_https ? 'ssid' : 'sid';
     mongodb_collection(variable_get('mongodb_session', 'session'))
