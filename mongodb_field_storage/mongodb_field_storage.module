@@ -70,7 +70,7 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
   $result = $collection->find(array('_id' => array('$in' => array_keys($keys))));
 
   foreach ($result as $row) {
-    if ($row['nid']) {
+    if ($entity_type == 'node' && isset($row['nid'])) {
       $entity_id = $row['nid'];
     }
     else {
