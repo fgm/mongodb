@@ -53,7 +53,7 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
 
   drupal_add_css(drupal_get_path('module', 'mongodb_block_ui') . '/mongodb_block_ui.css', array('preprocess' => FALSE));
 
-  $blocks_regions = system_region_list($theme, REGIONS_VISIBLE) + array(BLOCK_REGION_NONE => '<' . t('none') . '>');
+  $blocks_regions = system_region_list($theme, REGIONS_VISIBLE) + array(MONGODB_BLOCK_REGION_NONE => '<' . t('none') . '>');
 
   // Weights range from -delta to +delta, so delta should be at least half
   // of the amount of mongodb_block_uis present. This makes sure all
@@ -109,7 +109,7 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
     }
   }
   // Do not allow disabling the main system content mongodb_block_ui.
-  unset($form['system_main']['region']['#options'][BLOCK_REGION_NONE]);
+  unset($form['system_main']['region']['#options'][MONGODB_BLOCK_REGION_NONE]);
 
   $form['actions'] = array(
     '#tree' => FALSE,
@@ -172,7 +172,7 @@ function _mongodb_block_ui_compare($a, $b) {
   // We need the region list to correctly order by region.
   if (!isset($regions)) {
     $regions = array_flip(array_keys(system_region_list($theme)));
-    $regions[BLOCK_REGION_NONE] = count($regions);
+    $regions[MONGODB_BLOCK_REGION_NONE] = count($regions);
   }
 
   // Separate enabled from disabled.
@@ -518,7 +518,7 @@ function mongodb_block_ui_custom_block_delete_submit($form, &$form_state) {
 function template_preprocess_mongodb_block_ui_admin_display_form(&$variables) {
 
   $block_regions = system_region_list($variables['form']['edited_theme']['#value'], REGIONS_VISIBLE);
-  $variables['block_regions'] = $block_regions + array(BLOCK_REGION_NONE => t('Disabled'));
+  $variables['block_regions'] = $block_regions + array(MONGODB_BLOCK_REGION_NONE => t('Disabled'));
 
   foreach ($block_regions as $key => $value) {
     // Initialize an empty array for the region.
@@ -526,7 +526,7 @@ function template_preprocess_mongodb_block_ui_admin_display_form(&$variables) {
   }
 
   // Initialize disabled mongodb_block_uis array.
-  $variables['block_listing'][BLOCK_REGION_NONE] = array();
+  $variables['block_listing'][MONGODB_BLOCK_REGION_NONE] = array();
 
   // Set up to track previous region in loop.
   $last_region = '';
