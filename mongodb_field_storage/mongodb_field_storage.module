@@ -354,7 +354,11 @@ function mongodb_field_storage_query($query) {
     $find[$entity_map[$field]] = _mongodb_field_storage_query_value($value, $data['operator']);
   }
   foreach ($query->fieldConditions as $index => $data) {
-    $find[$data['field']['field_name'] . '.' . $data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
+    $fieldName = $data['field']['field_name'] . '.' . $data['column'];
+    if (isset($find[$fieldName]))
+      $find[$fieldName] = array_merge($find[$fieldName], _mongodb_field_storage_query_value($data['value'], $data['operator']));
+    else
+      $find[$data['field']['field_name'] . '.' . $data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
     unset($query->fields[$index]);
   }
   /*
