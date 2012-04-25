@@ -338,8 +338,10 @@ function mongodb_field_storage_query($query) {
         }
         if (is_array($field['bundles'])) {
           foreach ($field['bundles'] as $entity_type => $data) {
-            if (mongodb_collection('fields_current', $entity_type)->find()->limit(1)->count(TRUE)) {
-              return TRUE;
+            foreach($data as $bundle_name) {
+              if (mongodb_collection('fields_current', $entity_type)->find(array($field['field_name'] => array('$exists' => TRUE), 'type' => $bundle_name))->limit(1)->count(TRUE)) {
+                return TRUE;
+              }
             }
           }
         }
