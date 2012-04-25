@@ -65,7 +65,7 @@ Configuration Variables
       'db' => 'drupal_default'
     ),
   );
-   
+
   * If mongodb_connections is not defined, 'default' is automatically
   created with the following settings:
   'default' => array('host' => 'localhost', 'db' => 'drupal')
@@ -115,7 +115,7 @@ Configuration Variables
   This variable define the maximum severity level to save into watchdog. Errors
   under this level will be ignored by watchdog. If not defined, all errors will
   saved.
- 
+
   EXAMPLE:
   $conf['watchdog_limit'] = WATCHDOG_CRITICAL;
 
@@ -173,13 +173,9 @@ by the the following sub-modules.
 => mongodb_cache
 
    EXAMPLE:
-   include_once('./includes/cache.inc');
-   include_once('./sites/all/modules/mongodb/mongodb_cache/mongodb_cache.inc');
    # -- Configure Cache
    $conf['cache_backends'][] =
      'sites/all/modules/mongodb/mongodb_cache/mongodb_cache.inc';
-   $conf['cache_class_cache']           = 'DrupalMongoDBCache';
-   $conf['cache_class_cache_bootstrap'] = 'DrupalMongoDBCache';
    $conf['cache_default_class']         = 'DrupalMongoDBCache';
    # -- Don't touch SQL if in Cache
    $conf['page_cache_without_database'] = TRUE;
