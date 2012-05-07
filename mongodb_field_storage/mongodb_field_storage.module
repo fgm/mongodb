@@ -372,7 +372,7 @@ function _mongodb_field_storage_query_value($value, $operator) {
   if (!isset($operator)) {
     $operator = is_array($value) ? 'IN' : '=';
   }
-  switch ($operator) {
+  switch (strtoupper($operator)) {
     case '='           : return $value;
     case 'IN'          : return array('$in' => $value);
     case 'NOT IN'      : return array('$nin' => $value);
@@ -381,6 +381,7 @@ function _mongodb_field_storage_query_value($value, $operator) {
     case '>'           : return array('$gt' => $value);
     case '<='          : return array('$lte' => $value);
     case '>='          : return array('$gte' => $value);
+    case '!='          :
     case '<>'          : return array('$ne' => $value);
     case 'STARTS_WITH' : return new MongoRegex('/^' . $value . '/');
     case 'CONTAINS'    : return new MongoRegex('/' . $value . '/');
