@@ -372,7 +372,7 @@ function _mongodb_field_storage_query_value($value, $operator) {
   if (!isset($operator)) {
     $operator = is_array($value) ? 'IN' : '=';
   }
-  switch (strtoupper($operator)) {
+  switch ($operator) {
     case '='           : return $value;
     case 'IN'          : return array('$in' => $value);
     case 'NOT IN'      : return array('$nin' => $value);
