@@ -72,7 +72,7 @@ class MongoDBQueue implements DrupalQueueInterface {
       'update' => array('$set' => $newobj),
       'sort' => array('created' => 1),
     );
-    if (($result = mongodb_collection($this->collection)->db->command($cmd)) && $result['ok'] == 1) {
+    if (($result = mongodb_collection($this->collection)->db->command($cmd)) && $result['ok'] == 1 && !empty($result['value'])) {
       return (object) $result['value'];
     }
   }
