@@ -19,23 +19,47 @@ function mongodb_session_simpletest_alter(&$groups) {
  */
 function mongodb_session_user_update($edit, $account) {
   // Update field values for changed values of the user.
+  $roles = _mongodb_session_get_roles($account);
+  // If mongodb_field_storage is enabled it will take care of creating
+  // initial user entry just add roles to it.
   if (module_exists('mongodb_field_storage')) {
-    $roles = _mongodb_session_get_roles($account);
-    $save = (array) $account + array(
-      '_id' => (int) $account->uid,
-      '@bundle' => 'user',
-      '@fields' => array(),
-      'roles' => $roles,
+    $save = array(
+      '$set' => array('roles' => $roles)
+    );
+  }
+  else {
+    $save = array(
+      '$set' => (array) $account + array(
+        '_id' => (int) $account->uid,
+        '_bundle' => 'user',
+        'roles' => $roles,
+      ),
     );
     foreach (array('uid', 'created', 'access', 'login', 'status', 'picture') as $key) {
-      $save[$key] = (int) $save[$key];
+      $save['$set'][$key] = (int) $save['$set'][$key];
     }
-    mongodb_collection('fields_current', 'user')->save($save);
   }
+  mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $account->uid), $save, array('upsert' => TRUE));
+  return $roles;
 }
 
+/**
+ * Implements hook_user_insert().
+ */
 function mongodb_session_user_insert($edit, $account) {
   return mongodb_session_user_update($edit, $account);
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function mongodb_session_user_login($edit, $account) {
+  $save = array(
+    '$set' => array(
+      'login' => (int) $account->login,
+    ),
+  );
+  mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $account->uid), $save);
 }
 
 function _mongodb_session_get_roles($account) {

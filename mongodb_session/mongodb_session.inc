@@ -101,29 +101,22 @@ function _drupal_session_read($sid) {
   else {
     $session = $collection->findOne(array('sid' => $sid));
   }
-    $collection = mongodb_collection('fields_current', 'user');
-    $user = (object) $collection->findOne(array('_id' => $session['uid']));
+  $collection = mongodb_collection('fields_current', 'user');
+  $user = (object) $collection->findOne(array('_id' => $session['uid']));
 
-    if (!isset($user->uid)) {
-      include_once dirname(__FILE__) . '/mongodb_session.module';
-      $user = db_query("SELECT * FROM {users} u WHERE uid = :uid", array(':uid' => $session['uid']))->fetchObject();
-    }
-    // We found the client's session record and they are an authenticated,
-    // active user.
-    if ($session && !empty($session['uid']) && $user->status == 1) {
-      // Add roles element to $user, first we need to include function from
-      // module.
-      include_once dirname(__FILE__) . '/mongodb_session.module';
-      $user->roles = array();
-      $user->roles = mongodb_session_user_insert(array(), $user);
-
-      // If mongodb_fields_storage wrote this user object, we need to update it.
-      if (!isset($user->roles)) {
-        $user->roles = _mongodb_session_get_roles($user);
-        $collection->update(array('_id' => (int) $user->uid), array('$set' => array('roles' => $user->roles)));
-      }
-      $user->session = $session['session'];
-    }
+  if (!isset($user->uid)) {
+    $user = db_query("SELECT * FROM {users} u WHERE uid = :uid", array(':uid' => $session['uid']))->fetchObject();
+    // Add roles element to $user and insert an entry into fields_current.user
+    // so next time we get it from Mongo.
+    include_once dirname(__FILE__) . '/mongodb_session.module';
+    $user->roles = array();
+    $user->roles = mongodb_session_user_insert(array(), $user);
+  }
+  // We found the client's session record and they are an authenticated,
+  // active user.
+  if ($session && !empty($session['uid']) && $user->status == 1) {
+    $user->session = $session['session'];
+  }
   // We didn't find the client's record (session has expired), or they are
   // blocked, or they are an anonymous user.
   else {
