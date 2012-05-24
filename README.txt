@@ -6,7 +6,11 @@ MongoDB uses two variables (somewhat similar to the memcached module).
 
 The mongodb_connections variable is an associative array. The keys are
 what I will call aliases, the values are associative arrays again, with two
-keys, host and db. Example:
+requiired keys, host and db. Also, connection_options might be specified
+to allow for connecting to databases needing authenticating, replicate sets
+and so on.
+
+Example:
 
 $conf['mongodb_connections'] = array(
   'logginghost' => array('host' => 'log.local', 'db' => 'drupalogs'),
@@ -15,6 +19,12 @@ $conf['mongodb_connections'] = array(
 The 'default' alias is special, if it's not defined then 
 'default' => array('host' => 'localhost', 'db' => 'drupal') is added
 automatically.
+
+Replicate set example:
+
+$conf['mongodb_connections'] = array(
+  'default' => array('host' => 'localhost', 'db' => 'drupal', 'connection_options' => array('replicaSet' => TRUE)),
+);
 
 Then mongodb_collections will allow mapping collections to aliases:
 
