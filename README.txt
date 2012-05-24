@@ -23,7 +23,7 @@ automatically.
 Replicate set example:
 
 $conf['mongodb_connections'] = array(
-  'default' => array('host' => 'localhost', 'db' => 'drupal', 'connection_options' => array('replicaSet' => TRUE)),
+  'default' => array('host' => 'localhost', 'db' => 'drupal', 'connection_options' => array('replicaSet' => 'replicasetname')),
 );
 
 Then mongodb_collections will allow mapping collections to aliases:
