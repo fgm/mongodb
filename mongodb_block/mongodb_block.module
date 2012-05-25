@@ -7,10 +7,8 @@
  * Resembles very closely the core block module but without an UI.
  */
 
-if (!defined('BLOCK_REGION_NONE')) {
-  // Denotes that a block is not enabled in any region and should not be shown.
-  define('BLOCK_REGION_NONE', -1);
-}
+// Denotes that a block is not enabled in any region and should not be shown.
+define('MONGODB_BLOCK_REGION_NONE', -1);
 
 /**
  * Implements hook_menu().
@@ -262,7 +260,7 @@ function _mongodb_block_rehash($theme) {
           'pages' => array('%'),
           'pages_exclude' => array(),
           'status' => 0,
-          'region' => BLOCK_REGION_NONE,
+          'region' => MONGODB_BLOCK_REGION_NONE,
         );
         if (isset($block['node_type']) && $block['pages'] == array('%')) {
           $block['pages'] = array('node/%');
@@ -277,9 +275,9 @@ function _mongodb_block_rehash($theme) {
   drupal_alter('mongodb_block_info', $blocks, $theme);
   // Only store the block in the mongodb, if the status is enabled.
   foreach ($blocks as $key => $block) {
-    if ($block['region'] != BLOCK_REGION_NONE && !isset($regions[$block['region']])) {
+    if ($block['region'] != MONGODB_BLOCK_REGION_NONE && !isset($regions[$block['region']])) {
       $blocks[$key]['status'] = 0;
-      $blocks[$key]['region'] = BLOCK_REGION_NONE;
+      $blocks[$key]['region'] = MONGODB_BLOCK_REGION_NONE;
       $block = $blocks[$key];
     }
     if ($block['status']) {
