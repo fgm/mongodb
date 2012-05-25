@@ -221,10 +221,12 @@ function mongodb_block_get_renderable_array($region_blocks) {
  * Implements hook_mongodb_block_info_alter().
  */
 function mongodb_block_mongodb_block_info_alter(&$blocks) {
-  // Enable the main content block.
-  $blocks['system_main']['region'] = 'content';
-  $blocks['system_main']['weight'] = 0;
-  $blocks['system_main']['status'] = 1;
+  // Enable the main content block if it is not already enabled.
+  if (empty($blocks['system_main']['status'])) {
+    $blocks['system_main']['region'] = 'content';
+    $blocks['system_main']['weight'] = 0;
+    $blocks['system_main']['status'] = 1;
+  }
 }
 
 /**
