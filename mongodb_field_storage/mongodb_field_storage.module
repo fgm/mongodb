@@ -371,6 +371,7 @@ function mongodb_field_storage_query($query) {
   foreach ($query->propertyConditions as $data) {
     $find[$data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
   }
+
   // unset propertyConditions to please execute()
   unset($query->propertyConditions);
   if ($query->age == FIELD_LOAD_CURRENT) {
@@ -444,7 +445,7 @@ function _mongodb_field_storage_query_value($value, $operator) {
     case '>'           : return array('$gt' => $value);
     case '<='          : return array('$lte' => $value);
     case '>='          : return array('$gte' => $value);
-    case '!='          : return array('$ne' => $value);
+    case '!='          :
     case '<>'          : return array('$ne' => $value);
     case 'STARTS_WITH' : return new MongoRegex('/^' . $value . '/');
     case 'CONTAINS'    : return new MongoRegex('/' . $value . '/i');

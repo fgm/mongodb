@@ -531,7 +531,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query = new EntityFieldQuery();
     $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
-      ->propertyCondition('ftid', 3, '!=');
+      ->propertyCondition('ftid', 3, '<>');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 1),
       array('test_entity_bundle_key', 2),
@@ -541,7 +541,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test the "not equal to" operation on a property.'));
 
     $query = new EntityFieldQuery();
-    $query->fieldCondition($this->fields[0], 'value', 3, '!=');
+    $query->fieldCondition($this->fields[0], 'value', 3, '<>');
     $this->assertEntityFieldQuery($query, array(
       array('test_entity_bundle_key', 1),
       array('test_entity_bundle_key', 2),

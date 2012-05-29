@@ -1,4 +1,3 @@
-
 CONTENTS OF THIS FILE
 ---------------------
 
@@ -62,13 +61,27 @@ Configuration Variables
       // Omit USER:PASS@ if Mongo isn't configured to use authentication.
       'host' => 'mongodb://USER:PASS@localhost',
       // Database name
-      'db' => 'drupal_default'
+      'db' => 'drupal_default',
     ),
   );
 
   * If mongodb_connections is not defined, 'default' is automatically
   created with the following settings:
   'default' => array('host' => 'localhost', 'db' => 'drupal')
+
+  Also, connection_options might be specified to allow for connecting to
+  replicate sets (and any other options listed on
+  http://www.php.net/manual/mongo.construct.php)
+
+  $conf['mongodb_connections'] = array(
+    // Connection name/alias
+    'default' => array(
+      'host' => 'host1,host2,host3',
+      // Database name
+      'db' => 'drupal_default',
+      'connection_options' => array('replicaSet' => 'replicasetname'),
+    ),
+  );
 
 #2: mongodb_debug
 
