@@ -21,11 +21,11 @@ function mongodb_help($path, $arg) {
 function mongodb($alias = 'default') {
   static $mongo_objects;
   $connections = variable_get('mongodb_connections', array());
-  $connections += array('default' => array('host' => 'localhost', 'db' => 'drupal', 'connection_options' => array()));
   if (!isset($connections[$alias])) {
     $alias = 'default';
   }
-  $connection = $connections[$alias];
+  $connection = isset($connections[$alias]) ? $connections[$alias] : array();
+  $connection += array('host' => 'localhost', 'db' => 'drupal', 'connection_options' => array());
   $host = $connection['host'];
   $options = $connection['connection_options'] +  array('connect' => TRUE);
   $db = $connection['db'];
