@@ -238,9 +238,7 @@ function drupal_session_initialize() {
       $_COOKIE[$insecure_session_name] = $session_id;
     }
   }
-  if (isset($user->timezone)) {
-    date_default_timezone_set(drupal_get_user_timezone());
-  }
+  date_default_timezone_set(drupal_get_user_timezone());
 }
 
 /**
