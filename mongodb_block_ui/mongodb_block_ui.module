@@ -167,6 +167,9 @@ function mongodb_block_ui_block_info() {
 function mongodb_block_ui_mongodb_block_info_alter(&$blocks, $theme) {
   foreach (mongodb_collection('block_customized', $theme)->find() as $block) {
     $index = $block['_id']['module'] . '_' . $block['_id']['delta'];
+    if (!isset($blocks[$index])) {
+      continue;
+    }
     unset($block['_id']);
     if (isset($block['region']) && $block['region'] != MONGODB_BLOCK_REGION_NONE) {
       $block['status'] = TRUE;
