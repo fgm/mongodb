@@ -153,7 +153,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
     if (isset($entity->$field_name)) {
       foreach ($entity->$field_name as $language => $values) {
         // According to field.test, we should not save anything for NULL.
-        if (isset($values[0])) {
+        if (!empty($values[0])) {
           if ($field['cardinality'] == 1) {
             foreach ($values[0] as $column_name => $column_value) {
               if (isset($field['columns'][$column_name])) {
