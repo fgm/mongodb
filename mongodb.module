@@ -30,9 +30,15 @@ function mongodb($alias = 'default') {
   $options = $connection['connection_options'] +  array('connect' => TRUE);
   $db = $connection['db'];
   if (!isset($mongo_objects[$host][$db])) {
-    $mongo = new Mongo($host, $options);
-    $mongo_objects[$host][$db] = $mongo->selectDB($db);
-    $mongo_objects[$host][$db]->connection = $mongo;
+    try {
+      $mongo = new Mongo($host, $options);
+      $mongo_objects[$host][$db] = $mongo->selectDB($db);
+      $mongo_objects[$host][$db]->connection = $mongo;
+    }
+    catch (MongoConnectionException $e) {
+      $mongo_objects[$host][$db] = new mongoDummy;
+      throw $e;
+    }
   }
   return $mongo_objects[$host][$db];
 }
@@ -90,6 +96,15 @@ class mongoDebugCursor {
     debug($name);
     debug($arguments);
     return call_user_func_array(array($this->collection, $name), $arguments);
+  }
+}
+
+class mongoDummy {
+  public $connection;
+  function selectCollection() {
+    return new mongoDummy;
+  }
+  function __call($name, $arguments) {
   }
 }
 
