@@ -293,7 +293,7 @@ function mongodb_watchdog_filter_form($form) {
 
   foreach ($filters as $key => $filter) {
     $form['filters']['status'][$key] = array(
-      '#title' => $filter['title'],
+      '#title' => check_plain($filter['title']),
       '#type' => 'select',
       '#multiple' => TRUE,
       '#size' => 8,
@@ -535,7 +535,7 @@ EOT;
  *
  * @return boolean
  */
-function _mongodb_watchdog_sort_top($x,$y) {
+function _mongodb_watchdog_sort_top($x, $y) {
   $cx = reset($x['count']);
   $cy = reset($y['count']);
   return $cy - $cx;

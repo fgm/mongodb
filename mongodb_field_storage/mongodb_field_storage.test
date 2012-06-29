@@ -863,7 +863,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
       $this->assertEqual($results, $intended_results, $message);
     }
     catch (EntityFieldQueryException $e) {
-      $this->fail('Exception thrown: '. $e->getMessage());
+      $this->fail('Exception thrown: ' . $e->getMessage());
     }
   }
 }

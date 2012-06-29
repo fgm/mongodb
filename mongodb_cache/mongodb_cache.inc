@@ -1,4 +1,9 @@
 <?php
+/**
+ * @file
+ * MongoDB cache backend.
+ * Replace your cache-backend file with this file. See README.txt for details.
+ */
 
 if (!drupal_load('module', 'mongodb')) {
   include_once dirname(__FILE__) . '/../mongodb.module';
@@ -172,7 +177,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
           $collection->remove();
         }
         else {
-          $collection->remove(array('cid' => new MongoRegex('/'. preg_quote($cid) .'.*/')));
+          $collection->remove(array('cid' => new MongoRegex('/' . preg_quote($cid) . '.*/')));
         }
       }
       elseif (is_array($cid)) {

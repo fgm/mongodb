@@ -128,7 +128,7 @@ function _drush_mongodb_connect($alias) {
   $query = $host;
   $query .= '/' . $db;
   
-  $command = 'mongo '. $query;
+  $command = 'mongo ' . $query;
   return $command;
 }
 
