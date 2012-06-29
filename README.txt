@@ -207,3 +207,16 @@ by the the following sub-modules.
    EXAMPLE:
    # Field Storage
    $conf['field_storage_default'] = 'mongodb_field_storage';
+
+TROUBLESHOOTING
+------------
+
+If installing mongodb_field_storage from an Install Profile:
+
+* Do not enable the module in the profiles .info file.
+* Do not include the module specific $conf variable in settings.php during
+  install.
+* In the profiles hook_install() function include
+
+   module_enable(array('mongodb_field_storage'));
+   drupal_flush_all_caches();
