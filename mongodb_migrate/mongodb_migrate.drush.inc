@@ -84,14 +84,17 @@ function drush_mongodb_migrate() {
       }
       $entity_id = $query->execute()->fetchField();
       if ($entity_id) {
-        drush_print("Migrating $entity_type $entity_id");
-        $entities = entity_load($entity_type, array($entity_id));
-        $entity = reset($entities);
-        entity_save($entity_type, $entity);
+        $collection->db->resetError();
         $collection->insert(array(
           '_id' => (int) $entity_id,
           'timestamp' => time(),
         ));
+        $lastError = $collection->db->lastError();
+        if (empty($lastError['err'])) {
+          $entities = entity_load($entity_type, array($entity_id));
+          $entity = reset($entities);
+          entity_save($entity_type, $entity);
+        }
       }
       if (time() > $finish_time) {
         return;
