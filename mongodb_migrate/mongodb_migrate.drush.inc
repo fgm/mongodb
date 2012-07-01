@@ -94,6 +94,10 @@ function drush_mongodb_migrate() {
           $entities = entity_load($entity_type, array($entity_id));
           $entity = reset($entities);
           entity_save($entity_type, $entity);
+          drush_print("Migrating $entity_type $entity_id");
+        }
+        else {
+          drush_print("Not migrating $entity_type $entity_id");
         }
       }
       if (time() > $finish_time) {
