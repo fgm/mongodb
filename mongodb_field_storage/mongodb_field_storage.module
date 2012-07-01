@@ -50,8 +50,7 @@ function mongodb_field_storage_field_storage_delete_field($field) {
  * Implements hook_field_storage_load().
  */
 function mongodb_field_storage_field_storage_load($entity_type, $entities, $age, $fields, $options) {
-  // Call migration first.
-  module_invoke('mongodb_migrate', 'storage_load_helper', $entity_type, $entities, $age, $fields, $options);
+  module_invoke('mongodb_migrate', 'load_helper', $entity_type, $entities, $age, $fields, $options);
   $load_current = $age == FIELD_LOAD_CURRENT;
 
   // Fetch information about the fields and prepare the keys.
@@ -97,7 +96,10 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
           }
         }
       }
-      $entities[$entity_id]->{$field_name} = $field_values;
+      // Migrate might have set this.
+      if (!isset($entities[$entity_id]->{$field_name})) {
+        $entities[$entity_id]->{$field_name} = $field_values;
+      }
     }
   }
 }
@@ -212,6 +214,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
     $new_entity->_id = (int) $revision_id;
     mongodb_collection('fields_revision', $entity_type)->save($new_entity);
   }
+  module_invoke('mongodb_migrate', 'write_helper', $entity_type, $entity_id);
 }
 
 /**
