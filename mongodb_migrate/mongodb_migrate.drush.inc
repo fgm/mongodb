@@ -29,6 +29,8 @@ function drush_mongodb_migrate_prepare() {
       unset($fields[$key]);
       continue;
     }
+    // Updating storage is forbidden by field_update_field(). Bugger. Write our
+    // own, simplified update.
     $field['settings']['mongodb_migrate'] = 1;
     $field['storage_type'] = 'mongodb_field_storage';
     $field['storage_module'] = 'mongodb_field_storage';
