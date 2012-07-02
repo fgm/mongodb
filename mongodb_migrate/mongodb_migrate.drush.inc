@@ -22,14 +22,14 @@ function mongodb_migrate_drush_command() {
  * Drush callback; prepares for migration by updating {field_config}.
  */
 function drush_mongodb_migrate_prepare() {
-  $fields = db_query('SELECT field_name FROM {field_config} WHERE storage_type = :storage_type OR data LIKE :sql', array(':storage_type' => 'field_sql_storage', ':sql' => '%s:3:"sql"%'))->fetchCol();
+  $fields = db_query('SELECT field_name FROM {field_config} WHERE storage_type = :storage_type OR data LIKE :mongodb_migrate', array(':storage_type' => 'field_sql_storage', ':mongodb_migrate' => '%mongodb_migrate%'))->fetchCol();
   foreach ($fields as $key => $field_name) {
     $field = field_read_field($field_name);
-    if (!isset($field['storage']['details']['sql'])) {
+    if (!db_table_exists(_field_sql_storage_tablename($field))) {
       unset($fields[$key]);
       continue;
     }
-    // Updating storage is forbidden by field_update_field(). Bugger.
+    $field['settings']['mongodb_migrate'] = 1;
     $field['storage_type'] = 'mongodb_field_storage';
     $field['storage_module'] = 'mongodb_field_storage';
     $field['storage']['type'] = 'mongodb_field_storage';
