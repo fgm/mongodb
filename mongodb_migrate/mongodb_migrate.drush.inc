@@ -47,7 +47,8 @@ function drush_mongodb_migrate_prepare() {
     $field = $info[$field_name];
     db_update(_field_sql_storage_tablename($field))
       ->fields(array('deleted' => 0))
-      ->condition('deleted', 2);
+      ->condition('deleted', 2)
+      ->execute();
     foreach ($field['bundles'] as $entity_type => $bundles) {
       mongodb_collection("migrate.$entity_type")->drop();
       $all_bundles += array($entity_type => array());
