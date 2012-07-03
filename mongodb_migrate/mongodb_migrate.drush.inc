@@ -61,6 +61,7 @@ function drush_mongodb_migrate_prepare() {
     sort($bundles);
   }
   variable_set('mongodb_migrate_bundles', $all_bundles);
+  field_cache_clear();
 }
 
 function drush_mongodb_migrate() {
