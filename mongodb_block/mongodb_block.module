@@ -199,11 +199,23 @@ function mongodb_block_get_cache_id($block) {
  *   A list of blocks.
  */
 function mongodb_block_get_renderable_array($region_blocks) {
+  global $theme;
+
   $weight = 0;
   $build = array();
   foreach ($region_blocks as $key => $block) {
     $build[$key] = $block->content;
     unset($block->content);
+
+    // Add contextual links for this block; skip the main content block, since
+    // contextual links are basically output as tabs/local tasks already. Also
+    // skip the help block, since we assume that most users do not need or want
+    // to perform contextual actions on the help block, and the links needlessly
+    // draw attention on it.
+    // @see _block_get_renderable_array();
+    if (module_exists('mongodb_block_ui') && $key != 'system_main' && $key != 'system_help') {
+      $build[$key]['#contextual_links']['mongodb_block_ui'] = array('admin/structure/mongodb_block/manage', array($theme, $block->module, $block->delta));
+    }
 
     $build[$key] += array(
       '#block' => $block,
