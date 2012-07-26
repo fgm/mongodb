@@ -432,8 +432,8 @@ function mongodb_field_storage_query($query) {
       $entity = entity_create_stub_entity($entity_type, array($row['_id'], $row['_revision_id'], $row['_bundle']));
       $return[$entity_type][$row[$id_key]] = $entity;
     }
-    return $return;
   }
+  return $return;
 }
 
 function _mongodb_field_storage_query_value($value, $operator) {
