@@ -5,7 +5,7 @@
  * Replace your cache-backend file with this file. See README.txt for details.
  */
 
-if (!drupal_load('module', 'mongodb')) {
+if (!function_exists('mongodb')) {
   include_once dirname(__FILE__) . '/../mongodb.module';
 }
 
