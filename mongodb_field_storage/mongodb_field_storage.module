@@ -230,9 +230,9 @@ function _mongodb_field_storage_value($type, $value) {
   switch ($type) {
     case 'int':
     case 'serial':
-      return (int) $value;
+      return is_array($value) ? array_map('intval', $value) : intval($value);
     case 'float':
-      return (float) $value;
+      return is_array($value) ? array_map('floatval', $value) : floatval($value);
     default:
       return $value;
   }
@@ -355,16 +355,20 @@ function mongodb_field_storage_query($query) {
    // throw new EntityFieldQueryException('No entity_type');
   }
   $entity_map = array('entity_id' => '_id', 'revision_id' => '_revision_id', 'bundle' => '_bundle');
+  $type_map = array('entity_id' => 'int', 'revision_id' => 'int', 'bundle' => 'text');
   foreach ($query->entityConditions as $field => $data) {
     $value = $data['value'];
-    $find[$entity_map[$field]] = _mongodb_field_storage_query_value($value, $data['operator']);
+    $find[$entity_map[$field]] = _mongodb_field_storage_query_value($value, $data['operator'], $type_map[$field]);
   }
   foreach ($query->fieldConditions as $index => $data) {
     $fieldName = $data['field']['field_name'] . '.' . $data['column'];
-    if (isset($find[$fieldName]))
-      $find[$fieldName] = array_merge($find[$fieldName], _mongodb_field_storage_query_value($data['value'], $data['operator']));
-    else
-      $find[$data['field']['field_name'] . '.' . $data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
+    $type = $data['field']['columns'][$data['column']]['type'];
+    if (isset($find[$fieldName])) {
+      $find[$fieldName] = array_merge($find[$fieldName], _mongodb_field_storage_query_value($data['value'], $data['operator'], $type));
+    }
+    else {
+      $find[$data['field']['field_name'] . '.' . $data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator'], $type);
+    }
     unset($query->fields[$index]);
   }
   /*
@@ -372,8 +376,13 @@ function mongodb_field_storage_query($query) {
     $find[$field['field_name']]['$exists'] = TRUE;
   }
   */
-  foreach ($query->propertyConditions as $data) {
-    $find[$data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator']);
+  if ($query->propertyConditions) {
+    $entity_info = entity_get_info($entity_type);
+    $table_schema = isset($entity_info['base table']) ? drupal_get_schema($entity_info['base table']) : array();
+    foreach ($query->propertyConditions as $data) {
+      $type = isset($table_schema['fields'][$data['column']]['type']) ? $table_schema['fields'][$data['column']]['type'] : NULL;
+      $find[$data['column']] = _mongodb_field_storage_query_value($data['value'], $data['operator'], $type);
+    }
   }
 
   // unset propertyConditions to please execute()
@@ -436,10 +445,11 @@ function mongodb_field_storage_query($query) {
   return $return;
 }
 
-function _mongodb_field_storage_query_value($value, $operator) {
+function _mongodb_field_storage_query_value($value, $operator, $type) {
   if (!isset($operator)) {
     $operator = is_array($value) ? 'IN' : '=';
   }
+  $value = _mongodb_field_storage_value($type, $value);
   switch ($operator) {
     case '='           : return $value;
     case 'IN'          : return array('$in' => $value);
