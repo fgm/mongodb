@@ -1,5 +1,5 @@
 
-name = MongoDB Storage
+name = MongoDB Field Storage
 description = Store Field content on MongoDB.
 package = MongoDB
 version = VERSION
