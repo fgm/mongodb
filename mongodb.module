@@ -32,6 +32,9 @@ function mongodb($alias = 'default') {
   if (!isset($mongo_objects[$host][$db])) {
     try {
       $mongo = new Mongo($host, $options);
+      if (!empty($connection['slave_ok'])) {
+        $mongo->setSlaveOkay(TRUE);
+      }
       $mongo_objects[$host][$db] = $mongo->selectDB($db);
       $mongo_objects[$host][$db]->connection = $mongo;
     }

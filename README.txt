@@ -83,6 +83,19 @@ Configuration Variables
     ),
   );
 
+  Querying a slave is also possible by creating a new connection alias
+  and specifying slave_ok option.
+
+  $conf['mongodb_connections'] = array(
+    // Connection name/alias
+    'slave' => array(
+      'host' => 'slave1',
+      // Database name
+      'db' => 'drupal_default',
+      'slave_ok' => TRUE,
+    ),
+  );
+
 #2: mongodb_debug
 
   A variable primarily for developers, mongodb_debug causes a collection
