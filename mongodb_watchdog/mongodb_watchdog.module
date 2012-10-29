@@ -97,7 +97,7 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   $event = array(
     'variables' => $log_entry['variables'],
     'timestamp' => $log_entry['timestamp'],
-    'user' => array('name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')), 'uid' => $account->uid),
+    'user' => array('name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')), 'uid' => $log_entry['uid']),
     'ip' => $log_entry['ip'],
     'request_uri' => $log_entry['request_uri'],
     'referer' => $log_entry['referer'],
