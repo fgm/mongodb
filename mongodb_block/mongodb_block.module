@@ -83,6 +83,9 @@ function mongodb_block_page_build(&$page) {
     $ancestors = array_merge($ancestors, menu_get_ancestors($request_parts));
   }
   $ancestors[] = '%';
+  if (drupal_is_front_page()) {
+    $ancestors[] = '<front>';
+  }
   $query['pages']['$in'] = $ancestors;
   $query['pages_exclude']['$nin'] = $ancestors;
   $query['region']['$in'] = array_keys($all_regions);
