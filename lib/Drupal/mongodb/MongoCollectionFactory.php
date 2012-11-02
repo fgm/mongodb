@@ -7,6 +7,8 @@
 
 namespace Drupal\mongodb;
 
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 class MongoCollectionFactory {
 
   /**
