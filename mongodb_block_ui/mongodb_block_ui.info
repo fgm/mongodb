@@ -1,9 +1,0 @@
-name = MongoDB Block UI
-description = Controls the visual building blocks a page is constructed with. Blocks are boxes of content rendered into an area, or region, of a web page.
-package = MongoDB
-version = VERSION
-core = 7.x
-dependencies[] = mongodb_block
-files[] = mongodb_block_ui.module
-files[] = mongodb_block_ui.admin.inc
-files[] = mongodb_block_ui.install

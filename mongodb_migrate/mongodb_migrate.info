@@ -1,6 +1,0 @@
-name = MongoDB Migrate
-description = Migrate fields from MySQL to MongoDB
-package = MongoDB
-core = 7.x
-requirements[] = entity
-requirements[] = mongodb_field_storage

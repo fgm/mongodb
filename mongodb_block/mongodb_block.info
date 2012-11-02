@@ -1,9 +1,0 @@
-
-name = MongoDB Block
-description = MongoDB based block system
-package = MongoDB
-version = VERSION
-dependencies[] = mongodb
-core = 7.x
-files[] = mongodb_block.module
-files[] = mongodb_block.install
