@@ -25,15 +25,14 @@ class Mongo {
       $host = $this->connection['host'];
       $options = $this->connection['connection_options'] + array('connect' => TRUE);
       try {
-        $mongo = new Mongo($host, $options);
+        $mongo = new \Mongo($host, $options);
         if (!empty($connection['slave_ok'])) {
           $mongo->setSlaveOkay(TRUE);
         }
-        $mongo_objects[$host][$db] = $mongo->selectDB($db);
-        $mongo_objects[$host][$db]->connection = $mongo;
+        $this->db = $mongo->selectDB($db);
       }
       catch (\MongoConnectionException $e) {
-        $mongo_objects[$host][$db] = new mongoDummy;
+        $this->db = new mongoDummy;
         throw $e;
       }
     }
@@ -42,7 +41,7 @@ class Mongo {
 
   /**
    * @param $collection_name
-   * @return MongoDB
+   * @return \MongoCollection
    */
   public function get($collection_name) {
     return $this->getDb()->selectCollection($collection_name);
