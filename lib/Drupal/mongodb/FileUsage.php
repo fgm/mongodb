@@ -65,39 +65,36 @@ class FileUsage extends FileUsageBase {
    * Implements Drupal\file\FileUsage\FileUsageInterface::delete().
    */
   public function delete(File $file, $module, $type = NULL, $id = NULL, $count = 1) {
-    if ($count > 0) {
-      // Delete entries that have a exact or less value to prevent empty rows.
-      $key = array(
-        'fid' => (int) $file->fid,
-        'module' => $module,
-      );
+    $key = array(
+      'fid' => (int) $file->fid,
+      'module' => $module,
+    );
 
-      if ($type && $id) {
-        $key['type'] = $type;
-        $key['id'] = (int) $id;
+    if ($type && $id) {
+      $key['type'] = $type;
+      $key['id'] = (int) $id;
+    }
+
+    if ($count) {
+      $key['count']['$lte'] = $count;
+    }
+
+    // @index fid, module.
+    // @index fid, module, count.
+    // @index fid, module, type, id.
+    // @index fid, module, type, id, count.
+    // Delete entries that have a exact or less value to prevent empty rows.
+    $record = $this->database->get($this->collection)->remove($key, array('safe' => TRUE));
+
+    if (empty($record) && $count > 0) {
+      unset($key['count']);
+      // Assume that we do not want to update if item is collection.
+      try {
+        // @index fid, module.
+        // @index fid, module, type, id.
+        $this->database->get($this->collection)->update($key, array('$inc' => array('count' => -1 * $count)), array('safe' => TRUE));
       }
-
-      if ($count) {
-        $key['count']['$lte'] = $count;
-      }
-
-      // @index fid, module.
-      // @index fid, module, count.
-      // @index fid, module, type, id.
-      // @index fid, module, type, id, count.
-      $record_count = $this->database->get($this->collection)->count($key);
-
-      // If the row has more than the specified count decrement it by that number.
-      if (!$record_count) {
-        unset($key['count']);
-        // Assume that we do not want to update if item is collection.
-        try {
-          // @index fid, module.
-          // @index fid, module, type, id.
-          $this->database->get($this->collection)->update($key, array('$inc' => array('count' => -1 * $count)), array('safe' => TRUE));
-        }
-        catch (Exception $e) {
-        }
+      catch (Exception $e) {
       }
     }
 
