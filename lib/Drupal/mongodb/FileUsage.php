@@ -8,6 +8,7 @@
 namespace Drupal\mongodb;
 
 use Drupal\file\Plugin\Core\Entity\File;
+use Drupal\file\FileUsage\FileUsageBase;
 
 /**
  * Defines the mongodb file usage backend.
@@ -95,7 +96,7 @@ class FileUsage extends FileUsageBase {
           // @index fid, module, type, id.
           $this->database->get($this->collection)->update($key, array('$inc' => -1 * $count));
         }
-        catch {
+        catch (Exception $e) {
         }
       }
     }
