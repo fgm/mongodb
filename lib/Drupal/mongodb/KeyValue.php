@@ -9,16 +9,58 @@ use Drupal\Core\KeyValueStore\StorageBase;
  */
 class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
 
+  /**
+   * The object wrapping the MongoDB database object.
+   *
+   * @var MongoCollectionFactory
+   */
+  protected $mongo;
+
+  /**
+   * Name of the key-value collection.
+   *
+   * @var string
+   */
+  protected $collection;
+
+  /**
+   * Construct this object.
+   *
+   * @param MongoCollectionFactory $mongo
+   *   The object wrapping the MongoDB database object.
+   * @param $collection
+   *   Name of the key-value collection.
+   */
   function __construct(MongoCollectionFactory $mongo, $collection) {
     $this->mongo = $mongo;
     // system. is a reserved string.
     $this->collection = $collection;
   }
 
+  /**
+   * Gets the collection for this key-value collection.
+   *
+   * @return \MongoCollection
+   */
   protected function collection() {
     return $this->mongo->get($this->collection);
   }
 
+  /**
+   * Prepares an object for insertion.
+   */
+  protected function getObject($key, $value, $expire) {
+    if ($expire < REQUEST_TIME) {
+      $expire += REQUEST_TIME;
+    }
+    $scalar = is_scalar($value);
+    return array(
+        'key' => (string) $key,
+        'value' => $scalar ? $value : serialize($value),
+        'scalar' => $scalar,
+        'expire' => $expire,
+    );
+  }
 
   /**
    * Saves a value for a given key with a time to live.
@@ -32,17 +74,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    */
   function setWithExpire($key, $value, $expire) {
     $this->garbageCollection();
-    if ($expire < REQUEST_TIME) {
-      $expire += REQUEST_TIME;
-    }
-    $this->collection()->update(array('key' => (string) $key),
-      array(
-        'key' => (string) $key,
-        'value' => serialize($value),
-        'expire' => $expire,
-      ),
-      array('upsert' => TRUE)
-    );
+    $this->collection()->update(array('key' => (string) $key), $this->getObject($key, $value, $expire), array('upsert' => TRUE));
   }
 
   /**
@@ -64,13 +96,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
       if ($expire < REQUEST_TIME) {
         $expire += REQUEST_TIME;
       }
-      $result = $this->collection()->insert(array(
-          'key' => (string) $key,
-          'value' => serialize($value),
-          'expire' => $expire,
-        ),
-        array('safe' => TRUE)
-      );
+      $result = $this->collection()->insert($this->getObject($key, $value, $expire), array('safe' => TRUE));
       return $result['ok'] && !isset($result['err']);
     }
     catch (\MongoCursorException $e) {
@@ -117,6 +143,12 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
     return $this->getHelper();
   }
 
+  /**
+   * Executes the get for getMultiple() and getAll().
+   *
+   * @param array|null $keys
+   * @return array
+   */
   protected function getHelper($keys = NULL) {
     $find = array(
       'expire' => array('$gte' => time()),
@@ -127,7 +159,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
     $result = $this->collection()->find($find);
     $return = array();
     foreach ($result as $row) {
-      $return[$row['key']] = unserialize($row['value']);
+      $return[$row['key']] = $row['scalar'] ? $row['value'] : unserialize($row['value']);
     }
     return $return;
   }
@@ -169,10 +201,16 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
     $this->collection()->remove(array('key' => array('$id' => $this->strMap($keys))));
   }
 
+  /**
+   * Delete expired items.
+   */
   protected function garbageCollection() {
     $this->collection()->remove(array('$expire' => array('$lt' => time())));
   }
 
+  /**
+   * Cast keys to strings.
+   */
   protected function strMap($keys) {
     return array_map('strval', $keys);
   }
