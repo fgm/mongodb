@@ -31,10 +31,14 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    */
   function setWithExpire($key, $value, $expire) {
     $this->garbageCollection();
-    $this->collection()->update(array('_id' => (string) $key),
+    if ($expire < REQUEST_TIME) {
+      $expire += REQUEST_TIME;
+    }
+    $this->collection()->update(array('key' => (string) $key),
       array(
-        'value' => $value,
-        'expire' => REQUEST_TIME + $expire,
+        'key' => (string) $key,
+        'value' => serialize($value),
+        'expire' => $expire,
       ),
       array('upsert' => TRUE)
     );
@@ -56,10 +60,13 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
   function setWithExpireIfNotExists($key, $value, $expire) {
     $this->garbageCollection();
     try {
+      if ($expire < REQUEST_TIME) {
+        $expire += REQUEST_TIME;
+      }
       $result = $this->collection()->insert(array(
-          '_id' => (string) $key,
-          'value' => $value,
-          'expire' => REQUEST_TIME + $expire,
+          'key' => (string) $key,
+          'value' => serialize($value),
+          'expire' => $expire,
         ),
         array('safe' => TRUE)
       );
@@ -114,12 +121,12 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
       'expire' => array('$gte' => time()),
     );
     if ($keys) {
-      $find['_id'] = array('$in' => $this->strMap($keys));
+      $find['key'] = array('$in' => $this->strMap($keys));
     }
-    $result = $this->collection()->find($find, array('value' => 1));
+    $result = $this->collection()->find($find);
     $return = array();
     foreach ($result as $row) {
-      $return[$row['_id']] = $row['value'];
+      $return[$row['key']] = unserialize($row['value']);
     }
     return $return;
   }
@@ -158,7 +165,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    *   A list of item names to delete.
    */
   public function deleteMultiple(array $keys) {
-    $this->collection()->remove(array('_id' => array('$id' => $this->strMap($keys))));
+    $this->collection()->remove(array('key' => array('$id' => $this->strMap($keys))));
   }
 
   protected function garbageCollection() {

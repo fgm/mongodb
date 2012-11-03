@@ -33,8 +33,7 @@ class MongodbBundle extends Bundle {
       ->addArgument('file_usage');
     $container
       ->register('keyvalue', 'Drupal\mongodb\KeyValueFactory')
-      ->addArgument(new Reference('mongo'))
-      ->addArgument('file_usage');
+      ->addArgument(new Reference('mongo'));
   }
 
 }
