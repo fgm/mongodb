@@ -50,13 +50,13 @@ class FileUsage extends FileUsageBase {
    */
   public function add(File $file, $module, $type, $id, $count = 1) {
     $key = array(
-      'fid' => $file->fid,
+      'fid' => (int) $file->fid,
       'module' => $module,
       'type' => $type,
-      'id' => $id,
+      'id' => (int) $id,
     );
     // @index fid, module, type, id.
-    $this->database->get($this->collection)->update($key, array('$inc' => $count), array('upsert' => TRUE));
+    $this->database->get($this->collection)->update($key, array('$inc' => array('count' => $count)), array('upsert' => TRUE, 'safe' => TRUE));
 
     parent::add($file, $module, $type, $id, $count);
   }
