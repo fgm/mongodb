@@ -68,13 +68,13 @@ class FileUsage extends FileUsageBase {
     if ($count > 0) {
       // Delete entries that have a exact or less value to prevent empty rows.
       $key = array(
-        'fid' => $file->fid,
+        'fid' => (int) $file->fid,
         'module' => $module,
       );
 
       if ($type && $id) {
         $key['type'] = $type;
-        $key['id'] = $id;
+        $key['id'] = (int) $id;
       }
 
       if ($count) {
@@ -94,7 +94,7 @@ class FileUsage extends FileUsageBase {
         try {
           // @index fid, module.
           // @index fid, module, type, id.
-          $this->database->get($this->collection)->update($key, array('$inc' => -1 * $count));
+          $this->database->get($this->collection)->update($key, array('$inc' => array('count' => -1 * $count)), array('safe' => TRUE));
         }
         catch (Exception $e) {
         }
@@ -109,12 +109,12 @@ class FileUsage extends FileUsageBase {
    */
   public function listUsage(File $file) {
     $key = array(
-      'fid' => $file->fid,
+      'fid' => (int) $file->fid,
       'count' => array(
         '$gt' => 0,
       ),
     );
-    $results = $this->database->get($this->collection)->find($key, array('module' => TRUE, 'type' => TRUE, 'id' => TRUE, 'count' => TRUE));
+    $results = $this->database->get($this->collection)->find($key);
     $references = array();
     foreach ($results as $usage) {
       $references[$usage['module']][$usage['type']][$usage['id']] = $usage['count'];
