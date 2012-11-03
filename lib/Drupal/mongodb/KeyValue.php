@@ -93,9 +93,6 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
   function setWithExpireIfNotExists($key, $value, $expire) {
     $this->garbageCollection();
     try {
-      if ($expire < REQUEST_TIME) {
-        $expire += REQUEST_TIME;
-      }
       $result = $this->collection()->insert($this->getObject($key, $value, $expire), array('safe' => TRUE));
       return $result['ok'] && !isset($result['err']);
     }
