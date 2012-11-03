@@ -44,6 +44,6 @@ class Mongo {
    * @return \MongoCollection
    */
   public function get($collection_name) {
-    return $this->getDb()->selectCollection($collection_name);
+    return $this->getDb()->selectCollection(str_replace('system.', 'system_.', $collection_name));
   }
 }

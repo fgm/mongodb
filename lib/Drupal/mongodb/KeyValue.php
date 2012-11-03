@@ -11,6 +11,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
 
   function __construct(MongoCollectionFactory $mongo, $collection) {
     $this->mongo = $mongo;
+    // system. is a reserved string.
     $this->collection = $collection;
   }
 
