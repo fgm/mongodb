@@ -86,9 +86,9 @@ class FileUsage extends FileUsageBase {
     // Delete entries that have a exact or less value to prevent empty rows.
     $record = $this->database->get($this->collection)->remove($key, array('safe' => TRUE));
 
-    if (empty($record['ok']) && $count > 0) {
+    if (empty($record['n']) && $count > 0) {
       unset($key['count']);
-      // Assume that we do not want to update if item is collection.
+      // Assume that we do not want to update if item is not in the collection.
       try {
         // @index fid, module.
         // @index fid, module, type, id.

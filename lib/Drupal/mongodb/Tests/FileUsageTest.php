@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\mongodb\Tests;
+use Drupal\file\Tests\FileManagedTestBase;
 
 /**
  * Tests file usage functions.
@@ -79,7 +80,7 @@ class FileUsageTest extends FileManagedTestBase {
   function testRemoveUsage() {
     $file = $this->createFile();
     $database = drupal_container()->get('mongo');
-    $database->get('file_usage')->insert(array('fid' => (int) $file->fid, 'module' => 'testing', 'type' => 'foo', 'id' => 2, 'count' => 3));
+    $database->get('file_usage')->insert(array('fid' => (int) $file->fid, 'module' => 'testing', 'type' => 'bar', 'id' => 2, 'count' => 3));
 
     // Normal decrement.
     file_usage()->delete($file, 'testing', 'bar', 2);
@@ -89,11 +90,11 @@ class FileUsageTest extends FileManagedTestBase {
     // Multiple decrement and removal.
     file_usage()->delete($file, 'testing', 'bar', 2, 2);
     $count = $database->get('file_usage')->findOne(array('fid' => (int) $file->fid), array('count' => TRUE));
-    $this->assertIdentical(FALSE, !isset($count['count']), t('The count was removed entirely when empty.'));
+    $this->assertIdentical(FALSE, isset($count['count']), t('The count was removed entirely when empty.'));
 
     // Non-existent decrement.
     file_usage()->delete($file, 'testing', 'bar', 2);
     $count = $database->get('file_usage')->findOne(array('fid' => (int) $file->fid), array('count' => TRUE));
-    $this->assertIdentical(FALSE, !isset($count['count']), t('Decrementing non-exist record complete.'));
+    $this->assertIdentical(FALSE, isset($count['count']), t('Decrementing non-exist record complete.'));
   }
 }
