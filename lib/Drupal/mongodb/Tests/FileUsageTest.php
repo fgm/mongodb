@@ -24,7 +24,7 @@ class FileUsageTest extends FileManagedTestBase {
     return array(
       'name' => 'File usage',
       'description' => 'Tests the mongo file usage functions.',
-      'group' => 'File API',
+      'group' => 'MongoDB',
     );
   }
 

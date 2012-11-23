@@ -32,6 +32,10 @@ class MongodbBundle extends Bundle {
       ->addArgument(new Reference('mongo'))
       ->addArgument('file_usage');
     $container
+      ->register('flood', 'Drupal\mongodb\Flood')
+      ->addArgument(new Reference('mongo'))
+      ->addArgument('flood');
+    $container
       ->register('keyvalue', 'Drupal\mongodb\KeyValueFactory')
       ->addArgument(new Reference('mongo'));
   }
