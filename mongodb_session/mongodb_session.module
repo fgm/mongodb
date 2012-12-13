@@ -23,6 +23,8 @@ function mongodb_session_user_update($edit, $account) {
   // If mongodb_field_storage is enabled it will take care of creating
   // initial user entry just add roles to it.
   if (module_exists('mongodb_field_storage')) {
+    $wrote = &drupal_static('mongodb_field_storage_field_storage_write', array());
+    $wrote['user'][$account->uid] = TRUE;
     $save = array(
       '$set' => array('roles' => $roles)
     );
