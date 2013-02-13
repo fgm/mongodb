@@ -3,14 +3,11 @@
 function mongodb_migrate_drush_command() {
   $items['mongodb-migrate-prepare'] = array(
     'description' => 'Prepare for migrate. Resets existing migration. No data is lost.',
-    'examples' => array(
-      'drush mongodb-field-update body',
-    ),
   );
   $items['mongodb-migrate'] = array(
-    'description' => 'Migrates fields. Run mongodb-field-update first.',
+    'description' => 'Migrates fields. Run mongodb-migrate-prepare first.',
     'options' => array(
-      'timeout' => 'How many seconds the command should run. 0 for no timeout. Defaults to 900s.',
+      'timeout' => 'How many seconds the command should run. 0 for no timeout. Defaults to 900.',
       'count' => 'How many entities should the command process. 0 for all. Defaults to all.',
     ),
   );
@@ -42,7 +39,7 @@ function drush_mongodb_migrate_prepare() {
     drupal_write_record('field_config', $field, array('id'));
   }
   $info = field_info_fields();
-  $all_bundles = array();
+  $all_entity_types = array();
   foreach ($fields as $field_name) {
     $field = $info[$field_name];
     db_update(_field_sql_storage_tablename($field))
@@ -51,23 +48,25 @@ function drush_mongodb_migrate_prepare() {
       ->execute();
     foreach ($field['bundles'] as $entity_type => $bundles) {
       mongodb_collection("migrate.$entity_type")->drop();
-      $all_bundles += array($entity_type => array());
-      $all_bundles[$entity_type] += $bundles;
+      $all_entity_types[] = $entity_type;
     }
   }
   variable_set('mongodb_migrate_fields', array_flip($fields));
-  ksort($all_bundles);
-  foreach ($all_bundles as &$bundles) {
-    sort($bundles);
-  }
-  variable_set('mongodb_migrate_bundles', $all_bundles);
+  variable_set('mongodb_migrate_types', array_unique($all_entity_types));
   field_cache_clear();
 }
 
+/**
+ * Drush callback; migrate all field data into MongoDB.
+ */
 function drush_mongodb_migrate() {
-  $finish_time = time() + drush_get_option('timeout', 900);
+  $timeout = drush_get_option('timeout', 900);
+  $finish_time = FALSE;
+  if ($timeout > 0) {
+    $finish_time = time() + $timeout;
+  }
   $limit = drush_get_option('count', 0);
-  foreach (variable_get('mongodb_migrate_bundles', array()) as $entity_type => $bundles) {
+  foreach (variable_get('mongodb_migrate_types', array())) {
     $counter = 0;
     $collection = mongodb_collection("migrate.$entity_type");
     $entity_info = entity_get_info($entity_type);
@@ -81,11 +80,8 @@ function drush_mongodb_migrate() {
       $query = db_select($entity_info['base table'], 'e')
         ->fields('e', array($id_field))
         ->condition($id_field, $max, '>')
-        ->orderBy($id_field, ASC)
+        ->orderBy($id_field, 'ASC')
         ->range(0, 1);
-      if (isset($entity_info['entity keys']['bundle'])) {
-        $query->condition($entity_info['entity keys']['bundle'], $bundles);
-      }
       $entity_id = $query->execute()->fetchField();
       if ($entity_id) {
         $collection->db->resetError();
@@ -104,7 +100,7 @@ function drush_mongodb_migrate() {
           drush_print("Not migrating $entity_type $entity_id");
         }
       }
-      if (time() > $finish_time) {
+      if ($finish_time && time() > $finish_time) {
         return;
       }
     } while ($entity_id && (!$limit || ++$counter < $limit));
