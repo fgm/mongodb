@@ -66,7 +66,7 @@ function drush_mongodb_migrate() {
     $finish_time = time() + $timeout;
   }
   $limit = drush_get_option('count', 0);
-  foreach (variable_get('mongodb_migrate_types', array())) {
+  foreach (variable_get('mongodb_migrate_types', array()) as $entity_type) {
     $counter = 0;
     $collection = mongodb_collection("migrate.$entity_type");
     $entity_info = entity_get_info($entity_type);
