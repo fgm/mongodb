@@ -1,9 +1,9 @@
 <?php
 
 function mongodb_migrate_load_helper($entity_type, $entities, $age, &$fields, $options) {
-  $all_bundles = variable_get('mongodb_migrate_bundles', array());
+  $all_types = variable_get('mongodb_migrate_types', array());
   $migrate_fields = variable_get('mongodb_migrate_fields', array());
-  if (defined('DRUSH_VERSION') && $age == FIELD_LOAD_CURRENT && isset($all_bundles[$entity_type])) {
+  if (defined('DRUSH_VERSION') && $age == FIELD_LOAD_CURRENT && in_array($entity_type, $all_types)) {
     $field_info = field_info_field_by_ids();
     $sql_fields = array();
     foreach ($fields as $field_id => $ids) {
