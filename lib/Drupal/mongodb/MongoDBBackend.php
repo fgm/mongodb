@@ -139,15 +139,18 @@ class MongoDBBackend implements CacheBackendInterface {
    * Implements Drupal\Core\Cache\CacheBackendInterface::set().
    */
   public function set($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT, array $tags = array()) {
-    $scalar = is_scalar($data);
+    // We do not serialize configurations as we're sure we always get
+    // them as arrays. This will be much faster as mongo knows how to
+    // store arrays directly.
+    $serialized = !is_scalar($data) || $this->bin != 'cache_config';
     $entry = array(
       '_id' => (string) $cid,
       'cid' => (string) $cid,
-      'serialized' => !$scalar,
+      'serialized' => $serialized,
       'created' => REQUEST_TIME,
       'expire' => $expire,
       'tags' => $tags,
-      'data' => $scalar ? $data : serialize($data),
+      'data' => $serialized ? serialize($data) : $data,
     );
 
     // Use MongoBinData for non-UTF8 strings.
@@ -156,7 +159,7 @@ class MongoDBBackend implements CacheBackendInterface {
     }
 
     try {
-      $collection = drupal_container()->get('mongo')->get($this->bin);
+      $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
       $collection->save($entry);
     }
     catch (Exception $e) {
