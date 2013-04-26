@@ -92,8 +92,6 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function getMultiple(&$cids, $allow_invalid = FALSE) {
     try {
-      // Garbage collection necessary when enforcing a minimum cache lifetime.
-      $this->garbageCollection();
       $connection = Drupal::getContainer()->get('mongo');
       $find = array();
       $find['_id']['$in'] = array_map('strval', $cids);
@@ -322,6 +320,7 @@ class MongoDBBackend implements CacheBackendInterface {
    *   TRUE if the cache bin specified is empty.
    */
   public function isEmpty() {
+    $this->garbageCollection();
     $item = Drupal::getContainer()->get('mongo')->get($this->bin)->findOne();
     return empty($item);
   }
