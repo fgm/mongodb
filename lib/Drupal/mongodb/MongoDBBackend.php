@@ -8,6 +8,7 @@
 namespace Drupal\mongodb;
 
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal;
 
 /**
  * Defines MongoDB cache implementation.
@@ -46,10 +47,9 @@ class MongoDBBackend implements CacheBackendInterface {
    * Implements Drupal\Core\Cache\CacheBackendInterface::get().
    */
   public function get($cid, $allow_invalid = FALSE) {
-    return FALSE;
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection($this->bin);
-    $connection = drupal_container()->get('mongo');
+    $connection = Drupal::getContainer()->get('mongo');
     $cache = $connection->get($this->bin)->findOne(array('_id' => (string)$cid));
     return $this->prepareItem($cache);
   }
@@ -58,7 +58,6 @@ class MongoDBBackend implements CacheBackendInterface {
    * Implements Drupal\Core\Cache\CacheBackendInterface::getMultiple().
    */
   public function getMultiple(&$cids, $allow_invalid = FALSE) {
-    return array();
     try {
       // When serving cached pages, the overhead of using ::select() was found
       // to add around 30% overhead to the request. Since $this->bin is a
@@ -86,6 +85,7 @@ class MongoDBBackend implements CacheBackendInterface {
     catch (Exception $e) {
       // If the database is never going to be available, cache requests should
       // return FALSE in order to allow exception handling to occur.
+      $cids = array();
       return array();
     }
   }
