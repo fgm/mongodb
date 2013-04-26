@@ -17,17 +17,17 @@ use Drupal;
  * cached data. Each cache bin corresponds to a database table by the same name.
  */
 class MongoDBBackend implements CacheBackendInterface {
-  
+
   /**
    * @var string
    */
   protected $bin;
-  
+
   /**
    * A static cache of all tags checked during the request.
    */
   protected static $tagCache = array();
-  
+
   /**
    * Constructs a MongoDBBackend object.
    *
@@ -42,7 +42,7 @@ class MongoDBBackend implements CacheBackendInterface {
     }
     $this->bin = $bin;
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::get().
    *
@@ -69,7 +69,7 @@ class MongoDBBackend implements CacheBackendInterface {
     }
     return current($items);
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::getMultiple().
    *
@@ -115,7 +115,7 @@ class MongoDBBackend implements CacheBackendInterface {
       return array();
     }
   }
-  
+
   /**
    * Prepares a cached item.
    *
@@ -158,7 +158,7 @@ class MongoDBBackend implements CacheBackendInterface {
 
     return $cache;
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::set().
    *
@@ -214,7 +214,7 @@ class MongoDBBackend implements CacheBackendInterface {
       // The database may not be available, so we'll ignore cache_set requests.
     }
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::delete().
    *
@@ -225,9 +225,9 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function delete($cid) {
     $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
-    $collection->remove(array('_id' => $cid));
+    $collection->remove(array('_id' => (string) $cid));
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::deleteMultiple().
    *
@@ -265,7 +265,7 @@ class MongoDBBackend implements CacheBackendInterface {
       $collection->remove($remove);
     }
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::flush().
    *
@@ -274,7 +274,7 @@ class MongoDBBackend implements CacheBackendInterface {
   public function deleteAll() {
     Drupal::getContainer()->get('mongo')->get($this->bin)->remove();
   }
-  
+
   /**
    * Removes expired cache items from MongoDB.
    */
@@ -288,7 +288,7 @@ class MongoDBBackend implements CacheBackendInterface {
     );
     $collection->remove($remove);
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::invalidateTags().
    *
@@ -301,7 +301,7 @@ class MongoDBBackend implements CacheBackendInterface {
   public function invalidateTags(array $tags) {
 
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::garbageCollection().
    *
@@ -311,7 +311,7 @@ class MongoDBBackend implements CacheBackendInterface {
   public function garbageCollection() {
     $this->expire();
   }
-  
+
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::isEmpty().
    *
@@ -336,7 +336,7 @@ class MongoDBBackend implements CacheBackendInterface {
    *   The cache ID to invalidate.
    */
   public function invalidate($cid) {
-
+    $this->invalidateMultiple(array($cid));
   }
 
   /**
@@ -349,7 +349,16 @@ class MongoDBBackend implements CacheBackendInterface {
    *   An array of cache IDs to invalidate.
    */
   public function invalidateMultiple(array $cids) {
-
+    try {
+      $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
+      $collection->update(
+        array('_id' => array('$in' =>  array_map('strval', $cids))),
+        array('$set' => array('expire' => REQUEST_TIME - 1))
+      );
+    }
+    catch (Exception $e) {
+      // The database may not be available, so we'll ignore cache_set requests.
+    }
   }
 
   /**
@@ -359,7 +368,16 @@ class MongoDBBackend implements CacheBackendInterface {
    * in later calls to get(), if the $allow_invalid argument is TRUE.
    */
   public function invalidateAll() {
-
+    try {
+      $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
+      $collection->update(
+        array(),
+        array('$set' => array('expire' => REQUEST_TIME - 1))
+      );
+    }
+    catch (Exception $e) {
+      // The database may not be available, so we'll ignore cache_set requests.
+    }
   }
 
   /**
