@@ -62,11 +62,12 @@ class MongoDBBackend implements CacheBackendInterface {
    *   The cache item or FALSE on failure.
    */
   public function get($cid, $allow_invalid = FALSE) {
-    // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $this->garbageCollection($this->bin);
-    $connection = Drupal::getContainer()->get('mongo');
-    $cache = $connection->get($this->bin)->findOne(array('_id' => (string)$cid));
-    return $this->prepareItem($cache, $allow_invalid);
+    $cids = array($cid);
+    $items = $this->getMultiple($cids, $allow_invalid);
+    if (empty($items)) {
+      return FALSE;
+    }
+    return current($items);
   }
   
   /**
