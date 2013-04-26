@@ -161,6 +161,30 @@ class MongoDBBackend implements CacheBackendInterface {
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::set().
+   *
+   * Stores data in the persistent cache.
+   *
+   * @param string $cid
+   *   The cache ID of the data to store.
+   * @param mixed $data
+   *   The data to store in the cache.
+   *   Some storage engines only allow objects up to a maximum of 1MB in size to
+   *   be stored by default. When caching large arrays or similar, take care to
+   *   ensure $data does not exceed this size.
+   * @param int $expire
+   *   One of the following values:
+   *   - CacheBackendInterface::CACHE_PERMANENT: Indicates that the item should
+   *     not be removed unless it is deleted explicitly.
+   *   - A Unix timestamp: Indicates that the item will be considered invalid
+   *     after this time, i.e. it will not be returned by get() unless
+   *     $allow_invalid has been set to TRUE. When the item has expired, it may
+   *     be permanently deleted by the garbage collector at any time.
+   * @param array $tags
+   *   An array of tags to be stored with the cache item. These should normally
+   *   identify objects used to build the cache item, which should trigger
+   *   cache invalidation when updated. For example if a cached item represents
+   *   a node, both the node ID and the author's user ID might be passed in as
+   *   tags. For example array('node' => array(123), 'user' => array(92)).
    */
   public function set($cid, $data, $expire = CacheBackendInterface::CACHE_PERMANENT, array $tags = array()) {
     // We do not serialize configurations as we're sure we always get
@@ -193,18 +217,28 @@ class MongoDBBackend implements CacheBackendInterface {
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::delete().
+   *
+   * Deletes an item from the cache.
+   *
+   * @param string $cid
+   *   The cache ID to delete.
    */
   public function delete($cid) {
-    $collection = drupal_container()->get('mongo')->get($this->bin);
+    $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
     $collection->remove(array('_id' => $cid));
   }
   
-  
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::deleteMultiple().
+   *
+   * Deletes multiple items from the cache.
+   *
+   * @param array $cids
+   *   An array of cache IDs to delete.
    */
   public function deleteMultiple(array $cids) {
-    $connection = drupal_container()->get('mongo');
+    $connection = Drupal::getContainer()->get('mongo');
+
     // Delete in chunks when a large array is passed.
     do {
       $remove = array('cid' => array('$in' => array_map('strval', array_splice($cids, 0, 1000))));
@@ -216,26 +250,36 @@ class MongoDBBackend implements CacheBackendInterface {
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::deleteTags().
    *
+   * Deletes items with any of the specified tags.
+   *
    * @param array $tags
    *   Associative array of tags, in the same format that is passed to
    *   CacheBackendInterface::set().
    */
   public function deleteTags(array $tags) {
-
+    $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
+    foreach ($tags as $tag) {
+      $remove = array(
+        'tags' => $tag,
+      );
+      $collection->remove($remove);
+    }
   }
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::flush().
+   *
+   * Deletes all cache items in a bin.
    */
   public function deleteAll() {
-    drupal_container()->get('mongo')->get($this->bin)->remove();
+    Drupal::getContainer()->get('mongo')->get($this->bin)->remove();
   }
   
   /**
-   * Implements Drupal\Core\Cache\CacheBackendInterface::expire().
+   * Removes expired cache items from MongoDB.
    */
   public function expire() {
-    $collection = drupal_container()->get('mongo')->get($this->bin);
+    $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
     $remove = array(
       'expire' => array(
         '$ne' => CacheBackendInterface::CACHE_PERMANENT,
@@ -247,19 +291,22 @@ class MongoDBBackend implements CacheBackendInterface {
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::invalidateTags().
+   *
+   * Marks cache items with any of the specified tags as invalid.
+   *
+   * @param array $tags
+   *   Associative array of tags, in the same format that is passed to
+   *   CacheBackendInterface::set().
    */
   public function invalidateTags(array $tags) {
-    $collection = drupal_container()->get('mongo')->get($this->bin);
-    foreach ($tags as $tag) {
-      $remove = array(
-        'tags' => $tag,
-      );
-      $collection->remove($remove);
-    }
+
   }
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::garbageCollection().
+   *
+   * Performs garbage collection on a cache bin.
+   * The backend may choose to delete expired or invalidated items.
    */
   public function garbageCollection() {
     $this->expire();
@@ -267,25 +314,60 @@ class MongoDBBackend implements CacheBackendInterface {
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::isEmpty().
+   *
+   * Checks if a cache bin is empty. A cache bin is considered empty
+   * if it does not contain any valid data for any cache ID.
+   *
+   * @return
+   *   TRUE if the cache bin specified is empty.
    */
   public function isEmpty() {
-    $item = drupal_container()->get('mongo')->get($this->bin)->findOne();
+    $item = Drupal::getContainer()->get('mongo')->get($this->bin)->findOne();
     return empty($item);
   }
 
+  /**
+   * Implements Drupal\Core\Cache\CacheBackendInterface::invalidate().
+   *
+   * Marks a cache item as invalid. Invalid items may be returned in
+   * later calls to get(), if the $allow_invalid argument is TRUE.
+   *
+   * @param string $cid
+   *   The cache ID to invalidate.
+   */
   public function invalidate($cid) {
 
   }
 
+  /**
+   * Implements Drupal\Core\Cache\CacheBackendInterface::invalidateMultiple().
+   *
+   * Marks cache items as invalid. Invalid items may be returned in
+   * later calls to get(), if the $allow_invalid argument is TRUE.
+   *
+   * @param string $cids
+   *   An array of cache IDs to invalidate.
+   */
   public function invalidateMultiple(array $cids) {
 
   }
 
+  /**
+   * Implements Drupal\Core\Cache\CacheBackendInterface::invalidateAll().
+   *
+   * Marks all cache items as invalid. Invalid items may be returned
+   * in later calls to get(), if the $allow_invalid argument is TRUE.
+   */
   public function invalidateAll() {
 
   }
 
+  /**
+   * Implements Drupal\Core\Cache\CacheBackendInterface::removeBin().
+   *
+   * Remove a cache bin.
+   */
   public function removeBin() {
-
+    Drupal::getContainer()->get('mongo')->get($this->bin)->drop();
   }
 }
