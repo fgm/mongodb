@@ -7,7 +7,9 @@
 
 namespace Drupal\mongodb;
 
+use Drupal;
 use Drupal\Core\Flood\FloodInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Defines the mongodb flood backend.
@@ -56,7 +58,7 @@ class Flood implements FloodInterface {
    */
   public function register($name, $window = 3600, $identifier = NULL) {
     if (!isset($identifier)) {
-      $identifier = ip_address();
+      $identifier = Drupal::request()->getClientIp();
     }
 
     $data = array(
@@ -74,7 +76,7 @@ class Flood implements FloodInterface {
    */
   public function clear($name, $identifier = NULL) {
     if (!isset($identifier)) {
-      $identifier = ip_address();
+      $identifier = Drupal::request()->getClientIp();
     }
 
     $key = array(
@@ -90,7 +92,7 @@ class Flood implements FloodInterface {
    */
   public function isAllowed($name, $threshold, $window = 3600, $identifier = NULL) {
     if (!isset($identifier)) {
-      $identifier = ip_address();
+      $identifier = Drupal::request()->getClientIp();
     }
 
     $key = array(
