@@ -8,3 +8,13 @@ if (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'install') {
   $bundle->build(drupal_container());
 }
 
+
+Cache backend:
+----------------------------------------------------------------------
+
+Enable mongodb.module and add this to your settings.php:
+
+$settings['cache']['cache'] = 'cache.backend.mongodb';
+
+Replace second 'cache' with desired cache bin or 'default' if you want
+to use MongoDB as default backend.
