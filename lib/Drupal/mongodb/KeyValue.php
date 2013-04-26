@@ -199,6 +199,13 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
   }
 
   /**
+   * Deletes all items from the key/value store.
+   */
+  public function deleteAll() {
+    $this->collection()->remove();
+  }
+
+  /**
    * Delete expired items.
    */
   protected function garbageCollection() {
