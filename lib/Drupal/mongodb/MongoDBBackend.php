@@ -188,7 +188,7 @@ class MongoDBBackend implements CacheBackendInterface {
     // We do not serialize configurations as we're sure we always get
     // them as arrays. This will be much faster as mongo knows how to
     // store arrays directly.
-    $serialized = !is_scalar($data) || $this->bin != 'cache_config';
+    $serialized = !(is_scalar($data) || $this->bin == 'cache_config');
     $entry = array(
       '_id' => (string) $cid,
       'cid' => (string) $cid,
