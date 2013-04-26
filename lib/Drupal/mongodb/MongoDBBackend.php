@@ -45,7 +45,8 @@ class MongoDBBackend implements CacheBackendInterface {
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::get().
    */
-  public function get($cid) {
+  public function get($cid, $allow_invalid = FALSE) {
+    return FALSE;
     // Garbage collection necessary when enforcing a minimum cache lifetime.
     $this->garbageCollection($this->bin);
     $connection = drupal_container()->get('mongo');
@@ -56,7 +57,8 @@ class MongoDBBackend implements CacheBackendInterface {
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::getMultiple().
    */
-  public function getMultiple(&$cids) {
+  public function getMultiple(&$cids, $allow_invalid = FALSE) {
+    return array();
     try {
       // When serving cached pages, the overhead of using ::select() was found
       // to add around 30% overhead to the request. Since $this->bin is a
@@ -183,11 +185,22 @@ class MongoDBBackend implements CacheBackendInterface {
     }
     while (count($cids));
   }
+
+  /**
+   * Implements Drupal\Core\Cache\CacheBackendInterface::deleteTags().
+   *
+   * @param array $tags
+   *   Associative array of tags, in the same format that is passed to
+   *   CacheBackendInterface::set().
+   */
+  public function deleteTags(array $tags) {
+
+  }
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::flush().
    */
-  public function flush() {
+  public function deleteAll() {
     drupal_container()->get('mongo')->get($this->bin)->remove();
   }
   
@@ -233,4 +246,19 @@ class MongoDBBackend implements CacheBackendInterface {
     return empty($item);
   }
 
+  public function invalidate($cid) {
+
+  }
+
+  public function invalidateMultiple(array $cids) {
+
+  }
+
+  public function invalidateAll() {
+
+  }
+
+  public function removeBin() {
+
+  }
 }
