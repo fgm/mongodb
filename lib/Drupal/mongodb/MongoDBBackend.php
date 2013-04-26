@@ -45,6 +45,21 @@ class MongoDBBackend implements CacheBackendInterface {
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::get().
+   *
+   * Returns data from the persistent cache.
+   *
+   * @param string $cid
+   *   The cache ID of the data to retrieve.
+   * @param bool $allow_invalid
+   *   (optional) If TRUE, a cache item may be returned even if it is expired or
+   *   has been invalidated. Such items may sometimes be preferred, if the
+   *   alternative is recalculating the value stored in the cache, especially
+   *   if another concurrent request is already recalculating the same value.
+   *   The "valid" property of the returned object indicates whether the item is
+   *   valid or not. Defaults to FALSE.
+   *
+   * @return object|false
+   *   The cache item or FALSE on failure.
    */
   public function get($cid, $allow_invalid = FALSE) {
     // Garbage collection necessary when enforcing a minimum cache lifetime.
@@ -56,19 +71,29 @@ class MongoDBBackend implements CacheBackendInterface {
   
   /**
    * Implements Drupal\Core\Cache\CacheBackendInterface::getMultiple().
+   *
+   * Returns data from the persistent cache when given an array of cache IDs.
+   *
+   * @param array $cids
+   *   An array of cache IDs for the data to retrieve. This is passed by
+   *   reference, and will have the IDs successfully returned from cache
+   *   removed.
+   * @param bool $allow_invalid
+   *   (optional) If TRUE, cache items may be returned even if they have expired
+   *   or been invalidated. Such items may sometimes be preferred, if the
+   *   alternative is recalculating the value stored in the cache, especially
+   *   if another concurrent thread is already recalculating the same value. The
+   *   "valid" property of the returned objects indicates whether the items are
+   *   valid or not. Defaults to FALSE.
+   *
+   * @return array
+   *   An array of cache item objects indexed by cache ID.
    */
   public function getMultiple(&$cids, $allow_invalid = FALSE) {
     try {
-      // When serving cached pages, the overhead of using ::select() was found
-      // to add around 30% overhead to the request. Since $this->bin is a
-      // variable, this means the call to ::query() here uses a concatenated
-      // string. This is highly discouraged under any other circumstances, and
-      // is used here only due to the performance overhead we would incur
-      // otherwise. When serving an uncached page, the overhead of using
-      // ::select() is a much smaller proportion of the request.
       // Garbage collection necessary when enforcing a minimum cache lifetime.
       $this->garbageCollection();
-      $connection = drupal_container()->get('mongo');
+      $connection = Drupal::getContainer()->get('mongo');
       $find = array();
       $find['_id']['$in'] = array_map('strval', $cids);
       $result = $connection->get($this->bin)->find($find);
