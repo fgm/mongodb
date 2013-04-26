@@ -51,7 +51,7 @@ class MongoDBBackend implements CacheBackendInterface {
     $this->garbageCollection($this->bin);
     $connection = Drupal::getContainer()->get('mongo');
     $cache = $connection->get($this->bin)->findOne(array('_id' => (string)$cid));
-    return $this->prepareItem($cache);
+    return $this->prepareItem($cache, $allow_invalid);
   }
   
   /**
@@ -74,7 +74,7 @@ class MongoDBBackend implements CacheBackendInterface {
       $result = $connection->get($this->bin)->find($find);
       $cache = array();
       foreach ($result as $item) {
-        $item = $this->prepareItem($item);
+        $item = $this->prepareItem($item, $allow_invalid);
         if ($item) {
           $cache[$item->cid] = $item;
         }
@@ -97,37 +97,35 @@ class MongoDBBackend implements CacheBackendInterface {
    * data as appropriate.
    *
    * @param stdClass $cache
-   *   An item loaded from cache_get() or cache_get_multiple().
+   *   An item loaded from get() or getMultiple().
    *
    * @return mixed
    *   The item with data unserialized as appropriate or FALSE if there is no
    *   valid item to load.
    */
-  protected function prepareItem($cache) {
+  protected function prepareItem($cache, $allow_invalid) {
     global $user;
 
     if (!$cache || !isset($cache['data'])) {
       return FALSE;
     }
+
+    // Remove Mongo-specific fields and convert to object to achieve
+    // standard behaviour.
     unset($cache['_id']);
     $cache = (object)$cache;
-        // If the data is permanent or we are not enforcing a minimum cache lifetime
-    // always return the cached data.
-    if ($cache->expire == CACHE_PERMANENT || !variable_get('cache_lifetime', 0)) {
-    }
-    // If enforcing a minimum cache lifetime, validate that the data is
-    // currently valid for this user before we return it by making sure the cache
-    // entry was created before the timestamp in the current session's cache
-    // timer. The cache variable is loaded into the $user object by _drupal_session_read()
-    // in session.inc. If the data is permanent or we're not enforcing a minimum
-    // cache lifetime always return the cached data.
-    if ($cache->expire != CACHE_PERMANENT && variable_get('cache_lifetime', 0) && $user->cache > $cache->created) {
-      // This cache data is too old and thus not valid for us, ignore it.
+
+    // Check if item still valid.
+    $cache->valid = $cache->expire == CacheBackendInterface::CACHE_PERMANENT || $cache->expire >= REQUEST_TIME;
+
+    if (!$allow_invalid && !$cache->valid) {
       return FALSE;
     }
+
     if ($cache->data instanceof MongoBinData) {
       $cache->data = $cache->data->bin;
     }
+
     if ($cache->serialized) {
       $cache->data = unserialize($cache->data);
     }
