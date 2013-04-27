@@ -189,7 +189,7 @@ class MongoDBBackend implements CacheBackendInterface {
       'serialized' => $serialized,
       'created' => REQUEST_TIME,
       'expire' => $expire,
-      'tags' => $tags,
+      'tags' => $this->flattenTags($tags),
       'data' => $serialized ? serialize($data) : $data,
     );
 
@@ -215,7 +215,7 @@ class MongoDBBackend implements CacheBackendInterface {
    *   The cache ID to delete.
    */
   public function delete($cid) {
-    $$this->collection->remove(array('_id' => (string) $cid));
+    $this->collection->remove(array('_id' => (string) $cid));
   }
 
   /**
@@ -285,7 +285,15 @@ class MongoDBBackend implements CacheBackendInterface {
    *   CacheBackendInterface::set().
    */
   public function invalidateTags(array $tags) {
-
+    try {
+      $this->collection->update(
+        array('tags' => array('$in' => $this->flattenTags($tags))),
+        array('$set' => array('expire' => REQUEST_TIME - 1))
+      );
+    }
+    catch (Exception $e) {
+      // The database may not be available, so we'll ignore cache_set requests.
+    }
   }
 
   /**
@@ -373,4 +381,33 @@ class MongoDBBackend implements CacheBackendInterface {
   public function removeBin() {
     $this->collection->drop();
   }
+
+  /**
+   * 'Flattens' a tags array into an array of strings.
+   *
+   * @param array $tags
+   *   Associative array of tags to flatten.
+   *
+   * @return array
+   *   An indexed array of flattened tag identifiers.
+   */
+  protected function flattenTags(array $tags) {
+    if (isset($tags[0])) {
+      return $tags;
+    }
+
+    $flat_tags = array();
+    foreach ($tags as $namespace => $values) {
+      if (is_array($values)) {
+        foreach ($values as $value) {
+          $flat_tags[] = "$namespace:$value";
+        }
+      }
+      else {
+        $flat_tags[] = "$namespace:$values";
+      }
+    }
+    return $flat_tags;
+  }
+
 }
