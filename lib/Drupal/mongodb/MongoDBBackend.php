@@ -2,24 +2,23 @@
 
 /**
  * @file
- * Definition of Drupal\Core\Cache\DatabaseBackend.
+ * Definition of Drupal\mongodb/MongoDBBackend.
  */
 
 namespace Drupal\mongodb;
 
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal;
+use Drupal\Core\Cache\CacheBackendInterface;
 
 /**
  * Defines MongoDB cache implementation.
- *
- * This is Drupal's default cache implementation. It uses the database to store
- * cached data. Each cache bin corresponds to a database table by the same name.
  */
 class MongoDBBackend implements CacheBackendInterface {
 
   /**
-   * @var string
+   * MongoDB collection.
+   *
+   * @var \MongoCollection
    */
   protected $bin;
 
@@ -31,15 +30,12 @@ class MongoDBBackend implements CacheBackendInterface {
   /**
    * Constructs a MongoDBBackend object.
    *
-   * @param string $bin
-   *   The cache bin for which the object is created.
+   * @param \MondoCollection $bin
+   *   The cache bin MongoClient object for which the object is created.
    */
-  public function __construct($bin) {
+  public function __construct(\MongoCollection $bin) {
     // All cache tables should be prefixed with 'cache_', except for the
     // default 'cache' bin.
-    if ($bin != 'cache') {
-      $bin = 'cache_' . $bin;
-    }
     $this->bin = $bin;
   }
 
@@ -92,10 +88,9 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function getMultiple(&$cids, $allow_invalid = FALSE) {
     try {
-      $connection = Drupal::getContainer()->get('mongo');
       $find = array();
       $find['_id']['$in'] = array_map('strval', $cids);
-      $result = $connection->get($this->bin)->find($find);
+      $result = $this->bin->find($find);
       $cache = array();
       foreach ($result as $item) {
         $item = $this->prepareItem($item, $allow_invalid);
@@ -188,7 +183,7 @@ class MongoDBBackend implements CacheBackendInterface {
     // We do not serialize configurations as we're sure we always get
     // them as arrays. This will be much faster as mongo knows how to
     // store arrays directly.
-    $serialized = !(is_scalar($data) || $this->bin == 'cache_config');
+    $serialized = !(is_scalar($data) || $this->bin->getName() == 'cache_config');
     $entry = array(
       '_id' => (string) $cid,
       'cid' => (string) $cid,
@@ -205,8 +200,7 @@ class MongoDBBackend implements CacheBackendInterface {
     }
 
     try {
-      $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
-      $collection->save($entry);
+      $this->bin->save($entry);
     }
     catch (Exception $e) {
       // The database may not be available, so we'll ignore cache_set requests.
@@ -222,8 +216,7 @@ class MongoDBBackend implements CacheBackendInterface {
    *   The cache ID to delete.
    */
   public function delete($cid) {
-    $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
-    $collection->remove(array('_id' => (string) $cid));
+    $$this->bin->remove(array('_id' => (string) $cid));
   }
 
   /**
@@ -235,12 +228,10 @@ class MongoDBBackend implements CacheBackendInterface {
    *   An array of cache IDs to delete.
    */
   public function deleteMultiple(array $cids) {
-    $connection = Drupal::getContainer()->get('mongo');
-
     // Delete in chunks when a large array is passed.
     do {
       $remove = array('cid' => array('$in' => array_map('strval', array_splice($cids, 0, 1000))));
-      $connection->get($this->bin)->remove($remove);
+      $this->bin->remove($remove);
     }
     while (count($cids));
   }
@@ -255,12 +246,11 @@ class MongoDBBackend implements CacheBackendInterface {
    *   CacheBackendInterface::set().
    */
   public function deleteTags(array $tags) {
-    $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
     foreach ($tags as $tag) {
       $remove = array(
         'tags' => $tag,
       );
-      $collection->remove($remove);
+      $this->bin->remove($remove);
     }
   }
 
@@ -270,21 +260,20 @@ class MongoDBBackend implements CacheBackendInterface {
    * Deletes all cache items in a bin.
    */
   public function deleteAll() {
-    Drupal::getContainer()->get('mongo')->get($this->bin)->remove();
+    $this->bin->remove();
   }
 
   /**
    * Removes expired cache items from MongoDB.
    */
   public function expire() {
-    $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
     $remove = array(
       'expire' => array(
         '$ne' => CacheBackendInterface::CACHE_PERMANENT,
         '$lte' => REQUEST_TIME,
       ),
     );
-    $collection->remove($remove);
+    $this->bin->remove($remove);
   }
 
   /**
@@ -321,7 +310,7 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function isEmpty() {
     $this->garbageCollection();
-    $item = Drupal::getContainer()->get('mongo')->get($this->bin)->findOne();
+    $item = $this->bin->findOne();
     return empty($item);
   }
 
@@ -349,8 +338,7 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function invalidateMultiple(array $cids) {
     try {
-      $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
-      $collection->update(
+      $this->bin->update(
         array('_id' => array('$in' =>  array_map('strval', $cids))),
         array('$set' => array('expire' => REQUEST_TIME - 1))
       );
@@ -368,8 +356,7 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function invalidateAll() {
     try {
-      $collection = Drupal::getContainer()->get('mongo')->get($this->bin);
-      $collection->update(
+      $this->bin->update(
         array(),
         array('$set' => array('expire' => REQUEST_TIME - 1))
       );
@@ -385,6 +372,6 @@ class MongoDBBackend implements CacheBackendInterface {
    * Remove a cache bin.
    */
   public function removeBin() {
-    Drupal::getContainer()->get('mongo')->get($this->bin)->drop();
+    $this->bin->drop();
   }
 }

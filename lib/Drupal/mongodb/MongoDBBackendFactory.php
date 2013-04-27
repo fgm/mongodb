@@ -7,12 +7,28 @@
 
 namespace Drupal\mongodb;
 
-use Drupal\Core\Database\Connection;
+use Drupal;
 
-class MongoDbBackendFactory {
+class MongoDBBackendFactory {
 
   /**
-   * Gets DatabaseBackend for the specified cache bin.
+   * The MongoDB database object.
+   *
+   * @var \Drupal\mongodb\MongoCollectionFactory
+   */
+  protected $mongo;
+
+  /**
+   * Constructs the MongoDBBackendFactory object.
+   *
+   * @param \Drupal\mongodb\MongoCollectionFactory $mongo
+   */
+  function __construct(MongoCollectionFactory $mongo) {
+    $this->mongo = $mongo;
+  }
+
+  /**
+   * Gets MongoDBBackend for the specified cache bin.
    *
    * @param $bin
    *   The cache bin for which the object is created.
@@ -21,7 +37,10 @@ class MongoDbBackendFactory {
    *   The cache backend object for the specified cache bin.
    */
   function get($bin) {
-    return new MongoDBBackend($bin);
+    if ($bin != 'cache') {
+      $bin = 'cache_' . $bin;
+    }
+    return new MongoDBBackend($this->mongo->get($bin));
   }
 
 }

@@ -1,3 +1,4 @@
 services:
   cache.backend.mongodb:
     class: Drupal\mongodb\MongoDBBackendFactory
+    arguments: ['@mongo']
