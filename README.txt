@@ -3,8 +3,8 @@ Cache backend configuration:
 
 Enable mongodb.module and add this to your settings.php:
 
-$settings['cache']['cache'] = 'cache.backend.mongodb';
+$settings['cache']['default'] = 'cache.backend.mongodb';
 
-Replace second 'cache' with desired cache bin ('config', 'block',
-'bootstrap', ...) or 'default' if you want to use MongoDB as default
-backend.
+This will enable MongoDB cache backend for all cache bins. If you want
+to configure backends on per-bin basis just replace 'default' with
+desired cache bin ('config', 'block', bootstrap', ...).
