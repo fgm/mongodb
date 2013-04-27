@@ -7,7 +7,6 @@
 
 namespace Drupal\mongodb;
 
-use Drupal;
 use Drupal\Core\Cache\CacheBackendInterface;
 
 /**
@@ -20,7 +19,7 @@ class MongoDBBackend implements CacheBackendInterface {
    *
    * @var \MongoCollection
    */
-  protected $bin;
+  protected $collection;
 
   /**
    * A static cache of all tags checked during the request.
@@ -33,10 +32,10 @@ class MongoDBBackend implements CacheBackendInterface {
    * @param \MondoCollection $bin
    *   The cache bin MongoClient object for which the object is created.
    */
-  public function __construct(\MongoCollection $bin) {
+  public function __construct(\MongoCollection $collection) {
     // All cache tables should be prefixed with 'cache_', except for the
     // default 'cache' bin.
-    $this->bin = $bin;
+    $this->collection = $collection;
   }
 
   /**
@@ -90,7 +89,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $find = array();
       $find['_id']['$in'] = array_map('strval', $cids);
-      $result = $this->bin->find($find);
+      $result = $this->collection->find($find);
       $cache = array();
       foreach ($result as $item) {
         $item = $this->prepareItem($item, $allow_invalid);
@@ -183,7 +182,7 @@ class MongoDBBackend implements CacheBackendInterface {
     // We do not serialize configurations as we're sure we always get
     // them as arrays. This will be much faster as mongo knows how to
     // store arrays directly.
-    $serialized = !(is_scalar($data) || $this->bin->getName() == 'cache_config');
+    $serialized = !(is_scalar($data) || $this->collection->getName() == 'cache_config');
     $entry = array(
       '_id' => (string) $cid,
       'cid' => (string) $cid,
@@ -200,7 +199,7 @@ class MongoDBBackend implements CacheBackendInterface {
     }
 
     try {
-      $this->bin->save($entry);
+      $this->collection->save($entry);
     }
     catch (Exception $e) {
       // The database may not be available, so we'll ignore cache_set requests.
@@ -216,7 +215,7 @@ class MongoDBBackend implements CacheBackendInterface {
    *   The cache ID to delete.
    */
   public function delete($cid) {
-    $$this->bin->remove(array('_id' => (string) $cid));
+    $$this->collection->remove(array('_id' => (string) $cid));
   }
 
   /**
@@ -231,7 +230,7 @@ class MongoDBBackend implements CacheBackendInterface {
     // Delete in chunks when a large array is passed.
     do {
       $remove = array('cid' => array('$in' => array_map('strval', array_splice($cids, 0, 1000))));
-      $this->bin->remove($remove);
+      $this->collection->remove($remove);
     }
     while (count($cids));
   }
@@ -250,7 +249,7 @@ class MongoDBBackend implements CacheBackendInterface {
       $remove = array(
         'tags' => $tag,
       );
-      $this->bin->remove($remove);
+      $this->collection->remove($remove);
     }
   }
 
@@ -260,7 +259,7 @@ class MongoDBBackend implements CacheBackendInterface {
    * Deletes all cache items in a bin.
    */
   public function deleteAll() {
-    $this->bin->remove();
+    $this->collection->remove();
   }
 
   /**
@@ -273,7 +272,7 @@ class MongoDBBackend implements CacheBackendInterface {
         '$lte' => REQUEST_TIME,
       ),
     );
-    $this->bin->remove($remove);
+    $this->collection->remove($remove);
   }
 
   /**
@@ -310,7 +309,7 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function isEmpty() {
     $this->garbageCollection();
-    $item = $this->bin->findOne();
+    $item = $this->collection->findOne();
     return empty($item);
   }
 
@@ -338,7 +337,7 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function invalidateMultiple(array $cids) {
     try {
-      $this->bin->update(
+      $this->collection->update(
         array('_id' => array('$in' =>  array_map('strval', $cids))),
         array('$set' => array('expire' => REQUEST_TIME - 1))
       );
@@ -356,7 +355,7 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function invalidateAll() {
     try {
-      $this->bin->update(
+      $this->collection->update(
         array(),
         array('$set' => array('expire' => REQUEST_TIME - 1))
       );
@@ -372,6 +371,6 @@ class MongoDBBackend implements CacheBackendInterface {
    * Remove a cache bin.
    */
   public function removeBin() {
-    $this->bin->drop();
+    $this->collection->drop();
   }
 }

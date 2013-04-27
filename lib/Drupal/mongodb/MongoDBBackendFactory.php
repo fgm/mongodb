@@ -7,8 +7,6 @@
 
 namespace Drupal\mongodb;
 
-use Drupal;
-
 class MongoDBBackendFactory {
 
   /**
