@@ -38,6 +38,9 @@ class MongoDBBackendFactory {
     if ($bin != 'cache') {
       $bin = 'cache_' . $bin;
     }
+    $collection = $this->mongo->get($bin);
+    $collection->ensureIndex(array('tags' => 1));
+    $collection->ensureIndex(array('expire' => 1));
     return new MongoDBBackend($this->mongo->get($bin));
   }
 
