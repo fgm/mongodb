@@ -245,11 +245,11 @@ class MongoDBBackend implements CacheBackendInterface {
    *   CacheBackendInterface::set().
    */
   public function deleteTags(array $tags) {
-    foreach ($tags as $tag) {
-      $remove = array(
-        'tags' => $tag,
-      );
-      $this->collection->remove($remove);
+    try {
+      $this->collection->remove(array('tags' => array('$in' => $this->flattenTags($tags))));
+    }
+    catch (Exception $e) {
+      // The database may not be available, so we'll ignore cache_set requests.
     }
   }
 
