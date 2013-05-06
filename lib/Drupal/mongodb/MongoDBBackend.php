@@ -86,26 +86,18 @@ class MongoDBBackend implements CacheBackendInterface {
    *   An array of cache item objects indexed by cache ID.
    */
   public function getMultiple(&$cids, $allow_invalid = FALSE) {
-    try {
-      $find = array();
-      $find['_id']['$in'] = array_map('strval', $cids);
-      $result = $this->collection->find($find);
-      $cache = array();
-      foreach ($result as $item) {
-        $item = $this->prepareItem($item, $allow_invalid);
-        if ($item) {
-          $cache[$item->cid] = $item;
-        }
+    $find = array();
+    $find['_id']['$in'] = array_map('strval', $cids);
+    $result = $this->collection->find($find);
+    $cache = array();
+    foreach ($result as $item) {
+      $item = $this->prepareItem($item, $allow_invalid);
+      if ($item) {
+        $cache[$item->cid] = $item;
       }
-      $cids = array_diff($cids, array_keys($cache));
-      return $cache;
     }
-    catch (Exception $e) {
-      // If the database is never going to be available, cache requests should
-      // return FALSE in order to allow exception handling to occur.
-      $cids = array();
-      return array();
-    }
+    $cids = array_diff($cids, array_keys($cache));
+    return $cache;
   }
 
   /**
@@ -229,8 +221,13 @@ class MongoDBBackend implements CacheBackendInterface {
   public function deleteMultiple(array $cids) {
     // Delete in chunks when a large array is passed.
     do {
-      $remove = array('cid' => array('$in' => array_map('strval', array_splice($cids, 0, 1000))));
-      $this->collection->remove($remove);
+      try {
+        $remove = array('cid' => array('$in' => array_map('strval', array_splice($cids, 0, 1000))));
+        $this->collection->remove($remove);
+      }
+      catch (Exception $e) {
+        // The database may not be available.
+      }
     }
     while (count($cids));
   }
@@ -249,7 +246,7 @@ class MongoDBBackend implements CacheBackendInterface {
       $this->collection->remove(array('tags' => array('$in' => $this->flattenTags($tags))));
     }
     catch (Exception $e) {
-      // The database may not be available, so we'll ignore cache_set requests.
+      // The database may not be available.
     }
   }
 
@@ -292,7 +289,7 @@ class MongoDBBackend implements CacheBackendInterface {
       );
     }
     catch (Exception $e) {
-      // The database may not be available, so we'll ignore cache_set requests.
+      // The database may not be available.
     }
   }
 
@@ -351,7 +348,7 @@ class MongoDBBackend implements CacheBackendInterface {
       );
     }
     catch (Exception $e) {
-      // The database may not be available, so we'll ignore cache_set requests.
+      // The database may not be available.
     }
   }
 
@@ -369,7 +366,7 @@ class MongoDBBackend implements CacheBackendInterface {
       );
     }
     catch (Exception $e) {
-      // The database may not be available, so we'll ignore cache_set requests.
+      // The database may not be available.
     }
   }
 
