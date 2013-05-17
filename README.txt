@@ -76,12 +76,14 @@ Configuration Variables
   $conf['mongodb_connections'] = array(
     // Connection name/alias
     'default' => array(
-      'host' => 'host1,host2,host3',
+      'host' => 'mongodb://[username:password@]host1[:port1][,host2[:port2:],...]',
       // Database name
       'db' => 'drupal_default',
       'connection_options' => array('replicaSet' => 'replicasetname'),
     ),
   );
+
+  Where square brackets indicate username, password, port1 etc are optional.
 
   Querying a slave is also possible by creating a new connection alias
   and specifying slave_ok option.
