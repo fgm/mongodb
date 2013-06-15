@@ -1,0 +1,6 @@
+@CHARSET "UTF-8";
+
+/* Line up filter select elements */
+#mongodb-watchdog-filter-form .form-type-select {
+  display: inline-block;
+}

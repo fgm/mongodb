@@ -289,6 +289,10 @@ function mongodb_watchdog_filter_form($form) {
     '#title' => t('Filter log messages'),
     '#collapsible' => TRUE,
     '#collapsed' => empty($_SESSION),
+    '#attached' => array(
+      'css' => array(
+        drupal_get_path('module', 'mongodb_watchdog') . '/mongodb_watchdog.css',
+    )),
   );
 
   foreach ($filters as $key => $filter) {
