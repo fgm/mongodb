@@ -123,7 +123,7 @@ class MongoDBBackend implements CacheBackendInterface {
     // Remove Mongo-specific fields and convert to object to achieve
     // standard behaviour.
     unset($cache['_id']);
-    $cache = (object)$cache;
+    $cache = (object) $cache;
 
     // Check if item still valid.
     $cache->valid = $cache->expire == CacheBackendInterface::CACHE_PERMANENT || $cache->expire >= REQUEST_TIME;
@@ -174,7 +174,7 @@ class MongoDBBackend implements CacheBackendInterface {
     // We do not serialize configurations as we're sure we always get
     // them as arrays. This will be much faster as mongo knows how to
     // store arrays directly.
-    $serialized = !(is_scalar($data) || $this->collection->getName() == 'cache_config');
+    $serialized = !is_scalar($data) && $this->collection->getName() != 'cache_config');
     $entry = array(
       '_id' => (string) $cid,
       'cid' => (string) $cid,
@@ -191,7 +191,7 @@ class MongoDBBackend implements CacheBackendInterface {
     }
 
     try {
-      $this->collection->save($entry);
+      $this->collection->save($entry, array('w' => 0));
     }
     catch (Exception $e) {
       // The database may not be available, so we'll ignore cache_set requests.
@@ -219,17 +219,13 @@ class MongoDBBackend implements CacheBackendInterface {
    *   An array of cache IDs to delete.
    */
   public function deleteMultiple(array $cids) {
-    // Delete in chunks when a large array is passed.
-    do {
-      try {
-        $remove = array('cid' => array('$in' => array_map('strval', array_splice($cids, 0, 1000))));
-        $this->collection->remove($remove);
-      }
-      catch (Exception $e) {
-        // The database may not be available.
-      }
+    try {
+      $remove = array('cid' => array('$in' => $cids);
+      $this->collection->remove($remove, array('w' => 0));
     }
-    while (count($cids));
+    catch (Exception $e) {
+      // The database may not be available.
+    }
   }
 
   /**
@@ -243,7 +239,7 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function deleteTags(array $tags) {
     try {
-      $this->collection->remove(array('tags' => array('$in' => $this->flattenTags($tags))));
+      $this->collection->remove(array('tags' => array('$in' => $this->flattenTags($tags))), array('w' => 0));
     }
     catch (Exception $e) {
       // The database may not be available.
@@ -256,7 +252,7 @@ class MongoDBBackend implements CacheBackendInterface {
    * Deletes all cache items in a bin.
    */
   public function deleteAll() {
-    $this->collection->remove();
+    $this->collection->remove(array(), array('w' => 0));
   }
 
   /**
@@ -269,7 +265,7 @@ class MongoDBBackend implements CacheBackendInterface {
         '$lte' => REQUEST_TIME,
       ),
     );
-    $this->collection->remove($remove);
+    $this->collection->remove($remove, array('w' => 0));
   }
 
   /**
@@ -285,7 +281,8 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->update(
         array('tags' => array('$in' => $this->flattenTags($tags))),
-        array('$set' => array('expire' => REQUEST_TIME - 1))
+        array('$set' => array('expire' => REQUEST_TIME - 1)),
+        array('w' => 0)
       );
     }
     catch (Exception $e) {
@@ -344,7 +341,8 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->update(
         array('_id' => array('$in' =>  array_map('strval', $cids))),
-        array('$set' => array('expire' => REQUEST_TIME - 1))
+        array('$set' => array('expire' => REQUEST_TIME - 1)),
+        array('w' => 0)
       );
     }
     catch (Exception $e) {
