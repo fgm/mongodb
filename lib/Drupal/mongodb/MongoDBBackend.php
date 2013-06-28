@@ -126,6 +126,9 @@ class MongoDBBackend implements CacheBackendInterface {
     $cache = (object) $cache;
 
     // Check if item still valid.
+    if (is_object($cache->expire)) {
+      $cache->expire = $cache->expire->sec;
+    }
     $cache->valid = $cache->expire == CacheBackendInterface::CACHE_PERMANENT || $cache->expire >= REQUEST_TIME;
 
     if (!$allow_invalid && !$cache->valid) {
@@ -180,7 +183,7 @@ class MongoDBBackend implements CacheBackendInterface {
       'cid' => (string) $cid,
       'serialized' => $serialized,
       'created' => REQUEST_TIME,
-      'expire' => $expire,
+      'expire' => $expire == CacheBackendInterface::CACHE_PERMANENT ? CacheBackendInterface::CACHE_PERMANENT : new MongoDate($expire),
       'tags' => $this->flattenTags($tags),
       'data' => $serialized ? serialize($data) : $data,
     );
@@ -259,13 +262,7 @@ class MongoDBBackend implements CacheBackendInterface {
    * Removes expired cache items from MongoDB.
    */
   public function expire() {
-    $remove = array(
-      'expire' => array(
-        '$ne' => CacheBackendInterface::CACHE_PERMANENT,
-        '$lte' => REQUEST_TIME,
-      ),
-    );
-    $this->collection->remove($remove, array('w' => 0));
+    // Since we use TTL collections do nothing here.
   }
 
   /**
@@ -281,7 +278,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->update(
         array('tags' => array('$in' => $this->flattenTags($tags))),
-        array('$set' => array('expire' => REQUEST_TIME - 1)),
+        array('$set' => array('expire' => new MongoDate(REQUEST_TIME - 1))),
         array('w' => 0)
       );
     }
@@ -341,7 +338,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->update(
         array('_id' => array('$in' =>  array_map('strval', $cids))),
-        array('$set' => array('expire' => REQUEST_TIME - 1)),
+        array('$set' => array('expire' => new MongoDate(REQUEST_TIME - 1))),
         array('w' => 0)
       );
     }
@@ -360,7 +357,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->update(
         array(),
-        array('$set' => array('expire' => REQUEST_TIME - 1))
+        array('$set' => array('expire' => new MongoDate(REQUEST_TIME - 1)))
       );
     }
     catch (Exception $e) {

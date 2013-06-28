@@ -40,7 +40,11 @@ class MongoDBBackendFactory {
     }
     $collection = $this->mongo->get($bin);
     $collection->ensureIndex(array('tags' => 1));
-    $collection->ensureIndex(array('expire' => 1));
+    $ttl = config('mongodb.cache')->get('ttl');
+    if ($ttl == NULL) {
+      $ttl = 300;
+    }
+    $collection->ensureIndex(array('expire' => 1), array('expireAfterSeconds' => $ttl));
     return new MongoDBBackend($this->mongo->get($bin));
   }
 
