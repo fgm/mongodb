@@ -113,7 +113,7 @@ function drush_mongodb_query($alias = 'default', $query = '') {
 }
 
 /**
- * Returns the basic shell commando string.
+ * Returns the basic shell command string.
  */
 function _drush_mongodb_connect($alias) {
   $connections = variable_get('mongodb_connections', array());

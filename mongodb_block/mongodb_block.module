@@ -300,7 +300,7 @@ function _mongodb_block_rehash($theme) {
       mongodb_block_save_block($collection, $block);
     }
   }
-  $collection->remove(array('_id' => array('$nin' => $ids)));
+  $collection->remove(array('_id' => array('$nin' => $ids)), array('safe' => TRUE));
   return $blocks;
 }
 
@@ -314,7 +314,7 @@ function _mongodb_block_rehash($theme) {
  */
 function mongodb_block_save_block($collection, $block) {
   unset($block['module'], $block['delta'], $block['status']);
-  $collection->save($block);
+  $collection->save($block, array('safe' => TRUE));
 }
 
 /**

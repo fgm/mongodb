@@ -67,7 +67,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
 
 
       $find = array('expire' => array('$lte' => $cache_flush, '$ne' => CACHE_PERMANENT));
-      $collection->remove($find);
+      $collection->remove($find, array('w' => 0));
     }
   }
 
@@ -133,7 +133,7 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
 
     try {
       $collection = mongodb_collection($this->bin);
-      $collection->save($entry);
+      $collection->save($entry, array('w' => 0));
     }
     catch (Exception $e) {
       // The database may not be available, so we'll ignore cache_set requests.
@@ -162,13 +162,13 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
           // Clear the cache for everyone, cache_lifetime seconds have
           // passed since the first request to clear the cache.
 
-          $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$lte' => REQUEST_TIME)));
+          $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$lte' => REQUEST_TIME)), array('w' => 0));
           variable_set('cache_flush_' . $this->bin, 0);
         }
       }
       else {
         // No minimum cache lifetime, flush all temporary cache entries now.
-        $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$lte' => REQUEST_TIME)));
+        $collection->remove(array('expire' => array('$ne' => CACHE_PERMANENT, '$lte' => REQUEST_TIME)), array('w' => 0));
       }
     }
     else {
@@ -177,19 +177,19 @@ class DrupalMongoDBCache implements DrupalCacheInterface {
           $collection->remove();
         }
         else {
-          $collection->remove(array('cid' => new MongoRegex('/' . preg_quote($cid) . '.*/')));
+          $collection->remove(array('cid' => new MongoRegex('/'. preg_quote($cid) .'.*/')), array('w' => 0));
         }
       }
       elseif (is_array($cid)) {
         // Delete in chunks when a large array is passed.
         do {
           $find = array('cid' => array('$in' => array_map('strval', array_splice($cid, 0, 1000))));
-          $collection->remove($find);
+          $collection->remove($find, array('w' => 0));
         }
         while (count($cid));
       }
       else {
-        $collection->remove(array('_id' => (string)$cid));
+        $collection->remove(array('_id' => (string)$cid), array('w' => 0));
       }
     }
   }

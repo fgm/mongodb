@@ -31,9 +31,22 @@ function mongodb($alias = 'default') {
   $db = $connection['db'];
   if (!isset($mongo_objects[$host][$db])) {
     try {
-      $mongo = new Mongo($host, $options);
-      if (!empty($connection['slave_ok'])) {
-        $mongo->setSlaveOkay(TRUE);
+      // Use the 1.3 client if available.
+      if (class_exists('MongoClient')) {
+        $mongo = new MongoClient($host, $options);
+        // Enable read preference and tags if provided. This can also be
+        // controlled on a per query basis at the cursor level if more control
+        // is required.
+        if (!empty($connection['read_preference'])) {
+          $tags = !empty($connection['read_preference']['tags']) ? $connection['read_preference']['tags'] : array();
+          $mongo->setReadPreference($connection['read_preference']['preference'], $tags);
+        }
+      }
+      else {
+        $mongo = new Mongo($host, $options);
+        if (!empty($connection['slave_ok'])) {
+          $mongo->setSlaveOkay(TRUE);
+        }
       }
       $mongo_objects[$host][$db] = $mongo->selectDB($db);
       $mongo_objects[$host][$db]->connection = $mongo;
@@ -61,12 +74,25 @@ function mongodb_collection() {
     $prefixed = mongodb_collection_name($collection_name);
   }
   $collections = variable_get('mongodb_collections', array());
-  $alias = isset($collections[$collection_name]) ? $collections[$collection_name] : 'default';
+  if (isset($collections[$collection_name])) {
+    // We might be dealing with an array or string because of need to preserve
+    // backwards comptability.
+    $alias = is_array($collections[$collection_name]) && !empty($collections[$collection_name]['db_connection']) ? $collections[$collection_name]['db_connection'] : $collections[$collection_name
+  }
+  else {
+    $alias = 'default';
+  }
   // Prefix the collection name for simpletest. It will be in the same DB as the
   // non-prefixed version so it's enough to prefix after choosing the mongodb
   // object.
   $mongodb_object = mongodb($alias);
   $collection = $mongodb_object->selectCollection(mongodb_collection_name($collection_name));
+  // Enable read preference and tags at a collection level if we have 1.3
+  // client.
+  if (!empty($collections[$alias]['read_preference']) && get_class($mongodb_object->connection) == 'MongoClient') {
+    $tags = !empty($collections[$alias]['read_preference']['tags']) ? $collections[$alias]['read_preference']['tags'] : array();
+    $collection->setReadPreference($collections[$alias]['read_preference']['preference'], $tags);
+  }
   $collection->connection = $mongodb_object->connection;
   return variable_get('mongodb_debug', FALSE) ? new mongoDebugCollection($collection) : $collection;
 }
@@ -158,7 +184,13 @@ function mongodb_test_group_finished() {
  */
 function mongodb_set_active_connection($alias, $connection_name = 'default') {
   // No need to check if the connection is valid as mongodb() does this.
-  $GLOBALS['conf']['mongodb_collections'][$alias] = $connection_name;
+  $alias_exists = isset($GLOBALS['conf']['mongodb_collections'][$alias]) && is_array($GLOBALS['conf']['mongodb_collections'][$alias]);
+  if ($alias_exists & !empty($GLOBALS['conf']['mongodb_collections'][$alias]['db_connection'])) {
+    $GLOBALS['conf']['mongodb_collections'][$alias]['db_connection'] = $connection_name;
+  }
+  else {
+    $GLOBALS['conf']['mongodb_collections'][$alias] = $connection_name;
+  }
 }
 
 /**

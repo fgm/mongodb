@@ -98,6 +98,28 @@ Configuration Variables
     ),
   );
 
+  As of the mongoDB 1.3 php driver slave_ok has been deprecated and instead
+  read preferences should be used when dealing with a replica set. These
+  preferences can be set at a connection or collection level see below for the
+  collection information.
+
+  $conf['mongodb_connections'] = array(
+    // Connection name/alias
+    'slave' => array(
+      'host' => 'slave1',
+      // Database name
+      'db' => 'drupal_default',
+      'read_preference' => array(
+        'preference' => 'secondaryPreferred',
+        'tags' => array(
+          array('dc' => 'east', 'use' => 'reporting'),
+          array('dc' => 'west'),
+        ),
+      ),
+      'connection_options' => array('replicaSet' => 'main'),
+    ),
+  );
+
 #2: mongodb_debug
 
   A variable primarily for developers, mongodb_debug causes a collection
@@ -191,6 +213,25 @@ the hypothetical connection alias 'logginghost'
 EXAMPLE:
 $conf['mongodb_collections'] = array('watchdog' => 'logginghost');
 
+If you are using the 1.3 drivers you can specify the following connection
+options db_connection and read_preference. These options allow to control
+collection level mongo read preferences and whether any tags should be used.
+
+$conf['mongodb_collections'] = array(
+  'watchdog' => array(
+    'db_connection' => 'logginghost',
+    'read_preference' => array(
+      'preference' => 'secondaryPreferred',
+      'tags' => array(
+        array('dc' => 'east', 'use' => 'reporting'),
+        array('dc' => 'west'),
+      ),
+    ),
+  ),
+);
+
+If you do not need read_preference you can continue to utilise the existing
+array structure for the 1.3 drivers.
 
 MODULE-SPECIFIC CONFIGURATION
 ------------

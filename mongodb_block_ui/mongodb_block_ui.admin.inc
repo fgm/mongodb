@@ -144,7 +144,7 @@ function mongodb_block_ui_admin_display_form_submit($form, &$form_state) {
         'weight' => (int) $block['weight'],
         'region' => $block['region'],
       );
-      $collection->update($find, array('$set' => $set), array('upsert' => TRUE));
+      $collection->update($find, array('$set' => $set), array('upsert' => TRUE, 'safe' => TRUE));
     }
   }
   drupal_set_message(t('The block settings have been updated.'));
@@ -366,7 +366,7 @@ function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
     'title' => $form_state['values']['title'],
   );
   // This way region and weight is preserved.
-  $collection->update(array('_id' => $id), array('$set' => $customized), array('upsert' => TRUE));
+  $collection->update(array('_id' => $id), array('$set' => $customized), array('upsert' => TRUE, 'safe' => TRUE));
 
   // Ensure that custom blocks have their settings saved.
   // @todo: this should probably be done via hook_block_configure().
@@ -377,7 +377,7 @@ function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
       'info' => $form_state['values']['info'],
       'title' => $form_state['values']['title'],
     );
-    mongodb_collection('block_custom')->save($block);
+    mongodb_collection('block_custom')->save($block, array('safe' => TRUE));
   }
   module_invoke($form_state['values']['module'], 'block_save', $form_state['values']['delta'], $form_state['values']);
   drupal_set_message(t('The block configuration has been saved.'));
@@ -463,7 +463,7 @@ function mongodb_block_ui_add_block_form_submit($form, &$form_state) {
     'info' => $form_state['values']['info'],
     'title' => $form_state['values']['title'],
   );
-  $collection->insert($block);
+  $collection->insert($block, array('safe' => TRUE));
   drupal_set_message(t('The block has been created.'));
   cache_clear_all();
   $theme = $form['#theme_key'];
@@ -491,14 +491,14 @@ function mongodb_block_ui_custom_block_delete($form, &$form_state, $theme, $modu
  */
 function mongodb_block_ui_custom_block_delete_submit($form, &$form_state) {
   // Remove the custom block.
-  mongodb_collection('block_custom')->remove(array('_id' => $form_state['values']['delta']));
+  mongodb_collection('block_custom')->remove(array('_id' => $form_state['values']['delta']), array('safe' => TRUE));
   // Also remove customization for every theme.
   $id = array(
     'module' => $form_state['values']['module'],
     'delta' => $form_state['values']['delta'],
   );
   foreach (list_themes() as $theme) {
-    mongodb_collection('block_customized', $theme->name)->remove(array('_id' => $id));
+    mongodb_collection('block_customized', $theme->name)->remove(array('_id' => $id), array('safe' => TRUE));
   }
   drupal_set_message(t('The block %name has been removed.', array('%name' => $form_state['values']['info'])));
   cache_clear_all();

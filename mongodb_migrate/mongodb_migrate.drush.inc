@@ -85,10 +85,13 @@ function drush_mongodb_migrate() {
       $entity_id = $query->execute()->fetchField();
       if ($entity_id) {
         $collection->db->resetError();
-        $collection->insert(array(
-          '_id' => (int) $entity_id,
-          'timestamp' => time(),
-        ));
+        $collection->insert(
+          array(
+            '_id' => (int) $entity_id,
+            'timestamp' => time(),
+          ),
+          array('safe' => TRUE),
+        );
         $lastError = $collection->db->lastError();
         if (empty($lastError['err'])) {
           $entities = entity_load($entity_type, array($entity_id));
