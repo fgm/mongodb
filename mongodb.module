@@ -77,7 +77,7 @@ function mongodb_collection() {
   if (isset($collections[$collection_name])) {
     // We might be dealing with an array or string because of need to preserve
     // backwards comptability.
-    $alias = is_array($collections[$collection_name]) && !empty($collections[$collection_name]['db_connection']) ? $collections[$collection_name]['db_connection'] : $collections[$collection_name
+    $alias = is_array($collections[$collection_name]) && !empty($collections[$collection_name]['db_connection']) ? $collections[$collection_name]['db_connection'] : $collections[$collection_name];
   }
   else {
     $alias = 'default';

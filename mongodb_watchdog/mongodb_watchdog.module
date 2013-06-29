@@ -119,7 +119,7 @@ function mongodb_watchdog_watchdog(array $log_entry) {
     $command = array('create' => $collection->getName(), 'capped' => TRUE, 'size' => $max * 1000, "max" => $max);
     $collection->db->command($command);
   }
-  $collection->insert($event, 'safe' => TRUE);
+  $collection->insert($event, array('safe' => TRUE));
 }
 
 /**
