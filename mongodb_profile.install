@@ -1,21 +1,43 @@
 <?php
 
+/**
+ * Implements hook_install_tasks().
+ */
 function mongodb_profile_install_tasks() {
   $tasks['mongodb_profile_write_settings'] = array();
   return $tasks;
 }
 
+/**
+ * Registers MongoServiceProvider in settings.php if possible and displays
+ * warning if not.
+ */
 function mongodb_profile_write_settings() {
-  $settings = <<<'__EOF__'
-  if (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'install') {
-    drupal_classloader_register('mongodb', 'modules/mongodb');
-    $bundle = new Drupal\mongodb\MongodbBundle;
-    $bundle->build(drupal_container());
+  $settings = "\$conf['container_service_providers']['MongoServiceProvider'] = 'Drupal\mongodb\MongoServiceProvider';";
+  $file = conf_path() . '/settings.php';
+
+  if (!is_writable($file) && !($chmod = drupal_chmod(DRUPAL_ROOT . '/' . $file, '755'))) {
+    watchdog('mongodb', 'Could not add configuration to setttings.php. Please add the following line to your configuration file: %conf.', array('%conf' => $settings), WATCHDOG_WARNING);
   }
-__EOF__;
-  file_put_contents(conf_path() . '/settings.php', $settings, FILE_APPEND);
+
+  file_put_contents($file, $settings . PHP_EOL, FILE_APPEND);
+
+  if ($chmod) {
+    drupal_verify_install_file(DRUPAL_ROOT . '/' . $file, FILE_EXIST|FILE_READABLE|FILE_NOT_WRITABLE);
+  }
 }
 
+  /**
+   * Implements hook_install_tasks_alter().
+   *
+   * Adds install tasks to the appropriate place inside tasks array.
+   *
+   * This allows us to rely on Drupal being already bootstrapped, but some
+   * other stuff not being yet executed.
+   *
+   * @param $tasks array
+   *   Array of install tasks.
+   */
 function mongodb_profile_install_tasks_alter(&$tasks) {
   $new_tasks = array();
   foreach ($tasks as $name => $task) {
@@ -23,44 +45,29 @@ function mongodb_profile_install_tasks_alter(&$tasks) {
       $new_tasks['mongodb_profile_container_fix'] = array(
         'run' => INSTALL_TASK_RUN_IF_REACHED,
       );
-      $new_tasks['mongodb_profile_install_mongodb_module'] = array();
+      $new_tasks['mongodb_profile_fix_system_schema'] = array();
     }
     $new_tasks[$name] = $task;
   }
   $tasks = $new_tasks;
 }
 
+/**
+ * Registers MongoServiceProvider during install process.
+ */
 function mongodb_profile_container_fix() {
-  $files = array('KeyValue.php', 'KeyValueFactory.php', 'Mongo.php', 'MongoCollectionFactory.php', 'MongodbBundle.php');
-  foreach ($files as $file) {
-    include_once DRUPAL_ROOT . "/modules/mongodb/lib/Drupal/mongodb/$file";
-  }
-  $bundle = new Drupal\mongodb\MongodbBundle;
-  $bundle->build(drupal_container());
+  drupal_classloader_register('mongodb', 'modules/mongodb');
+  $GLOBALS['conf']['container_service_providers']['MongoServiceProvider'] = 'Drupal\mongodb\MongoServiceProvider';
 }
 
-function mongodb_profile_install_mongodb_module() {
-  // Copy the system schema.
+/**
+ * Manually updates systems module's schema number to prevent SQL tables to be
+ * created.
+ */
+function mongodb_profile_fix_system_schema() {
   $system_path = drupal_get_path('module', 'system');
   require_once DRUPAL_ROOT . '/' . $system_path . '/system.install';
   $system_versions = drupal_get_schema_versions('system');
   $system_version = $system_versions ? max($system_versions) : SCHEMA_INSTALLED;
-  drupal_container()
-    ->get('keyvalue')
-    ->get('system.schema')
-    ->set('system', $system_version);
-
-  // Enable mongodb module.
-  config('system.module')
-    ->set('enabled.mongodb', 0)
-    ->save();
-
-  // Clear out module list and hook implementation statics.
-  system_list_reset();
-  module_list_reset();
-  module_implements_reset();
-
-  config_install_default_config('module', 'mongodb');
-
-  module_invoke('mongodb', 'install');
+  Drupal::keyValue('system.schema')->set('system', $system_version);
 }

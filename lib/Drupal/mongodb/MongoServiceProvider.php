@@ -2,18 +2,24 @@
 
 /**
  * @file
- * Definition of Drupal\mongodb\MongodbBundle.
+ * Definition of Drupal\mongodb\MongoServiceProvider..
  */
 
 namespace Drupal\mongodb;
 
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Drupal\Core\DependencyInjection\ServiceProviderInterface;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
-class MongodbBundle extends Bundle {
+/**
+ * MongoDB service provider. Registers Mongo-related services.
+ */
+class MongoServiceProvider implements ServiceProviderInterface  {
 
-  public function build(ContainerBuilder $container) {
+  /**
+   * {@inheritdoc}
+   */
+  public function register(ContainerBuilder $container) {
     global $conf;
     $conf += array('mongodb_connections' => array(), 'mongodb_collections' => array());
     $conf['mongodb_connections'] += array('default' => array());

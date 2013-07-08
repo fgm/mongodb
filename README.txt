@@ -1,3 +1,15 @@
+Basic configuration:
+----------------------------------------------------------------------
+Enable mongodb.module and add this line to settings.php:
+
+$conf['container_service_providers']['MongoServiceProvider'] = 'Drupal\mongodb\MongoServiceProvider';
+
+This will register MongoServiceProvider, which will take care about registration of
+MongoDB related services.
+
+mongodb_profile will do this automatically if file permissions allow that.
+
+
 Cache backend configuration:
 ----------------------------------------------------------------------
 
