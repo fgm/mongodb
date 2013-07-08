@@ -1,0 +1,66 @@
+<?php
+
+function mongodb_profile_install_tasks() {
+  $tasks['mongodb_profile_write_settings'] = array();
+  return $tasks;
+}
+
+function mongodb_profile_write_settings() {
+  $settings = <<<'__EOF__'
+  if (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'install') {
+    drupal_classloader_register('mongodb', 'modules/mongodb');
+    $bundle = new Drupal\mongodb\MongodbBundle;
+    $bundle->build(drupal_container());
+  }
+__EOF__;
+  file_put_contents(conf_path() . '/settings.php', $settings, FILE_APPEND);
+}
+
+function mongodb_profile_install_tasks_alter(&$tasks) {
+  $new_tasks = array();
+  foreach ($tasks as $name => $task) {
+    if ($name == 'install_bootstrap_full') {
+      $new_tasks['mongodb_profile_container_fix'] = array(
+        'run' => INSTALL_TASK_RUN_IF_REACHED,
+      );
+      $new_tasks['mongodb_profile_install_mongodb_module'] = array();
+    }
+    $new_tasks[$name] = $task;
+  }
+  $tasks = $new_tasks;
+}
+
+function mongodb_profile_container_fix() {
+  $files = array('KeyValue.php', 'KeyValueFactory.php', 'Mongo.php', 'MongoCollectionFactory.php', 'MongodbBundle.php');
+  foreach ($files as $file) {
+    include_once DRUPAL_ROOT . "/modules/mongodb/lib/Drupal/mongodb/$file";
+  }
+  $bundle = new Drupal\mongodb\MongodbBundle;
+  $bundle->build(drupal_container());
+}
+
+function mongodb_profile_install_mongodb_module() {
+  // Copy the system schema.
+  $system_path = drupal_get_path('module', 'system');
+  require_once DRUPAL_ROOT . '/' . $system_path . '/system.install';
+  $system_versions = drupal_get_schema_versions('system');
+  $system_version = $system_versions ? max($system_versions) : SCHEMA_INSTALLED;
+  drupal_container()
+    ->get('keyvalue')
+    ->get('system.schema')
+    ->set('system', $system_version);
+
+  // Enable mongodb module.
+  config('system.module')
+    ->set('enabled.mongodb', 0)
+    ->save();
+
+  // Clear out module list and hook implementation statics.
+  system_list_reset();
+  module_list_reset();
+  module_implements_reset();
+
+  config_install_default_config('module', 'mongodb');
+
+  module_invoke('mongodb', 'install');
+}

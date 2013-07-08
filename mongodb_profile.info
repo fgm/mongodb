@@ -1,0 +1,7 @@
+name = MongoDB
+description = MongoDB profile
+version = VERSION
+core = 8.x
+dependencies[] = node
+dependencies[] = block
+dependencies[] = dblog
