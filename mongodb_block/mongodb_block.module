@@ -295,9 +295,13 @@ function _mongodb_block_rehash($theme) {
       $blocks[$key]['region'] = MONGODB_BLOCK_REGION_NONE;
       $block = $blocks[$key];
     }
-    if ($block['status']) {
+    if (!empty($block['status'])) {
       $ids[] = $block['_id'];
       mongodb_block_save_block($collection, $block);
+    }
+    else {
+      $blocks[$key]['status'] = 0;
+      $blocks[$key]['region'] = MONGODB_BLOCK_REGION_NONE;
     }
   }
   $collection->remove(array('_id' => array('$nin' => $ids)), array('safe' => TRUE));
