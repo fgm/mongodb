@@ -77,6 +77,8 @@ function mongodb_watchdog_watchdog(array $log_entry) {
     return;
   }
 
+  static $checked_ids = array();
+
   // Find the function that generated this error.
   $log_entry = (array) $log_entry;
   _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
@@ -111,15 +113,18 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   );
   $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
   $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
-  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE, 'safe' => TRUE));
-  $result = $collection->db->command(array('getlasterror' => 1));
+  if (!isset($checked_ids[$id])) {
+    $checked_ids[$id] = $collection->findOne(array('_id' => $id), array('_id' => 1));
+  }
+  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE, 'w' => 0));
   $collection = $collection->db->selectCollection('watchdog_event_' . $id);
-  if (empty($result['updatedExisting'])) {
+  if (empty($checked_ids[$id])) {
     $max = variable_get('mongodb_watchdog_items', 10000);
     $command = array('create' => $collection->getName(), 'capped' => TRUE, 'size' => $max * 1000, "max" => $max);
     $collection->db->command($command);
+    $checked_ids[$id] = TRUE;
   }
-  $collection->insert($event, array('safe' => TRUE));
+  $collection->insert($event, array('w' => 0));
 }
 
 /**
