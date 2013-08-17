@@ -5,9 +5,7 @@
  * Replace your cache-backend file with this file. See README.txt for details.
  */
 
-if (!function_exists('mongodb')) {
-  include_once dirname(__FILE__) . '/../mongodb.module';
-}
+include_once dirname(__FILE__) . '/../mongodb.module';
 
 /**
  * MonogoDB cache implementation.
