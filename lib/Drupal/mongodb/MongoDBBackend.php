@@ -278,7 +278,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->update(
         array('tags' => array('$in' => $this->flattenTags($tags))),
-        array('$set' => array('expire' => new MongoDate(REQUEST_TIME - 1))),
+        array('$set' => array('expire' => new \MongoDate(REQUEST_TIME - 1))),
         array('w' => 0)
       );
     }
@@ -338,7 +338,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->update(
         array('_id' => array('$in' =>  array_map('strval', $cids))),
-        array('$set' => array('expire' => new MongoDate(REQUEST_TIME - 1))),
+        array('$set' => array('expire' => new \MongoDate(REQUEST_TIME - 1))),
         array('w' => 0)
       );
     }
@@ -357,7 +357,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->update(
         array(),
-        array('$set' => array('expire' => new MongoDate(REQUEST_TIME - 1)))
+        array('$set' => array('expire' => new \MongoDate(REQUEST_TIME - 1)))
       );
     }
     catch (Exception $e) {
