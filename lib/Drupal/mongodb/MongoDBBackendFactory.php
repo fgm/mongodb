@@ -7,6 +7,8 @@
 
 namespace Drupal\mongodb;
 
+use Drupal\Component\Utility\Settings;
+
 class MongoDBBackendFactory {
 
   /**
@@ -17,12 +19,20 @@ class MongoDBBackendFactory {
   protected $mongo;
 
   /**
+   * The settings array.
+   *
+   * @var \Drupal\Component\Utility\Settings
+   */
+  protected $settings;
+
+  /**
    * Constructs the MongoDBBackendFactory object.
    *
    * @param \Drupal\mongodb\MongoCollectionFactory $mongo
    */
-  function __construct(MongoCollectionFactory $mongo) {
+  function __construct(MongoCollectionFactory $mongo, Settings $settings) {
     $this->mongo = $mongo;
+    $this->settings = $settings;
   }
 
   /**
@@ -40,8 +50,11 @@ class MongoDBBackendFactory {
     }
     $collection = $this->mongo->get($bin);
     $collection->ensureIndex(array('tags' => 1));
-    $ttl = config('mongodb.cache')->get('ttl');
-    if ($ttl == NULL) {
+    $settings = $this->settings->get('mongo');
+    if (isset($settings['cache']['ttl'])) {
+      $ttl = $settings['cache']['ttl'];
+    }
+    else {
       $ttl = 300;
     }
     $collection->ensureIndex(array('expire' => 1), array('expireAfterSeconds' => $ttl));

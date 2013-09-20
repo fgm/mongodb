@@ -177,7 +177,7 @@ class MongoDBBackend implements CacheBackendInterface {
     // We do not serialize configurations as we're sure we always get
     // them as arrays. This will be much faster as mongo knows how to
     // store arrays directly.
-    $serialized = !is_scalar($data) && $this->collection->getName() != 'cache_config');
+    $serialized = !is_scalar($data) && $this->collection->getName() != 'cache_config';
     $entry = array(
       '_id' => (string) $cid,
       'cid' => (string) $cid,
@@ -223,7 +223,7 @@ class MongoDBBackend implements CacheBackendInterface {
    */
   public function deleteMultiple(array $cids) {
     try {
-      $remove = array('cid' => array('$in' => $cids);
+      $remove = array('cid' => array('$in' => $cids));
       $this->collection->remove($remove, array('w' => 0));
     }
     catch (Exception $e) {

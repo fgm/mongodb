@@ -33,17 +33,17 @@ class MongoServiceProvider implements ServiceProviderInterface  {
       ->register('mongo', 'Drupal\mongodb\MongoCollectionFactory')
       ->addArgument(new Reference('service_container'))
       ->addArgument($conf['mongodb_collections']);
-    $container
-      ->register('file.usage', 'Drupal\mongodb\FileUsage')
-      ->addArgument(new Reference('mongo'))
-      ->addArgument('file_usage');
+//    $container
+//      ->register('file.usage', 'Drupal\mongodb\FileUsage')
+//      ->addArgument(new Reference('mongo'))
+//      ->addArgument('file_usage');
     $container
       ->register('flood', 'Drupal\mongodb\Flood')
       ->addArgument(new Reference('mongo'))
       ->addArgument('flood');
-    $container
-      ->register('keyvalue', 'Drupal\mongodb\KeyValueFactory')
-      ->addArgument(new Reference('mongo'));
+//    $container
+//      ->register('keyvalue', 'Drupal\mongodb\KeyValueFactory')
+//      ->addArgument(new Reference('mongo'));*/
   }
 
 }
