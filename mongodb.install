@@ -8,11 +8,37 @@ function mongodb_requirements($phase) {
 
   if (!extension_loaded('mongo')) {
     $requirements['mongodb'] = array(
-      'title' => $t('Mongodb'),
-      'value' => $t('Not found'),
+      'title' => t('Mongodb'),
+      'value' => t('Not found'),
       'description' => t('Mongodb requires the PHP MongoDB extension to be installed.'),
       'severity' => REQUIREMENT_ERROR,
     );
   }
   return $requirements;
+}
+
+
+/**
+ * Implements hook_install().
+ */
+function mongodb_install() {
+  $mongo = \Drupal::service('mongo');
+  $settings = \Drupal::service('settings')->get('mongo');
+
+  // Flood indexes.
+  $mongo->get('flood')->ensureIndex(
+    array(
+      'event' => 1,
+      'identifier' => 1,
+      'timestamp' => 1,
+      'expiration' => 1,
+    )
+  );
+  if (isset($settings['flood']['ttl'])) {
+    $ttl = $settings['flood']['ttl'];
+  }
+  else {
+    $ttl = 300;
+  }
+  $mongo->get('flood')->ensureIndex(array('expiration' => 1), array('expireAfterSeconds' => $ttl));
 }

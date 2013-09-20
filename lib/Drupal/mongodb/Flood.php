@@ -51,8 +51,6 @@ class Flood implements FloodInterface {
     $this->collection = $collection;
   }
 
-  // @todo we need to add indexes when we install the module.
-
   /**
    * Implements Drupal\Core\Flood\FloodInterface::register().
    */
@@ -68,7 +66,7 @@ class Flood implements FloodInterface {
       'expiration' => REQUEST_TIME + $window,
     );
 
-    $this->database->get($this->collection)->insert($data, array('safe' => TRUE));
+    $this->database->get($this->collection)->insert($data);
   }
 
   /**
@@ -110,13 +108,7 @@ class Flood implements FloodInterface {
    * Implements Drupal\Core\Flood\FloodInterface::garbageCollection().
    */
   public function garbageCollection() {
-    $key = array(
-      'expiration' => array(
-        '$lt' => REQUEST_TIME,
-      ),
-    );
-
-    return $this->database->get($this->collection)->remove($key);
+    // Since we use TTL collections do nothing here.
   }
 
 }
