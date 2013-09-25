@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Definition of Drupal\mongodb\MongoServiceProvider..
+ * Definition of Drupal\mongodb\MongodbServiceProvider..
  */
 
 namespace Drupal\mongodb;
@@ -15,7 +15,7 @@ use Symfony\Component\DependencyInjection\Reference;
 /**
  * MongoDB service provider. Registers Mongo-related services.
  */
-class MongoServiceProvider implements  ServiceProviderInterface, ServiceModifierInterface {
+class MongodbServiceProvider implements ServiceProviderInterface, ServiceModifierInterface {
 
   /**
    * {@inheritdoc}
