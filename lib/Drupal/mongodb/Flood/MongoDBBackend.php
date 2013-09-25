@@ -5,11 +5,10 @@
  * Definition of Drupal\mongodb\Flood\MongoDBBackend.
  */
 
-namespace Drupal\mongodb;
+namespace Drupal\mongodb\Flood;
 
-use Drupal;
-use Drupal\Component\Utility\Settings;
 use Drupal\Core\Flood\FloodInterface;
+use Drupal\mongodb\MongoCollectionFactory;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -20,19 +19,25 @@ class MongoDBBackend implements FloodInterface {
   /**
    * The mongodb factory registered as a service.
    *
-   * @var Drupal\mongodb\MongoCollectionFactory
+   * @var \Drupal\mongodb\MongoCollectionFactory
    */
   protected $mongo;
 
   /**
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
    * Construct the DatabaseFileUsageBackend.
    *
-   * @param Drupal\mongodb\MongoCollectionFactory $mongo
+   * @param \Drupal\mongodb\MongoCollectionFactory $mongo
    *   The database connection which will be used to store the flood
    *   information.
    */
-  public function __construct(MongoCollectionFactory $mongo) {
+  public function __construct(MongoCollectionFactory $mongo, Request $request) {
     $this->mongo = $mongo;
+    $this->request = $request;
   }
 
   /**
@@ -40,7 +45,7 @@ class MongoDBBackend implements FloodInterface {
    */
   public function register($name, $window = 3600, $identifier = NULL) {
     if (!isset($identifier)) {
-      $identifier = Drupal::request()->getClientIp();
+      $identifier = $this->request->getClientIp();
     }
 
     $data = array(
@@ -58,7 +63,7 @@ class MongoDBBackend implements FloodInterface {
    */
   public function clear($name, $identifier = NULL) {
     if (!isset($identifier)) {
-      $identifier = Drupal::request()->getClientIp();
+      $identifier = $this->request->getClientIp();
     }
 
     $key = array(
@@ -74,7 +79,7 @@ class MongoDBBackend implements FloodInterface {
    */
   public function isAllowed($name, $threshold, $window = 3600, $identifier = NULL) {
     if (!isset($identifier)) {
-      $identifier = Drupal::request()->getClientIp();
+      $identifier = $this->request->getClientIp();
     }
 
     $key = array(

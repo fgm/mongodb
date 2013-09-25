@@ -7,6 +7,6 @@ services:
     arguments: ['@mongo', '@settings']
   mongodb.flood:
     class: Drupal\mongodb\Flood\MongoDBBackend
-    arguments: ['@mongo']
+    arguments: ['@mongo', '@request']
     tags:
       - { name: mongodb.override }
