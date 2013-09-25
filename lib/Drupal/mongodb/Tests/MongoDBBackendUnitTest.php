@@ -39,17 +39,4 @@ class MongoDBBackendUnitTest extends GenericCacheBackendUnitTestBase {
     return \Drupal::service('cache.backend.mongodb')->get($bin);
   }
 
-  /**
-   * Installs system schema.
-   */
-  public function setUpCacheBackend() {
-    drupal_install_schema('system');
-  }
-
-  /**
-   * Uninstalls system schema.
-   */
-  public function tearDownCacheBackend() {
-    drupal_uninstall_schema('system');
-  }
 }
