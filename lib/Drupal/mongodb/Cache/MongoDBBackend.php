@@ -183,7 +183,7 @@ class MongoDBBackend implements CacheBackendInterface {
       'cid' => (string) $cid,
       'serialized' => $serialized,
       'created' => REQUEST_TIME,
-      'expire' => $expire == CacheBackendInterface::CACHE_PERMANENT ? CacheBackendInterface::CACHE_PERMANENT : new MongoDate($expire),
+      'expire' => $expire == CacheBackendInterface::CACHE_PERMANENT ? CacheBackendInterface::CACHE_PERMANENT : new \MongoDate($expire),
       'tags' => $this->flattenTags($tags),
       'data' => $serialized ? serialize($data) : $data,
     );

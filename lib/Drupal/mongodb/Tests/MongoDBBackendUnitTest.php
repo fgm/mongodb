@@ -7,7 +7,7 @@
 
 namespace Drupal\mongodb\Tests;
 
-use Drupal\mongodb\MongoDBBackend;
+use Drupal\mongodb\Cache\MongoDBBackend;
 use Drupal\system\Tests\Cache\GenericCacheBackendUnitTestBase;
 
 /**
@@ -36,7 +36,7 @@ class MongoDBBackendUnitTest extends GenericCacheBackendUnitTestBase {
    *   A new DatabaseBackend object.
    */
   protected function createCacheBackend($bin) {
-    return new MongoDBBackend($bin);
+    return \Drupal::service('cache.backend.mongodb')->get($bin);
   }
 
   /**

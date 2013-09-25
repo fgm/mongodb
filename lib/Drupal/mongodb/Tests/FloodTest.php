@@ -36,7 +36,7 @@ class FloodTest extends WebTestBase {
     $threshold = 1;
     $window_expired = -1;
     $name = 'flood_test_cleanup';
-    $flood = drupal_container()->get('flood');
+    $flood = \Drupal::service('flood');
 
     // Register expired event.
     $flood->register($name, $window_expired);
