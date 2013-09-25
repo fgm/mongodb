@@ -8,7 +8,6 @@
 namespace Drupal\mongodb;
 
 use Drupal\Component\Utility\Settings;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class MongoCollectionFactory {
 
@@ -35,9 +34,9 @@ class MongoCollectionFactory {
   /**
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
    */
-  function __construct(ContainerInterface $container, Settings $settings) {
-    $this->container = $container;
-    $mongo = $settings->get('mongo');
+  function __construct(Settings $settings) {
+    $mongo = $settings->get('mongo', array());
+    $mongo += array('servers' => array());
     $this->serverInfo = $mongo['servers'];
     // The default server needs to exist.
     $this->serverInfo += array('default' => array());
@@ -71,11 +70,12 @@ class MongoCollectionFactory {
       $prefixed = $this->prefix() . $collection_name;
     }
     if (!isset($this->clients[$collection_name])) {
-      $server_index = isset($this->collectionInfo[$collection_name]) ? $this->collectionInfo[$collection_name] : $this->collectionInfo['default'];
+      $server_index = isset($this->collectionInfo[$collection_name]) ? $this->collectionInfo[$collection_name] : 'default';
       $server = $this->serverInfo[$server_index];
       $this->collections[$collection_name] = $this->getClient($server)
         ->selectCollection($server['db'], str_replace('system.', 'system_.', $prefixed));
     }
+    return $this->collections[$collection_name];
   }
 
   /**

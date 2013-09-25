@@ -190,7 +190,7 @@ class MongoDBBackend implements CacheBackendInterface {
 
     // Use MongoBinData for non-UTF8 strings.
     if (is_string($entry['data']) && !drupal_validate_utf8($entry['data'])) {
-      $entry['data'] = new MongoBinData($entry['data']);
+      $entry['data'] = new \MongoBinData($entry['data']);
     }
 
     try {
