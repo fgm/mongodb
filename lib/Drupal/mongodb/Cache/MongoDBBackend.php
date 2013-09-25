@@ -29,7 +29,7 @@ class MongoDBBackend implements CacheBackendInterface {
   /**
    * Constructs a MongoDBBackend object.
    *
-   * @param \MondoCollection $bin
+   * @param \MongoCollection $bin
    *   The cache bin MongoClient object for which the object is created.
    */
   public function __construct(\MongoCollection $collection) {
@@ -106,7 +106,7 @@ class MongoDBBackend implements CacheBackendInterface {
    * Checks that items are either permanent or did not expire, and unserializes
    * data as appropriate.
    *
-   * @param stdClass $cache
+   * @param \stdClass $cache
    *   An item loaded from get() or getMultiple().
    *
    * @return mixed
@@ -135,7 +135,7 @@ class MongoDBBackend implements CacheBackendInterface {
       return FALSE;
     }
 
-    if ($cache->data instanceof MongoBinData) {
+    if ($cache->data instanceof \MongoBinData) {
       $cache->data = $cache->data->bin;
     }
 
@@ -196,7 +196,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->save($entry, array('w' => 0));
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // The database may not be available, so we'll ignore cache_set requests.
     }
   }
@@ -226,7 +226,7 @@ class MongoDBBackend implements CacheBackendInterface {
       $remove = array('cid' => array('$in' => $cids));
       $this->collection->remove($remove, array('w' => 0));
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // The database may not be available.
     }
   }
@@ -244,7 +244,7 @@ class MongoDBBackend implements CacheBackendInterface {
     try {
       $this->collection->remove(array('tags' => array('$in' => $this->flattenTags($tags))), array('w' => 0));
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // The database may not be available.
     }
   }
@@ -282,7 +282,7 @@ class MongoDBBackend implements CacheBackendInterface {
         array('w' => 0)
       );
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // The database may not be available.
     }
   }
@@ -342,7 +342,7 @@ class MongoDBBackend implements CacheBackendInterface {
         array('w' => 0)
       );
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // The database may not be available.
     }
   }
@@ -360,7 +360,7 @@ class MongoDBBackend implements CacheBackendInterface {
         array('$set' => array('expire' => new \MongoDate(REQUEST_TIME - 1)))
       );
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // The database may not be available.
     }
   }
