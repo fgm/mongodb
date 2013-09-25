@@ -2,12 +2,13 @@
 
 /**
  * @file
- * Contains \Drupal\mongodb\MongoDBBackendFactory.
+ * Contains \Drupal\Cache\mongodb\MongoDBBackendFactory.
  */
 
 namespace Drupal\mongodb\Cache;
 
 use Drupal\Component\Utility\Settings;
+use Drupal\mongodb\MongoCollectionFactory;
 
 class MongoDBBackendFactory {
 
@@ -41,7 +42,7 @@ class MongoDBBackendFactory {
    * @param $bin
    *   The cache bin for which the object is created.
    *
-   * @return \Drupal\mongo\Cache\MongoDBBackend
+   * @return \Drupal\mongodb\Cache\MongoDBBackend
    *   The cache backend object for the specified cache bin.
    */
   function get($bin) {
