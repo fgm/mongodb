@@ -2,53 +2,37 @@
 
 /**
  * @file
- * Definition of Drupal\mongodb\Flood.
+ * Definition of Drupal\mongodb\Flood\MongoDBBackend.
  */
 
 namespace Drupal\mongodb;
 
 use Drupal;
+use Drupal\Component\Utility\Settings;
 use Drupal\Core\Flood\FloodInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Defines the mongodb flood backend.
  */
-class Flood implements FloodInterface {
-
-  /**
-   * The database connection used to store flood event information.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
+class MongoDBBackend implements FloodInterface {
 
   /**
    * The mongodb factory registered as a service.
    *
    * @var Drupal\mongodb\MongoCollectionFactory
    */
-  protected $database;
-
-  /**
-   * The name of the mongodb collection used to store flood information.
-   *
-   * @var string
-   */
-  protected $collection;
+  protected $mongo;
 
   /**
    * Construct the DatabaseFileUsageBackend.
    *
-   * @param Drupal\mongodb\MongoCollectionFactory $database
+   * @param Drupal\mongodb\MongoCollectionFactory $mongo
    *   The database connection which will be used to store the flood
    *   information.
-   * @param string $collection
-   *   (optional) The collection to store file usage info. Defaults to 'flood'.
    */
-  public function __construct(MongoCollectionFactory $database, $collection = 'flood') {
-    $this->database = $database;
-    $this->collection = $collection;
+  public function __construct(MongoCollectionFactory $mongo) {
+    $this->mongo = $mongo;
   }
 
   /**
@@ -66,7 +50,7 @@ class Flood implements FloodInterface {
       'expiration' => REQUEST_TIME + $window,
     );
 
-    $this->database->get($this->collection)->insert($data);
+    $this->mongo->get('flood')->insert($data);
   }
 
   /**
@@ -82,7 +66,7 @@ class Flood implements FloodInterface {
       'identifier' => $identifier,
     );
 
-    $this->database->get($this->collection)->remove($key);
+    $this->mongo->get('flood')->remove($key);
   }
 
   /**
@@ -101,7 +85,7 @@ class Flood implements FloodInterface {
       ),
     );
 
-    return ($this->database->get($this->collection)->count($key) < $threshold);
+    return ($this->mongo->get('flood')->count($key) < $threshold);
   }
 
   /**

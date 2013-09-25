@@ -1,13 +1,26 @@
-Basic configuration:
-----------------------------------------------------------------------
-Enable mongodb.module and add this line to settings.php:
+VARIABLES
+------------
+MongoDB uses the $settings['mongo'] to store all settings.  EXAMPLE:
+  $settings['mongo'] = array(
+    'servers' => array(
+      // Connection name/alias
+      'default' => array(
+        // Omit USER:PASS@ if Mongo isn't configured to use authentication.
+        'server' => 'mongodb://USER:PASS@localhost',
+        // Database name
+        'db' => 'drupal_default',
+      ),
+      // Connection name/alias
+      'floodhost' => array(
+        'server' => 'mongodb://flood.example.com',
+        'db' => 'flood',
+      ),
+    ),
+    'collections' => array(
+      'flood' => 'floodhost',
+    ),
+  );
 
-$conf['container_service_providers']['MongoServiceProvider'] = 'Drupal\mongodb\MongoServiceProvider';
-
-This will register MongoServiceProvider, which will take care about registration of
-MongoDB related services.
-
-mongodb_profile will do this automatically if file permissions allow that.
 
 
 Cache backend configuration:

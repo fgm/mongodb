@@ -5,7 +5,7 @@
  * Definition of Drupal\mongodb/MongoDBBackend.
  */
 
-namespace Drupal\mongodb;
+namespace Drupal\mongodb\Cache;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 
