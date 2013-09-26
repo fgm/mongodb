@@ -23,7 +23,7 @@ class MongodbServiceProviderTest extends WebTestBase {
     return array(
       'name' => 'MongoDB ServicesRegistration',
       'description' => 'Tests mongodb service provider registration to the DIC.',
-      'group' => 'Mongodb',
+      'group' => 'MongoDB',
     );
   }
 

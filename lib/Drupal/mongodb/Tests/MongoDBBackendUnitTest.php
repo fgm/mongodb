@@ -23,9 +23,9 @@ class MongoDBBackendUnitTest extends GenericCacheBackendUnitTestBase {
 
   public static function getInfo() {
     return array(
-      'name' => 'MongoDB backend',
+      'name' => 'MongoDB cache backend',
       'description' => 'Unit test of the MongoDB backend using the generic cache unit test base.',
-      'group' => 'Cache',
+      'group' => 'MongoDB',
     );
   }
 
