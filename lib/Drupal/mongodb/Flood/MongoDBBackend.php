@@ -88,6 +88,9 @@ class MongoDBBackend implements FloodInterface {
       'timestamp' => array(
         '$gt' => REQUEST_TIME - $window,
       ),
+      'expiration' => array(
+        '$gt' => REQUEST_TIME,
+      ),
     );
 
     return ($this->mongo->get('flood')->count($key) < $threshold);
