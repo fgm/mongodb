@@ -33,7 +33,7 @@ class KeyValueFactory {
   }
 
   function get($collection) {
-    $collection = "keyvalue.$collection";
+    $mongo_collection = "keyvalue.$collection";
 
     $settings = $this->settings->get('mongo');
     if (isset($settings['keyvalue']['ttl'])) {
@@ -42,8 +42,8 @@ class KeyValueFactory {
     else {
       $ttl = 300;
     }
-    $this->mongo->get($collection)->ensureIndex(array('expire' => 1), array('expireAfterSeconds' => $ttl));
-    $this->mongo->get($collection)->ensureIndex(array('_id' => 1, 'expire' => 1));
+    $this->mongo->get($mongo_collection)->ensureIndex(array('expire' => 1), array('expireAfterSeconds' => $ttl));
+    $this->mongo->get($mongo_collection)->ensureIndex(array('_id' => 1, 'expire' => 1));
     return new KeyValue($this->mongo, $collection);
   }
 

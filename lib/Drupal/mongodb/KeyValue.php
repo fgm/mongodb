@@ -6,7 +6,7 @@ use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use Drupal\Core\KeyValueStore\StorageBase;
 
 /**
- * This class holds a MongoDB database object.
+ * This class holds a MongoDB key-value backend.
  */
 class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
 
@@ -18,9 +18,9 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
   protected $mongo;
 
   /**
-   * MongoDB collection.
+   * MongoDB collection name.
    *
-   * @var \MongoCollection
+   * @var string
    */
   protected $mongo_collection;
 
@@ -35,7 +35,16 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
   function __construct(MongoCollectionFactory $mongo, $collection) {
     parent::__construct($collection);
     $this->mongo = $mongo;
-    $this->mongo_collection =  $this->mongo->get($this->collection);
+    $this->mongo_collection =  "keyvalue.$this->collection";
+  }
+
+  /**
+   * Gets the collection for this key-value collection.
+   *
+   * @return \MongoCollection
+   */
+  protected function collection() {
+    return $this->mongo->get($this->mongo_collection);
   }
 
   /**
@@ -47,7 +56,6 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
       '_id' => (string) $key,
       'value' => $scalar ? $value : serialize($value),
       'scalar' => $scalar,
-      'expire' => $expire,
     );
 
     if (!empty($expire)) {
@@ -68,7 +76,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    *   The time to live for items, in seconds.
    */
   function setWithExpire($key, $value, $expire) {
-    $this->mongo_collection->update(array('key' => (string) $key), $this->getObject($key, $value, $expire), array('upsert' => TRUE));
+    $this->collection()->update(array('_id' => (string) $key), $this->getObject($key, $value, $expire), array('upsert' => TRUE));
   }
 
   /**
@@ -86,7 +94,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    */
   function setWithExpireIfNotExists($key, $value, $expire) {
     try {
-      return $this->mongo_collection->insert($this->getObject($key, $value, $expire));
+      return $this->collection()->insert($this->getObject($key, $value, $expire));
     }
     catch (\MongoCursorException $e) {
       return FALSE;
@@ -119,7 +127,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    * @todo What's returned for non-existing keys?
    */
   public function getMultiple(array $keys) {
-    return $this->getHelper($this->strMap($keys));
+    return $this->getHelper($keys);
   }
 
   /**
@@ -139,18 +147,17 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    * @return array
    */
   protected function getHelper($keys = NULL) {
+    $find = array();
     if ($keys) {
       $find['_id'] = array('$in' => $this->strMap($keys));
     }
 
-    $find = array(
-      '$or' => array(
-        array('expire' => array('$gte' => new \MongoDate())),
-        array('expire' => array('$exists' => FALSE)),
-      ),
+    $find['$or'] = array(
+      array('expire' => array('$gte' => new \MongoDate())),
+      array('expire' => array('$exists' => FALSE)),
     );
 
-    $result = $this->mongo_collection->find($find);
+    $result = $this->collection()->find($find);
     $return = array();
     foreach ($result as $row) {
       $return[$row['_id']] = $row['scalar'] ? $row['value'] : unserialize($row['value']);
@@ -167,7 +174,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    *   The data to store.
    */
   public function set($key, $value) {
-    $this->mongo_collection->update(array('_id' => (string) $key), $this->getObject($key, $value), array('upsert' => TRUE));
+    $this->collection()->update(array('_id' => (string) $key), $this->getObject($key, $value), array('upsert' => TRUE));
   }
 
   /**
@@ -183,7 +190,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    */
   public function setIfNotExists($key, $value) {
     try {
-      return $this->mongo_collection->insert($this->getObject($key, $value));
+      return $this->collection()->insert($this->getObject($key, $value));
     }
     catch (\MongoCursorException $e) {
       return FALSE;
@@ -197,14 +204,14 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    *   A list of item names to delete.
    */
   public function deleteMultiple(array $keys) {
-    $this->mongo_collection->remove(array('_id' => array('$in' => $this->strMap($keys))));
+    $this->collection()->remove(array('_id' => array('$in' => $this->strMap($keys))));
   }
 
   /**
    * Deletes all items from the key/value store.
    */
   public function deleteAll() {
-    $this->mongo_collection->remove();
+    $this->collection()->remove();
   }
 
   /**
