@@ -28,7 +28,7 @@ Cache backend configuration:
 
 Enable mongodb.module and add this to your settings.php:
 
-$settings['cache']['default'] = 'cache.backend.mongodb';
+  $settings['cache']['default'] = 'cache.backend.mongodb';
 
 This will enable MongoDB cache backend for all cache bins. If you want
 to configure backends on per-bin basis just replace 'default' with
@@ -39,4 +39,31 @@ purge all temporary cache items TTL seconds after their expiration. Default valu
 for TTL is 300. This value can be changed by adding this lime to settings.php
 (replace 3600 with desired TTL):
 
-$settings['mongo']['cache']['ttl'] = 3600;
+  $settings['mongo']['cache']['ttl'] = 3600;
+
+
+KeyValue backend configuration:
+-----------------------------------------------------------------------
+
+Works very similar as cache backends. To enable mongo KeyValue store for all
+keyvalue collections put this in settings.php:
+
+  $settings['keyvalue_default'] = 'keyvalue.mongodb';
+
+For expirable collections:
+
+  $settings['keyvalue_expirable_default'] = 'keyvalue.mongodb';
+
+This will set mongo as default backend. To enable it on per-collection basis use
+(replace [collection_name] with a desired keyvalue collection - state, update, module_list, etc.):
+
+  $settings['keyvalue_service_[collection_name]'] = 'keyvalue.mongodb';
+
+or
+
+  $settings['keyvalue_expirable_service_[collection_name]'] = 'keyvalue.mongodb';
+
+We use "TTL" mongo collections for expirable keyvalue service. You can set TTL by
+adding this line to settings.php.
+
+  $settings['mongo']['keyvalue']['ttl'] = 3600;

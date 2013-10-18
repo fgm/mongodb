@@ -5,6 +5,9 @@ services:
   cache.backend.mongodb:
     class: Drupal\mongodb\Cache\MongoDBBackendFactory
     arguments: ['@mongo', '@settings']
+  keyvalue.mongodb:
+    class: Drupal\mongodb\KeyValueFactory
+    arguments: ['@mongo', '@settings']
   mongodb.flood:
     class: Drupal\mongodb\Flood\MongoDBBackend
     arguments: ['@mongo', '@request']

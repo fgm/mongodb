@@ -7,6 +7,8 @@
 
 namespace Drupal\mongodb;
 
+use \Drupal\Component\Utility\Settings;
+
 class KeyValueFactory {
 
   /**
@@ -15,14 +17,34 @@ class KeyValueFactory {
   protected $mongo;
 
   /**
-   * @param MongoCollectionFactory $mongo
+   * The settings array.
+   *
+   * @var \Drupal\Component\Utility\Settings
    */
-  function __construct(MongoCollectionFactory $mongo) {
+  protected $settings;
+
+  /**
+   * @param MongoCollectionFactory $mongo
+   * @param \Drupal\Component\Utility\Settings $settings
+   */
+  function __construct(MongoCollectionFactory $mongo, Settings $settings) {
     $this->mongo = $mongo;
+    $this->settings = $settings;
   }
 
   function get($collection) {
-    return new KeyValue($this->mongo, "keyvalue.$collection");
+    $collection = "keyvalue.$collection";
+
+    $settings = $this->settings->get('mongo');
+    if (isset($settings['keyvalue']['ttl'])) {
+      $ttl = $settings['keyvalue']['ttl'];
+    }
+    else {
+      $ttl = 300;
+    }
+    $this->mongo->get($collection)->ensureIndex(array('expire' => 1), array('expireAfterSeconds' => $ttl));
+    $this->mongo->get($collection)->ensureIndex(array('_id' => 1, 'expire' => 1));
+    return new KeyValue($this->mongo, $collection);
   }
 
 }
