@@ -41,4 +41,22 @@ function mongodb_install() {
     $ttl = 300;
   }
   $mongo->get('flood')->ensureIndex(array('expiration' => 1), array('expireAfterSeconds' => $ttl));
+
+  // File usage indexes
+  $mongo->get('file_usage')->ensureIndex(array(
+    'fid' => 1,
+    'module' => 1,
+    'type' => 1,
+    'id' => 1,
+    'count' => 1,
+  ));
+  $mongo->get('file_usage')->ensureIndex(array(
+    'fid' => 1,
+    'module' => 1,
+    'count' => 1,
+  ));
+  $mongo->get('file_usage')->ensureIndex(array(
+    'fid' => 1,
+    'count' => 1,
+  ));
 }

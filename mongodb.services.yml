@@ -13,3 +13,8 @@ services:
     arguments: ['@mongo', '@request']
     tags:
       - { name: mongodb.override }
+  file.usage:
+    class: Drupal\mongodb\FileUsage
+    arguments: ['@mongo']
+    tags:
+      - { name: mongodb.override }

@@ -33,9 +33,9 @@ class FileUsageTest extends FileManagedTestBase {
    */
   function testGetUsage() {
     $file = $this->createFile();
-    $database = drupal_container()->get('mongo');
-    $database->get('file_usage')->insert(array('fid' => (int) $file->fid, 'module' => 'testing', 'type' => 'foo', 'id' => 1, 'count' => 1));
-    $database->get('file_usage')->insert(array('fid' => (int) $file->fid, 'module' => 'testing', 'type' => 'bar', 'id' => 2, 'count' => 2));
+    $database = \Drupal::service('mongo');
+    $database->get('file_usage')->insert(array('fid' => (int) $file->id(), 'module' => 'testing', 'type' => 'foo', 'id' => 1, 'count' => 1));
+    $database->get('file_usage')->insert(array('fid' => (int) $file->id(), 'module' => 'testing', 'type' => 'bar', 'id' => 2, 'count' => 2));
 
     $usage = file_usage()->listUsage($file);
 
@@ -57,8 +57,8 @@ class FileUsageTest extends FileManagedTestBase {
     file_usage()->add($file, 'testing', 'bar', 2);
     file_usage()->add($file, 'testing', 'bar', 2);
 
-    $database = drupal_container()->get('mongo');
-    $results = $database->get('file_usage')->find(array('fid' => (int) $file->fid));
+    $database = \Drupal::service('mongo');
+    $results = $database->get('file_usage')->find(array('fid' => (int) $file->id()));
 
     $usage = array();
     foreach ($results as $result) {
@@ -79,22 +79,22 @@ class FileUsageTest extends FileManagedTestBase {
    */
   function testRemoveUsage() {
     $file = $this->createFile();
-    $database = drupal_container()->get('mongo');
-    $database->get('file_usage')->insert(array('fid' => (int) $file->fid, 'module' => 'testing', 'type' => 'bar', 'id' => 2, 'count' => 3));
+    $database = \Drupal::service('mongo');
+    $database->get('file_usage')->insert(array('fid' => (int) $file->id(), 'module' => 'testing', 'type' => 'bar', 'id' => 2, 'count' => 3));
 
     // Normal decrement.
     file_usage()->delete($file, 'testing', 'bar', 2);
-    $result = $database->get('file_usage')->findOne(array('fid' => (int) $file->fid), array('count' => TRUE));
+    $result = $database->get('file_usage')->findOne(array('fid' => (int) $file->id()), array('count' => TRUE));
     $this->assertEqual(2, $result['count'], t('The count was decremented correctly.'));
 
     // Multiple decrement and removal.
     file_usage()->delete($file, 'testing', 'bar', 2, 2);
-    $count = $database->get('file_usage')->findOne(array('fid' => (int) $file->fid), array('count' => TRUE));
+    $count = $database->get('file_usage')->findOne(array('fid' => (int) $file->id()), array('count' => TRUE));
     $this->assertIdentical(FALSE, isset($count['count']), t('The count was removed entirely when empty.'));
 
     // Non-existent decrement.
     file_usage()->delete($file, 'testing', 'bar', 2);
-    $count = $database->get('file_usage')->findOne(array('fid' => (int) $file->fid), array('count' => TRUE));
+    $count = $database->get('file_usage')->findOne(array('fid' => (int) $file->id()), array('count' => TRUE));
     $this->assertIdentical(FALSE, isset($count['count']), t('Decrementing non-exist record complete.'));
   }
 }
