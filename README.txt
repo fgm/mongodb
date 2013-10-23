@@ -67,3 +67,21 @@ We use "TTL" mongo collections for expirable keyvalue service. You can set TTL b
 adding this line to settings.php.
 
   $settings['mongo']['keyvalue']['ttl'] = 3600;
+
+
+Queue backend configuration:
+-----------------------------------------------------------------------
+
+Works very similar as cache backends. To enable mongo queue store for all
+queues put this in settings.php:
+
+  $settings['queue_default'] = 'queue.mongodb';
+
+This will set mongo as default backend. To enable it on per-queue basis use
+(replace [queue_name] with a desired queue):
+
+  $settings['queue_service_[queue_name]'] = 'queue.mongodb';
+
+or for reliable queues:
+
+  $settings['queue_reliable_service_[queue_name]'] = 'queue.mongodb';

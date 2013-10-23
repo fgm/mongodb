@@ -8,6 +8,9 @@ services:
   keyvalue.mongodb:
     class: Drupal\mongodb\KeyValueFactory
     arguments: ['@mongo', '@settings']
+  keyvalue.mongodb:
+    class: Drupal\mongodb\Queue\QueueFactory
+    arguments: ['@mongo']
   mongodb.flood:
     class: Drupal\mongodb\Flood\MongoDBBackend
     arguments: ['@mongo', '@request']
