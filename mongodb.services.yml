@@ -16,8 +16,20 @@ services:
     arguments: ['@mongo', '@request']
     tags:
       - { name: mongodb.override }
-  file.usage:
+  mongodb.file.usage:
     class: Drupal\mongodb\FileUsage
     arguments: ['@mongo']
+    tags:
+      - { name: mongodb.override }
+  mongodb.config.cachedstorage.storage:
+    class: Drupal\mongodb\Config\ConfigStorage
+    factory_class: Drupal\mongodb\Config\ConfigStorageFactory
+    factory_method: getActive
+    arguments: ['@mongo', '@string_translation']
+    tags:
+      - { name: mongodb.override }
+  mongodb.config.storage.snapshot:
+    class: Drupal\mongodb\Config\ConfigStorage
+    arguments: ['@mongo', '@string_translation', snapshot]
     tags:
       - { name: mongodb.override }

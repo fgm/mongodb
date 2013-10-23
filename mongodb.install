@@ -1,5 +1,9 @@
 <?php
 
+
+use Drupal\Core\Config\FileStorage;
+use Drupal\mongodb\Config\ConfigStorage;
+
 /**
  * Implement hook_requirements().
  */
@@ -22,6 +26,14 @@ function mongodb_requirements($phase) {
  * Implements hook_install().
  */
 function mongodb_install() {
+  _mongodb_create_indexes();
+  _mongodb_move_configuration();
+}
+
+/**
+ * Ensures indexes on various Mongo collections.
+ */
+function _mongodb_create_indexes() {
   $mongo = \Drupal::service('mongo');
   $settings = \Drupal::service('settings')->get('mongo');
 
@@ -59,4 +71,16 @@ function mongodb_install() {
     'fid' => 1,
     'count' => 1,
   ));
+}
+
+/**
+ * Move configuration from file storage to mongo.
+ */
+function _mongodb_move_configuration() {
+  $source = new FileStorage(config_get_config_directory(CONFIG_ACTIVE_DIRECTORY));
+  $destination = new ConfigStorage(\Drupal::service('mongo'), \Drupal::service('string_translation'));
+  config_import_create_snapshot($source, $destination);
+
+  $snapshot = new ConfigStorage(\Drupal::service('mongo'), \Drupal::service('string_translation'), 'snapshot');
+  config_import_create_snapshot($source, $snapshot);
 }
