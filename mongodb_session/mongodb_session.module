@@ -23,7 +23,7 @@ function mongodb_session_user_login($edit, $account) {
       'login' => (int) $account->login,
     ),
   );
-  mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $account->uid), $save, array('w' => 0);
+  mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $account->uid), $save, array('w' => 0));
 }
 
 function _mongodb_session_get_roles($account) {
