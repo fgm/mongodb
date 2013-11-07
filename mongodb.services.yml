@@ -33,3 +33,9 @@ services:
     arguments: ['@mongo', '@string_translation', snapshot]
     tags:
       - { name: mongodb.override }
+  mongodb.path.crud:
+    class: Drupal\mongodb\Path
+    arguments: ['@mongo', '@module_handler', '@path.alias_manager']
+#    Disabled until we move path queries to one class.
+#    tags:
+#      - { name: mongodb.override }

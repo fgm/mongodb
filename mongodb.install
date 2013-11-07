@@ -71,6 +71,10 @@ function _mongodb_create_indexes() {
     'fid' => 1,
     'count' => 1,
   ));
+
+  // Path alias.
+  $mongo->get('url_alias')->ensureIndex(array('alias' => 1, 'langcode' => 1, '_id' => 1));
+  $mongo->get('url_alias')->ensureIndex(array('source' => 1, 'langcode' => 1, '_id' => 1));
 }
 
 /**
