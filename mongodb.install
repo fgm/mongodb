@@ -72,9 +72,11 @@ function _mongodb_create_indexes() {
     'count' => 1,
   ));
 
-  // Path alias.
-  $mongo->get('url_alias')->ensureIndex(array('alias' => 1, 'langcode' => 1, '_id' => 1));
-  $mongo->get('url_alias')->ensureIndex(array('source' => 1, 'langcode' => 1, '_id' => 1));
+  // Path alias. This should cover all queries via index intersections.
+  $mongo->get('url_alias')->ensureIndex(array('alias' => 1));
+  $mongo->get('url_alias')->ensureIndex(array('source' => 1));
+  $mongo->get('url_alias')->ensureIndex(array('langcode' => 1, '_id' => 1));
+  $mongo->get('url_alias')->ensureIndex(array('langcode' => -1, '_id' => 1));
 }
 
 /**

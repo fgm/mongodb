@@ -7,10 +7,8 @@
 
 namespace Drupal\mongodb;
 
-use Drupal\Core\Database\Database;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\Language;
-use Drupal\Core\Path\AliasManager;
 
 /**
  * Defines a class for CRUD operations on path aliases in MongoDB.
@@ -44,19 +42,11 @@ class Path {
    * @param MongoCollectionFactory $mongo
    *   The object wrapping the MongoDB database object.
    *
-   * @param \Drupal\Core\Path\AliasManager $alias_manager
-   *   An alias manager with an internal cache of stored aliases.
-   *
    * @param string $mongo_collection
    *   Mongo collection name to use. Defaults to "url_alias".
-   *
-   * @todo This class should not take an alias manager in its constructor. Once
-   *   we move to firing an event for CRUD operations instead of invoking a
-   *   hook, we can have a listener that calls cacheClear() on the alias manager.
    */
-  public function __construct(MongoCollectionFactory $mongo, ModuleHandlerInterface $module_handler, AliasManager $alias_manager, $mongo_colleciton = 'url_alias') {
+  public function __construct(MongoCollectionFactory $mongo, ModuleHandlerInterface $module_handler, $mongo_colleciton = 'url_alias') {
     $this->mongo = $mongo;
-    $this->alias_manager = $alias_manager;
     $this->mongo_collection = $mongo_colleciton;
     $this->module_handler = $module_handler;
   }
@@ -93,6 +83,7 @@ class Path {
     );
 
     $hook = 'path_update';
+    // @TODO use separate collection for autoincrement keys and use findAndModify()?
     if (empty($pid)) {
       $result = $this->mongo->get($this->mongo_collection)
         ->find(array(), array('_id' => TRUE))
@@ -103,14 +94,11 @@ class Path {
       $hook = 'path_insert';
     }
 
-    $response = $this->mongo->get('url_alias')->update(array('_id' => $pid), array('$set' => $fields), array('upsert' => TRUE));
+    $response = $this->mongo->get($this->mongo_collection)->update(array('_id' => $pid), array('$set' => $fields), array('upsert' => TRUE));
 
     if (empty($response['err'])) {
       $fields['pid'] = $pid;
-      // @todo Switch to using an event for this instead of a hook when core
-      // does it with SQL implementation.
       $this->module_handler->invokeAll($hook, $fields);
-      $this->alias_manager->cacheClear();
       return $fields;
     }
     return FALSE;
@@ -145,5 +133,119 @@ class Path {
     $response = $this->mongo->get($this->mongo_collection)->remove($conditions);
     $this->module_handler->invokeAll('path_delete', $path);
     return $response['n'];
+  }
+
+  /**
+   * Preloads path alias information for a given list of source paths.
+   *
+   * @param $path
+   *   The path to investigate for corresponding aliases.
+   * @param $langcode
+   *   Language code to search the path with. If there's no path defined for
+   *   that language it will search paths without language.
+   * @return array
+   *   Source (keys) to alias (values) mapping.
+   */
+  public function preloadPathAlias($preloaded, $langcode) {
+    $args = array(
+      'source' => array( '$in' =>  $preloaded),
+    );
+    $select = array('source' => 1, 'alias' => 1);
+
+    if ($langcode == Language::LANGCODE_NOT_SPECIFIED) {
+      $args['langcode'] = Language::LANGCODE_NOT_SPECIFIED;
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('_id' => 1));
+    }
+    elseif ($langcode < Language::LANGCODE_NOT_SPECIFIED) {
+      $args['langcode'] = array('$in' => array($langcode, Language::LANGCODE_NOT_SPECIFIED));
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('langcode' => 1, '_id' => 1));
+    }
+    else {
+      $args['langcode'] = array('$in' => array($langcode, Language::LANGCODE_NOT_SPECIFIED));
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('langcode' => -1, '_id' => 1));
+    }
+
+    $result = array();
+    foreach ($cursor as $item) {
+      $result[$item['source']] = $item['alias'];
+    }
+
+    return $result;
+  }
+
+  /**
+   * Returns an alias of Drupal system URL.
+   *
+   * @param string $path
+   *   The path to investigate for corresponding path aliases.
+   * @param string $langcode
+   *   Language code to search the path with. If there's no path defined for
+   *   that language it will search paths without language.
+   *
+   * @return string|bool
+   *   A path alias, or FALSE if no path was found.
+   */
+  public function lookupPathAlias($path, $langcode) {
+    $args = array(
+      'source' => $path,
+    );
+    $select = array('alias' => 1);
+
+    if ($langcode == Language::LANGCODE_NOT_SPECIFIED) {
+      $args['langcode'] = Language::LANGCODE_NOT_SPECIFIED;
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('_id' => -1))->limit(1);
+    }
+    elseif ($langcode > Language::LANGCODE_NOT_SPECIFIED) {
+      $args['langcode'] = array('$in' => array($langcode, Language::LANGCODE_NOT_SPECIFIED));
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('langcode' => -1, '_id' => -1))->limit(1);
+    }
+    else {
+      $args['langcode'] = array('$in' => array($langcode, Language::LANGCODE_NOT_SPECIFIED));
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('langcode' => 1, '_id' => -1))->limit(1);
+    }
+
+    if ($alias = $cursor->getNext()) {
+      return $alias['alias'];
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Returns Drupal system URL of an alias.
+   *
+   * @param string $path
+   *   The path to investigate for corresponding system URLs.
+   * @param string $langcode
+   *   Language code to search the path with. If there's no path defined for
+   *   that language it will search paths without language.
+   *
+   * @return string|bool
+   *   A Drupal system path, or FALSE if no path was found.
+   */
+  public function lookupPathSource($path, $langcode) {
+    $args = array(
+      'alias' => $path,
+    );
+    $select = array('source' => 1);
+
+    if ($langcode == Language::LANGCODE_NOT_SPECIFIED) {
+      $args['langcode'] = Language::LANGCODE_NOT_SPECIFIED;
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('_id' => -1))->limit(1);
+    }
+    elseif ($langcode > Language::LANGCODE_NOT_SPECIFIED) {
+      $args['langcode'] = array('$in' => array($langcode, Language::LANGCODE_NOT_SPECIFIED));
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('langcode' => -1, '_id' => -1))->limit(1);
+    }
+    else {
+      $args['langcode'] = array('$in' => array($langcode, Language::LANGCODE_NOT_SPECIFIED));
+      $cursor = $this->mongo->get($this->mongo_collection)->find($args, $select)->sort(array('langcode' => 1, '_id' => -1))->limit(1);
+    }
+
+    if ($source = $cursor->getNext()) {
+      return $source['source'];
+    }
+
+    return FALSE;
   }
 }

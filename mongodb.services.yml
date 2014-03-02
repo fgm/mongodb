@@ -35,7 +35,6 @@ services:
       - { name: mongodb.override }
   mongodb.path.crud:
     class: Drupal\mongodb\Path
-    arguments: ['@mongo', '@module_handler', '@path.alias_manager']
-#    Disabled until we move path queries to one class.
-#    tags:
-#      - { name: mongodb.override }
+    arguments: ['@mongo', '@module_handler']
+    tags:
+      - { name: mongodb.override }
