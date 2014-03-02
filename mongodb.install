@@ -83,8 +83,8 @@ function _mongodb_create_indexes() {
 function _mongodb_move_configuration() {
   $source = new FileStorage(config_get_config_directory(CONFIG_ACTIVE_DIRECTORY));
   $destination = new ConfigStorage(\Drupal::service('mongo'), \Drupal::service('string_translation'));
-  config_import_create_snapshot($source, $destination);
+  \Drupal::service('config.manager')->createSnapshot($source, $destination);
 
   $snapshot = new ConfigStorage(\Drupal::service('mongo'), \Drupal::service('string_translation'), 'snapshot');
-  config_import_create_snapshot($source, $snapshot);
+  \Drupal::service('config.manager')->createSnapshot($source, $snapshot);
 }
