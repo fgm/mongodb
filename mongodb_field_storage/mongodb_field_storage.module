@@ -446,8 +446,8 @@ function _mongodb_field_storage_query_value($value, $operator, $type) {
   $value = _mongodb_field_storage_value($type, $value);
   switch ($operator) {
     case '='           : return $value;
-    case 'IN'          : return array('$in' => $value);
-    case 'NOT IN'      : return array('$nin' => $value);
+    case 'IN'          : return array('$in' => array_values($value));
+    case 'NOT IN'      : return array('$nin' => array_values($value));
     case 'ALL'         : return array('$all' => $value);
     case '<'           : return array('$lt' => $value);
     case '>'           : return array('$gt' => $value);
