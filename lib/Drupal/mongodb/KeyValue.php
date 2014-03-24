@@ -211,7 +211,7 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    * Deletes all items from the key/value store.
    */
   public function deleteAll() {
-    $this->collection()->remove();
+    $this->collection()->remove(array());
   }
 
   /**
@@ -219,5 +219,18 @@ class KeyValue extends StorageBase implements KeyValueStoreExpirableInterface {
    */
   protected function strMap($keys) {
     return array_map('strval', $keys);
+  }
+
+  /**
+   * Returns whether a given key exists in the store.
+   *
+   * @param string $key
+   *   The key to check.
+   *
+   * @return bool
+   *   TRUE if the key exists, FALSE otherwise.
+   */
+  public function has($key) {
+    return (bool) $this->collection()->findOne(array('_id' => (string) $key));
   }
 }
