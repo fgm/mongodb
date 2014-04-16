@@ -90,7 +90,7 @@ function drush_mongodb_migrate() {
             '_id' => (int) $entity_id,
             'timestamp' => time(),
           ),
-          array('safe' => TRUE)
+          mongodb_default_write_options()
         );
         $lastError = $collection->db->lastError();
         if (empty($lastError['err'])) {

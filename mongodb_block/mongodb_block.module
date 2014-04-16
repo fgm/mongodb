@@ -304,7 +304,7 @@ function _mongodb_block_rehash($theme) {
       $blocks[$key]['region'] = MONGODB_BLOCK_REGION_NONE;
     }
   }
-  $collection->remove(array('_id' => array('$nin' => $ids)), array('safe' => TRUE));
+  $collection->remove(array('_id' => array('$nin' => $ids)), mongodb_default_write_options());
   return $blocks;
 }
 
@@ -318,7 +318,7 @@ function _mongodb_block_rehash($theme) {
  */
 function mongodb_block_save_block($collection, $block) {
   unset($block['module'], $block['delta'], $block['status']);
-  $collection->save($block, array('safe' => TRUE));
+  $collection->save($block, mongodb_default_write_options());
 }
 
 /**
