@@ -179,7 +179,7 @@ function _drupal_session_write($sid, $value) {
 
   $collection = mongodb_collection(variable_get('mongodb_session', 'session'));
   $collection
-    ->update($key, $key + $fields, array('upsert' => TRUE, 'w' => 0));
+    ->update($key, $key + $fields, array('upsert' => TRUE) + mongodb_default_write_options(FALSE));
 
   // Last access time is updated no more frequently than once every 180 seconds.
   // This reduces contention in the users table.
@@ -193,7 +193,7 @@ function _drupal_session_write($sid, $value) {
       ->condition('uid', $user->uid)
       ->execute();
     // Update MongoDB because we prefer that.
-    mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $user->uid), array('$set' => $fields), array('w' => 0));
+    mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $user->uid), array('$set' => $fields), mongodb_default_write_options(FALSE));
     // Throw a bone to entitycache, too.
     if (variable_get('entitycache_enabled', FALSE)) {
       cache_clear_all($user->uid, 'cache_entity_user');
@@ -349,7 +349,7 @@ function drupal_session_regenerate() {
   if (isset($old_session_id)) {
     $field = $is_https ? 'ssid' : 'sid';
     mongodb_collection(variable_get('mongodb_session', 'session'))
-      ->update(array('sid' => $old_session_id), array('$set' => array($field => session_id())), array('w' => 0));
+      ->update(array('sid' => $old_session_id), array('$set' => array($field => session_id())), mongodb_default_write_options(FALSE));
   }
 }
 
@@ -366,7 +366,7 @@ function _drupal_session_destroy($sid) {
 
   $field = $is_https ? 'ssid' : 'sid';
   mongodb_collection(variable_get('mongodb_session', 'session'))
-    ->remove(array($field => $sid), array('w' => 0));
+    ->remove(array($field => $sid), mongodb_default_write_options(FALSE));
 
   // Reset $_SESSION and $user to prevent a new session from being started
   // in drupal_session_commit().
@@ -411,7 +411,7 @@ function _drupal_session_delete_cookie($name, $secure = NULL) {
  */
 function drupal_session_destroy_uid($uid) {
   mongodb_collection(variable_get('mongodb_session', 'session'))
-    ->remove(array('uid' => $uid), array('w' => 0));
+    ->remove(array('uid' => $uid), mongodb_default_write_options(FALSE));
 }
 
 /**
@@ -430,7 +430,7 @@ function _drupal_session_garbage_collection($lifetime) {
   // to '1814400'. At that value, only after a user doesn't log in after
   // three weeks (1814400 seconds) will his/her session be removed.
   mongodb_collection(variable_get('mongodb_session', 'session'))
-    ->remove(array('timestamp' => array('$lt' => REQUEST_TIME - $lifetime)), array('w' => 0));
+    ->remove(array('timestamp' => array('$lt' => REQUEST_TIME - $lifetime)), mongodb_default_write_options(FALSE));
   return TRUE;
 }
 

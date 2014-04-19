@@ -195,7 +195,7 @@ function mongodb_field_storage_field_storage_write($entity_type, $entity, $op, $
 
   // Save the object.
   $collection = mongodb_collection('fields_current', $entity_type);
-  $collection->save($new_entity, array('safe' => TRUE));
+  $collection->save($new_entity, mongodb_default_write_options());
   $slaves = variable_get('mongodb_slave');
   if ($slaves) {
     $return = $collection->db->runCommand(array(
@@ -247,9 +247,9 @@ function _mongodb_field_storage_value($type, $value) {
 function mongodb_field_storage_field_storage_delete($entity_type, $entity, $fields) {
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
 
-  mongodb_collection('fields_current', $entity_type)->remove(array('_id' => (int) $entity_id), array('safe' => TRUE));
+  mongodb_collection('fields_current', $entity_type)->remove(array('_id' => (int) $entity_id), mongodb_default_write_options());
   $entity_info = entity_get_info($entity_type);
-  mongodb_collection('fields_revision', $entity_type)->remove(array($entity_info['entity keys']['id'] => (int) $entity_id), array('safe' => TRUE));
+  mongodb_collection('fields_revision', $entity_type)->remove(array($entity_info['entity keys']['id'] => (int) $entity_id), mongodb_default_write_options());
 }
 
 /**
@@ -259,7 +259,7 @@ function mongodb_field_storage_field_storage_delete($entity_type, $entity, $fiel
  */
 function mongodb_field_storage_field_storage_delete_revision($entity_type, $entity, $fields) {
   list($entity_id, $revision_id, $bundle) = entity_extract_ids($entity_type, $entity);
-  mongodb_collection('fields_revision', $entity_type)->remove(array('_id' => (int) $revision_id), array('safe' => TRUE));
+  mongodb_collection('fields_revision', $entity_type)->remove(array('_id' => (int) $revision_id), mongodb_default_write_options());
 }
 
 /**
@@ -446,8 +446,8 @@ function _mongodb_field_storage_query_value($value, $operator, $type) {
   $value = _mongodb_field_storage_value($type, $value);
   switch ($operator) {
     case '='           : return $value;
-    case 'IN'          : return array('$in' => $value);
-    case 'NOT IN'      : return array('$nin' => $value);
+    case 'IN'          : return array('$in' => array_values($value));
+    case 'NOT IN'      : return array('$nin' => array_values($value));
     case 'ALL'         : return array('$all' => $value);
     case '<'           : return array('$lt' => $value);
     case '>'           : return array('$gt' => $value);
@@ -466,8 +466,8 @@ function _mongodb_field_storage_query_value($value, $operator, $type) {
  * Implements hook_field_attach_rename_bundle().
  */
 function mongodb_field_storage_field_attach_rename_bundle($entity_type, $bundle_old, $bundle_new) {
-  mongodb_collection('fields_current', $entity_type)->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE), array('safe' => TRUE));
-  mongodb_collection('fields_revision', $entity_type)->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE), array('safe' => TRUE));
+  mongodb_collection('fields_current', $entity_type)->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE), mongodb_default_write_options());
+  mongodb_collection('fields_revision', $entity_type)->update(array('_bundle' => $bundle_old), array('_bundle' => $bundle_new), array('multiple' => TRUE), mongodb_default_write_options());
 }
 
 /**
@@ -489,9 +489,9 @@ function mongodb_field_storage_entity_update($entity, $entity_type) {
  */
 function mongodb_field_storage_field_attach_delete($entity_type, $entity) {
   list($entity_id, $revision_id) = entity_extract_ids($entity_type, $entity);
-  mongodb_collection('fields_current', $entity_type)->remove(array('_id' => (int) $entity_id), array('safe' => TRUE));
+  mongodb_collection('fields_current', $entity_type)->remove(array('_id' => (int) $entity_id), mongodb_default_write_options());
   if ($revision_id) {
-    mongodb_collection('fields_revision', $entity_type)->remove(array('_id' => (int) $revision_id), array('safe' => TRUE));
+    mongodb_collection('fields_revision', $entity_type)->remove(array('_id' => (int) $revision_id), mongodb_default_write_options());
   }
 }
 

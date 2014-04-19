@@ -47,7 +47,7 @@ function mongodb_queue_cron() {
         }
 
         $db->selectCollection($queue_name)
-          ->update($update_query, array('$set' => array('expire' => 0)), array('multiple' => TRUE, 'safe' => TRUE));
+          ->update($update_query, array('$set' => array('expire' => 0)), array('multiple' => TRUE) + mongodb_default_write_options());
       }
     }
   }
