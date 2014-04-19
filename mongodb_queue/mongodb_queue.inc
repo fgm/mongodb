@@ -35,7 +35,7 @@ class MongoDBQueue implements DrupalQueueInterface {
       'expire' => 0,
     );
     return mongodb_collection($this->collection)
-      ->insert($item, array('safe' => TRUE));
+      ->insert($item, mongodb_default_write_options());
   }
 
   /**
