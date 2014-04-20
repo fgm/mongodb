@@ -85,7 +85,7 @@ class MongoDBQueue implements DrupalQueueInterface {
    */
   public function releaseItem($item) {
     return mongodb_collection($this->collection)
-      ->update(array('_id' => $item->_id), array('$set' => array('expire' => 0)), array('safe' => TRUE));
+      ->update(array('_id' => $item->_id), array('$set' => array('expire' => 0)), mongodb_default_write_options());
   }
 
   /**
@@ -96,7 +96,7 @@ class MongoDBQueue implements DrupalQueueInterface {
    */
   public function deleteItem($item) {
     mongodb_collection($this->collection)
-      ->remove(array('_id' => $item->_id), array('safe' => TRUE));
+      ->remove(array('_id' => $item->_id), mongodb_default_write_options());
   }
 
   /**
