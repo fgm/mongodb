@@ -142,7 +142,7 @@ function mongodb_block_ui_block_info() {
 
   $collection = mongodb_collection('block_custom');
   $result = $collection->find(array(), array('info', '_id'))
-    ->sort(array('info'));
+    ->sort(array('info' => 1));
   $blocks = new stdClass();
   foreach ($result as $block) {
     $delta = $block['_id'];
