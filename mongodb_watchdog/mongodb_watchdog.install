@@ -33,12 +33,14 @@ function mongodb_watchdog_uninstall() {
   // Then drop all watchdog event collections in all known database aliases.
   $aliases = variable_get('mongodb_connections', array());
   $aliases['default'] = TRUE;
+  $count = 0;
   $regex = '/\.watchdog_event_[[:xdigit:]]{32}$/';
   foreach (array_keys($aliases) as $alias) {
     $db = mongodb($alias);
     foreach ($db->listCollections() as $collection) {
       if (preg_match($regex, $collection)) {
         $collection->drop();
+        $count++;
       }
     }
   }
