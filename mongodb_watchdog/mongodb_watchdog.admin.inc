@@ -424,6 +424,8 @@ function mongodb_watchdog_clear_log_submit() {
 /**
  * Build a MongoDB query based on the selected filters.
  *
+ * Refer to the @link https://jira.mongodb.org/browse/PHP-1051 Mongo Issue regarding the $in value @endlink
+ * Refer to the @link https://jira.mongodb.org/browse/PHP-104 Mongo Issue regarding numeric keys on objects @endlink
  * @return array
  *   An array to build a MongoDB query.
  */
@@ -439,11 +441,11 @@ function mongodb_watchdog_build_filter_query() {
 
   $find = array();
   if ($types) {
-    $find['type'] = array('$in' => $types);
+    $find['type'] = array('$in' => array_values($types));
   }
   if ($severities) {
     // MongoDB is picky about types, ensure the severities are all integers.
-    $find['severity'] = array('$in' => array_map('intval', $severities));
+    $find['severity'] = array('$in' => array_values(array_map('intval', $severities)));
   }
   return $find;
 }
