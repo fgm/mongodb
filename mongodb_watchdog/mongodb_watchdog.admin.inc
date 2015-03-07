@@ -490,10 +490,7 @@ function mongodb_watchdog_page_top($type) {
   $event_collection = mongodb_collection('watchdog_event_' . $key);
   $reduce = <<<EOT
 function (doc, accumulator) {
-  var param = doc.variables['@param'];
-  accumulator.count[param] = accumulator.count[param]
-    ? accumulator.count[param] + 1
-    : 1 ;
+  accumulator.count++;
 }
 EOT;
 
@@ -518,8 +515,8 @@ EOT;
   $rows = array();
   foreach ($counts as $count) {
     $rows[] = array(
-      reset($count['count']),
-      key($count['count']),
+      $count['variables.@param'],
+      $count['count'],
     );
   }
 
@@ -540,7 +537,7 @@ EOT;
  * @return boolean
  */
 function _mongodb_watchdog_sort_top($x, $y) {
-  $cx = reset($x['count']);
-  $cy = reset($y['count']);
+  $cx = $x['count'];
+  $cy = $y['count'];
   return $cy - $cx;
 }
