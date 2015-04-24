@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * @file
+ * MongoDB session install file.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function mongodb_session_install() {
+  mongodb_session_ensure_indexes();
+}
+
+/**
+ * Implements hook_enable().
+ */
+function mongodb_session_enable() {
+  mongodb_session_ensure_indexes();
+}
+
+/**
+ * Create an index for the session collection.
+ */
+function mongodb_session_ensure_indexes() {
+  $collection =   mongodb_collection(variable_get('mongodb_session', 'session'));
+
+  $index = array(
+    'sid' => 1,
+  );
+  $collection->ensureIndex($index);
+
+  $index = array(
+    'ssid' => 1,
+  );
+  $collection->ensureIndex($index);
+
+  $index = array(
+    'uid' => 1,
+  );
+  $collection->ensureIndex($index);
+
+  $index = array(
+    'timestamp' => -1
+  );
+  $collection->ensureIndex($index);
+}
+
+/**
+ * Build indexes on session table.
+ */
+function mongodb_session_update_7000() {
+  if (variable_get('mongodb_indexes_auto_build', TRUE)) {
+    mongodb_session_ensure_indexes();
+  }
+}
