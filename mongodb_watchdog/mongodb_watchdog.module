@@ -30,7 +30,7 @@ function mongodb_watchdog_menu() {
     'file' => 'mongodb_watchdog.admin.inc',
   );
   $items['admin/reports/mongodb/access-denied'] = array(
-    'title' => "Top 'access denied' errors'",
+    'title' => "Top 'access denied' errors in MongoDB",
     'type' => MENU_LOCAL_TASK,
     'description' => "View 'access denied' errors (403s).",
     'page callback' => 'mongodb_watchdog_page_top',
@@ -39,7 +39,7 @@ function mongodb_watchdog_menu() {
     'file' => 'mongodb_watchdog.admin.inc',
   );
   $items['admin/reports/mongodb/page-not-found'] = array(
-    'title' => "Top 'page not found' errors",
+    'title' => "Top 'page not found' errors in MongoDB",
     'type' => MENU_LOCAL_TASK,
     'description' => "View 'page not found' errors (404s).",
     'page callback' => 'mongodb_watchdog_page_top',
@@ -77,6 +77,8 @@ function mongodb_watchdog_watchdog(array $log_entry) {
     return;
   }
 
+  static $checked_ids = array();
+
   // Find the function that generated this error.
   $log_entry = (array) $log_entry;
   _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
@@ -98,7 +100,7 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   $event = array(
     'variables' => $log_entry['variables'],
     'timestamp' => $log_entry['timestamp'],
-    'user' => array('name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')), 'uid' => $account->uid),
+    'user' => array('name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')), 'uid' => $log_entry['user']->uid),
     'ip' => $log_entry['ip'],
     'request_uri' => $log_entry['request_uri'],
     'referer' => $log_entry['referer'],
@@ -112,15 +114,18 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   );
   $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
   $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
-  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE));
-  $result = $collection->db->command(array('getlasterror' => 1));
+  if (!isset($checked_ids[$id])) {
+    $checked_ids[$id] = $collection->findOne(array('_id' => $id), array('_id' => 1));
+  }
+  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE) + mongodb_default_write_options(FALSE));
   $collection = $collection->db->selectCollection('watchdog_event_' . $id);
-  if (empty($result['updatedExisting'])) {
+  if (empty($checked_ids[$id])) {
     $max = variable_get('mongodb_watchdog_items', 10000);
     $command = array('create' => $collection->getName(), 'capped' => TRUE, 'size' => $max * 1000, "max" => $max);
     $collection->db->command($command);
+    $checked_ids[$id] = TRUE;
   }
-  $collection->insert($event);
+  $collection->insert($event, mongodb_default_write_options(FALSE));
 }
 
 /**

@@ -1,5 +1,12 @@
 <?php
+/**
+ * @file
+ * Test class for MongoDB_watchdog.
+ */
 
+/**
+ * Test the behaviour of watchdog() mongodb_watchdog, not dblog
+ */
 class MongoDBLogTestCase extends DrupalWebTestCase {
   /**
    * Name of the test helper module invoking watchdog for test.
@@ -19,7 +26,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
    *
    * @var string
    */
-  protected $profile = 'testing';
+  protected $profile = 'default';
 
   /**
    * An administrator-type user account
@@ -55,7 +62,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'MongoDB log functionality',
-      'description' => 'Generate events and verify dblog entries; verify user access to log reports based on permissions.',
+      'description' => 'Generate events and verify watchdog entries; verify user access to log reports based on permissions.',
       'group' => 'MongoDB',
     );
   }

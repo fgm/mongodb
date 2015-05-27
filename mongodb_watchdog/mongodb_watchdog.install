@@ -5,6 +5,8 @@
  * MongoDB watchdog install file.
  */
 
+require_once dirname(__FILE__) . '/../mongodb.module';
+
 /**
  * Implements hook_install().
  */
