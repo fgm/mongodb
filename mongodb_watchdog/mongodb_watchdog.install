@@ -22,6 +22,39 @@ function mongodb_watchdog_enable() {
 }
 
 /**
+ * Implements hook_uninstall().
+ *
+ * Drop /all/ the watchdog collections.
+ */
+function mongodb_watchdog_uninstall() {
+  // Drop the base watchdog collection
+  $watchdog_name = variable_get('mongodb_watchdog', 'watchdog');
+  $watchdog = mongodb_collection($watchdog_name);
+  $watchdog->drop();
+
+  // Then drop all watchdog event collections in all known database aliases.
+  $aliases = variable_get('mongodb_connections', array());
+  $aliases['default'] = TRUE;
+  $count = 0;
+  $regex = '/\.watchdog_event_[[:xdigit:]]{32}$/';
+  foreach (array_keys($aliases) as $alias) {
+    $db = mongodb($alias);
+    foreach ($db->listCollections() as $collection) {
+      if (preg_match($regex, $collection)) {
+        $collection->drop();
+        $count++;
+      }
+    }
+  }
+  if ($count) {
+    drupal_set_message(format_plural($count, 'Dropped 1 watchdog collection', 'Dropped @count watchdog collections'));
+  }
+
+  variable_del('mongodb_watchdog');
+  variable_del('mongodb_watchdog_items');
+}
+
+/**
  * Create an index for the watchdog table.
  *
  * This index is on <line, timestamp> instead of <function, line, timestamp>,
@@ -65,4 +98,16 @@ function mongodb_watchdog_ensure_indexes() {
     'timestamp' => -1
   );
   $collection->ensureIndex($index);
+}
+
+/**
+ * Changes a variable name that defines a collection to store events.
+ */
+function mongodb_watchdog_update_6000() {
+  $collection_name = variable_get('mongodb_collectionname', 'watchdog');
+  if ($collection_name !== 'watchdog') {
+    variable_set('mongodb_watchdog', $collection_name);
+  }
+  variable_del('mongodb_collectionname');
+  variable_del('mongodb_watchdog_collectionname');
 }

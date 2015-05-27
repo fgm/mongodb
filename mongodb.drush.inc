@@ -73,19 +73,16 @@ function mongodb_drush_help($section) {
   switch ($section) {
     case 'drush:mongodb-conf':
       return dt('Show database connection details.');
-
     case 'drush:mongodb-connect':
       return dt('A string which connects to the current database.');
-
     case 'drush:mongodb-cli':
       return dt('Quickly enter the mongodb shell.');
-
     // TODO
     case 'drush:mongodb-dump':
       return dt('Prints the whole database to STDOUT or save to a file.');
-
     case 'drush:mongodb-query':
       return dt("Usage: drush [options] mongodb-query <query>...\n<query> is a single js command. It does not print the result by default, see the example");
+
   }
 }
 
@@ -131,7 +128,7 @@ function _drush_mongodb_connect($alias) {
   $query = $host;
   $query .= '/' . $db;
 
-  $command = 'mongo '. $query;
+  $command = 'mongo ' . $query;
   return $command;
 }
 

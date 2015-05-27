@@ -35,7 +35,7 @@ function mongodb_watchdog_overview() {
     WATCHDOG_ERROR    => 'mongodb_watchdog-error',
     WATCHDOG_CRITICAL => 'mongodb_watchdog-critical',
     WATCHDOG_ALERT    => 'mongodb_watchdog-alert',
-    WATCHDOG_EMERG    => 'mongodb_watchdog-emerg',
+    WATCHDOG_EMERG    => 'mongodb_watchdog-emergency',
   );
 
   global $pager_page_array, $pager_total, $pager_total_items, $pager_limits;
@@ -50,7 +50,7 @@ function mongodb_watchdog_overview() {
     ->skip($on_page * $per_page)
     ->sort(array('timestamp' => -1));
 
-  $build['mongodb_watchdog_filter_form'] = mongodb_watchdog_filter_form() ;
+  $build['mongodb_watchdog_filter_form'] = mongodb_watchdog_filter_form();
   $build['mongodb_watchdog_clear_log_form'] = mongodb_watchdog_clear_log_form();
 
   $header = array(
@@ -114,9 +114,6 @@ function mongodb_watchdog_overview() {
  */
 function mongodb_watchdog_event($dblog) {
   $severity = watchdog_severity_levels();
-
-  $output = '';
-
   $rows = array(
     array(
       array('data' => t('Type'), 'header' => TRUE),
@@ -144,7 +141,7 @@ function mongodb_watchdog_event($dblog) {
     ),
   );
 
-  $output .= theme('table', NULL, $rows, array('class' => 'dblog-event'));
+  $build = theme('table', NULL, $rows, array('class' => 'dblog-event'));
 
   // @todo: the count is unreliable, so just get the actual number of entries.
 //$total = min($dblog['count'], variable_get('mongodb_watchdog_items', 10000));
@@ -188,8 +185,10 @@ function mongodb_watchdog_event($dblog) {
       $dblog['variables'] = $event['variables'];
     }
     $rows[] = array(
+      // Build the user account page link, instead of theme('username'),
+      // theme('username') do not retrieve links to disabled accounts page.
       format_date($event['timestamp'], 'small'),
-      theme('username', (object) $account),
+      l($account['name'], 'user/' . $account['uid']),
       $request_uri ? l(truncate_utf8(basename(($request_uri)), 20), $request_uri) : '',
       $referer ? l(truncate_utf8(basename(($referer)), 20), $referer) : '',
       check_plain($ip),
@@ -197,11 +196,11 @@ function mongodb_watchdog_event($dblog) {
       $link,
     );
   }
-  $output .= theme('table', $header, $rows);
+  $build .= theme('table', $header, $rows);
   if ($total > $limit) {
-    $output .= theme('pager');
+    $build .= theme('pager');
   }
-  return $output;
+  return $build;
 }
 
 /**
@@ -286,7 +285,7 @@ function mongodb_watchdog_filter_form($form_state = array()) {
 
   foreach ($filters as $key => $filter) {
     $form['filters']['status'][$key] = array(
-      '#title' => $filter['title'],
+      '#title' => check_plain($filter['title']),
       '#type' => 'select',
       '#multiple' => TRUE,
       '#size' => 8,
@@ -418,6 +417,8 @@ function mongodb_watchdog_clear_log_submit() {
 /**
  * Build a MongoDB query based on the selected filters.
  *
+ * Refer to the @link https://jira.mongodb.org/browse/PHP-1051 Mongo Issue regarding the $in value @endlink
+ * Refer to the @link https://jira.mongodb.org/browse/PHP-104 Mongo Issue regarding numeric keys on objects @endlink
  * @return array
  *   An array to build a MongoDB query.
  */
@@ -433,11 +434,11 @@ function mongodb_watchdog_build_filter_query() {
 
   $find = array();
   if ($types) {
-    $find['type'] = array('$in' => $types);
+    $find['type'] = array('$in' => array_values($types));
   }
   if ($severities) {
     // MongoDB is picky about types, ensure the severities are all integers.
-    $find['severity'] = array('$in' => array_map('intval', $severities));
+    $find['severity'] = array('$in' => array_values(array_map('intval', $severities)));
   }
   return $find;
 }
@@ -463,22 +464,23 @@ function mongodb_watchdog_page_top($type) {
     'access denied',
   );
   if (!in_array($type, $types)) {
-    $message = t('Unknown top report type: %type', $type_param);
-    drupal_set_message($message, 'error');
-    watchdog('mongodb_watchdog', 'Unknown top report type: %type', $type_param, WATCHDOG_ERROR);
-    $ret = $message;
+    drupal_set_message(t('Unknown top report type: %type', $type_param), 'error');
+    watchdog('mongodb_watchdog', 'Unknown top report type: %type', $type_param, WATCHDOG_WARNING);
+    $ret = '';
     return $ret;
   }
 
   // Find _id for the error type.
   $watchdog = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
   $template = $watchdog->findOne(array('type' => $type), array('_id'));
+
   // findOne() will return NULL if no row is found
   if (empty($template)) {
     $ret['empty'] = array(
       '#value' => t('No "%type" message found', $type_param),
     ) + $message_wrapper;
-    return drupal_render($ret);
+    $ret = drupal_render($ret);
+    return $ret;
   }
 
   // Find occurrences of error type.
@@ -496,11 +498,8 @@ EOT;
     $reduce
   );
   if (!$counts['ok']) {
-    $message = t('No "%type" occurrence found', $type_param);
-    $ret = array(
-      '#value' => $message,
-    ) + $message_wrapper;
-    $ret = drupal_render($ret);
+    drupal_set_message(t('No "%type" occurrence found', $type_param), 'error');
+    $ret = '';
     return $ret;
   }
   $counts = $counts['retval'];

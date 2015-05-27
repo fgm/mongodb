@@ -4,6 +4,8 @@
  * Fires watchdog messages to mongodb.
  */
 
+include_once dirname(__FILE__) . '/../mongodb.module';
+
 /**
  * Implement hook_menu().
  */
@@ -16,8 +18,7 @@ function mongodb_watchdog_menu() {
     'access arguments' => array('access site reports'),
     'file'  => 'mongodb_watchdog.admin.inc',
   );
-
-  $items['admin/reports/mongodb/overview'] = array(
+  $items['admin/reports/mongodb/list'] = array(
     'title' => 'Overview',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
@@ -117,7 +118,7 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   if (!isset($checked_ids[$id])) {
     $checked_ids[$id] = $collection->findOne(array('_id' => $id), array('_id' => 1));
   }
-  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE) + mongodb_default_write_options(FALSE));
+  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE) + mongodb_default_write_options(TRUE));
   $collection = $collection->db->selectCollection('watchdog_event_' . $id);
   if (empty($checked_ids[$id])) {
     $max = variable_get('mongodb_watchdog_items', 10000);
