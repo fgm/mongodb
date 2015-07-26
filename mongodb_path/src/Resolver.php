@@ -5,10 +5,13 @@
  * Contains MongoDB_Path_Resolver.
  */
 
+namespace Drupal\mongodb_path;
+
+
 /**
  * Class MongoDB_Path_Resolver.
  */
-class MongoDbPathResolver implements MongoDbPathResolverInterface {
+class Resolver implements ResolverInterface {
 
   protected $flush = 0;
 
@@ -32,7 +35,7 @@ class MongoDbPathResolver implements MongoDbPathResolverInterface {
    * @param int $request_time
    *   Request timestamp.
    * @param int $initial_flush
-   *   The initial value of \MongoDbResolverInterface::FLUSH_VAR.
+   *   The initial value of ResolverInterface::FLUSH_VAR.
    * @param \MongoDB $mongo
    *   Database used to store aliases.
    */
@@ -125,7 +128,7 @@ class MongoDbPathResolver implements MongoDbPathResolverInterface {
       }
     }
     // If the alias has already been loaded, return it.
-    //function_exists('dpm') ? dpm($cache['map']['en']) : print_r($cache['map']);
+    // function_exists('dpm') ? dpm($cache['map']['en']) : print_r($cache['map']);
     if (isset($cache['map'][$path_language][$path])) {
       return $cache['map'][$path_language][$path];
     }
@@ -163,7 +166,7 @@ class MongoDbPathResolver implements MongoDbPathResolverInterface {
    */
   public function lookupPathSource(array &$cache, $path, $path_language) {
     // Look for the value $path within the cached $map.
-    $source = false;
+    $source = FALSE;
     if (!isset($cache['map'][$path_language]) || !($source = array_search($path,
         $cache['map'][$path_language]))
     ) {
@@ -193,7 +196,7 @@ class MongoDbPathResolver implements MongoDbPathResolverInterface {
         // We can't record anything into $map because we do not have a valid
         // index and there is no need because we have not learned anything
         // about any Drupal path. Thus cache to $no_source.
-        $cache['no_source'][$path_language][$path] = true;
+        $cache['no_source'][$path_language][$path] = TRUE;
       }
     }
 

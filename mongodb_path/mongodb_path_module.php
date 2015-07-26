@@ -21,7 +21,9 @@ function mongodb_path_exit() {
   }
 
   global $_mongodb_path_tracer;
-  // dpm($_mongodb_path_tracer, $q);
+  if (!empty($_mongodb_path_tracer['enabled']) && function_exists('dpm')) {
+    dpm($_mongodb_path_tracer, $q);
+  }
 }
 
 /**

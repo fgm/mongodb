@@ -1,0 +1,9 @@
+<?php
+
+/**
+ * @file
+ * MongoDB Path module stub, for Drupal 7 compatibility.
+ */
+
+// Scrutinizer only works on .php files.
+require_once __DIR__ . '/mongodb_path_module.php';

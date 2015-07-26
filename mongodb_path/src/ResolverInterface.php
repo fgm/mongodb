@@ -3,15 +3,15 @@
 /**
  * @file
  * Contains MongoDB_Path_ResolverInterface.
- *
- * Since the core Drupal 7 autoloader does not support namespaces, this uses
- * PEAR-style namespacing.
  */
+
+namespace Drupal\mongodb_path;
+
 
 /**
  * Interface for MongoDB path resolver implementations.
  */
-interface MongoDbPathResolverInterface {
+interface ResolverInterface {
   const FLUSH_VAR = 'mongodb_path_flush';
 
   /**
@@ -35,6 +35,7 @@ interface MongoDbPathResolverInterface {
    * Return the current flush timestamp.
    *
    * @return int
+   *   The timestamp of the latest flush, or 0 if flush is not required.
    */
   public function getFlushTimestamp();
 
@@ -50,7 +51,7 @@ interface MongoDbPathResolverInterface {
    *   The internal path represented by the alias, or the original alias if no
    *   internal path was found.
    */
-  public function getNormalPath($path, $language);
+  public function getNormalPath($path, $language = NULL);
 
   /**
    * Given an internal Drupal path, return the alias set by the administrator.
@@ -85,6 +86,8 @@ interface MongoDbPathResolverInterface {
   public function lookupPathAlias(array &$cache, $path, $path_language);
 
   /**
+   * Lookup source for a path which may be an alias.
+   *
    * @param array[string]mixed $cache
    *   Cache can be modified to reflect into the caller.
    * @param string $path

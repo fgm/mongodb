@@ -5,12 +5,13 @@
  * A Drupal 7 path plugin to declare in $conf['path_inc'].
  */
 
-use Pheanstalk\Response;
-
-// Core autoloader is not available to path plugins during site install.
+// Core autoloader is not available to path plugins during site install, and
+// doesn't support namespace anyway.
 require_once __DIR__ . '/src/ResolverInterface.php';
 require_once __DIR__ . '/src/ResolverFactory.php';
 require_once __DIR__ . '/src/Resolver.php';
+
+use Drupal\mongodb_path\ResolverFactory;
 
 /**
  * @file
@@ -22,20 +23,19 @@ require_once __DIR__ . '/src/Resolver.php';
  */
 
 /**
- * Enable trace aggregation in mongodb_path_trace().
- *
- * @var bool
- */
-global $_mongodb_path_tracer_aggregation;
-
-/**
  * Data holder for the plugin trace.
  *
- * @var array
+ * @var mixed[]
+ *   - data: the trace data
+ *   - aggregation: is trace aggregation enabled ?
  */
 global $_mongodb_path_tracer;
 
-$_mongodb_path_tracer_aggregation = FALSE;
+$_mongodb_path_tracer = [
+  'data' => [],
+  'aggregation' => FALSE,
+  'enabled' => TRUE,
+];
 
 /**
  * Gets Resolver instance.
@@ -44,7 +44,7 @@ $_mongodb_path_tracer_aggregation = FALSE;
  * during _drupal_bootstrap_variables(), while the path plugin is loaded later,
  * during _drupal_bootstrap_full().
  *
- * @return \MongoDbPathResolver
+ * @return \Drupal\mongodb_path\ResolverInterface
  *   The active Resolver instance.
  *
  * @see _drupal_bootstrap_variables()
@@ -63,7 +63,7 @@ function mongodb_path_resolver() {
   if (!isset($resolver)) {
     // $stack = debug_backtrace();
     // echo "<p>Resolver built for " . $stack[1]['function'] . "</p>\n";
-    $resolver = MongoDbPathResolverFactory::create();
+    $resolver = ResolverFactory::create();
   }
 
   return $resolver;
@@ -72,11 +72,9 @@ function mongodb_path_resolver() {
 /**
  * Debugging helper: trace calls to path plugin functions.
  *
- * @global $_mongodb_path_tracer_aggregation;
  * @global $mongodb_path_tracer
  */
 function mongodb_path_trace() {
-  global $_mongodb_path_tracer_aggregation;
   global $_mongodb_path_tracer;
 
   $stack = debug_backtrace(FALSE);
@@ -87,11 +85,11 @@ function mongodb_path_trace() {
     $args[] = var_export($arg, TRUE);
   }
   $s_args = implode('", "', $args);
-  if ($_mongodb_path_tracer_aggregation) {
-    $_mongodb_path_tracer[$function][] = $s_args;
+  if ($_mongodb_path_tracer['aggregation']) {
+    $_mongodb_path_tracer['data'][$function][] = $s_args;
   }
   else {
-    $_mongodb_path_tracer[] = "$function($s_args)";
+    $_mongodb_path_tracer['data'][] = "$function($s_args)";
   }
 }
 
@@ -229,7 +227,7 @@ function drupal_cache_system_paths() {
  * If no path is provided, the function will return the alias of the current
  * page.
  *
- * @param string $path
+ * @param string|null $path
  *   An internal Drupal path.
  * @param string|null $path_language
  *   An optional language code to look up the path in.
@@ -241,7 +239,7 @@ function drupal_cache_system_paths() {
 function drupal_get_path_alias($path = NULL, $path_language = NULL) {
   mongodb_path_trace();
   // If no path is specified, use the current page's path.
-  if ($path == NULL) {
+  if (empty($path)) {
     $path = $_GET['q'];
   }
   $result = $path;
@@ -266,8 +264,10 @@ function drupal_get_path_alias($path = NULL, $path_language = NULL) {
 function drupal_get_normal_path($path, $path_language = NULL) {
   mongodb_path_trace();
   $original_path = $path;
+
   // Lookup the path alias first.
-  if ($source = drupal_lookup_path('source', $path, $path_language)) {
+  $source = drupal_lookup_path('source', $path, $path_language);
+  if (is_string($source)) {
     $path = $source;
   }
 
@@ -275,6 +275,7 @@ function drupal_get_normal_path($path, $path_language = NULL) {
   // here because we need to run hook_url_inbound_alter() in the reverse order
   // of hook_url_outbound_alter().
   foreach (array_reverse(module_implements('url_inbound_alter')) as $module) {
+    /** @var callable $function */
     $function = $module . '_url_inbound_alter';
     $function($path, $original_path, $path_language);
   }
@@ -298,8 +299,8 @@ function drupal_is_front_page() {
   $is_front_page = &$drupal_static_fast['is_front_page'];
 
   if (!isset($is_front_page)) {
-    // As drupal_path_initialize updates $_GET['q'] with the 'site_frontpage'
-    // path, we can check it against the 'site_frontpage' variable.
+    // Since drupal_path_initialize() updates $_GET['q'] with the contents of
+    // the 'site_frontpage' path, we can check it against that variable.
     $is_front_page = ($_GET['q'] == variable_get('site_frontpage', 'node'));
   }
 
@@ -441,7 +442,7 @@ function path_load($conditions) {
 /**
  * Save a path alias to the database.
  *
- * @param array[string]mixed $path
+ * @param mixed[] $path
  *   An associative array containing the following keys:
  *   - source: The internal system path.
  *   - alias: The URL alias.
