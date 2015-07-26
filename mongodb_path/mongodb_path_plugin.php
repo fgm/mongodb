@@ -3,6 +3,12 @@
 /**
  * @file
  * A Drupal 7 path plugin to declare in $conf['path_inc'].
+ *
+ * TODO Check core assumptions below:
+ *
+ * These functions are not loaded for cached pages, but modules that need
+ * to use them in hook_boot() or hook exit() can make them available, by
+ * executing "drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);".
  */
 
 // Core autoloader is not available to path plugins during site install, and
@@ -34,7 +40,7 @@ global $_mongodb_path_tracer;
 $_mongodb_path_tracer = [
   'data' => [],
   'aggregation' => FALSE,
-  'enabled' => TRUE,
+  'enabled' => FALSE,
 ];
 
 /**
@@ -44,7 +50,7 @@ $_mongodb_path_tracer = [
  * during _drupal_bootstrap_variables(), while the path plugin is loaded later,
  * during _drupal_bootstrap_full().
  *
- * @return \Drupal\mongodb_path\ResolverInterface
+ * @return \Drupal\mongodb_path\Resolver
  *   The active Resolver instance.
  *
  * @see _drupal_bootstrap_variables()
@@ -135,35 +141,16 @@ function drupal_path_initialize() {
  * @return string|bool
  *   Either a Drupal system path, an aliased path, or FALSE if no path was
  *   found.
+ *
+ * @global $language_url
  */
 function drupal_lookup_path($action, $path = '', $path_language = NULL) {
   mongodb_path_trace();
   global $language_url;
-  // Use the advanced drupal_static() pattern, since this is called very often.
-  static $drupal_static_fast;
-  if (!isset($drupal_static_fast)) {
-    $drupal_static_fast['cache'] = &drupal_static(__FUNCTION__);
-  }
-  $cache = &$drupal_static_fast['cache'];
 
-  if (!isset($cache)) {
-    $cache = array(
-      'map' => array(),
-      'no_source' => array(),
-      'whitelist' => NULL,
-      'system_paths' => array(),
-      'no_aliases' => array(),
-      'first_call' => TRUE,
-    );
-  }
+  $resolver = mongodb_path_resolver();
 
-  // Retrieve the path alias whitelist.
-  if (!isset($cache['whitelist'])) {
-    $cache['whitelist'] = variable_get('path_alias_whitelist', NULL);
-    if (!isset($cache['whitelist'])) {
-      $cache['whitelist'] = drupal_path_alias_whitelist_rebuild();
-    }
-  }
+  $resolver->ensureWhitelist();
 
   // If no language is explicitly specified we default to the current URL
   // language. If we used a language different from the one conveyed by the
@@ -171,21 +158,17 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
   // alias matching the URL path.
   $path_language = $path_language ? $path_language : $language_url->language;
 
-  $resolver = mongodb_path_resolver();
-
   $ret = FALSE;
 
   if ($action == 'wipe') {
-    $resolver->lookupPathWipe($cache);
+    $resolver->lookupPathWipe();
   }
-  elseif ($cache['whitelist'] && $path != '') {
+  elseif (!$resolver->isWhitelistEmpty() && $path != '') {
     if ($action == 'alias') {
-      $ret = $resolver->lookupPathAlias($cache, $path, $path_language);
+      $ret = $resolver->lookupPathAlias($path, $path_language);
     }
-    // Check $no_source for this $path in case we've already determined that
-    // there isn't a path that has this alias.
-    elseif ($action == 'source' && !isset($cache['no_source'][$path_language][$path])) {
-      $ret = $resolver->lookupPathSource($cache, $path, $path_language);
+    elseif ($action == 'source' && $resolver->mayHaveSource($path, $path_language)) {
+      $ret = $resolver->lookupPathSource($path, $path_language);
     }
   }
 
@@ -204,19 +187,14 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
  */
 function drupal_cache_system_paths() {
   mongodb_path_trace();
-  // Check if the system paths for this page were loaded from cache in this
-  // request to avoid writing to cache on every request.
-  $cache = &drupal_static('drupal_lookup_path', array());
-  if (empty($cache['system_paths']) && !empty($cache['map'])) {
-    // Generate a cache ID (cid) specifically for this page.
+
+  // Only cache the system paths for this page is they were not loaded from
+  // cache in this request, to avoid writing to cache on every request.
+  $paths = mongodb_path_resolver()->getRefreshedCachedPaths();
+  if (!empty($paths)) {
     $cid = current_path();
-    // The static $map array used by drupal_lookup_path() includes all
-    // system paths for the page request.
-    if ($paths = current($cache['map'])) {
-      $data = array_keys($paths);
-      $expire = REQUEST_TIME + (60 * 60 * 24);
-      cache_set($cid, $data, 'cache_path', $expire);
-    }
+    $expire = REQUEST_TIME + (60 * 60 * 24);
+    cache_set($cid, $paths, 'cache_path', $expire);
   }
 }
 
@@ -290,6 +268,7 @@ function drupal_get_normal_path($path, $path_language = NULL) {
  */
 function drupal_is_front_page() {
   mongodb_path_trace();
+
   // Use the advanced drupal_static() pattern, since this is called very often.
   static $drupal_static_fast;
   if (!isset($drupal_static_fast)) {
@@ -325,12 +304,14 @@ function drupal_match_path($path, $patterns) {
     // Convert path settings to a regular expression. Therefore replace newlines
     // with a logical or, /* with asterisks and the <front> with the frontpage.
     $to_replace = array(
+      // Newlines.
       '/(\r\n?|\n)/',
-    // Newlines.
+
+      // Asterisks.
       '/\\\\\*/',
-    // Asterisks.
+
+      // <front>
       '/(^|\|)\\\\<front\\\\>($|\|)/',
-    // <front>
     );
     $replacements = array(
       '|',
@@ -372,7 +353,7 @@ function current_path() {
 /**
  * Rebuild the path alias white list.
  *
- * @param string|void $source
+ * @param string|NULL $source
  *   An optional system path for which an alias is being inserted.
  *
  * @return string[]
@@ -385,21 +366,21 @@ function drupal_path_alias_whitelist_rebuild($source = NULL) {
   // When paths are inserted, only rebuild the white_list if the system path
   // has a top level component which is not already in the white_list.
   if (!empty($source)) {
-    $white_list = variable_get('path_alias_whitelist', NULL);
-    if (isset($white_list[strtok($source, '/')])) {
-      return $white_list;
+    $whitelist = variable_get('path_alias_whitelist', []);
+    if (isset($whitelist[strtok($source, '/')])) {
+      return $whitelist;
     }
   }
   // For each alias in the database, get the top level component of the system
   // path it corresponds to. This is the portion of the path before the first
   // '/', if present, otherwise the whole path itself.
-  $white_list = array();
+  $whitelist = [];
   $result = db_query("SELECT DISTINCT SUBSTRING_INDEX(source, '/', 1) AS path FROM {url_alias}");
   foreach ($result as $row) {
-    $white_list[$row->path] = TRUE;
+    $whitelist[$row->path] = TRUE;
   }
-  variable_set('path_alias_whitelist', $white_list);
-  return $white_list;
+  variable_set('path_alias_whitelist', $whitelist);
+  return $whitelist;
 }
 
 /**
@@ -419,6 +400,7 @@ function drupal_path_alias_whitelist_rebuild($source = NULL) {
  */
 function path_load($conditions) {
   mongodb_path_trace();
+
   if (is_numeric($conditions)) {
     $conditions = array('pid' => $conditions);
   }
@@ -514,6 +496,7 @@ function path_delete($criteria) {
  */
 function path_is_admin($path) {
   mongodb_path_trace();
+
   $path_map = &drupal_static(__FUNCTION__);
   if (!isset($path_map['admin'][$path])) {
     $patterns = path_get_admin_paths();
@@ -540,6 +523,7 @@ function path_is_admin($path) {
  */
 function path_get_admin_paths() {
   mongodb_path_trace();
+
   $patterns = &drupal_static(__FUNCTION__);
   if (!isset($patterns)) {
     $paths = module_invoke_all('admin_paths');
@@ -578,6 +562,7 @@ function path_get_admin_paths() {
  */
 function drupal_valid_path($path, $dynamic_allowed = FALSE) {
   mongodb_path_trace();
+
   global $menu_admin;
   // We indicate that a menu administrator is running the menu access check.
   $menu_admin = TRUE;
@@ -613,7 +598,7 @@ function drupal_valid_path($path, $dynamic_allowed = FALSE) {
  */
 function drupal_clear_path_cache($source = NULL) {
   mongodb_path_trace();
-  // Clear the drupal_lookup_path() static cache.
-  drupal_static_reset('drupal_lookup_path');
+
+  mongodb_path_resolver()->cacheInit();
   drupal_path_alias_whitelist_rebuild($source);
 }

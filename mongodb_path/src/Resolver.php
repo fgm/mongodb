@@ -13,6 +13,20 @@ namespace Drupal\mongodb_path;
  */
 class Resolver implements ResolverInterface {
 
+  /**
+   * An in-memory path cache.
+   *
+   * It includes all system paths for the page request.
+   *
+   * @var array
+   */
+  protected $cache;
+
+  /**
+   * The timestamp of the latest flush, or 0 if disabled.
+   *
+   * @var int
+   */
   protected $flush = 0;
 
   /**
@@ -41,7 +55,52 @@ class Resolver implements ResolverInterface {
    */
   public function __construct($request_time, $initial_flush, \MongoDB $mongo) {
     $this->requestTime = $request_time;
+    $this->flush = $initial_flush;
     $this->mongo = $mongo;
+
+    $this->cacheInit();
+  }
+
+  /**
+   * Initialize the cache.
+   */
+  public function cacheInit() {
+    $this->cache = [
+      'first_call' => TRUE,
+      'map' => [],
+      'no_aliases' => [],
+      'no_source' => [],
+      'system_paths' => [],
+      'whitelist' => [],
+    ];
+  }
+
+  /**
+   * Debugging helper: dump the memory cache map using available method.
+   */
+  protected function dumpCacheMap() {
+    if (function_exists('dpm')) {
+      dpm($this->cache['map']['en']);
+    }
+    else {
+      echo check_plain(print_r($this->cache['map'], TRUE));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function ensureWhitelist() {
+    // It is initialized and reset by its cacheInit() method.
+    assert('isset($this->cache["whitelist"])');
+
+    // Retrieve the path alias whitelist.
+    if (empty($this->cache['whitelist'])) {
+      $this->cache['whitelist'] = variable_get('path_alias_whitelist', []);
+      if (empty($this->cache['whitelist'])) {
+        $this->cache['whitelist'] = drupal_path_alias_whitelist_rebuild();
+      }
+    }
   }
 
   /**
@@ -73,34 +132,57 @@ class Resolver implements ResolverInterface {
   }
 
   /**
-   * Must the module trigger a flush on hook_flush_caches() ?
-   *
-   * @return bool
-   *   True is module must request a flush, False, otherwise.
+   * {@inheritdoc}
    */
-  public function isFlushRequired() {
-    $ret = !!$this->flush;
+  public function getRefreshedCachedPaths() {
+    if (empty($this->cache['system_paths']) && !empty($this->cache['map'])) {
+      $ret = array_keys(current($this->cache['map']));
+    }
+    else {
+      $ret = [];
+    }
 
     return $ret;
   }
 
   /**
+   * Must the module trigger a flush on hook_flush_caches() ?
+   *
+   * @return bool
+   *   True if module must request a flush, False, otherwise.
+   */
+  public function isFlushRequired() {
+    return !!$this->flush;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function lookupPathAlias(array &$cache, $path, $path_language) {
+  public function isWhitelistEmpty() {
+    return empty($this->cache['whitelist']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function lookupPathAlias($path, $path_language) {
+    mongodb_path_trace();
+    static $count = 0;
+    $count++;
+
     // During the first call to drupal_lookup_path() per language, load the
     // expected system paths for the page from cache.
-    if (!empty($cache['first_call'])) {
-      $cache['first_call'] = FALSE;
+    if (!empty($this->cache['first_call'])) {
+      $this->cache['first_call'] = FALSE;
 
-      $cache['map'][$path_language] = array();
+      $this->cache['map'][$path_language] = array();
       // Load system paths from cache.
       $cid = current_path();
       if ($cached = cache_get($cid, 'cache_path')) {
-        $cache['system_paths'] = $cached->data;
+        $this->cache['system_paths'] = $cached->data;
         // Now fetch the aliases corresponding to these system paths.
         $args = array(
-          ':system' => $cache['system_paths'],
+          ':system' => $this->cache['system_paths'],
           ':language' => $path_language,
           ':language_none' => LANGUAGE_NONE,
         );
@@ -122,24 +204,24 @@ class Resolver implements ResolverInterface {
         else {
           $result = db_query('SELECT source, alias FROM {url_alias} WHERE source IN (:system) AND language IN (:language, :language_none) ORDER BY language DESC, pid ASC', $args);
         }
-        $cache['map'][$path_language] = $result->fetchAllKeyed();
+        $this->cache['map'][$path_language] = $result->fetchAllKeyed();
         // Keep a record of paths with no alias to avoid querying twice.
-        $cache['no_aliases'][$path_language] = array_flip(array_diff_key($cache['system_paths'], array_keys($cache['map'][$path_language])));
+        $this->cache['no_aliases'][$path_language] = array_flip(array_diff_key($this->cache['system_paths'], array_keys($this->cache['map'][$path_language])));
       }
     }
+
     // If the alias has already been loaded, return it.
-    // function_exists('dpm') ? dpm($cache['map']['en']) : print_r($cache['map']);
-    if (isset($cache['map'][$path_language][$path])) {
-      return $cache['map'][$path_language][$path];
+    if (isset($this->cache['map'][$path_language][$path])) {
+      return $this->cache['map'][$path_language][$path];
     }
     // Check the path whitelist, if the top_level part before the first /
     // is not in the list, then there is no need to do anything further,
     // it is not in the database.
-    elseif (!isset($cache['whitelist'][strtok($path, '/')])) {
+    elseif (!isset($this->cache['whitelist'][strtok($path, '/')])) {
       return FALSE;
     }
     // For system paths which were not cached, query aliases individually.
-    elseif (!isset($cache['no_aliases'][$path_language][$path])) {
+    elseif (!isset($this->cache['no_aliases'][$path_language][$path])) {
       $args = array(
         ':source' => $path,
         ':language' => $path_language,
@@ -156,7 +238,7 @@ class Resolver implements ResolverInterface {
       else {
         $alias = db_query("SELECT alias FROM {url_alias} WHERE source = :source AND language IN (:language, :language_none) ORDER BY language ASC, pid DESC", $args)->fetchField();
       }
-      $cache['map'][$path_language][$path] = $alias;
+      $this->cache['map'][$path_language][$path] = $alias;
       return $alias;
     }
   }
@@ -164,11 +246,11 @@ class Resolver implements ResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function lookupPathSource(array &$cache, $path, $path_language) {
+  public function lookupPathSource($path, $path_language) {
     // Look for the value $path within the cached $map.
     $source = FALSE;
-    if (!isset($cache['map'][$path_language]) || !($source = array_search($path,
-        $cache['map'][$path_language]))
+    if (!isset($this->cache['map'][$path_language]) || !($source = array_search($path,
+        $this->cache['map'][$path_language]))
     ) {
       $args = array(
         ':alias' => $path,
@@ -190,13 +272,13 @@ class Resolver implements ResolverInterface {
           $args);
       }
       if ($source = $result->fetchField()) {
-        $cache['map'][$path_language][$source] = $path;
+        $this->cache['map'][$path_language][$source] = $path;
       }
       else {
         // We can't record anything into $map because we do not have a valid
         // index and there is no need because we have not learned anything
         // about any Drupal path. Thus cache to $no_source.
-        $cache['no_source'][$path_language][$path] = TRUE;
+        $this->cache['no_source'][$path_language][$path] = TRUE;
       }
     }
 
@@ -206,9 +288,16 @@ class Resolver implements ResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function lookupPathWipe(array &$cache) {
-    $cache = [];
-    $cache['map'] = drupal_path_alias_whitelist_rebuild();
+  public function lookupPathWipe() {
+    $this->cacheInit();
+    $this->cache['map'] = drupal_path_alias_whitelist_rebuild();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function mayHaveSource($path_language, $path) {
+    return !isset($this->cache['no_source'][$path_language][$path]);
   }
 
 }

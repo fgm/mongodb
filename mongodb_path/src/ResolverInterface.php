@@ -15,6 +15,13 @@ interface ResolverInterface {
   const FLUSH_VAR = 'mongodb_path_flush';
 
   /**
+   * Ensure the whitelist is initialized.
+   *
+   * Use the whitelist variable first, then rebuild if still empty.
+   */
+  public function ensureWhitelist();
+
+  /**
    * Flush the path cache.
    *
    * Used by system_cron() to flush the path cache.
@@ -30,6 +37,14 @@ interface ResolverInterface {
    *   True is module must request a flush, False, otherwise.
    */
   public function isFlushRequired();
+
+  /**
+   * Is there any entry in the whitelist ?
+   *
+   * @return bool
+   *   TRUE is there is at least one entry, FALSE otherwise.
+   */
+  public function iswhitelistEmpty();
 
   /**
    * Return the current flush timestamp.
@@ -59,7 +74,7 @@ interface ResolverInterface {
    * If no path is provided, the function will return the alias of the current
    * page.
    *
-   * @param string $path
+   * @param string|NULL $path
    *   An internal Drupal path.
    * @param string|null $path_language
    *   An optional language code to look up the path in.
@@ -71,10 +86,17 @@ interface ResolverInterface {
   public function getPathAlias($path = NULL, $path_language = NULL);
 
   /**
+   * Return the list of path cache entries if they were not loaded from cache.
+   *
+   * @return string[]
+   *   An array of the system paths on this page, if they were not all loaded
+   *   from the cache path.
+   */
+  public function getRefreshedCachedPaths();
+
+  /**
    * Lookup alias for a given path.
    *
-   * @param array[string]mixed $cache
-   *   Cache can be modified to reflect into the caller.
    * @param string $path
    *   The path for which to look up an alias.
    * @param string $path_language
@@ -83,13 +105,11 @@ interface ResolverInterface {
    * @return string|bool
    *   The looked up alias, or FALSE if none can be found.
    */
-  public function lookupPathAlias(array &$cache, $path, $path_language);
+  public function lookupPathAlias($path, $path_language);
 
   /**
    * Lookup source for a path which may be an alias.
    *
-   * @param array[string]mixed $cache
-   *   Cache can be modified to reflect into the caller.
    * @param string $path
    *   The alias for which to look up a source.
    * @param string $path_language
@@ -98,14 +118,29 @@ interface ResolverInterface {
    * @return string|bool
    *   The looked up source, or FALSE if none can be found.
    */
-  public function lookupPathSource(array &$cache, $path, $path_language);
+  public function lookupPathSource($path, $path_language);
 
   /**
    * Clear the static cache and the prefix white list.
-   *
-   * @param array $cache
-   *   The static cache to clear.
    */
-  public function lookupPathWipe(array &$cache);
+  public function lookupPathWipe();
+
+  /**
+   * Is there a possibility for this path to have a source for that language ?
+   *
+   * This can be used to perform a lookup only if it may possibly succeed: using
+   * the memory cache, we can have information about a path not having a source,
+   * in which case a query will not be necessary.
+   *
+   * @param string $path
+   *   The path to check for a source.
+   * @param string $path_language
+   *   The language for which this path might be an alias for a source.
+   *
+   * @return bool
+   *   TRUE if there is no "no_source" entry in the cache for the $path and
+   *   $path_language.
+   */
+  public function mayHaveSource($path, $path_language);
 
 }

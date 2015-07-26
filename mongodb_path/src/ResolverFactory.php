@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains the MongoDB Path Resolver Factory.
