@@ -206,9 +206,9 @@ class Resolver implements ResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function lookupPathWipe() {
-    $ret = drupal_path_alias_whitelist_rebuild();
-    return $ret;
+  public function lookupPathWipe(array &$cache) {
+    $cache = [];
+    $cache['map'] = drupal_path_alias_whitelist_rebuild();
   }
 
 }

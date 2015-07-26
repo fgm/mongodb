@@ -101,11 +101,11 @@ interface ResolverInterface {
   public function lookupPathSource(array &$cache, $path, $path_language);
 
   /**
-   * Clear the path cache and the prefix white list.
+   * Clear the static cache and the prefix white list.
    *
-   * @return string[]
-   *   The cleared prefix white list.
+   * @param array $cache
+   *   The static cache to clear.
    */
-  public function lookupPathWipe();
+  public function lookupPathWipe(array &$cache);
 
 }

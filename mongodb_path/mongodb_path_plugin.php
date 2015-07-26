@@ -146,8 +146,6 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
   }
   $cache = &$drupal_static_fast['cache'];
 
-  $resolver = mongodb_path_resolver();
-
   if (!isset($cache)) {
     $cache = array(
       'map' => array(),
@@ -173,24 +171,25 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
   // alias matching the URL path.
   $path_language = $path_language ? $path_language : $language_url->language;
 
+  $resolver = mongodb_path_resolver();
+
+  $ret = FALSE;
+
   if ($action == 'wipe') {
-    $cache = array();
-    $cache['whitelist'] = $resolver->lookupPathWipe();
+    $resolver->lookupPathWipe($cache);
   }
   elseif ($cache['whitelist'] && $path != '') {
     if ($action == 'alias') {
       $ret = $resolver->lookupPathAlias($cache, $path, $path_language);
-      return $ret;
     }
     // Check $no_source for this $path in case we've already determined that
     // there isn't a path that has this alias.
     elseif ($action == 'source' && !isset($cache['no_source'][$path_language][$path])) {
       $ret = $resolver->lookupPathSource($cache, $path, $path_language);
-      return $ret;
     }
   }
 
-  return FALSE;
+  return $ret;
 }
 
 /**
