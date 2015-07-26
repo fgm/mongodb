@@ -8,9 +8,9 @@
 use Pheanstalk\Response;
 
 // Core autoloader is not available to path plugins during site install.
-require_once __DIR__ . '/src/ResolverInterface.inc';
-require_once __DIR__ . '/src/ResolverFactory.inc';
-require_once __DIR__ . '/src/Resolver.inc';
+require_once __DIR__ . '/src/ResolverInterface.php';
+require_once __DIR__ . '/src/ResolverFactory.php';
+require_once __DIR__ . '/src/Resolver.php';
 
 /**
  * @file
