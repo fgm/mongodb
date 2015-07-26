@@ -1,0 +1,165 @@
+digraph calls {
+  label="Function/method calls and global references";
+  rankdir = LR;
+  graph [ color = "silver" ];
+  node [ shape = none ];
+
+  /* Hooks */
+  node [ fontcolor=orange ];
+
+  hook_admin_paths;
+  hook_admin_paths_alter;
+  hook_menu_get_item_alter;
+  hook_path_delete;
+  hook_path_insert;
+  hook_path_update;
+  hook_translated_menu_link_alter;
+  hook_url_inbound_alter;
+  hook_url_outbound_alter;
+
+  /* Core */
+  node [ fontcolor=blue ];
+
+  DBTNG;
+  q [ label="$_GET['q']" ];
+  "$GLOBALS['user']";
+
+  subgraph cluster_cache {
+    label = "Cache API";
+
+    cache_clear_all;
+    cache_get;
+    cache_set;
+  }
+
+  subgraph cluster_common {
+    label = "Common includes";
+
+    drupal_strip_dangerous_protocols;
+    url;
+    url_is_external;
+  }
+
+  subgraph cluster_menu {
+    label = "Menu includes";
+
+    _menu_check_access;
+    _menu_check_rebuild;
+    _menu_item_localize;
+    _menu_link_translate;
+    _menu_link_map_translate;
+    _menu_load_objects;
+    _menu_translate;
+    menu_get_ancestors;
+    menu_get_item;
+    menu_rebuild;
+    menu_unserialize;
+  }
+
+  subgraph cluster_user {
+    label = "User module";
+
+    user_access;
+    user_role_permissions;
+  }
+
+  subgraph cluster_variable {
+    label = "Variables";
+
+    variable_get;
+    variable_set;
+  }
+
+  /* Plugin */
+  node  [ fontcolor=black ];
+
+  mongodb_path_resolver -> "Resolver::create";
+
+  current_path -> q;
+
+  drupal_cache_system_paths -> cache_set;
+  drupal_cache_system_paths -> current_path;
+
+  drupal_clear_path_cache -> drupal_path_alias_whitelist_rebuild
+
+  drupal_get_normal_path -> drupal_lookup_path;
+  drupal_get_normal_path -> hook_url_inbound_alter;
+
+  drupal_get_path_alias -> q;
+  drupal_get_path_alias -> drupal_lookup_path;
+
+  drupal_is_front_page -> q;
+  drupal_is_front_page -> variable_get;
+
+  drupal_lookup_path -> variable_get;
+  drupal_lookup_path -> drupal_path_alias_whitelist_rebuild;
+  drupal_lookup_path -> current_path;
+  drupal_lookup_path -> cache_get;
+  drupal_lookup_path -> DBTNG;
+
+  drupal_match_path -> variable_get;
+
+  drupal_path_alias_whitelist_rebuild -> variable_get;
+  drupal_path_alias_whitelist_rebuild -> DBTNG;
+  drupal_path_alias_whitelist_rebuild -> variable_set;
+
+  drupal_path_initialize -> q;
+  drupal_path_initialize -> variable_get;
+  drupal_path_initialize -> drupal_get_normal_path;
+
+  drupal_valid_path -> url_is_external;
+  drupal_valid_path -> DBTNG;
+  drupal_valid_path -> _menu_link_translate;
+  drupal_valid_path -> menu_get_item;
+
+  path_delete -> path_load;
+  path_delete -> DBTNG;
+  path_delete -> hook_path_delete;
+  path_delete -> drupal_clear_path_cache;
+
+  path_get_admin_paths -> hook_admin_paths;
+  path_get_admin_paths -> hook_admin_paths_alter;
+
+  path_is_admin -> path_get_admin_paths;
+  path_is_admin -> drupal_match_path;
+
+  path_load -> DBTNG;
+
+  path_save -> path_load;
+  path_save -> hook_path_insert;
+  path_save -> hook_path_update;
+  path_save -> drupal_clear_path_cache;
+
+  _menu_check_access -> menu_unserialize;
+  _menu_check_access -> user_access;
+  _menu_item_localize -> menu_unserialize;
+
+  _menu_link_translate -> _menu_check_access;
+  _menu_link_translate -> _menu_item_localize;
+  _menu_link_translate -> _menu_link_map_translate;
+  _menu_link_translate -> _menu_load_objects;
+  _menu_link_translate -> hook_translated_menu_link_alter;
+
+  _menu_translate -> _menu_link_map_translate;
+
+  menu_get_ancestors -> variable_get;
+
+  menu_get_item -> variable_get;
+  menu_get_item -> _menu_check_rebuild;
+  menu_get_item -> menu_rebuild;
+  menu_get_item -> menu_get_ancestors;
+  menu_get_item -> DBTNG;
+  menu_get_item ->  hook_menu_get_item_alter;
+  menu_get_item -> _menu_translate;
+  menu_get_item -> menu_unserialize;
+
+  url -> hook_url_outbound_alter;
+  url_is_external -> drupal_strip_dangerous_protocols;
+
+  user_access -> user_role_permissions;
+  user_access -> "$GLOBALS['user']";
+  user_role_permissions -> DBTNG;
+
+  variable_set -> DBTNG;
+  variable_set -> cache_clear_all;
+}

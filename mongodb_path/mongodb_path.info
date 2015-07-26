@@ -1,0 +1,15 @@
+name = MongoDB Path UI
+description = UI for MongoDB Path
+package = MongoDB
+
+core = 7.x
+php = 5.4
+
+dependencies[] = mongodb
+
+;
+; This module/path plugin does not use core autoloading, which is not available
+; during installation with a non-core path plugin.
+;
+; @see mongodb.path.inc
+;
