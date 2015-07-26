@@ -21,7 +21,7 @@ function mongodb_path_exit() {
   }
 
   global $_mongodb_path_tracer;
-  dpm($_mongodb_path_tracer, $q);
+  // dpm($_mongodb_path_tracer, $q);
 }
 
 /**
@@ -31,8 +31,9 @@ function mongodb_path_exit() {
  * to honor this behavior, although it is costly.
  */
 function mongodb_path_flush_caches() {
-  if (variable_get(MongoDbPathResolverInterface::FLUSH_VAR, FALSE)) {
-    mongodb_path_resolver()->flush();
+  $resolver = mongodb_path_resolver();
+  if ($resolver->isFlushRequired()) {
+    $resolver->flush();
   }
 
   return [];
