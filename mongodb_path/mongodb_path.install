@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * @file
+ * Installation-related hooks for MongoDB path module.
+ */
+
+require_once __DIR__ . '/mongodb_path_install.php';
