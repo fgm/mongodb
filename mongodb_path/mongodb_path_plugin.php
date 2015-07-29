@@ -366,7 +366,7 @@ function drupal_path_alias_whitelist_rebuild($source = NULL) {
   // When paths are inserted, only rebuild the white_list if the system path
   // has a top level component which is not already in the white_list.
   if (!empty($source)) {
-    $whitelist = variable_get('path_alias_whitelist', []);
+    $whitelist = variable_get('path_alias_whitelist', NULL);
     if (isset($whitelist[strtok($source, '/')])) {
       return $whitelist;
     }

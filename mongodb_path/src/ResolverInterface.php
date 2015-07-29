@@ -39,12 +39,25 @@ interface ResolverInterface {
   public function isFlushRequired();
 
   /**
+   * Is the whitelist set but empty ?
+   *
+   * Must not be called if the whitelist has not been initialized.
+   *
+   * @return bool
+   *   TRUE if the whitelist is initialized but empty, FALSE otherwise.
+   */
+  public function isWhitelistEmpty();
+
+  /**
    * Is there any entry in the whitelist ?
+   *
+   * It may be NULL if not yet initialized, or be empty because rebuild found
+   * nothing to add.
    *
    * @return bool
    *   TRUE is there is at least one entry, FALSE otherwise.
    */
-  public function iswhitelistEmpty();
+  public function isWhitelistSet();
 
   /**
    * Return the current flush timestamp.

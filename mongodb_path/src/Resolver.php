@@ -71,7 +71,7 @@ class Resolver implements ResolverInterface {
       'no_aliases' => [],
       'no_source' => [],
       'system_paths' => [],
-      'whitelist' => [],
+      'whitelist' => NULL,
     ];
   }
 
@@ -91,13 +91,10 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function ensureWhitelist() {
-    // It is initialized and reset by its cacheInit() method.
-    assert('isset($this->cache["whitelist"])');
-
     // Retrieve the path alias whitelist.
-    if (empty($this->cache['whitelist'])) {
-      $this->cache['whitelist'] = variable_get('path_alias_whitelist', []);
-      if (empty($this->cache['whitelist'])) {
+    if (!$this->isWhitelistSet()) {
+      $this->cache['whitelist'] = variable_get('path_alias_whitelist', NULL);
+      if (!isset($this->cache['whitelist'])) {
         $this->cache['whitelist'] = drupal_path_alias_whitelist_rebuild();
       }
     }
@@ -159,7 +156,15 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function isWhitelistEmpty() {
+    assert('$this->cache["whitelist"] !== NULL');
     return empty($this->cache['whitelist']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isWhitelistSet() {
+    return $this->cache['whitelist'] !== NULL;
   }
 
   /**
