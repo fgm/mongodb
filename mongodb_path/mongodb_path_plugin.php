@@ -41,6 +41,7 @@ $_mongodb_path_tracer = [
   'data' => [],
   'aggregation' => FALSE,
   'enabled' => FALSE,
+  'debug' => FALSE,
 ];
 
 /**
@@ -49,6 +50,8 @@ $_mongodb_path_tracer = [
  * This function is in the module, not the plugin: all modules are loaded at the
  * during _drupal_bootstrap_variables(), while the path plugin is loaded later,
  * during _drupal_bootstrap_full().
+ *
+ * It may be called during install, hence the use of get_t().
  *
  * @return \Drupal\mongodb_path\Resolver
  *   The active Resolver instance.
@@ -67,9 +70,12 @@ function mongodb_path_resolver() {
   $resolver = &$drupal_static_fast['resolver'];
 
   if (!isset($resolver)) {
-    // $stack = debug_backtrace();
-    // echo "<p>Resolver built for " . $stack[1]['function'] . "</p>\n";
     $resolver = ResolverFactory::create();
+    if (!empty($GLOBALS['_mongodb_path_tracer']['debug'])) {
+      $t = get_t();
+      $stack = debug_backtrace();
+      echo $t("<p>Resolver built for @function.</p>", ['@function' => $stack[1]['function']]);
+    }
   }
 
   return $resolver;
@@ -363,23 +369,7 @@ function current_path() {
  */
 function drupal_path_alias_whitelist_rebuild($source = NULL) {
   mongodb_path_trace();
-  // When paths are inserted, only rebuild the white_list if the system path
-  // has a top level component which is not already in the white_list.
-  if (!empty($source)) {
-    $whitelist = variable_get('path_alias_whitelist', NULL);
-    if (isset($whitelist[strtok($source, '/')])) {
-      return $whitelist;
-    }
-  }
-  // For each alias in the database, get the top level component of the system
-  // path it corresponds to. This is the portion of the path before the first
-  // '/', if present, otherwise the whole path itself.
-  $whitelist = [];
-  $result = db_query("SELECT DISTINCT SUBSTRING_INDEX(source, '/', 1) AS path FROM {url_alias}");
-  foreach ($result as $row) {
-    $whitelist[$row->path] = TRUE;
-  }
-  variable_set('path_alias_whitelist', $whitelist);
+  $whitelist = mongodb_path_resolver()->whitelistRebuild($source);
   return $whitelist;
 }
 
@@ -400,24 +390,8 @@ function drupal_path_alias_whitelist_rebuild($source = NULL) {
  */
 function path_load($conditions) {
   mongodb_path_trace();
-
-  if (is_numeric($conditions)) {
-    $conditions = array('pid' => $conditions);
-  }
-  elseif (is_string($conditions)) {
-    $conditions = array('source' => $conditions);
-  }
-  elseif (!is_array($conditions)) {
-    return FALSE;
-  }
-  $select = db_select('url_alias');
-  foreach ($conditions as $field => $value) {
-    $select->condition($field, $value);
-  }
-  return $select
-    ->fields('url_alias')
-    ->execute()
-    ->fetchAssoc();
+  $ret = mongodb_path_resolver()->pathLoad($conditions);
+  return $ret;
 }
 
 /**
@@ -431,28 +405,8 @@ function path_load($conditions) {
  *   - language: (optional) The language of the alias.
  */
 function path_save(array &$path) {
-  mongodb_path_trace();
-  $path += array('language' => LANGUAGE_NONE);
-
-  // Load the stored alias, if any.
-  if (!empty($path['pid']) && !isset($path['original'])) {
-    $path['original'] = path_load($path['pid']);
-  }
-
-  if (empty($path['pid'])) {
-    drupal_write_record('url_alias', $path);
-    module_invoke_all('path_insert', $path);
-  }
-  else {
-    drupal_write_record('url_alias', $path, array('pid'));
-    module_invoke_all('path_update', $path);
-  }
-
-  // Clear internal properties.
-  unset($path['original']);
-
-  // Clear the static alias cache.
-  drupal_clear_path_cache($path['source']);
+  mongodb_path_trace($path);
+  mongodb_path_resolver()->pathSave($path);
 }
 
 /**
@@ -463,17 +417,7 @@ function path_save(array &$path) {
  */
 function path_delete($criteria) {
   mongodb_path_trace();
-  if (!is_array($criteria)) {
-    $criteria = array('pid' => $criteria);
-  }
-  $path = path_load($criteria);
-  $query = db_delete('url_alias');
-  foreach ($criteria as $field => $value) {
-    $query->condition($field, $value);
-  }
-  $query->execute();
-  module_invoke_all('path_delete', $path);
-  drupal_clear_path_cache($path['source']);
+  mongodb_path_resolver()->pathDelete($criteria);
 }
 
 /**

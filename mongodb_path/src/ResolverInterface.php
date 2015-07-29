@@ -156,4 +156,54 @@ interface ResolverInterface {
    */
   public function mayHaveSource($path, $path_language);
 
+  /**
+   * Delete a URL alias.
+   *
+   * @param array|int $criteria
+   *   A number representing the pid or an array of criteria.
+   */
+  function pathDelete($criteria);
+
+  /**
+   * Fetches a specific URL alias from the database.
+   *
+   * @param mixed $conditions
+   *   A string representing the source, a number representing the pid, or an
+   *   array of query conditions.
+   *
+   * @return string[]|bool
+   *   FALSE if no alias was found or an associative array containing the
+   *   following keys:
+   *   - source: The internal system path.
+   *   - alias: The URL alias.
+   *   - pid: Unique path alias identifier.
+   *   - language: The language of the alias.
+   */
+  public function pathLoad($conditions);
+
+  /**
+   * Save a path alias to the database.
+   *
+   * @param mixed[] $path
+   *   An associative array containing the following keys:
+   *   - source: The internal system path.
+   *   - alias: The URL alias.
+   *   - pid: (optional) Unique path alias identifier.
+   *   - language: (optional) The language of the alias.
+   */
+  function pathSave(array &$path);
+
+  /**
+   * Rebuild the path alias white list.
+   *
+   * @param string|NULL $source
+   *   An optional system path for which an alias is being inserted.
+   *
+   * @return string[]
+   *   An array containing a white list of path aliases.
+   *
+   * @see system_update_7042()
+   */
+  function whitelistRebuild($source = NULL);
+
 }

@@ -54,6 +54,7 @@ class Resolver implements ResolverInterface {
    *   Database used to store aliases.
    */
   public function __construct($request_time, $initial_flush, \MongoDB $mongo) {
+    mongodb_path_trace();
     $this->requestTime = $request_time;
     $this->flush = $initial_flush;
     $this->mongo = $mongo;
@@ -65,6 +66,7 @@ class Resolver implements ResolverInterface {
    * Initialize the cache.
    */
   public function cacheInit() {
+    mongodb_path_trace();
     $this->cache = [
       'first_call' => TRUE,
       'map' => [],
@@ -79,6 +81,7 @@ class Resolver implements ResolverInterface {
    * Debugging helper: dump the memory cache map using available method.
    */
   protected function dumpCacheMap() {
+    mongodb_path_trace();
     if (function_exists('dpm')) {
       dpm($this->cache['map']['en']);
     }
@@ -91,11 +94,12 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function ensureWhitelist() {
+    mongodb_path_trace();
     // Retrieve the path alias whitelist.
     if (!$this->isWhitelistSet()) {
       $this->cache['whitelist'] = variable_get('path_alias_whitelist', NULL);
       if (!isset($this->cache['whitelist'])) {
-        $this->cache['whitelist'] = drupal_path_alias_whitelist_rebuild();
+        $this->cache['whitelist'] = $this->whitelistRebuild();
       }
     }
   }
@@ -104,6 +108,7 @@ class Resolver implements ResolverInterface {
    * Fake a flush using a flush timestamp, à la Varnish.
    */
   public function flush() {
+    mongodb_path_trace();
     $this->flush = REQUEST_TIME;
   }
 
@@ -111,6 +116,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function getFlushTimestamp() {
+    mongodb_path_trace();
     return $this->flush;
   }
 
@@ -118,6 +124,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function getNormalPath($path, $language = NULL) {
+    mongodb_path_trace();
     return drupal_get_normal_path($path, $language);
   }
 
@@ -125,6 +132,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function getPathAlias($path = NULL, $path_language = NULL) {
+    mongodb_path_trace();
     return drupal_get_path_alias($path, $path_language);
   }
 
@@ -132,6 +140,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function getRefreshedCachedPaths() {
+    mongodb_path_trace();
     if (empty($this->cache['system_paths']) && !empty($this->cache['map'])) {
       $ret = array_keys(current($this->cache['map']));
     }
@@ -149,6 +158,7 @@ class Resolver implements ResolverInterface {
    *   True if module must request a flush, False, otherwise.
    */
   public function isFlushRequired() {
+    mongodb_path_trace();
     return !!$this->flush;
   }
 
@@ -156,6 +166,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function isWhitelistEmpty() {
+    mongodb_path_trace();
     assert('$this->cache["whitelist"] !== NULL');
     return empty($this->cache['whitelist']);
   }
@@ -164,6 +175,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function isWhitelistSet() {
+    mongodb_path_trace();
     return $this->cache['whitelist'] !== NULL;
   }
 
@@ -252,6 +264,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function lookupPathSource($path, $path_language) {
+    mongodb_path_trace();
     // Look for the value $path within the cached $map.
     $source = FALSE;
     if (!isset($this->cache['map'][$path_language]) || !($source = array_search($path,
@@ -294,15 +307,113 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function lookupPathWipe() {
+    mongodb_path_trace();
     $this->cacheInit();
-    $this->cache['map'] = drupal_path_alias_whitelist_rebuild();
+    $this->cache['map'] = $this->whitelistRebuild();
   }
 
   /**
    * {@inheritdoc}
    */
   public function mayHaveSource($path_language, $path) {
+    mongodb_path_trace();
     return !isset($this->cache['no_source'][$path_language][$path]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function pathDelete($criteria) {
+    mongodb_path_trace();
+    if (!is_array($criteria)) {
+      $criteria = ['pid' => $criteria];
+    }
+    $path = $this->pathLoad($criteria);
+    $query = db_delete('url_alias');
+    foreach ($criteria as $field => $value) {
+      $query->condition($field, $value);
+    }
+    $query->execute();
+    module_invoke_all('path_delete', $path);
+    drupal_clear_path_cache($path['source']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function pathLoad($conditions) {
+    mongodb_path_trace();
+    if (is_numeric($conditions)) {
+      $conditions = array('pid' => $conditions);
+    }
+    elseif (is_string($conditions)) {
+      $conditions = array('source' => $conditions);
+    }
+    elseif (!is_array($conditions)) {
+      return FALSE;
+    }
+    $select = db_select('url_alias');
+    foreach ($conditions as $field => $value) {
+      $select->condition($field, $value);
+    }
+    $ret = $select
+      ->fields('url_alias')
+      ->execute()
+      ->fetchAssoc();
+
+    return $ret;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function pathSave(array &$path) {
+    mongodb_path_trace();
+    $path += array('language' => LANGUAGE_NONE);
+
+    // Load the stored alias, if any.
+    if (!empty($path['pid']) && !isset($path['original'])) {
+      $path['original'] = path_load($path['pid']);
+    }
+
+    if (empty($path['pid'])) {
+      drupal_write_record('url_alias', $path);
+      module_invoke_all('path_insert', $path);
+    }
+    else {
+      drupal_write_record('url_alias', $path, array('pid'));
+      module_invoke_all('path_update', $path);
+    }
+
+    // Clear internal properties.
+    unset($path['original']);
+
+    // Clear the static alias cache.
+    drupal_clear_path_cache($path['source']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function whitelistRebuild($source = NULL) {
+    mongodb_path_trace();
+    // When paths are inserted, only rebuild the white_list if the system path
+    // has a top level component which is not already in the white_list.
+    if (!empty($source)) {
+      $whitelist = variable_get('path_alias_whitelist', NULL);
+      if (isset($whitelist[strtok($source, '/')])) {
+        return $whitelist;
+      }
+    }
+    // For each alias in the database, get the top level component of the system
+    // path it corresponds to. This is the portion of the path before the first
+    // '/', if present, otherwise the whole path itself.
+    $whitelist = [];
+    $result = db_query("SELECT DISTINCT SUBSTRING_INDEX(source, '/', 1) AS path FROM {url_alias}");
+    foreach ($result as $row) {
+      $whitelist[$row->path] = TRUE;
+    }
+    variable_set('path_alias_whitelist', $whitelist);
+    return $whitelist;
+  }
 }
