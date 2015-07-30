@@ -13,6 +13,7 @@
 
 // Core autoloader is not available to path plugins during site install, and
 // doesn't support namespace anyway.
+require_once __DIR__ . '/src/AliasStorage.php';
 require_once __DIR__ . '/src/ResolverInterface.php';
 require_once __DIR__ . '/src/ResolverFactory.php';
 require_once __DIR__ . '/src/Resolver.php';
@@ -405,7 +406,7 @@ function path_load($conditions) {
  *   - language: (optional) The language of the alias.
  */
 function path_save(array &$path) {
-  mongodb_path_trace($path);
+  mongodb_path_trace();
   mongodb_path_resolver()->pathSave($path);
 }
 

@@ -10,6 +10,8 @@ namespace Drupal\mongodb_path;
 
 /**
  * Class MongoDB_Path_Resolver.
+ *
+ * @package Drupal\mongodb_path
  */
 class Resolver implements ResolverInterface {
 
@@ -30,11 +32,11 @@ class Resolver implements ResolverInterface {
   protected $flush = 0;
 
   /**
-   * The database to use.
+   * The NoSQL storage to use.
    *
-   * @var \MongoDB
+   * @var \Drupal\mongodb_path\AliasStorage
    */
-  protected $mongo;
+  protected $storage;
 
   /**
    * Request timestamp.
@@ -50,14 +52,14 @@ class Resolver implements ResolverInterface {
    *   Request timestamp.
    * @param int $initial_flush
    *   The initial value of ResolverInterface::FLUSH_VAR.
-   * @param \MongoDB $mongo
+   * @param \Drupal\mongodb_path\AliasStorage $storage
    *   Database used to store aliases.
    */
-  public function __construct($request_time, $initial_flush, \MongoDB $mongo) {
+  public function __construct($request_time, $initial_flush, AliasStorage $storage) {
     mongodb_path_trace();
     $this->requestTime = $request_time;
     $this->flush = $initial_flush;
-    $this->mongo = $mongo;
+    $this->storage = $storage;
 
     $this->cacheInit();
   }
@@ -329,6 +331,7 @@ class Resolver implements ResolverInterface {
       $criteria = ['pid' => $criteria];
     }
     $path = $this->pathLoad($criteria);
+    $this->storage->delete($criteria);
     $query = db_delete('url_alias');
     foreach ($criteria as $field => $value) {
       $query->condition($field, $value);
@@ -369,11 +372,11 @@ class Resolver implements ResolverInterface {
    */
   public function pathSave(array &$path) {
     mongodb_path_trace();
-    $path += array('language' => LANGUAGE_NONE);
+    $path += ['language' => LANGUAGE_NONE];
 
     // Load the stored alias, if any.
     if (!empty($path['pid']) && !isset($path['original'])) {
-      $path['original'] = path_load($path['pid']);
+      $path['original'] = $this->pathLoad($path['pid']);
     }
 
     if (empty($path['pid'])) {
@@ -384,6 +387,7 @@ class Resolver implements ResolverInterface {
       drupal_write_record('url_alias', $path, array('pid'));
       module_invoke_all('path_update', $path);
     }
+    $this->storage->save($path);
 
     // Clear internal properties.
     unset($path['original']);

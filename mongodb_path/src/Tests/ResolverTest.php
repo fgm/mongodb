@@ -6,6 +6,7 @@
 
 namespace Drupal\mongodb_path\Tests;
 
+use Drupal\mongodb_path\AliasStorage;
 use Drupal\mongodb_path\Resolver;
 
 /**
@@ -25,6 +26,13 @@ class ResolverTest extends \DrupalUnitTestCase {
    * @var string
    */
   protected $savedDbName;
+
+  /**
+   * The test storage instance.
+   *
+   * @var \Drupal\mongodb_path\AliasStorage
+   */
+  protected $storage;
 
   /**
    * The test database instance.
@@ -60,6 +68,8 @@ class ResolverTest extends \DrupalUnitTestCase {
     $conf['mongodb_connections'] = $connections;
 
     $this->testDB = mongodb();
+    $this->storage = new AliasStorage($this->testDB);
+
   }
 
   /**
@@ -68,6 +78,7 @@ class ResolverTest extends \DrupalUnitTestCase {
   public function tearDown() {
     global $conf;
 
+    $this->storage->drop();
     $this->testDB->drop();
     $this->pass(strtr('Dropped MongoDB database %name', ['%name' => $this->testDB->__toString()]));
     $this->testDB = NULL;
@@ -93,7 +104,7 @@ class ResolverTest extends \DrupalUnitTestCase {
    * Tests constructor cache initialization.
    */
   public function testConstructor() {
-    $resolver = new Resolver(mt_rand(0, 1 << 31), 0, $this->testDB);
+    $resolver = new Resolver(mt_rand(0, 1 << 31), 0, $this->storage);
     $this->assertTrue(is_array($resolver->getRefreshedCachedPaths()), "Refreshed cache paths are in an array");
   }
 

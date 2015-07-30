@@ -5,6 +5,8 @@
  * Installation-related hooks for MongoDB path module.
  */
 
+use Drupal\mongodb_path\AliasStorage;
+
 /**
  * Implements hook_requirements().
  *
@@ -33,4 +35,12 @@ function mongodb_path_requirements() {
   }
 
   return $ret;
+}
+
+/**
+ * Implements hook_install().
+ */
+function mongodb_path_install() {
+  $storage = new AliasStorage(mongodb());
+  $storage->ensureSchema();
 }

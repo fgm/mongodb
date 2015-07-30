@@ -13,7 +13,7 @@ namespace Drupal\mongodb_path;
  *
  * It isolates the Resolver instance from Drupal procedural code.
  *
- * @package contrib\mongodb\mongodb_path\src
+ * @package Drupal\mongodb_path
  */
 class ResolverFactory {
 
@@ -27,7 +27,8 @@ class ResolverFactory {
     $initial_flush = variable_get(ResolverInterface::FLUSH_VAR, 0);
 
     module_load_include('module', 'mongodb');
-    $instance = new Resolver(REQUEST_TIME, $initial_flush, mongodb());
+    $storage = new AliasStorage(mongodb());
+    $instance = new Resolver(REQUEST_TIME, $initial_flush, $storage);
 
     // Only commit to changing flush timestamp if it actually changed.
     drupal_register_shutdown_function(function() use ($instance, $initial_flush) {
