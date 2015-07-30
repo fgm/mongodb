@@ -77,9 +77,24 @@ class AliasStorage {
    *
    * @param array $conditions
    *   Unlike path_load(), this method required a criteria array.
+   *
+   * @return string[]|NULL
+   *   NULL if no alias was found or an associative array containing the
+   *   following keys:
+   *   - source: The internal system path.
+   *   - alias: The URL alias.
+   *   - pid: Unique path alias identifier.
+   *   - language: The language of the alias.
    */
   public function load(array $conditions) {
-    dsm($conditions, __METHOD__);
+    /* This specific instance of findOne() does not return a generic array, but
+     * a string[], because _id is removed from the results, and all other
+     * document properties are integer, hence the more specific doc-ing.
+     */
+
+    /** @var string[]|NULL $result */
+    $result = $this->collection->findOne($conditions, ['first' => 0, '_id' => 0]);
+    return $result;
   }
 
   /**
@@ -155,5 +170,5 @@ class AliasStorage {
       'pid' => 1,
     ], $options);
   }
-  
+
 }

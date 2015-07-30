@@ -355,6 +355,11 @@ class Resolver implements ResolverInterface {
     elseif (!is_array($conditions)) {
       return FALSE;
     }
+    $alias = $this->storage->load($conditions);
+    if (isset($alias)) {
+      return $alias;
+    }
+
     $select = db_select('url_alias');
     foreach ($conditions as $field => $value) {
       $select->condition($field, $value);
@@ -363,6 +368,10 @@ class Resolver implements ResolverInterface {
       ->fields('url_alias')
       ->execute()
       ->fetchAssoc();
+
+    if ($ret != FALSE) {
+      $this->storage->save($ret);
+    }
 
     return $ret;
   }
