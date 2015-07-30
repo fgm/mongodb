@@ -61,7 +61,9 @@ $_mongodb_path_tracer = [
  * @see _drupal_bootstrap_full()
  */
 function mongodb_path_resolver() {
-  mongodb_path_trace();
+  if (!empty($GLOBALS['_mongodb_path_tracer']['debug'])) {
+    mongodb_path_trace();
+  }
 
   // Use the advanced drupal_static() pattern, since this is called very often.
   static $drupal_static_fast;
@@ -93,6 +95,9 @@ function mongodb_path_trace() {
   $stack = debug_backtrace(FALSE);
   $caller = $stack[1];
   $function = $caller['function'];
+  if (isset($caller['class'])) {
+    $function = $caller['class'] . '::' . $function;
+  }
   $args = [];
   foreach ($caller['args'] as $arg) {
     $args[] = var_export($arg, TRUE);
@@ -544,6 +549,7 @@ function drupal_valid_path($path, $dynamic_allowed = FALSE) {
 function drupal_clear_path_cache($source = NULL) {
   mongodb_path_trace();
 
-  mongodb_path_resolver()->cacheInit();
-  drupal_path_alias_whitelist_rebuild($source);
+  $resolver = mongodb_path_resolver();
+  $resolver->cacheInit();
+  $resolver->whitelistRebuild($source);
 }

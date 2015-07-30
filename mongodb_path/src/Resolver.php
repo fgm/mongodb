@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains MongoDB_Path_Resolver.
+ * Contains the MongoDB path resolver.
  */
 
 namespace Drupal\mongodb_path;
@@ -418,14 +418,10 @@ class Resolver implements ResolverInterface {
         return $whitelist;
       }
     }
-    // For each alias in the database, get the top level component of the system
-    // path it corresponds to. This is the portion of the path before the first
-    // '/', if present, otherwise the whole path itself.
-    $whitelist = [];
-    $result = db_query("SELECT DISTINCT SUBSTRING_INDEX(source, '/', 1) AS path FROM {url_alias}");
-    foreach ($result as $row) {
-      $whitelist[$row->path] = TRUE;
-    }
+
+    // Get the whitelist from the alias storage.
+    $whitelist = $this->storage->getWhitelist();
+
     variable_set('path_alias_whitelist', $whitelist);
     return $whitelist;
   }

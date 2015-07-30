@@ -1,12 +1,12 @@
 <?php
+
 /**
  * @file
- * Contains AliasStorage.php
+ * Contains the MongoDB path alias storage.
  */
 
 namespace Drupal\mongodb_path;
 
-use contrib\mongodb\mongodb_path\src\Alias;
 
 /**
  * Class AliasStorage
@@ -49,6 +49,7 @@ class AliasStorage {
    *   A MongoDB database in which to access the alias storage collection.
    */
   public function __construct(\MongoDB $mongo) {
+    mongodb_path_trace();
     $this->mongo = $mongo;
     $this->collection = $mongo->selectCollection(static::COLLECTION_NAME);
   }
@@ -57,6 +58,7 @@ class AliasStorage {
    * Drop the MongoDB collection underlying the alias storage.
    */
   public function drop() {
+    mongodb_path_trace();
     $this->collection->drop();
     $this->collection = NULL;
   }
@@ -68,6 +70,7 @@ class AliasStorage {
    *   Unlike path_delete(), this method required a criteria array.
    */
   public function delete(array $criteria) {
+    mongodb_path_trace();
     $criteria = array_intersect_key($criteria, static::ALIAS_KEYS);
     $this->collection->remove($criteria);
   }
@@ -87,6 +90,8 @@ class AliasStorage {
    *   - language: The language of the alias.
    */
   public function load(array $conditions) {
+    mongodb_path_trace();
+
     /* This specific instance of findOne() does not return a generic array, but
      * a string[], because _id is removed from the results, and all other
      * document properties are integer, hence the more specific doc-ing.
@@ -94,6 +99,25 @@ class AliasStorage {
 
     /** @var string[]|NULL $result */
     $result = $this->collection->findOne($conditions, ['first' => 0, '_id' => 0]);
+    return $result;
+  }
+
+  /**
+   * Query the white list from the MongoDB collection.
+   *
+   * For each alias in the database, get the top level component of the system
+   * path it corresponds to. This is the portion of the path before the first
+   * '/', if present, otherwise the whole path itself.
+   *
+   * @return string[]
+   *   A hash of "1"s indexed by the distinct top level components. This
+   *   seemingly unnatural format allows Resolver::whitelistRebuild() to
+   *   use isset() on the whitelist, which is faster than in_array().
+   */
+  public function getWhitelist() {
+    mongodb_path_trace();
+    $result = (array) $this->collection->distinct('first');
+    $result = array_combine($result, array_fill(0, count($result), 1));
     return $result;
   }
 
@@ -108,6 +132,7 @@ class AliasStorage {
    *   The path to insert or update.
    */
   public function save(array $path) {
+    mongodb_path_trace();
     $options = [
       // This should not matter, as alias are presumed to match uniquely.
       'multiple' => FALSE,
@@ -135,6 +160,7 @@ class AliasStorage {
    * - alias: the alias for a source/langcode
    */
   public function ensureSchema() {
+    mongodb_path_trace();
     $collection = $this->mongo->selectCollection(static::COLLECTION_NAME);
 
     // This one is just an accelerator, so there is no need to wait on it.
