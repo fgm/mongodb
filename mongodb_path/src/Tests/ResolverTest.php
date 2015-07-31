@@ -6,7 +6,8 @@
 
 namespace Drupal\mongodb_path\Tests;
 
-use Drupal\mongodb_path\AliasStorage;
+use Drupal\mongodb_path\Storage\Dbtng as DbtngStorage;
+use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
 use Drupal\mongodb_path\Resolver;
 
 /**
@@ -21,6 +22,11 @@ use Drupal\mongodb_path\Resolver;
 class ResolverTest extends \DrupalUnitTestCase {
 
   /**
+   * @var \Drupal\mongodb_path\Storage\StorageInterface
+   */
+  protected $rdb_storage;
+
+  /**
    * The name of the default database.
    *
    * @var string
@@ -30,9 +36,9 @@ class ResolverTest extends \DrupalUnitTestCase {
   /**
    * The test storage instance.
    *
-   * @var \Drupal\mongodb_path\AliasStorage
+   * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
-  protected $storage;
+  protected $mongodb_storage;
 
   /**
    * The test database instance.
@@ -57,6 +63,8 @@ class ResolverTest extends \DrupalUnitTestCase {
 
   /**
    * Override the MongoDB connection, switching to a per-test database.
+   *
+   * Do not touch the DBTNG database: simpletest sets it up itself.
    */
   public function setUp() {
     global $conf;
@@ -68,17 +76,19 @@ class ResolverTest extends \DrupalUnitTestCase {
     $conf['mongodb_connections'] = $connections;
 
     $this->testDB = mongodb();
-    $this->storage = new AliasStorage($this->testDB);
-
+    $this->mongodb_storage = new MongoDbStorage($this->testDB);
+    $this->rdb_storage = new DbtngStorage(\Database::getConnection());
   }
 
   /**
    * Restore the default MongoDB connection.
+   *
+   * Do not touch the DBTNG database: simpletest cleans it itself.
    */
   public function tearDown() {
     global $conf;
 
-    $this->storage->drop();
+    $this->mongodb_storage->clear();
     $this->testDB->drop();
     $this->pass(strtr('Dropped MongoDB database %name', ['%name' => $this->testDB->__toString()]));
     $this->testDB = NULL;
@@ -104,7 +114,7 @@ class ResolverTest extends \DrupalUnitTestCase {
    * Tests constructor cache initialization.
    */
   public function testConstructor() {
-    $resolver = new Resolver(mt_rand(0, 1 << 31), 0, $this->storage);
+    $resolver = new Resolver(mt_rand(0, 1 << 31), 0, $this->mongodb_storage, $this->rdb_storage);
     $this->assertTrue(is_array($resolver->getRefreshedCachedPaths()), "Refreshed cache paths are in an array");
   }
 

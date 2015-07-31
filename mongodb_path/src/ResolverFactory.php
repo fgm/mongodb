@@ -7,6 +7,8 @@
 
 namespace Drupal\mongodb_path;
 
+use Drupal\mongodb_path\Storage\Dbtng as DbtngStorage;
+use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
 
 /**
  * Class ResolverFactory creates a Resolved instance.
@@ -27,8 +29,10 @@ class ResolverFactory {
     $initial_flush = variable_get(ResolverInterface::FLUSH_VAR, 0);
 
     module_load_include('module', 'mongodb');
-    $storage = new AliasStorage(mongodb());
-    $instance = new Resolver(REQUEST_TIME, $initial_flush, $storage);
+    $mongodb_storage = new MongoDbStorage(mongodb());
+    $dbtng_storage = new DbtngStorage(\Database::getConnection('default'));
+
+    $instance = new Resolver(REQUEST_TIME, $initial_flush, $mongodb_storage, $dbtng_storage);
 
     // Only commit to changing flush timestamp if it actually changed.
     drupal_register_shutdown_function(function() use ($instance, $initial_flush) {

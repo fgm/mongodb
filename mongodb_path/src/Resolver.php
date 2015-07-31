@@ -7,6 +7,7 @@
 
 namespace Drupal\mongodb_path;
 
+use Drupal\mongodb_path\Storage\StorageInterface;
 
 /**
  * Class MongoDB_Path_Resolver.
@@ -34,9 +35,16 @@ class Resolver implements ResolverInterface {
   /**
    * The NoSQL storage to use.
    *
-   * @var \Drupal\mongodb_path\AliasStorage
+   * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
-  protected $storage;
+  protected $mongodb_storage;
+
+  /**
+   * The SQL storage to use.
+   *
+   * @var \Drupal\mongodb_path\Storage\StorageInterface
+   */
+  protected $rdb_storage;
 
   /**
    * Request timestamp.
@@ -52,14 +60,17 @@ class Resolver implements ResolverInterface {
    *   Request timestamp.
    * @param int $initial_flush
    *   The initial value of ResolverInterface::FLUSH_VAR.
-   * @param \Drupal\mongodb_path\AliasStorage $storage
-   *   Database used to store aliases.
+   * @param \Drupal\mongodb_path\Storage\StorageInterface $mongodb_storage
+   *   MongoDB database used to store aliases.
+   * @param \Drupal\mongodb_path\Storage\StorageInterface $rdb_storage
+   *   Relational database used to store aliases.
    */
-  public function __construct($request_time, $initial_flush, AliasStorage $storage) {
+  public function __construct($request_time, $initial_flush, StorageInterface $mongodb_storage, StorageInterface $rdb_storage) {
     mongodb_path_trace();
     $this->requestTime = $request_time;
     $this->flush = $initial_flush;
-    $this->storage = $storage;
+    $this->mongodb_storage = $mongodb_storage;
+    $this->rdb_storage = $rdb_storage;
 
     $this->cacheInit();
   }
@@ -331,7 +342,7 @@ class Resolver implements ResolverInterface {
       $criteria = ['pid' => $criteria];
     }
     $path = $this->pathLoad($criteria);
-    $this->storage->delete($criteria);
+    $this->mongodb_storage->delete($criteria);
     $query = db_delete('url_alias');
     foreach ($criteria as $field => $value) {
       $query->condition($field, $value);
@@ -355,7 +366,7 @@ class Resolver implements ResolverInterface {
     elseif (!is_array($conditions)) {
       return FALSE;
     }
-    $alias = $this->storage->load($conditions);
+    $alias = $this->mongodb_storage->load($conditions);
     if (isset($alias)) {
       return $alias;
     }
@@ -370,7 +381,7 @@ class Resolver implements ResolverInterface {
       ->fetchAssoc();
 
     if ($ret != FALSE) {
-      $this->storage->save($ret);
+      $this->mongodb_storage->save($ret);
     }
 
     return $ret;
@@ -396,7 +407,7 @@ class Resolver implements ResolverInterface {
       drupal_write_record('url_alias', $path, array('pid'));
       module_invoke_all('path_update', $path);
     }
-    $this->storage->save($path);
+    $this->mongodb_storage->save($path);
 
     // Clear internal properties.
     unset($path['original']);
@@ -420,7 +431,7 @@ class Resolver implements ResolverInterface {
     }
 
     // Get the whitelist from the alias storage.
-    $whitelist = $this->storage->getWhitelist();
+    $whitelist = $this->mongodb_storage->getWhitelist();
 
     variable_set('path_alias_whitelist', $whitelist);
     return $whitelist;

@@ -13,7 +13,10 @@
 
 // Core autoloader is not available to path plugins during site install, and
 // doesn't support namespace anyway.
-require_once __DIR__ . '/src/AliasStorage.php';
+require_once __DIR__ . '/src/Storage/StorageInterface.php';
+require_once __DIR__ . '/src/Storage/MongoDb.php';
+require_once __DIR__ . '/src/Storage/Dbtng.php';
+
 require_once __DIR__ . '/src/ResolverInterface.php';
 require_once __DIR__ . '/src/ResolverFactory.php';
 require_once __DIR__ . '/src/Resolver.php';
@@ -100,7 +103,8 @@ function mongodb_path_trace() {
   }
   $args = [];
   foreach ($caller['args'] as $arg) {
-    $args[] = var_export($arg, TRUE);
+    // var_export() does not handle circular references: not a real problem.
+    $args[] = @var_export($arg, TRUE);
   }
   $s_args = implode('", "', $args);
   if ($_mongodb_path_tracer['aggregation']) {
