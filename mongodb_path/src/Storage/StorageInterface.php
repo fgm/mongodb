@@ -72,6 +72,6 @@ interface StorageInterface {
    * @param array $path
    *   The path to insert or update.
    */
-  public function save(array $path);
+  public function save(array &$path);
 
 }

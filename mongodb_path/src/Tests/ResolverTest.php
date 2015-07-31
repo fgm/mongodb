@@ -78,6 +78,8 @@ class ResolverTest extends \DrupalUnitTestCase {
     $this->testDB = mongodb();
     $this->mongodb_storage = new MongoDbStorage($this->testDB);
     $this->rdb_storage = new DbtngStorage(\Database::getConnection());
+
+    parent::setUp();
   }
 
   /**
@@ -114,7 +116,7 @@ class ResolverTest extends \DrupalUnitTestCase {
    * Tests constructor cache initialization.
    */
   public function testConstructor() {
-    $resolver = new Resolver(mt_rand(0, 1 << 31), 0, $this->mongodb_storage, $this->rdb_storage);
+    $resolver = new Resolver(mt_rand(0, 1 << 31), $this->mongodb_storage, $this->rdb_storage);
     $this->assertTrue(is_array($resolver->getRefreshedCachedPaths()), "Refreshed cache paths are in an array");
   }
 

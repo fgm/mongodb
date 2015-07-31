@@ -99,7 +99,7 @@ class MongoDb implements StorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function save(array $path) {
+  public function save(array &$path) {
     mongodb_path_trace();
     $options = [
       // This should not matter, as alias are presumed to match uniquely.

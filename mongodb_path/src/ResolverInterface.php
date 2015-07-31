@@ -12,31 +12,12 @@ namespace Drupal\mongodb_path;
  * Interface for MongoDB path resolver implementations.
  */
 interface ResolverInterface {
-  const FLUSH_VAR = 'mongodb_path_flush';
-
   /**
    * Ensure the whitelist is initialized.
    *
    * Use the whitelist variable first, then rebuild if still empty.
    */
   public function ensureWhitelist();
-
-  /**
-   * Flush the path cache.
-   *
-   * Used by system_cron() to flush the path cache.
-   *
-   * @see system_cron()
-   */
-  public function flush();
-
-  /**
-   * Must the module trigger a flush on hook_flush_caches() ?
-   *
-   * @return bool
-   *   True is module must request a flush, False, otherwise.
-   */
-  public function isFlushRequired();
 
   /**
    * Is the whitelist set but empty ?
@@ -58,14 +39,6 @@ interface ResolverInterface {
    *   TRUE is there is at least one entry, FALSE otherwise.
    */
   public function isWhitelistSet();
-
-  /**
-   * Return the current flush timestamp.
-   *
-   * @return int
-   *   The timestamp of the latest flush, or 0 if flush is not required.
-   */
-  public function getFlushTimestamp();
 
   /**
    * Given a path alias, return the internal path it represents.
@@ -171,7 +144,7 @@ interface ResolverInterface {
    *   A string representing the source, a number representing the pid, or an
    *   array of query conditions.
    *
-   * @return string[]|bool
+   * @return false|string[]
    *   FALSE if no alias was found or an associative array containing the
    *   following keys:
    *   - source: The internal system path.

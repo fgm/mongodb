@@ -390,7 +390,7 @@ function drupal_path_alias_whitelist_rebuild($source = NULL) {
  *   A string representing the source, a number representing the pid, or an
  *   array of query conditions.
  *
- * @return string[]|bool
+ * @return false|string[]
  *   FALSE if no alias was found or an associative array containing the
  *   following keys:
  *   - source: The internal system path.

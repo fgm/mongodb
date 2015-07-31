@@ -29,18 +29,3 @@ function mongodb_path_exit() {
     });
   }
 }
-
-/**
- * Implements hook_flush_caches().
- *
- * Core expects to flush the "path cache" during full flushes, so we may want
- * to honor this behavior, although it is costly.
- */
-function mongodb_path_flush_caches() {
-  $resolver = mongodb_path_resolver();
-  if ($resolver->isFlushRequired()) {
-    $resolver->flush();
-  }
-
-  return [];
-}

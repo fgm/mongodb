@@ -383,6 +383,17 @@ EXAMPLE:
 If all modules on the site expose their cache bins via `hook_flush_caches()`,
 there is no need to enable the mongodb_cache module.
 
+### mongodb_path
+
+As with the core Path plugin:
+
+* the `site_frontpage` variable defines what the MongoDB path plugin considers
+  to be the home page of the site. It causes no MongoDB-specific behavior.
+* the `path_alias_whitelist` variable contains state information: an array of
+  the first component of paths on which an alias may be found. It is rebuilt
+  automatically by the MongoDB Path plugin, so it should not be modified in
+  `settings.php`, as this would prevent its dynamic maintenance.
+
 ### mongodb_session
 
 EXAMPLE:

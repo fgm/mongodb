@@ -26,25 +26,18 @@ class Resolver implements ResolverInterface {
   protected $cache;
 
   /**
-   * The timestamp of the latest flush, or 0 if disabled.
-   *
-   * @var int
-   */
-  protected $flush = 0;
-
-  /**
    * The NoSQL storage to use.
    *
    * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
-  protected $mongodb_storage;
+  protected $mongodbStorage;
 
   /**
    * The SQL storage to use.
    *
    * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
-  protected $rdb_storage;
+  protected $rdbStorage;
 
   /**
    * Request timestamp.
@@ -58,19 +51,19 @@ class Resolver implements ResolverInterface {
    *
    * @param int $request_time
    *   Request timestamp.
-   * @param int $initial_flush
-   *   The initial value of ResolverInterface::FLUSH_VAR.
    * @param \Drupal\mongodb_path\Storage\StorageInterface $mongodb_storage
    *   MongoDB database used to store aliases.
    * @param \Drupal\mongodb_path\Storage\StorageInterface $rdb_storage
    *   Relational database used to store aliases.
    */
-  public function __construct($request_time, $initial_flush, StorageInterface $mongodb_storage, StorageInterface $rdb_storage) {
+  public function __construct(
+    $request_time,
+    StorageInterface $mongodb_storage,
+    StorageInterface $rdb_storage) {
     mongodb_path_trace();
     $this->requestTime = $request_time;
-    $this->flush = $initial_flush;
-    $this->mongodb_storage = $mongodb_storage;
-    $this->rdb_storage = $rdb_storage;
+    $this->mongodbStorage = $mongodb_storage;
+    $this->rdbStorage = $rdb_storage;
 
     $this->cacheInit();
   }
@@ -118,22 +111,6 @@ class Resolver implements ResolverInterface {
   }
 
   /**
-   * Fake a flush using a flush timestamp, à la Varnish.
-   */
-  public function flush() {
-    mongodb_path_trace();
-    $this->flush = REQUEST_TIME;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFlushTimestamp() {
-    mongodb_path_trace();
-    return $this->flush;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getNormalPath($path, $language = NULL) {
@@ -162,17 +139,6 @@ class Resolver implements ResolverInterface {
     }
 
     return $ret;
-  }
-
-  /**
-   * Must the module trigger a flush on hook_flush_caches() ?
-   *
-   * @return bool
-   *   True if module must request a flush, False, otherwise.
-   */
-  public function isFlushRequired() {
-    mongodb_path_trace();
-    return !!$this->flush;
   }
 
   /**
@@ -342,12 +308,10 @@ class Resolver implements ResolverInterface {
       $criteria = ['pid' => $criteria];
     }
     $path = $this->pathLoad($criteria);
-    $this->mongodb_storage->delete($criteria);
-    $query = db_delete('url_alias');
-    foreach ($criteria as $field => $value) {
-      $query->condition($field, $value);
-    }
-    $query->execute();
+
+    $this->mongodbStorage->delete($criteria);
+    $this->rdbStorage->delete($criteria);
+
     module_invoke_all('path_delete', $path);
     drupal_clear_path_cache($path['source']);
   }
@@ -355,36 +319,21 @@ class Resolver implements ResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function pathLoad($conditions) {
+  public function pathLoad($criteria) {
     mongodb_path_trace();
-    if (is_numeric($conditions)) {
-      $conditions = array('pid' => $conditions);
+    if (is_numeric($criteria)) {
+      $criteria = ['pid' => $criteria];
     }
-    elseif (is_string($conditions)) {
-      $conditions = array('source' => $conditions);
+    elseif (is_string($criteria)) {
+      $criteria = ['source' => $criteria];
     }
-    elseif (!is_array($conditions)) {
+    elseif (!is_array($criteria)) {
       return FALSE;
     }
-    $alias = $this->mongodb_storage->load($conditions);
-    if (isset($alias)) {
-      return $alias;
-    }
 
-    $select = db_select('url_alias');
-    foreach ($conditions as $field => $value) {
-      $select->condition($field, $value);
-    }
-    $ret = $select
-      ->fields('url_alias')
-      ->execute()
-      ->fetchAssoc();
-
-    if ($ret != FALSE) {
-      $this->mongodb_storage->save($ret);
-    }
-
-    return $ret;
+    $alias = $this->mongodbStorage->load($criteria);
+    $result = isset($alias) ? $alias : FALSE;
+    return $result;
   }
 
   /**
@@ -396,18 +345,21 @@ class Resolver implements ResolverInterface {
 
     // Load the stored alias, if any.
     if (!empty($path['pid']) && !isset($path['original'])) {
-      $path['original'] = $this->pathLoad($path['pid']);
+      $original = $path['original'] = $this->pathLoad($path['pid']);
     }
 
-    if (empty($path['pid'])) {
-      drupal_write_record('url_alias', $path);
-      module_invoke_all('path_insert', $path);
+    $write = empty($path['pid']) ? 'insert' : 'update';
+
+    // DBTNG storage must run first, to generate the "pid" alias key.
+    $this->rdbStorage->save($path);
+    $this->mongodbStorage->save($path);
+
+    // This is not a valid document key, so it is stripped by storages, but
+    // hook_module_update() needs it, so restore it manually.
+    if (isset($original)) {
+      $path['original'] = $original;
     }
-    else {
-      drupal_write_record('url_alias', $path, array('pid'));
-      module_invoke_all('path_update', $path);
-    }
-    $this->mongodb_storage->save($path);
+    module_invoke_all("path_{$write}", $path);
 
     // Clear internal properties.
     unset($path['original']);
@@ -431,7 +383,7 @@ class Resolver implements ResolverInterface {
     }
 
     // Get the whitelist from the alias storage.
-    $whitelist = $this->mongodb_storage->getWhitelist();
+    $whitelist = $this->mongodbStorage->getWhitelist();
 
     variable_set('path_alias_whitelist', $whitelist);
     return $whitelist;
