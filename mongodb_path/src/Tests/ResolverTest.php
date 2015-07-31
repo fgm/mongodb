@@ -6,9 +6,9 @@
 
 namespace Drupal\mongodb_path\Tests;
 
+use Drupal\mongodb_path\Resolver;
 use Drupal\mongodb_path\Storage\Dbtng as DbtngStorage;
 use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
-use Drupal\mongodb_path\Resolver;
 
 /**
  * Class ResolverTest is a pseudo-unit test for the Resolver.

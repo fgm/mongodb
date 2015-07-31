@@ -34,6 +34,25 @@ function mongodb_path_requirements() {
     ];
   }
 
+  $plugin_loaded = function_exists('mongodb_path_resolver');
+  $ret['mongodb_path_plugin_loaded'] = [
+    'title' => $t('MongoDB Path plugin'),
+  ];
+
+  if ($plugin_loaded) {
+    $ret['mongodb_path_plugin_loaded'] += [
+      'value' => $t('Plugin loaded.'),
+      'severity' => REQUIREMENT_OK,
+    ];
+  }
+  else {
+    $ret['mongodb_path_plugin_loaded'] += [
+      'value' => $t('Plugin not loaded.'),
+      'description' => $t('The module cannot work without the MongoDB path plugin being installed.'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+
   return $ret;
 }
 
