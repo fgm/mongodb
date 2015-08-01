@@ -33,6 +33,20 @@ interface StorageInterface {
   public function delete(array $criteria);
 
   /**
+   * Query the white list from the collection/table.
+   *
+   * For each alias in the storage, get the top level component of the system
+   * path it corresponds to. This is the portion of the path before the first
+   * '/', if present, otherwise the whole path itself.
+   *
+   * @return string[]
+   *   A hash of "1"s indexed by the distinct top level components. This
+   *   seemingly unnatural format allows Resolver::whitelistRebuild() to
+   *   use isset() on the whitelist, which is faster than in_array().
+   */
+  public function getWhitelist();
+
+  /**
    * Load a path alias from storage.
    *
    * @param array $conditions
@@ -49,18 +63,27 @@ interface StorageInterface {
   public function load(array $conditions);
 
   /**
-   * Query the white list from the collection/table.
+   * Look up the aliases for an array of paths in a given language.
    *
-   * For each alias in the storage, get the top level component of the system
-   * path it corresponds to. This is the portion of the path before the first
-   * '/', if present, otherwise the whole path itself.
+   * Always get the language-specific alias before the language-neutral one. For
+   * example 'de' is less than 'und' so the order needs to be ascending, while
+   * 'xx-lolspeak' is more than 'und' so the order needs to be descending.
+   *
+   * @param string[] $paths
+   *   The system paths for which to look up aliases.
+   * @param string $language
+   *   The language in which aliases are looked up.
+   * @param bool $first_pass
+   *   Use first_pass processing, which swaps orderings and returns all aliases
+   *   instead of just the "best".
    *
    * @return string[]
-   *   A hash of "1"s indexed by the distinct top level components. This
-   *   seemingly unnatural format allows Resolver::whitelistRebuild() to
-   *   use isset() on the whitelist, which is faster than in_array().
+   *   A hash of alias strings by system paths, containing only paths for which
+   *   an alias exists. For system paths with more than one alias in the chosen
+   *   language, on first pass, all aliases will be returned ; in other cases,
+   *   the returned alias will be the one with the highest pid.
    */
-  public function getWhitelist();
+  public function lookupAliases(array $paths, $language, $first_pass = FALSE);
 
   /**
    * Save the path to the storage.

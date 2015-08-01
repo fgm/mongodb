@@ -13,6 +13,10 @@
 
 // Core autoloader is not available to path plugins during site install, and
 // doesn't support namespace anyway.
+require_once __DIR__ . '/src/Drupal8/CacheBackendInterface.php';
+require_once __DIR__ . '/src/Drupal8/CacheFactoryInterface.php';
+require_once __DIR__ . '/src/Drupal8/DefaultBackend.php';
+require_once __DIR__ . '/src/Drupal8/DefaultBackendFactory.php';
 require_once __DIR__ . '/src/Drupal8/ModuleHandlerInterface.php';
 require_once __DIR__ . '/src/Drupal8/ModuleHandler.php';
 require_once __DIR__ . '/src/Drupal8/SafeMarkup.php';
@@ -209,15 +213,8 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
  */
 function drupal_cache_system_paths() {
   mongodb_path_trace();
+  mongodb_path_resolver()->cacheSystemPaths();
 
-  // Only cache the system paths for this page is they were not loaded from
-  // cache in this request, to avoid writing to cache on every request.
-  $paths = mongodb_path_resolver()->getRefreshedCachedPaths();
-  if (!empty($paths)) {
-    $cid = current_path();
-    $expire = REQUEST_TIME + (60 * 60 * 24);
-    cache_set($cid, $paths, 'cache_path', $expire);
-  }
 }
 
 /**
@@ -559,6 +556,7 @@ function drupal_valid_path($path, $dynamic_allowed = FALSE) {
 function drupal_clear_path_cache($source = NULL) {
   mongodb_path_trace();
 
+  // FIXME also reset the resolver internal cache/firstpass to resync with DB.
   $resolver = mongodb_path_resolver();
   $resolver->cacheInit();
   $resolver->whitelistRebuild($source);

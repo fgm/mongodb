@@ -23,6 +23,32 @@ namespace Drupal\mongodb_path\Drupal8;
 interface ModuleHandlerInterface {
 
   /**
+   * Determines which modules are implementing a hook.
+   *
+   * @param string $hook
+   *   The name of the hook (e.g. "help" or "menu").
+   *
+   * @return array
+   *   An array with the names of the modules which are implementing this hook.
+   */
+  public function getImplementations($hook);
+
+  /**
+   * Invokes a hook in a particular module.
+   *
+   * @param string $module
+   *   The name of the module (without the .module extension).
+   * @param string $hook
+   *   The name of the hook to invoke.
+   * @param ...
+   *   Arguments to pass to the hook implementation.
+   *
+   * @return mixed
+   *   The return value of the hook implementation.
+   */
+  public function invoke($module, $hook, array $args = array());
+
+  /**
    * Invokes a hook in all enabled modules that implement it.
    *
    * @param string $hook

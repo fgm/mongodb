@@ -13,32 +13,21 @@ namespace Drupal\mongodb_path;
  */
 interface ResolverInterface {
   /**
+   * Cache system paths used on the current page if necessary.
+   *
+   * Only cache the system paths for this page is they were not loaded from
+   * cache in this request, to avoid writing to cache on every request.
+   *
+   * @see drupal_page_footer()
+   */
+  public function cacheSystemPaths();
+
+  /**
    * Ensure the whitelist is initialized.
    *
    * Use the whitelist variable first, then rebuild if still empty.
    */
   public function ensureWhitelist();
-
-  /**
-   * Is the whitelist set but empty ?
-   *
-   * Must not be called if the whitelist has not been initialized.
-   *
-   * @return bool
-   *   TRUE if the whitelist is initialized but empty, FALSE otherwise.
-   */
-  public function isWhitelistEmpty();
-
-  /**
-   * Is there any entry in the whitelist ?
-   *
-   * It may be NULL if not yet initialized, or be empty because rebuild found
-   * nothing to add.
-   *
-   * @return bool
-   *   TRUE is there is at least one entry, FALSE otherwise.
-   */
-  public function isWhitelistSet();
 
   /**
    * Given a path alias, return the internal path it represents.
@@ -79,6 +68,27 @@ interface ResolverInterface {
    *   from the cache path.
    */
   public function getRefreshedCachedPaths();
+
+  /**
+   * Is the whitelist set but empty ?
+   *
+   * Must not be called if the whitelist has not been initialized.
+   *
+   * @return bool
+   *   TRUE if the whitelist is initialized but empty, FALSE otherwise.
+   */
+  public function isWhitelistEmpty();
+
+  /**
+   * Is there any entry in the whitelist ?
+   *
+   * It may be NULL if not yet initialized, or be empty because rebuild found
+   * nothing to add.
+   *
+   * @return bool
+   *   TRUE is there is at least one entry, FALSE otherwise.
+   */
+  public function isWhitelistSet();
 
   /**
    * Lookup alias for a given path.

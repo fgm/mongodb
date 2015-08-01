@@ -7,6 +7,7 @@
 
 namespace Drupal\mongodb_path;
 
+use Drupal\mongodb_path\Drupal8\CacheBackendInterface;
 use Drupal\mongodb_path\Drupal8\ModuleHandlerInterface;
 use Drupal\mongodb_path\Drupal8\SafeMarkup;
 use Drupal\mongodb_path\Drupal8\StateInterface;
@@ -27,7 +28,14 @@ class Resolver implements ResolverInterface {
    *
    * @var array
    */
-  protected $cache;
+  protected $objectCache;
+
+  /**
+   * The cache_path service.
+   *
+   * @var \Drupal\mongodb_path\Drupal8\CacheBackendInterface
+   */
+  protected $cacheService;
 
   /**
    * A module handler service à la Drupal 8.
@@ -77,14 +85,18 @@ class Resolver implements ResolverInterface {
    *   MongoDB database used to store aliases.
    * @param \Drupal\mongodb_path\Storage\StorageInterface $rdb_storage
    *   Relational database used to store aliases.
+   * @param \Drupal\mongodb_path\Drupal8\CacheBackendInterface $cache_service
+   *   The cache_path service.
    */
   public function __construct(
     SafeMarkup $safe_markup,
     ModuleHandlerInterface $module_handler,
     StateInterface $state,
     StorageInterface $mongodb_storage,
-    StorageInterface $rdb_storage) {
+    StorageInterface $rdb_storage,
+    CacheBackendInterface $cache_service) {
     mongodb_path_trace();
+    $this->cacheService = $cache_service;
     $this->moduleHandler = $module_handler;
     $this->mongodbStorage = $mongodb_storage;
     $this->rdbStorage = $rdb_storage;
@@ -99,7 +111,7 @@ class Resolver implements ResolverInterface {
    */
   public function cacheInit() {
     mongodb_path_trace();
-    $this->cache = [
+    $this->objectCache = [
       'first_call' => TRUE,
       'map' => [],
       'no_aliases' => [],
@@ -110,15 +122,27 @@ class Resolver implements ResolverInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function cacheSystemPaths() {
+    $paths = $this->getRefreshedCachedPaths();
+    if (!empty($paths)) {
+      $cid = current_path();
+      $expire = REQUEST_TIME + (60 * 60 * 24);
+      $this->cacheService->set($cid, $paths, $expire);
+    }
+  }
+
+  /**
    * Debugging helper: dump the memory cache map using available method.
    */
   protected function dumpCacheMap() {
     mongodb_path_trace();
     if (function_exists('dpm')) {
-      dpm($this->cache['map']['en']);
+      dpm(json_encode($this->objectCache, JSON_PRETTY_PRINT));
     }
     else {
-      echo $this->safeMarkup->checkPlain(print_r($this->cache['map'], TRUE));
+      echo $this->safeMarkup->checkPlain(print_r($this->objectCache['map'], TRUE));
     }
   }
 
@@ -129,9 +153,9 @@ class Resolver implements ResolverInterface {
     mongodb_path_trace();
     // Retrieve the path alias whitelist.
     if (!$this->isWhitelistSet()) {
-      $this->cache['whitelist'] = $this->state->get('path_alias_whitelist', NULL);
-      if (!isset($this->cache['whitelist'])) {
-        $this->cache['whitelist'] = $this->whitelistRebuild();
+      $this->objectCache['whitelist'] = $this->state->get('path_alias_whitelist', NULL);
+      if (!isset($this->objectCache['whitelist'])) {
+        $this->objectCache['whitelist'] = $this->whitelistRebuild();
       }
     }
   }
@@ -157,8 +181,8 @@ class Resolver implements ResolverInterface {
    */
   public function getRefreshedCachedPaths() {
     mongodb_path_trace();
-    if (empty($this->cache['system_paths']) && !empty($this->cache['map'])) {
-      $ret = array_keys(current($this->cache['map']));
+    if (empty($this->objectCache['system_paths']) && !empty($this->objectCache['map'])) {
+      $ret = array_keys(current($this->objectCache['map']));
     }
     else {
       $ret = [];
@@ -172,8 +196,8 @@ class Resolver implements ResolverInterface {
    */
   public function isWhitelistEmpty() {
     mongodb_path_trace();
-    assert('$this->cache["whitelist"] !== NULL');
-    return empty($this->cache['whitelist']);
+    assert('$this->isWhitelistSet()');
+    return empty($this->objectCache['whitelist']);
   }
 
   /**
@@ -181,7 +205,7 @@ class Resolver implements ResolverInterface {
    */
   public function isWhitelistSet() {
     mongodb_path_trace();
-    return $this->cache['whitelist'] !== NULL;
+    return $this->objectCache['whitelist'] !== NULL;
   }
 
   /**
@@ -189,78 +213,41 @@ class Resolver implements ResolverInterface {
    */
   public function lookupPathAlias($path, $path_language) {
     mongodb_path_trace();
-    static $count = 0;
-    $count++;
 
     // During the first call to drupal_lookup_path() per language, load the
     // expected system paths for the page from cache.
-    if (!empty($this->cache['first_call'])) {
-      $this->cache['first_call'] = FALSE;
+    if (!empty($this->objectCache['first_call'])) {
+      $this->objectCache['first_call'] = FALSE;
 
-      $this->cache['map'][$path_language] = array();
+      $this->objectCache['map'][$path_language] = array();
       // Load system paths from cache.
       $cid = current_path();
-      if ($cached = cache_get($cid, 'cache_path')) {
-        $this->cache['system_paths'] = $cached->data;
+      if ($cached = $this->cacheService->get($cid)) {
+        $paths = $this->objectCache['system_paths'] = $cached->data;
+
         // Now fetch the aliases corresponding to these system paths.
-        $args = array(
-          ':system' => $this->cache['system_paths'],
-          ':language' => $path_language,
-          ':language_none' => LANGUAGE_NONE,
-        );
-        // Always get the language-specific alias before the language-neutral
-        // one. For example 'de' is less than 'und' so the order needs to be
-        // ASC, while 'xx-lolspeak' is more than 'und' so the order needs to
-        // be DESC. We also order by pid ASC so that fetchAllKeyed() returns
-        // the most recently created alias for each source. Subsequent queries
-        // using fetchField() must use pid DESC to have the same effect.
-        // For performance reasons, the query builder is not used here.
-        if ($path_language == LANGUAGE_NONE) {
-          // Prevent PDO from complaining about a token the query doesn't use.
-          unset($args[':language']);
-          $result = db_query('SELECT source, alias FROM {url_alias} WHERE source IN (:system) AND language = :language_none ORDER BY pid ASC', $args);
-        }
-        elseif ($path_language < LANGUAGE_NONE) {
-          $result = db_query('SELECT source, alias FROM {url_alias} WHERE source IN (:system) AND language IN (:language, :language_none) ORDER BY language ASC, pid ASC', $args);
-        }
-        else {
-          $result = db_query('SELECT source, alias FROM {url_alias} WHERE source IN (:system) AND language IN (:language, :language_none) ORDER BY language DESC, pid ASC', $args);
-        }
-        $this->cache['map'][$path_language] = $result->fetchAllKeyed();
+        $map = $this->objectCache['map'][$path_language] = $this->mongodbStorage->lookupAliases($paths, $path_language, TRUE);
+
         // Keep a record of paths with no alias to avoid querying twice.
-        $this->cache['no_aliases'][$path_language] = array_flip(array_diff_key($this->cache['system_paths'], array_keys($this->cache['map'][$path_language])));
+        $this->objectCache['no_aliases'][$path_language] = array_flip(array_diff_key($paths, array_keys($map)));
       }
     }
 
     // If the alias has already been loaded, return it.
-    if (isset($this->cache['map'][$path_language][$path])) {
-      return $this->cache['map'][$path_language][$path];
+    if (isset($map[$path])) {
+      return $map[$path];
     }
+
     // Check the path whitelist, if the top_level part before the first /
     // is not in the list, then there is no need to do anything further,
     // it is not in the database.
-    elseif (!isset($this->cache['whitelist'][strtok($path, '/')])) {
+    elseif (!isset($this->objectCache['whitelist'][strtok($path, '/')])) {
       return FALSE;
     }
     // For system paths which were not cached, query aliases individually.
-    elseif (!isset($this->cache['no_aliases'][$path_language][$path])) {
-      $args = array(
-        ':source' => $path,
-        ':language' => $path_language,
-        ':language_none' => LANGUAGE_NONE,
-      );
-      // See the queries above.
-      if ($path_language == LANGUAGE_NONE) {
-        unset($args[':language']);
-        $alias = db_query("SELECT alias FROM {url_alias} WHERE source = :source AND language = :language_none ORDER BY pid DESC", $args)->fetchField();
-      }
-      elseif ($path_language > LANGUAGE_NONE) {
-        $alias = db_query("SELECT alias FROM {url_alias} WHERE source = :source AND language IN (:language, :language_none) ORDER BY language DESC, pid DESC", $args)->fetchField();
-      }
-      else {
-        $alias = db_query("SELECT alias FROM {url_alias} WHERE source = :source AND language IN (:language, :language_none) ORDER BY language ASC, pid DESC", $args)->fetchField();
-      }
-      $this->cache['map'][$path_language][$path] = $alias;
+    elseif (!isset($this->objectCache['no_aliases'][$path_language][$path])) {
+      $result = $this->mongodbStorage->lookupAliases([$path], $path_language);
+      $alias = $this->objectCache['map'][$path_language][$path] = reset($result);
       return $alias;
     }
   }
@@ -272,8 +259,8 @@ class Resolver implements ResolverInterface {
     mongodb_path_trace();
     // Look for the value $path within the cached $map.
     $source = FALSE;
-    if (!isset($this->cache['map'][$path_language]) || !($source = array_search($path,
-        $this->cache['map'][$path_language]))
+    if (!isset($this->objectCache['map'][$path_language]) || !($source = array_search($path,
+        $this->objectCache['map'][$path_language]))
     ) {
       $args = array(
         ':alias' => $path,
@@ -295,13 +282,13 @@ class Resolver implements ResolverInterface {
           $args);
       }
       if ($source = $result->fetchField()) {
-        $this->cache['map'][$path_language][$source] = $path;
+        $this->objectCache['map'][$path_language][$source] = $path;
       }
       else {
         // We can't record anything into $map because we do not have a valid
         // index and there is no need because we have not learned anything
         // about any Drupal path. Thus cache to $no_source.
-        $this->cache['no_source'][$path_language][$path] = TRUE;
+        $this->objectCache['no_source'][$path_language][$path] = TRUE;
       }
     }
 
@@ -314,15 +301,15 @@ class Resolver implements ResolverInterface {
   public function lookupPathWipe() {
     mongodb_path_trace();
     $this->cacheInit();
-    $this->cache['map'] = $this->whitelistRebuild();
+    $this->objectCache['map'] = $this->whitelistRebuild();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function mayHaveSource($path_language, $path) {
+  public function mayHaveSource($path, $path_language) {
     mongodb_path_trace();
-    return !isset($this->cache['no_source'][$path_language][$path]);
+    return !isset($this->objectCache['no_source'][$path_language][$path]);
   }
 
   /**

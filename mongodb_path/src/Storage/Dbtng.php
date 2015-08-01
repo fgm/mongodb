@@ -114,6 +114,13 @@ EOT;
   /**
    * {@inheritdoc}
    */
+  public function lookupAliases($paths, $language, $first_pass = FALSE) {
+    throw new \BadMethodCallException('Alias lookup is not implemented in the DBTNG storage.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function save(array &$path) {
     mongodb_path_trace();
 

@@ -8,6 +8,7 @@
 namespace Drupal\mongodb_path\Tests;
 
 
+use Drupal\mongodb_path\Drupal8\DefaultBackendFactory;
 use Drupal\mongodb_path\Drupal8\ModuleHandler;
 use Drupal\mongodb_path\Drupal8\SafeMarkup;
 use Drupal\mongodb_path\Drupal8\State;
@@ -28,11 +29,22 @@ use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
 class ResolverTest extends \DrupalUnitTestCase {
 
   /**
+   * A Drupal 8-like Cache Backend service.
+   *
+   * @var \Drupal\mongodb_path\Drupal8\CacheBackendInterface
+   */
+  protected $cachePath;
+
+  /**
+   * A Drupal 8-like Module service.
+   *
    * @var \Drupal\mongodb_path\Drupal8\ModuleHandlerInterface
    */
   protected $moduleHandler;
 
   /**
+   * The DBTNG-based storage instance.
+   *
    * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
   protected $rdb_storage;
@@ -98,6 +110,8 @@ class ResolverTest extends \DrupalUnitTestCase {
 
     $this->testDB = mongodb();
 
+    $cache_factory = new DefaultBackendFactory();
+    $this->cachePath = $cache_factory->get('cache_path');
     $this->moduleHandler = new ModuleHandler();
     $this->safeMarkup = new SafeMarkup();
     $this->state = new State();
@@ -147,7 +161,8 @@ class ResolverTest extends \DrupalUnitTestCase {
       $this->moduleHandler,
       $this->state,
       $this->mongodb_storage,
-      $this->rdb_storage);
+      $this->rdb_storage,
+      $this->cachePath);
 
     $this->assertTrue(is_array($resolver->getRefreshedCachedPaths()), "Refreshed cache paths are in an array");
   }
