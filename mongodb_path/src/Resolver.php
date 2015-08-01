@@ -7,6 +7,10 @@
 
 namespace Drupal\mongodb_path;
 
+use Drupal\mongodb_path\Drupal8\ModuleHandlerInterface;
+use Drupal\mongodb_path\Drupal8\SafeMarkup;
+use Drupal\mongodb_path\Drupal8\StateInterface;
+
 use Drupal\mongodb_path\Storage\StorageInterface;
 
 /**
@@ -26,6 +30,13 @@ class Resolver implements ResolverInterface {
   protected $cache;
 
   /**
+   * A module handler service à la Drupal 8.
+   *
+   * @var \Drupal\mongodb_path\Drupal8\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * The NoSQL storage to use.
    *
    * @var \Drupal\mongodb_path\Storage\StorageInterface
@@ -40,30 +51,45 @@ class Resolver implements ResolverInterface {
   protected $rdbStorage;
 
   /**
-   * Request timestamp.
+   * A safe markup service.
    *
-   * @var int
+   * @var \Drupal\mongodb_path\Drupal8\SafeMarkup
    */
-  protected $requestTime;
+  protected $safeMarkup;
+
+  /**
+   * Provides access to state keys.
+   *
+   * @var \Drupal\mongodb_path\Drupal8\StateInterface
+   */
+  protected $state;
 
   /**
    * Constructor.
    *
-   * @param int $request_time
-   *   Request timestamp.
+   * @param \Drupal\mongodb_path\Drupal8\SafeMarkup $safe_markup
+   *   A safe markup service.
+   * @param \Drupal\mongodb_path\Drupal8\ModuleHandlerInterface
+   *   A module handler service
+   * @param \Drupal\mongodb_path\Drupal8\StateInterface
+   *   A State service.
    * @param \Drupal\mongodb_path\Storage\StorageInterface $mongodb_storage
    *   MongoDB database used to store aliases.
    * @param \Drupal\mongodb_path\Storage\StorageInterface $rdb_storage
    *   Relational database used to store aliases.
    */
   public function __construct(
-    $request_time,
+    SafeMarkup $safe_markup,
+    ModuleHandlerInterface $module_handler,
+    StateInterface $state,
     StorageInterface $mongodb_storage,
     StorageInterface $rdb_storage) {
     mongodb_path_trace();
-    $this->requestTime = $request_time;
+    $this->moduleHandler = $module_handler;
     $this->mongodbStorage = $mongodb_storage;
     $this->rdbStorage = $rdb_storage;
+    $this->safeMarkup = $safe_markup;
+    $this->state = $state;
 
     $this->cacheInit();
   }
@@ -92,7 +118,7 @@ class Resolver implements ResolverInterface {
       dpm($this->cache['map']['en']);
     }
     else {
-      echo check_plain(print_r($this->cache['map'], TRUE));
+      echo $this->safeMarkup->checkPlain(print_r($this->cache['map'], TRUE));
     }
   }
 
@@ -103,7 +129,7 @@ class Resolver implements ResolverInterface {
     mongodb_path_trace();
     // Retrieve the path alias whitelist.
     if (!$this->isWhitelistSet()) {
-      $this->cache['whitelist'] = variable_get('path_alias_whitelist', NULL);
+      $this->cache['whitelist'] = $this->state->get('path_alias_whitelist', NULL);
       if (!isset($this->cache['whitelist'])) {
         $this->cache['whitelist'] = $this->whitelistRebuild();
       }
@@ -307,12 +333,12 @@ class Resolver implements ResolverInterface {
     if (!is_array($criteria)) {
       $criteria = ['pid' => $criteria];
     }
-    $path = $this->pathLoad($criteria);
+    $path = (array) $this->pathLoad($criteria);
 
     $this->mongodbStorage->delete($criteria);
     $this->rdbStorage->delete($criteria);
 
-    module_invoke_all('path_delete', $path);
+    $this->moduleHandler->invokeAll('path_delete', $path);
     drupal_clear_path_cache($path['source']);
   }
 
@@ -354,12 +380,12 @@ class Resolver implements ResolverInterface {
     $this->rdbStorage->save($path);
     $this->mongodbStorage->save($path);
 
-    // This is not a valid document key, so it is stripped by storages, but
-    // hook_module_update() needs it, so restore it manually.
+    // This is not a valid document key, so it is stripped by storage
+    // implementations, but hook_module_update() needs it, so restore it.
     if (isset($original)) {
       $path['original'] = $original;
     }
-    module_invoke_all("path_{$write}", $path);
+    $this->moduleHandler->invokeAll("path_{$write}", $path);
 
     // Clear internal properties.
     unset($path['original']);
@@ -376,7 +402,7 @@ class Resolver implements ResolverInterface {
     // When paths are inserted, only rebuild the white_list if the system path
     // has a top level component which is not already in the white_list.
     if (!empty($source)) {
-      $whitelist = variable_get('path_alias_whitelist', NULL);
+      $whitelist = $this->state->get('path_alias_whitelist', NULL);
       if (isset($whitelist[strtok($source, '/')])) {
         return $whitelist;
       }
@@ -385,7 +411,8 @@ class Resolver implements ResolverInterface {
     // Get the whitelist from the alias storage.
     $whitelist = $this->mongodbStorage->getWhitelist();
 
-    variable_set('path_alias_whitelist', $whitelist);
+    $this->state->set('path_alias_whitelist', $whitelist);
     return $whitelist;
   }
+
 }

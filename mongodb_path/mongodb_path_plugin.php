@@ -13,6 +13,12 @@
 
 // Core autoloader is not available to path plugins during site install, and
 // doesn't support namespace anyway.
+require_once __DIR__ . '/src/Drupal8/ModuleHandlerInterface.php';
+require_once __DIR__ . '/src/Drupal8/ModuleHandler.php';
+require_once __DIR__ . '/src/Drupal8/SafeMarkup.php';
+require_once __DIR__ . '/src/Drupal8/StateInterface.php';
+require_once __DIR__ . '/src/Drupal8/State.php';
+
 require_once __DIR__ . '/src/Storage/StorageInterface.php';
 require_once __DIR__ . '/src/Storage/MongoDb.php';
 require_once __DIR__ . '/src/Storage/Dbtng.php';

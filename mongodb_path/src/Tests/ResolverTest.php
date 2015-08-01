@@ -1,10 +1,16 @@
 <?php
+
 /**
  * @file
  * Contains tests for the MongoDB path Resolver.
  */
 
 namespace Drupal\mongodb_path\Tests;
+
+
+use Drupal\mongodb_path\Drupal8\ModuleHandler;
+use Drupal\mongodb_path\Drupal8\SafeMarkup;
+use Drupal\mongodb_path\Drupal8\State;
 
 use Drupal\mongodb_path\Resolver;
 use Drupal\mongodb_path\Storage\Dbtng as DbtngStorage;
@@ -20,6 +26,11 @@ use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
  * @package Drupal\mongodb_path\Tests
  */
 class ResolverTest extends \DrupalUnitTestCase {
+
+  /**
+   * @var \Drupal\mongodb_path\Drupal8\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
 
   /**
    * @var \Drupal\mongodb_path\Storage\StorageInterface
@@ -39,6 +50,16 @@ class ResolverTest extends \DrupalUnitTestCase {
    * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
   protected $mongodb_storage;
+
+  /**
+   * @var \Drupal\mongodb_path\Drupal8\SafeMarkup
+   */
+  protected $safeMarkup;
+
+  /**
+   * @var \Drupal\mongodb_path\Drupal8\StateInterface
+   */
+  protected $state;
 
   /**
    * The test database instance.
@@ -76,6 +97,11 @@ class ResolverTest extends \DrupalUnitTestCase {
     $conf['mongodb_connections'] = $connections;
 
     $this->testDB = mongodb();
+
+    $this->moduleHandler = new ModuleHandler();
+    $this->safeMarkup = new SafeMarkup();
+    $this->state = new State();
+
     $this->mongodb_storage = new MongoDbStorage($this->testDB);
     $this->rdb_storage = new DbtngStorage(\Database::getConnection());
 
@@ -116,7 +142,13 @@ class ResolverTest extends \DrupalUnitTestCase {
    * Tests constructor cache initialization.
    */
   public function testConstructor() {
-    $resolver = new Resolver(mt_rand(0, 1 << 31), $this->mongodb_storage, $this->rdb_storage);
+    $resolver = new Resolver(
+      $this->safeMarkup,
+      $this->moduleHandler,
+      $this->state,
+      $this->mongodb_storage,
+      $this->rdb_storage);
+
     $this->assertTrue(is_array($resolver->getRefreshedCachedPaths()), "Refreshed cache paths are in an array");
   }
 
