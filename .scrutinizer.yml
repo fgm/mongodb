@@ -14,3 +14,4 @@ filter:
   paths:
     - 'mongodb_cache/*'
     - 'mongodb_path/*'
+    - 'mongodb_*.php'

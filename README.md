@@ -14,16 +14,19 @@ INTRODUCTION
 MongoDB integration for Drupal. This module is a collection of several modules,
 allowing to store different Drupal data in MongoDB.
 
-Module                | Information
-----------------------|---------------------------------------------------------
-mongodb               | Support library for the other modules
-mongodb_block         | Store block info in MongoDB much like the core block API
-mongodb_cache         | Store cache in MongoDB
-mongodb_field_storage | Store fields in MongoDB
-mongodb_path          | Store URL aliases in MongoDB [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/FGM/mongodb/badges/quality-score.png?b=2538542-path)](https://scrutinizer-ci.com/g/FGM/mongodb/?branch=2538542-path)
-mongodb_queue         | DrupalQueueInterface implementation using MongoDB
-mongodb_session       | Store sessions in MongoDB
-mongodb_watchdog      | Store watchdog messages in MongoDB
+Module                | S | Information
+----------------------|---|----------------------------------------------------
+mongodb               | * | Support library for the other modules
+mongodb_block         |   | Store block info in MongoDB like the core block API
+mongodb_cache         |   | Store cache in MongoDB
+mongodb_field_storage |   | Store fields in MongoDB
+mongodb_path          | * | Store URL aliases in MongoDB
+mongodb_queue         |   | DrupalQueueInterface implementation using MongoDB
+mongodb_session       |   | Store sessions in MongoDB
+mongodb_watchdog      |   | Store watchdog messages in MongoDB
+
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/FGM/mongodb/badges/quality-score.png?b=2538542-path)](https://scrutinizer-ci.com/g/FGM/mongodb/?branch=2538542-path)
+static analysis covers components checked in the "S" column.
 
 The module is a "development" version, and as such its configuration, as well of
 some of its APIs may change with each -dev release: please read this README with

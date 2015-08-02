@@ -77,9 +77,9 @@ class Resolver implements ResolverInterface {
    *
    * @param \Drupal\mongodb_path\Drupal8\SafeMarkup $safe_markup
    *   A safe markup service.
-   * @param \Drupal\mongodb_path\Drupal8\ModuleHandlerInterface
+   * @param \Drupal\mongodb_path\Drupal8\ModuleHandlerInterface $module_handler
    *   A module handler service
-   * @param \Drupal\mongodb_path\Drupal8\StateInterface
+   * @param \Drupal\mongodb_path\Drupal8\StateInterface $state
    *   A State service.
    * @param \Drupal\mongodb_path\Storage\StorageInterface $mongodb_storage
    *   MongoDB database used to store aliases.

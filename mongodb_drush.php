@@ -7,8 +7,9 @@
  * @Todo
  *  Check whether the alias argument is used.
  */
+
 /**
- * Implementation of hook_drush_command().
+ * Implements hook_drush_command().
  */
 function mongodb_drush_command() {
 //   $options['--alias'] = 'The alias defined in the variable mongodb_collections.';
@@ -18,7 +19,7 @@ function mongodb_drush_command() {
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_CONFIGURATION,
 //     'options' => $options,
     'arguments' => array(
-       'alias' => 'The connection',
+      'alias' => 'The connection',
     ),
   );
 
@@ -30,7 +31,7 @@ function mongodb_drush_command() {
       '`drush mongodb-connect`' => 'Connect to the mongodb.',
     ),
     'arguments' => array(
-       'alias' => 'The connection',
+      'alias' => 'The connection',
     ),
     'aliases' => array('mdbc'),
   );
@@ -41,7 +42,7 @@ function mongodb_drush_command() {
       'all' => 'Show all mongodb connections, instead of just one.',
     ),
     'arguments' => array(
-       'alias' => 'The connection',
+      'alias' => 'The connection',
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_CONFIGURATION,
 //     'options' => $options,
@@ -54,8 +55,8 @@ function mongodb_drush_command() {
       'drush mongodb-query default "db.watchdog.find().forEach(function(x){print(tojson(x))});"' => 'Get the watchdog message templates.',
     ),
     'arguments' => array(
-       'alias' => 'The connection',
-       'query' => 'A mongodb query. Mandatory.',
+      'alias' => 'The connection',
+      'query' => 'A mongodb query. Mandatory.',
     ),
 //     'options' => array(
 //       '--extra' => 'Add custom options to the mongodb command.',

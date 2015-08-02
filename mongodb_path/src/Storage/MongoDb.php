@@ -43,7 +43,7 @@ class MongoDb implements StorageInterface {
   /**
    * Storage constructor.
    *
-   * @param \MongoDB $mongo
+   * @param \MongoDB|\MongoDummy $mongo
    *   A MongoDB database in which to access the alias storage collection.
    */
   public function __construct(\MongoDB $mongo) {
@@ -153,12 +153,12 @@ class MongoDb implements StorageInterface {
    */
   public function lookupAliases(array $paths, $language, $first_pass = FALSE) {
     $languages = ($language == LANGUAGE_NONE)
-      ? [ LANGUAGE_NONE ]
-      : [ LANGUAGE_NONE, $language  ];
+      ? [LANGUAGE_NONE]
+      : [LANGUAGE_NONE, $language];
 
     $criteria = [
-      'source' => [ '$in' => $paths ],
-      'language' => [ '$in' => $languages ],
+      'source' => ['$in' => $paths],
+      'language' => ['$in' => $languages],
     ];
 
     if ($first_pass) {
@@ -172,7 +172,7 @@ class MongoDb implements StorageInterface {
         : ['language' => 1, 'pid' => -1];
     }
 
-    $fields = [ 'source' => 1, 'alias' => 1, 'language' => 1, 'pid' => 1, '_id' => 0 ];
+    $fields = ['source' => 1, 'alias' => 1, 'language' => 1, 'pid' => 1, '_id' => 0];
     $cursor = $this->collection->find($criteria, $fields)->sort($sort);
     $result = [];
 

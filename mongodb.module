@@ -8,7 +8,7 @@
 /**
  * Implements hook_help().
  */
-function mongodb_help($path, $arg) {
+function mongodb_help($path) {
   switch ($path) {
     case 'admin/help#mongodb':
       return '<p>' . t('<a href="!project">MongoDB</a> implements a generic <a href="!mongo">MongoDB</a> interface.', array(
@@ -53,15 +53,15 @@ function mongodb($alias = 'default', $retry = 3) {
     'connection_options' => array(),
   );
   $host = $connection['host'];
-  $db = $connection['db'];
+  $database = $connection['db'];
   $options = $connection['connection_options'] + array(
     'connect' => TRUE,
-    'db' => $db,
+    'db' => $database,
   );
-  if (!isset($mongo_objects[$host][$db])) {
+  if (!isset($mongo_objects[$host][$database])) {
     try {
       // Use the 1.3 client if available.
-      if (class_exists(MongoClient::class)) {
+      if (class_exists('MongoClient')) {
         $mongo = new MongoClient($host, $options);
         // Enable read preference and tags if provided. This can also be
         // controlled on a per query basis at the cursor level if more control
@@ -77,18 +77,18 @@ function mongodb($alias = 'default', $retry = 3) {
           $mongo->setSlaveOkay(TRUE);
         }
       }
-      $mongo_objects[$host][$db] = $mongo->selectDB($db);
-      $mongo_objects[$host][$db]->connection = $mongo;
+      $mongo_objects[$host][$database] = $mongo->selectDB($database);
+      $mongo_objects[$host][$database]->connection = $mongo;
     }
     catch (MongoConnectionException $e) {
       if ($retry > 0) {
         return mongodb($alias, --$retry);
       }
-      $mongo_objects[$host][$db] = new MongodbDummy();
+      $mongo_objects[$host][$database] = new MongodbDummy();
       throw $e;
     }
   }
-  return $mongo_objects[$host][$db];
+  return $mongo_objects[$host][$database];
 }
 
 /**
@@ -135,12 +135,14 @@ function mongodb_collection() {
   // object.
   $mongodb_object = mongodb($alias);
   $collection = $mongodb_object->selectCollection(mongodb_collection_name($collection_name));
+
   // Enable read preference and tags at a collection level if we have 1.3
   // client.
   if (!empty($collections[$alias]['read_preference']) && get_class($mongodb_object->connection) == 'MongoClient') {
     $tags = !empty($collections[$alias]['read_preference']['tags']) ? $collections[$alias]['read_preference']['tags'] : array();
     $collection->setReadPreference($collections[$alias]['read_preference']['preference'], $tags);
   }
+
   $collection->connection = $mongodb_object->connection;
   return variable_get('mongodb_debug', FALSE) ? new MongoDebugCollection($collection) : $collection;
 }
@@ -151,12 +153,19 @@ function mongodb_collection() {
 class MongoDebugCollection {
 
   /**
+   * The decorated collection.
+   *
+   * @var MongoCollection
+   */
+  protected $collection;
+
+  /**
    * Constructor.
    *
-   * @param string $collection
+   * @param \MongoCollection $collection
    *   The collection to decorate.
    */
-  public function __construct($collection) {
+  public function __construct(\MongoCollection $collection) {
     $this->collection = $collection;
   }
 
@@ -198,20 +207,27 @@ class MongoDebugCollection {
 }
 
 /**
- * Class MongoDebugCursor is a debug decorator for MongoCollection::find().
+ * Class MongoDebugCursor is a debug decorator for MongoCursor.
+ *
+ * @see mongoDebugCollection::find()
  */
 class MongoDebugCursor {
 
   /**
+   * The decorated cursor.
+   *
+   * @var \MongoCursor
+   */
+  protected $cursor;
+
+  /**
    * Constructor.
    *
-   * @param string $collection
-   *   The name of the collection on which the cursor applies.
-   *
-   * @see mongoDebugCollection::find()
+   * @param \MongoCursor $cursor
+   *   The cursor to decorate.
    */
-  public function __construct($collection) {
-    $this->collection = $collection;
+  public function __construct(\MongoCursor $cursor) {
+    $this->cursor = $cursor;
   }
 
   /**
@@ -228,20 +244,53 @@ class MongoDebugCursor {
   public function __call($name, array $arguments) {
     debug($name);
     debug($arguments);
-    return call_user_func_array(array($this->collection, $name), $arguments);
+    return call_user_func_array(array($this->cursor, $name), $arguments);
   }
 
 }
 
 /**
- * Class MongodbDummy is a fake object accepting any method and doing nothing.
+ * Class MongodbDummy is a mock object accepting any method and doing nothing.
+ *
+ * It is used to mock both databases and collections.
  */
 class MongodbDummy {
 
+  /**
+   * The collection name, if applicable.
+   *
+   * @var string
+   */
+  protected $collection;
+
+  /**
+   * The Mongo or MongoClient instance, if the objects is used as a database.
+   *
+   * @var \MongoClient
+   *
+   * @see mongod()
+   * @see mongodb_collection()
+   */
   public $connection;
 
   /**
+   * Constructor.
+   *
+   * @param string|NULL $name
+   *   If this parameter is passed, the object is used as a collection,
+   *   otherwise it is used as a database.
+   */
+  public function __construct($name = NULL) {
+    if (isset($name)) {
+      $this->collection = $name;
+    }
+  }
+
+  /**
    * Pretend to return a collection.
+   *
+   * @param string $name
+   *   The name of a collection.
    *
    * @return \MongodbDummy
    *   The returned value is actually a new MongodbDummy instance.
@@ -342,12 +391,16 @@ function mongodb_set_active_connection($alias, $connection_name = 'default') {
  * @param string $name
  *   The name of the sequence.
  * @param int $existing_id
- *   The minimal value to be generated.
+ *   The maximum known existing id : the result must be greater than this.
  *
  * @return int
- *   The id.
+ *   The next id in a sequence.
+ *
+ * @throws \InvalidArgumentException
+ *   If the database cannot be selected.
  *
  * @throws \MongoConnectionException
+ *   If the connection cannot be established.
  */
 function mongodb_next_id($name, $existing_id = 0) {
   // Atomically get the next id in the sequence.
@@ -366,6 +419,7 @@ function mongodb_next_id($name, $existing_id = 0) {
     $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
   }
   catch (Exception $e) {
+    $value = 0;
   }
   if (0 < $existing_id - $value + 1) {
     $cmd = array(
@@ -378,6 +432,7 @@ function mongodb_next_id($name, $existing_id = 0) {
     $sequence = $mongo->command($cmd);
     $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
   }
+
   return $value;
 }
 

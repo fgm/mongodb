@@ -43,11 +43,18 @@ class ResolverTest extends \DrupalUnitTestCase {
   protected $moduleHandler;
 
   /**
+   * The test storage instance.
+   *
+   * @var \Drupal\mongodb_path\Storage\StorageInterface
+   */
+  protected $mongodbStorage;
+
+  /**
    * The DBTNG-based storage instance.
    *
    * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
-  protected $rdb_storage;
+  protected $rdbStorage;
 
   /**
    * The name of the default database.
@@ -57,18 +64,15 @@ class ResolverTest extends \DrupalUnitTestCase {
   protected $savedDbName;
 
   /**
-   * The test storage instance.
+   * A Drupal 8-like safe markup service.
    *
-   * @var \Drupal\mongodb_path\Storage\StorageInterface
-   */
-  protected $mongodb_storage;
-
-  /**
    * @var \Drupal\mongodb_path\Drupal8\SafeMarkup
    */
   protected $safeMarkup;
 
   /**
+   * A Drupal 8-like State service.
+   *
    * @var \Drupal\mongodb_path\Drupal8\StateInterface
    */
   protected $state;
@@ -76,14 +80,14 @@ class ResolverTest extends \DrupalUnitTestCase {
   /**
    * The test database instance.
    *
-   * @var \MongoDB
+   * @var \MongoDB|\MongoDummy
    */
   protected $testDB;
 
   /**
    * Declare the test to SimpleTest.
    *
-   * @return string[]
+   * @return string[string]
    *   A test description array.
    */
   public static function getInfo() {
@@ -116,10 +120,8 @@ class ResolverTest extends \DrupalUnitTestCase {
     $this->safeMarkup = new SafeMarkup();
     $this->state = new State();
 
-    $this->mongodb_storage = new MongoDbStorage($this->testDB);
-    $this->rdb_storage = new DbtngStorage(\Database::getConnection());
-
-    parent::setUp();
+    $this->mongodbStorage = new MongoDbStorage($this->testDB);
+    $this->rdbStorage = new DbtngStorage(\Database::getConnection());
   }
 
   /**
@@ -130,7 +132,7 @@ class ResolverTest extends \DrupalUnitTestCase {
   public function tearDown() {
     global $conf;
 
-    $this->mongodb_storage->clear();
+    $this->mongodbStorage->clear();
     $this->testDB->drop();
     $this->pass(strtr('Dropped MongoDB database %name', ['%name' => $this->testDB->__toString()]));
     $this->testDB = NULL;
@@ -160,8 +162,8 @@ class ResolverTest extends \DrupalUnitTestCase {
       $this->safeMarkup,
       $this->moduleHandler,
       $this->state,
-      $this->mongodb_storage,
-      $this->rdb_storage,
+      $this->mongodbStorage,
+      $this->rdbStorage,
       $this->cachePath);
 
     $this->assertTrue(is_array($resolver->getRefreshedCachedPaths()), "Refreshed cache paths are in an array");

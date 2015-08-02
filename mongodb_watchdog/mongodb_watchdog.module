@@ -4,7 +4,7 @@
  * Fires watchdog messages to mongodb.
  */
 
-include_once dirname(__FILE__) . '/../mongodb.module';
+include_once dirname(__FILE__) . '/../mongodb_module.php';
 
 /**
  * Implements hook_menu().
