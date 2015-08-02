@@ -151,7 +151,7 @@ class MongoDb implements StorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function lookupAliases($paths, $language, $first_pass = FALSE) {
+  public function lookupAliases(array $paths, $language, $first_pass = FALSE) {
     $languages = ($language == LANGUAGE_NONE)
       ? [ LANGUAGE_NONE ]
       : [ LANGUAGE_NONE, $language  ];

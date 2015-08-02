@@ -114,7 +114,7 @@ EOT;
   /**
    * {@inheritdoc}
    */
-  public function lookupAliases($paths, $language, $first_pass = FALSE) {
+  public function lookupAliases(array $paths, $language, $first_pass = FALSE) {
     throw new \BadMethodCallException('Alias lookup is not implemented in the DBTNG storage.');
   }
 

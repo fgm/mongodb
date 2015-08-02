@@ -11,26 +11,6 @@
  * executing "drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);".
  */
 
-// Core autoloader is not available to path plugins during site install, and
-// doesn't support namespace anyway.
-require_once __DIR__ . '/src/Drupal8/CacheBackendInterface.php';
-require_once __DIR__ . '/src/Drupal8/CacheFactoryInterface.php';
-require_once __DIR__ . '/src/Drupal8/DefaultBackend.php';
-require_once __DIR__ . '/src/Drupal8/DefaultBackendFactory.php';
-require_once __DIR__ . '/src/Drupal8/ModuleHandlerInterface.php';
-require_once __DIR__ . '/src/Drupal8/ModuleHandler.php';
-require_once __DIR__ . '/src/Drupal8/SafeMarkup.php';
-require_once __DIR__ . '/src/Drupal8/StateInterface.php';
-require_once __DIR__ . '/src/Drupal8/State.php';
-
-require_once __DIR__ . '/src/Storage/StorageInterface.php';
-require_once __DIR__ . '/src/Storage/MongoDb.php';
-require_once __DIR__ . '/src/Storage/Dbtng.php';
-
-require_once __DIR__ . '/src/ResolverInterface.php';
-require_once __DIR__ . '/src/ResolverFactory.php';
-require_once __DIR__ . '/src/Resolver.php';
-
 use Drupal\mongodb_path\ResolverFactory;
 
 /**
@@ -57,6 +37,33 @@ $_mongodb_path_tracer = [
   'enabled' => FALSE,
   'debug' => FALSE,
 ];
+
+/**
+ * Autoload classes for this plugin.
+ *
+ * Core autoloader is not available to path plugins during site install, and
+ * doesn't support namespace anyway.
+ *
+ * This is not a generic PSR-4 autoloader, although the file layout is
+ * compatible with Drupal 8 PSR-4 layout.
+ *
+ * @param string $class
+ *   The name of the class/interface/trait to autoload.
+ *
+ * @see drupal_path_initialize()
+ */
+function _drupal_path_autoload($class) {
+  if (strpos($class, 'Drupal\mongodb_path\\') !== 0) {
+    return;
+  }
+  // 19 === strlen('Drupal\mongodb_path').
+  $class = substr($class, 19);
+  $path = __DIR__ . '/src/' . str_replace('\\', '/', $class) . '.php';
+  // No need to check for readability: matching files are in this package.
+  // No need to use require_once: if the file has been required once, its class
+  // will be in scope and the autoloaded will not be triggered.
+  require $path;
+}
 
 /**
  * Gets Resolver instance.
@@ -134,6 +141,8 @@ function mongodb_path_trace() {
  */
 function drupal_path_initialize() {
   mongodb_path_trace();
+  spl_autoload_register('_drupal_path_autoload');
+
   // Ensure $_GET['q'] is set before calling drupal_normal_path(), to support
   // path caching with hook_url_inbound_alter().
   if (empty($_GET['q'])) {
