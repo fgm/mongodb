@@ -20,6 +20,7 @@ mongodb               | Support library for the other modules
 mongodb_block         | Store block info in MongoDB much like the core block API
 mongodb_cache         | Store cache in MongoDB
 mongodb_field_storage | Store fields in MongoDB
+mongodb_path          | Store URL aliases in MongoDB [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/FGM/mongodb/badges/quality-score.png?b=2538542-path)](https://scrutinizer-ci.com/g/FGM/mongodb/?branch=2538542-path)
 mongodb_queue         | DrupalQueueInterface implementation using MongoDB
 mongodb_session       | Store sessions in MongoDB
 mongodb_watchdog      | Store watchdog messages in MongoDB
@@ -385,14 +386,16 @@ there is no need to enable the mongodb_cache module.
 
 ### mongodb_path
 
-As with the core Path plugin:
-
-* the `site_frontpage` variable defines what the MongoDB path plugin considers
-  to be the home page of the site. It causes no MongoDB-specific behavior.
-* the `path_alias_whitelist` variable contains state information: an array of
-  the first component of paths on which an alias may be found. It is rebuilt
-  automatically by the MongoDB Path plugin, so it should not be modified in
-  `settings.php`, as this would prevent its dynamic maintenance.
+* The `path_inc` settings variable needs to be set in `settings.php`, to the
+  path of `mongodb_path_plugin.php` before enabling the mongodb_path module.
+* As with the core Path plugin, the `site_frontpage` configuration variable
+  defines what the MongoDB path plugin considers to be the home page of the
+  site. It causes no MongoDB-specific behavior.
+* As with the core Path plugin, the `path_alias_whitelist` state variable
+  contains an array of the first component of paths on which an alias may be
+  found. Being a state variable rebuilt by the MongoDB Path plugin, it should
+  not be modified in `settings.php`, as this would prevent its dynamic
+  maintenance.
 
 ### mongodb_session
 
