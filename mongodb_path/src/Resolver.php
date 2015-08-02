@@ -95,7 +95,7 @@ class Resolver implements ResolverInterface {
     StorageInterface $mongodb_storage,
     StorageInterface $rdb_storage,
     CacheBackendInterface $cache_service) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $this->cacheService = $cache_service;
     $this->moduleHandler = $module_handler;
     $this->mongodbStorage = $mongodb_storage;
@@ -110,7 +110,7 @@ class Resolver implements ResolverInterface {
    * Initialize the cache.
    */
   public function cacheInit() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $this->objectCache = [
       'first_call' => TRUE,
       'map' => [],
@@ -137,7 +137,7 @@ class Resolver implements ResolverInterface {
    * Debugging helper: dump the memory cache map using available method.
    */
   protected function dumpCacheMap() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     if (function_exists('dpm')) {
       dpm(json_encode($this->objectCache, JSON_PRETTY_PRINT));
     }
@@ -150,7 +150,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function ensureWhitelist() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     // Retrieve the path alias whitelist.
     if (!$this->isWhitelistSet()) {
       $this->objectCache['whitelist'] = $this->state->get('path_alias_whitelist', NULL);
@@ -164,7 +164,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function getNormalPath($path, $language = NULL) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     return drupal_get_normal_path($path, $language);
   }
 
@@ -172,7 +172,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function getPathAlias($path = NULL, $path_language = NULL) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     return drupal_get_path_alias($path, $path_language);
   }
 
@@ -180,7 +180,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function getRefreshedCachedPaths() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     if (empty($this->objectCache['system_paths']) && !empty($this->objectCache['map'])) {
       $ret = array_keys(current($this->objectCache['map']));
     }
@@ -195,7 +195,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function isWhitelistEmpty() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     assert('$this->isWhitelistSet()');
     return empty($this->objectCache['whitelist']);
   }
@@ -204,7 +204,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function isWhitelistSet() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     return $this->objectCache['whitelist'] !== NULL;
   }
 
@@ -212,7 +212,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function lookupPathAlias($path, $path_language) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
 
     // During the first call to drupal_lookup_path() per language, load the
     // expected system paths for the page from cache.
@@ -256,7 +256,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function lookupPathSource($path, $path_language) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     // Look for the value $path within the cached $map.
     $source = FALSE;
     if (!isset($this->objectCache['map'][$path_language]) || !($source = array_search($path,
@@ -299,7 +299,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function lookupPathWipe() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $this->cacheInit();
     $this->objectCache['map'] = $this->whitelistRebuild();
   }
@@ -308,7 +308,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function mayHaveSource($path, $path_language) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     return !isset($this->objectCache['no_source'][$path_language][$path]);
   }
 
@@ -316,7 +316,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function pathDelete($criteria) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     if (!is_array($criteria)) {
       $criteria = ['pid' => $criteria];
     }
@@ -333,7 +333,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function pathLoad($criteria) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     if (is_numeric($criteria)) {
       $criteria = ['pid' => $criteria];
     }
@@ -353,7 +353,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function pathSave(array &$path) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $path += ['language' => LANGUAGE_NONE];
 
     // Load the stored alias, if any.
@@ -385,7 +385,7 @@ class Resolver implements ResolverInterface {
    * {@inheritdoc}
    */
   public function whitelistRebuild($source = NULL) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     // When paths are inserted, only rebuild the white_list if the system path
     // has a top level component which is not already in the white_list.
     if (!empty($source)) {

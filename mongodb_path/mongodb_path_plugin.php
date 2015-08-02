@@ -52,16 +52,16 @@ $_mongodb_path_tracer = [
  *
  * @see drupal_path_initialize()
  */
-function _drupal_path_autoload($class) {
+function _mongodb_path_autoload($class) {
   if (strpos($class, 'Drupal\mongodb_path\\') !== 0) {
     return;
   }
-  // 19 === strlen('Drupal\mongodb_path').
+  // 19 is the length of 'Drupal\mongodb_path': do not compute it every time.
   $class = substr($class, 19);
   $path = __DIR__ . '/src/' . str_replace('\\', '/', $class) . '.php';
   // No need to check for readability: matching files are in this package.
   // No need to use require_once: if the file has been required once, its class
-  // will be in scope and the autoloaded will not be triggered.
+  // will be in scope and the autoloader will not be triggered.
   require $path;
 }
 
@@ -72,17 +72,15 @@ function _drupal_path_autoload($class) {
  * during _drupal_bootstrap_variables(), while the path plugin is loaded later,
  * during _drupal_bootstrap_full().
  *
- * It may be called during install, hence the use of get_t().
- *
  * @return \Drupal\mongodb_path\Resolver
  *   The active Resolver instance.
  *
  * @see _drupal_bootstrap_variables()
  * @see _drupal_bootstrap_full()
  */
-function mongodb_path_resolver() {
+function _mongodb_path_resolver() {
   if (!empty($GLOBALS['_mongodb_path_tracer']['debug'])) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
   }
 
   // Use the advanced drupal_static() pattern, since this is called very often.
@@ -95,9 +93,8 @@ function mongodb_path_resolver() {
   if (!isset($resolver)) {
     $resolver = ResolverFactory::create();
     if (!empty($GLOBALS['_mongodb_path_tracer']['debug'])) {
-      $t = get_t();
       $stack = debug_backtrace();
-      echo $t("<p>Resolver built for @function.</p>", ['@function' => $stack[1]['function']]);
+      echo strtr("<p>Resolver built for @function.</p>", ['@function' => $stack[1]['function']]);
     }
   }
 
@@ -109,8 +106,12 @@ function mongodb_path_resolver() {
  *
  * @global $mongodb_path_tracer
  */
-function mongodb_path_trace() {
+function _mongodb_path_trace() {
   global $_mongodb_path_tracer;
+
+  if (empty($_mongodb_path_tracer['enabled'])) {
+    return;
+  }
 
   $stack = debug_backtrace(FALSE);
   $caller = $stack[1];
@@ -140,8 +141,8 @@ function mongodb_path_trace() {
  * @see _drupal_bootstrap_full()
  */
 function drupal_path_initialize() {
-  mongodb_path_trace();
-  spl_autoload_register('_drupal_path_autoload');
+  _mongodb_path_trace();
+  spl_autoload_register('_mongodb_path_autoload');
 
   // Ensure $_GET['q'] is set before calling drupal_normal_path(), to support
   // path caching with hook_url_inbound_alter().
@@ -149,7 +150,7 @@ function drupal_path_initialize() {
     $_GET['q'] = variable_get('site_frontpage', 'node');
   }
 
-  $_GET['q'] = mongodb_path_resolver()->getNormalPath($_GET['q']);
+  $_GET['q'] = _mongodb_path_resolver()->getNormalPath($_GET['q']);
 }
 
 /**
@@ -180,18 +181,18 @@ function drupal_path_initialize() {
  * @global $language_url
  */
 function drupal_lookup_path($action, $path = '', $path_language = NULL) {
-  mongodb_path_trace();
-  global $language_url;
+  _mongodb_path_trace();
 
-  $resolver = mongodb_path_resolver();
-
+  $resolver = _mongodb_path_resolver();
   $resolver->ensureWhitelist();
 
   // If no language is explicitly specified we default to the current URL
   // language. If we used a language different from the one conveyed by the
   // requested URL, we might end up being unable to check if there is a path
   // alias matching the URL path.
-  $path_language = $path_language ? $path_language : $language_url->language;
+  if (empty ($path_language)) {
+    $path_language = $GLOBALS['language_url']->language;
+  }
 
   $ret = FALSE;
 
@@ -213,17 +214,15 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
 /**
  * Cache system paths for a page.
  *
- * Cache an array of the system paths available on each page. We assume
- * that aliases will be needed for the majority of these paths during
- * subsequent requests, and load them in a single query during
- * drupal_lookup_path().
+ * Cache an array of the system paths available on each page. We assume that
+ * aliases will be needed for the majority of these paths during subsequent
+ * requests, and load them in a single query during drupal_lookup_path().
  *
  * @see drupal_page_footer()
  */
 function drupal_cache_system_paths() {
-  mongodb_path_trace();
-  mongodb_path_resolver()->cacheSystemPaths();
-
+  _mongodb_path_trace();
+  _mongodb_path_resolver()->cacheSystemPaths();
 }
 
 /**
@@ -242,13 +241,13 @@ function drupal_cache_system_paths() {
  *   found.
  */
 function drupal_get_path_alias($path = NULL, $path_language = NULL) {
-  mongodb_path_trace();
+  _mongodb_path_trace();
   // If no path is specified, use the current page's path.
   if (empty($path)) {
-    $path = $_GET['q'];
+    $path = current_path();
   }
   $result = $path;
-  if ($alias = drupal_lookup_path('alias', $path, $path_language)) {
+  if (is_string($alias = drupal_lookup_path('alias', $path, $path_language))) {
     $result = $alias;
   }
   return $result;
@@ -267,7 +266,7 @@ function drupal_get_path_alias($path = NULL, $path_language = NULL) {
  *   internal path was found.
  */
 function drupal_get_normal_path($path, $path_language = NULL) {
-  mongodb_path_trace();
+  _mongodb_path_trace();
   $original_path = $path;
 
   // Lookup the path alias first.
@@ -295,7 +294,7 @@ function drupal_get_normal_path($path, $path_language = NULL) {
  *   TRUE if the current page is the front page; FALSE otherwise.
  */
 function drupal_is_front_page() {
-  mongodb_path_trace();
+  _mongodb_path_trace();
 
   // Use the advanced drupal_static() pattern, since this is called very often.
   static $drupal_static_fast;
@@ -307,7 +306,7 @@ function drupal_is_front_page() {
   if (!isset($is_front_page)) {
     // Since drupal_path_initialize() updates $_GET['q'] with the contents of
     // the 'site_frontpage' path, we can check it against that variable.
-    $is_front_page = ($_GET['q'] == variable_get('site_frontpage', 'node'));
+    $is_front_page = (current_path() == variable_get('site_frontpage', 'node'));
   }
 
   return $is_front_page;
@@ -325,7 +324,7 @@ function drupal_is_front_page() {
  *   TRUE if the path matches a pattern, FALSE otherwise.
  */
 function drupal_match_path($path, $patterns) {
-  mongodb_path_trace();
+  _mongodb_path_trace();
   $regexps = &drupal_static(__FUNCTION__);
 
   if (!isset($regexps[$patterns])) {
@@ -374,7 +373,7 @@ function drupal_match_path($path, $patterns) {
  * @see request_path()
  */
 function current_path() {
-  mongodb_path_trace();
+  _mongodb_path_trace();
   return $_GET['q'];
 }
 
@@ -390,8 +389,8 @@ function current_path() {
  * @see system_update_7042()
  */
 function drupal_path_alias_whitelist_rebuild($source = NULL) {
-  mongodb_path_trace();
-  $whitelist = mongodb_path_resolver()->whitelistRebuild($source);
+  _mongodb_path_trace();
+  $whitelist = _mongodb_path_resolver()->whitelistRebuild($source);
   return $whitelist;
 }
 
@@ -411,8 +410,8 @@ function drupal_path_alias_whitelist_rebuild($source = NULL) {
  *   - language: The language of the alias.
  */
 function path_load($conditions) {
-  mongodb_path_trace();
-  $ret = mongodb_path_resolver()->pathLoad($conditions);
+  _mongodb_path_trace();
+  $ret = _mongodb_path_resolver()->pathLoad($conditions);
   return $ret;
 }
 
@@ -427,8 +426,8 @@ function path_load($conditions) {
  *   - language: (optional) The language of the alias.
  */
 function path_save(array &$path) {
-  mongodb_path_trace();
-  mongodb_path_resolver()->pathSave($path);
+  _mongodb_path_trace();
+  _mongodb_path_resolver()->pathSave($path);
 }
 
 /**
@@ -438,8 +437,8 @@ function path_save(array &$path) {
  *   A number representing the pid or an array of criteria.
  */
 function path_delete($criteria) {
-  mongodb_path_trace();
-  mongodb_path_resolver()->pathDelete($criteria);
+  _mongodb_path_trace();
+  _mongodb_path_resolver()->pathDelete($criteria);
 }
 
 /**
@@ -461,7 +460,7 @@ function path_delete($criteria) {
  * @see hook_admin_paths_alter()
  */
 function path_is_admin($path) {
-  mongodb_path_trace();
+  _mongodb_path_trace();
 
   $path_map = &drupal_static(__FUNCTION__);
   if (!isset($path_map['admin'][$path])) {
@@ -488,7 +487,7 @@ function path_is_admin($path) {
  * @see hook_admin_paths_alter()
  */
 function path_get_admin_paths() {
-  mongodb_path_trace();
+  _mongodb_path_trace();
 
   $patterns = &drupal_static(__FUNCTION__);
   if (!isset($patterns)) {
@@ -527,7 +526,7 @@ function path_get_admin_paths() {
  *   FALSE otherwise.
  */
 function drupal_valid_path($path, $dynamic_allowed = FALSE) {
-  mongodb_path_trace();
+  _mongodb_path_trace();
 
   global $menu_admin;
   // We indicate that a menu administrator is running the menu access check.
@@ -563,10 +562,10 @@ function drupal_valid_path($path, $dynamic_allowed = FALSE) {
  *   An optional system path for which an alias is being changed.
  */
 function drupal_clear_path_cache($source = NULL) {
-  mongodb_path_trace();
+  _mongodb_path_trace();
 
   // FIXME also reset the resolver internal cache/firstpass to resync with DB.
-  $resolver = mongodb_path_resolver();
+  $resolver = _mongodb_path_resolver();
   $resolver->cacheInit();
   $resolver->whitelistRebuild($source);
 }

@@ -73,7 +73,7 @@ digraph calls {
   /* Plugin */
   node  [ fontcolor=black ];
 
-  mongodb_path_resolver -> "Resolver::create";
+  _mongodb_path_resolver -> "Resolver::create";
 
   current_path -> q;
 

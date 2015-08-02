@@ -47,7 +47,7 @@ class MongoDb implements StorageInterface {
    *   A MongoDB database in which to access the alias storage collection.
    */
   public function __construct(\MongoDB $mongo) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $this->mongo = $mongo;
     $this->collection = $mongo->selectCollection(static::COLLECTION_NAME);
   }
@@ -56,7 +56,7 @@ class MongoDb implements StorageInterface {
    * {@inheritdoc}
    */
   public function clear() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $this->collection->drop();
     $this->collection = NULL;
   }
@@ -65,7 +65,7 @@ class MongoDb implements StorageInterface {
    * {@inheritdoc}
    */
   public function delete(array $criteria) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $criteria = array_intersect_key($criteria, static::ALIAS_KEYS);
     $this->collection->remove($criteria);
   }
@@ -85,7 +85,7 @@ class MongoDb implements StorageInterface {
    * - alias: the alias for a source/langcode
    */
   public function ensureSchema() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $collection = $this->mongo->selectCollection(static::COLLECTION_NAME);
 
     // This one is just an accelerator, so there is no need to wait on it.
@@ -126,7 +126,7 @@ class MongoDb implements StorageInterface {
    * {@inheritdoc}
    */
   public function getWhitelist() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $result = (array) $this->collection->distinct('first');
     $result = array_combine($result, array_fill(0, count($result), 1));
     return $result;
@@ -136,7 +136,7 @@ class MongoDb implements StorageInterface {
    * {@inheritdoc}
    */
   public function load(array $conditions) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
 
     /* This specific instance of findOne() does not return a generic array, but
      * a string[], because _id is removed from the results, and all other
@@ -193,7 +193,7 @@ class MongoDb implements StorageInterface {
    * {@inheritdoc}
    */
   public function save(array &$path) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $options = [
       // This should not matter, as alias are presumed to match uniquely.
       'multiple' => FALSE,

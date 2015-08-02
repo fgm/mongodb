@@ -38,7 +38,7 @@ class Dbtng implements StorageInterface {
    *   A MongoDB database in which to access the alias storage collection.
    */
   public function __construct(\DatabaseConnection $connection) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $this->connection = $connection;
   }
 
@@ -46,7 +46,7 @@ class Dbtng implements StorageInterface {
    * {@inheritdoc}
    */
   public function clear() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $this->connection->truncate(static::COLLECTION_NAME)->execute();
   }
 
@@ -54,7 +54,7 @@ class Dbtng implements StorageInterface {
    * {@inheritdoc}
    */
   public function delete(array $criteria) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
     $criteria = array_intersect_key($criteria, static::ALIAS_KEYS);
     $query = $this->connection->delete(static::COLLECTION_NAME);
     foreach ($criteria as $field => $value) {
@@ -67,7 +67,7 @@ class Dbtng implements StorageInterface {
    * {@inheritdoc}
    */
   public function load(array $criteria) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
 
     $criteria = array_intersect_key($criteria, static::ALIAS_KEYS);
     /** @var \SelectQuery $select */
@@ -90,7 +90,7 @@ class Dbtng implements StorageInterface {
    * {@inheritdoc}
    */
   public function getWhitelist() {
-    mongodb_path_trace();
+    _mongodb_path_trace();
 
     // For each alias in the database, get the top level component of the system
     // path it corresponds to. This is the portion of the path before the first
@@ -122,7 +122,7 @@ EOT;
    * {@inheritdoc}
    */
   public function save(array &$path) {
-    mongodb_path_trace();
+    _mongodb_path_trace();
 
     $path = array_intersect_key($path, static::ALIAS_KEYS);
 
