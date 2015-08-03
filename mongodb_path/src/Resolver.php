@@ -229,13 +229,15 @@ class Resolver implements ResolverInterface {
         $map = $this->objectCache['map'][$path_language] = $this->mongodbStorage->lookupAliases($paths, $path_language, TRUE);
 
         // Keep a record of paths with no alias to avoid querying twice.
-        $this->objectCache['no_aliases'][$path_language] = array_flip(array_diff_key($paths, array_keys($map)));
+        $no_aliases = array_diff($paths, array_keys($map));
+        $this->objectCache['no_aliases'][$path_language] = array_flip($no_aliases);
+        unset($map, $no_aliases);
       }
     }
 
     // If the alias has already been loaded, return it.
-    if (isset($map[$path])) {
-      return $map[$path];
+    if (isset($this->objectCache['map'][$path])) {
+      return $this->objectCache['map'][$path];
     }
 
     // Check the path whitelist, if the top_level part before the first /
