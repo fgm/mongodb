@@ -262,26 +262,7 @@ class Resolver implements ResolverInterface {
     if (!isset($this->objectCache['map'][$path_language]) || !($source = array_search($path,
         $this->objectCache['map'][$path_language]))
     ) {
-      $args = array(
-        ':alias' => $path,
-        ':language' => $path_language,
-        ':language_none' => LANGUAGE_NONE,
-      );
-      // See the queries above.
-      if ($path_language == LANGUAGE_NONE) {
-        unset($args[':language']);
-        $result = db_query("SELECT source FROM {url_alias} WHERE alias = :alias AND language = :language_none ORDER BY pid DESC",
-          $args);
-      }
-      elseif ($path_language > LANGUAGE_NONE) {
-        $result = db_query("SELECT source FROM {url_alias} WHERE alias = :alias AND language IN (:language, :language_none) ORDER BY language DESC, pid DESC",
-          $args);
-      }
-      else {
-        $result = db_query("SELECT source FROM {url_alias} WHERE alias = :alias AND language IN (:language, :language_none) ORDER BY language ASC, pid DESC",
-          $args);
-      }
-      if ($source = $result->fetchField()) {
+      if ($source = $this->mongodbStorage->lookupSource($path, $path_language)) {
         $this->objectCache['map'][$path_language][$source] = $path;
       }
       else {

@@ -86,6 +86,19 @@ interface StorageInterface {
   public function lookupAliases(array $paths, $language, $first_pass = FALSE);
 
   /**
+   * Lookup source for a path which may be an alias.
+   *
+   * @param string $path
+   *   A possible alias for which a system path is looked up.
+   * @param string $path_language
+   *   The language for which the alias applies.
+   *
+   * @return string|false
+   *   The looked up source, or FALSE if none can be found.
+   */
+  public function lookupSource($path, $path_language);
+
+  /**
    * Save the path to the storage.
    *
    * Because this plugin acts as a caching layer, we just fire and forget the

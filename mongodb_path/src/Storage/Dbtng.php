@@ -121,6 +121,13 @@ EOT;
   /**
    * {@inheritdoc}
    */
+  public function lookupSource($path, $language) {
+    throw new \BadMethodCallException('Source lookup is not implemented in the DBTNG storage.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function save(array &$path) {
     _mongodb_path_trace();
 

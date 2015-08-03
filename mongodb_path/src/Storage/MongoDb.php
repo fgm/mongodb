@@ -192,6 +192,35 @@ class MongoDb implements StorageInterface {
   /**
    * {@inheritdoc}
    */
+  public function lookupSource($path, $language) {
+    $languages = ($language == LANGUAGE_NONE)
+      ? [LANGUAGE_NONE]
+      : [LANGUAGE_NONE, $language];
+
+    $criteria = [
+      'alias' => $path,
+      'language' => ['$in' => $languages],
+    ];
+
+    $fields = [
+      'source' => 1,
+      '_id' => 0,
+    ];
+
+    $sort = [$language > LANGUAGE_NONE]
+      ? ['language' => -1, 'pid' => -1]
+      : ['language' => 1, 'pid' => -1];
+
+    $result = $this->collection->find($criteria, $fields)->sort($sort);
+    $rows = iterator_to_array($result);
+    $source = empty($rows) ? FALSE : $rows[0]['source'];
+
+    return $source;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function save(array &$path) {
     _mongodb_path_trace();
     $options = [
