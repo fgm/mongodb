@@ -246,6 +246,8 @@ class MongoDb implements StorageInterface {
    */
   public function save(array &$path) {
     _mongodb_path_trace();
+    $path['pid'] = intval($path['pid']);
+
     $options = [
       // This should not matter, as alias are presumed to match uniquely.
       'multiple' => FALSE,

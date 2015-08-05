@@ -198,7 +198,7 @@ class Resolver implements ResolverInterface {
     _mongodb_path_trace();
     if ($drop) {
       $this->mongodbStorage->clear();
-      $collection = $this->mongodbStorage->ensureSchema();
+      $this->mongodbStorage->ensureSchema();
     }
 
     // TODO implement a batch process using getTraversable($minId).
@@ -206,7 +206,6 @@ class Resolver implements ResolverInterface {
 
     /** @var \Drupal\mongodb_path\UrlAlias $alias */
     foreach ($cursor as $alias) {
-      echo "Saving $alias";
       $this->mongodbStorage->save($alias->asArray());
     }
 
