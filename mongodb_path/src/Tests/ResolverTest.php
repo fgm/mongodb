@@ -24,10 +24,7 @@ class ResolverTest extends \DrupalUnitTestCase {
   use MongoDbPathTestTrait;
 
   /**
-   * Declare the test to SimpleTest.
-   *
-   * @return string[string]
-   *   A test description array.
+   * {@inheritdoc}
    */
   public static function getInfo() {
     return array(

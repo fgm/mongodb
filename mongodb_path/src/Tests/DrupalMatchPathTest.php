@@ -16,8 +16,19 @@ namespace Drupal\mongodb_path\Tests;
  * @see drupal_match_path().
  */
 class DrupalMatchPathTest extends \DrupalWebTestCase {
+
+  use MongoDbPathTestTrait;
+
+  /**
+   * A random name for the site under test.
+   *
+   * @var string
+   */
   protected $front;
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Drupal match path',
@@ -26,7 +37,10 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     // Set up the database and testing environment.
     parent::setUp();
 
@@ -40,13 +54,19 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
   /**
    * Run through our test cases, making sure each one works as expected.
    */
-  function testDrupalMatchPath() {
+  public function testDrupalMatchPath() {
     // Set up our test cases.
     $tests = $this->drupalMatchPathTests();
     foreach ($tests as $patterns => $cases) {
       foreach ($cases as $path => $expected_result) {
         $actual_result = drupal_match_path($path, $patterns);
-        $this->assertIdentical($actual_result, $expected_result, format_string('Tried matching the path <code>@path</code> to the pattern <pre>@patterns</pre> - expected @expected, got @actual.', array('@path' => $path, '@patterns' => $patterns, '@expected' => var_export($expected_result, TRUE), '@actual' => var_export($actual_result, TRUE))));
+        $this->assertIdentical($actual_result, $expected_result, format_string('Tried matching the path <code>@path</code> to the pattern <pre>@patterns</pre> - expected @expected, got @actual.', array(
+          '@path' => $path,
+          '@patterns' => $patterns,
+          '@expected' => var_export($expected_result, TRUE),
+          '@actual' => var_export($actual_result, TRUE),
+          )
+        ));
       }
     }
   }
@@ -54,7 +74,7 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
   /**
    * Helper function for testDrupalMatchPath(): set up an array of test cases.
    *
-   * @return
+   * @return array
    *   An array of test cases to cycle through.
    */
   private function drupalMatchPathTests() {
@@ -130,4 +150,3 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
     );
   }
 }
-

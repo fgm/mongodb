@@ -26,56 +26,89 @@ trait MongoDbPathTestTrait {
    *
    * @var \Drupal\mongodb_path\Drupal8\CacheBackendInterface
    */
-  protected $cachePath;
+  protected $cachePath = NULL;
 
   /**
    * A Drupal 8-like Module service.
    *
    * @var \Drupal\mongodb_path\Drupal8\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected $moduleHandler = NULL;
 
   /**
    * The test storage instance.
    *
    * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
-  protected $mongodbStorage;
+  protected $mongodbStorage = NULL;
 
   /**
    * The DBTNG-based storage instance.
    *
    * @var \Drupal\mongodb_path\Storage\StorageInterface
    */
-  protected $rdbStorage;
+  protected $rdbStorage = NULL;
 
   /**
    * A Drupal 8-like safe markup service.
    *
    * @var \Drupal\mongodb_path\Drupal8\SafeMarkup
    */
-  protected $safeMarkup;
+  protected $safeMarkup = NULL;
 
   /**
    * The name of the default database.
    *
    * @var string
    */
-  protected $savedDbName;
+  protected $savedDbName = 'default';
 
   /**
    * A Drupal 8-like State service.
    *
    * @var \Drupal\mongodb_path\Drupal8\StateInterface
    */
-  protected $state;
+  protected $state = NULL;
 
   /**
    * The test database instance.
    *
    * @var \MongoDB|\MongoDummy
    */
-  protected $testDB;
+  protected $testDB = NULL;
+
+  /**
+   * Fire an assertion that is always negative.
+   *
+   * @param $message
+   *   The message to display along with the assertion.
+   * @param $group
+   *   The type of assertion - examples are "Browser", "PHP".
+   * @return FALSE
+   *
+   * @see \DrupalTestCase::pass()
+   */
+  protected abstract function fail($message = NULL, $group = 'Other');
+
+  /**
+   * Fire an assertion that is always positive.
+   *
+   * @param string $message
+   *   The message to display along with the assertion.
+   * @param string $group
+   *   The type of assertion - examples are "Browser", "PHP".
+   * @return TRUE
+   *
+   * @see \DrupalTestCase::pass()
+   */
+  protected abstract function pass($message = NULL, $group = 'Other');
+
+  /**
+   * Declare the test to Simpletest.
+   *
+   * @return string[]
+   */
+  public abstract static function getInfo();
 
   /**
    * Override the MongoDB connection, switching to a per-test database.

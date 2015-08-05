@@ -14,6 +14,10 @@ namespace Drupal\mongodb_path\Tests;
  * Tests hook_url_alter functions.
  */
 class UrlAlterFunctionalTest extends \DrupalWebTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => t('URL altering'),
@@ -22,14 +26,17 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     parent::setUp('path', 'forum', 'url_alter_test');
   }
 
   /**
    * Test that URL altering works and that it occurs in the correct order.
    */
-  function testUrlAlter() {
+  public function testUrlAlter() {
     $account = $this->drupalCreateUser(array('administer url aliases'));
     $this->drupalLogin($account);
 
@@ -78,7 +85,7 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
   /**
    * Test current_path() and request_path().
    */
-  function testCurrentUrlRequestedPath() {
+  public function testCurrentUrlRequestedPath() {
     $this->drupalGet('url-alter-test/bar');
     $this->assertRaw('request_path=url-alter-test/bar', 'request_path() returns the requested path.');
     $this->assertRaw('current_path=url-alter-test/foo', 'current_path() returns the internal path.');
@@ -87,7 +94,7 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
   /**
    * Tests that $_GET['q'] is initialized when the request path is empty.
    */
-  function testGetQInitialized() {
+  public function testGetQInitialized() {
     $this->drupalGet('');
     $this->assertText("\$_GET['q'] is non-empty with an empty request path.", "\$_GET['q'] is initialized with an empty request path.");
   }
@@ -126,5 +133,6 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
     $result = drupal_get_normal_path($original);
     $this->assertIdentical($result, $final, format_string('Altered inbound URL %original, expected %final, and got %result.', array('%original' => $original, '%final' => $final, '%result' => $result)));
   }
+
 }
 

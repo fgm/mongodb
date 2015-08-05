@@ -13,6 +13,12 @@ namespace Drupal\mongodb_path\Tests;
  * Tests the path_save() function.
  */
 class PathSaveTest extends \DrupalWebTestCase {
+
+  use MongoDbPathTestTrait;
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => t('Path save'),
@@ -21,7 +27,10 @@ class PathSaveTest extends \DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     // Enable a helper module that implements hook_path_update().
     parent::setUp('path_test');
     path_test_reset();
@@ -30,10 +39,9 @@ class PathSaveTest extends \DrupalWebTestCase {
   /**
    * Tests that path_save() makes the original path available to modules.
    */
-  function testDrupalSaveOriginalPath() {
+  public function testDrupalSaveOriginalPath() {
     $account = $this->drupalCreateUser();
     $uid = $account->uid;
-    $name = $account->name;
 
     // Create a language-neutral alias.
     $path = array(

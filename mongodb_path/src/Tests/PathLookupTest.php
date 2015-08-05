@@ -13,6 +13,10 @@ namespace Drupal\mongodb_path\Tests;
  * Unit test for drupal_lookup_path().
  */
 class PathLookupTest extends \DrupalWebTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => t('Path lookup'),
@@ -24,7 +28,7 @@ class PathLookupTest extends \DrupalWebTestCase {
   /**
    * Test that drupal_lookup_path() returns the correct path.
    */
-  function testDrupalLookupPath() {
+  public function testDrupalLookupPath() {
     $account = $this->drupalCreateUser();
     $uid = $account->uid;
     $name = $account->name;
@@ -99,5 +103,5 @@ class PathLookupTest extends \DrupalWebTestCase {
     path_save($path);
     $this->assertEqual(drupal_lookup_path('source', $path['alias']), $path['source'], 'Newer alias record is returned when comparing two LANGUAGE_NONE paths with the same alias.');
   }
-}
 
+}
