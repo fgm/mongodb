@@ -19,6 +19,23 @@ class PathLookupTest extends \DrupalWebTestCase {
   use MongoDbPathTestTrait;
 
   /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    $this->preserveMongoDbConfiguration();
+    parent::setUp();
+    $this->setUpTestServices($this->databasePrefix);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function tearDown() {
+    $this->tearDownTestServices();
+    parent::tearDown();
+  }
+
+  /**
    * Test that drupal_lookup_path() returns the correct path.
    */
   public function testDrupalLookupPath() {

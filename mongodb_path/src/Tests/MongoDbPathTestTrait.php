@@ -22,6 +22,23 @@ use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
 trait MongoDbPathTestTrait {
 
   /**
+   * The default MongoDB connection settings.
+   *
+   * Consider as a constant: they are a variable because constant arrays are not
+   * supported until PHP 5.6, but variable array initializers are supported on
+   * PHP 5.4.
+   *
+   * @var array
+   */
+  protected $defaultConfiguration = [
+    'default' => [
+      'host' => 'localhost:27017',
+      'db' => 'drupal',
+      'options' => [],
+    ],
+  ];
+
+  /**
    * A Drupal 8-like Cache Backend service.
    *
    * @var \Drupal\mongodb_path\Drupal8\CacheBackendInterface
@@ -57,11 +74,13 @@ trait MongoDbPathTestTrait {
   protected $safeMarkup = NULL;
 
   /**
-   * The name of the default database.
+   * The mongodb_connection settings in the live site.
+   *
+   * They are erased by WebTestCase setUp().
    *
    * @var string
    */
-  protected $savedDbName = 'default';
+  protected $savedConf = [];
 
   /**
    * A Drupal 8-like State service.
@@ -118,10 +137,11 @@ trait MongoDbPathTestTrait {
 
     $comment = $reflected->getDocComment();
     $matches = [];
-
     $error_arg = ['@class' => $class];
+
     $sts = preg_match('/^\/\*\*[\s]*\n[\s]*\*[\s]([^\n]*)/s', $comment, $matches);
     $description = $sts ? $matches[1] : strtr("MongoDB: FIXME Missing name for class @class", $error_arg);
+
     $sts = preg_match('/^[\s]+\*[\s]+@group[\s]+(.*)$/m', $comment, $matches);
     $group = $sts ? $matches[1] : strtr("MongoDB: FIXME Missing group for class @class.", $error_arg);
 
@@ -133,18 +153,31 @@ trait MongoDbPathTestTrait {
   }
 
   /**
+   * Preserve the MongoDB connection info: DrupalWebTestCase::setUp() resets it.
+   */
+  public function preserveMongoDbConfiguration() {
+    $this->savedConf = isset($GLOBALS['conf']['mongodb_connections'])
+      ? $GLOBALS['conf']['mongodb_connections']
+      : $this->defaultConfiguration;
+  }
+
+  /**
    * Override the MongoDB connection, switching to a per-test database.
    *
    * Do not touch the DBTNG database: simpletest sets it up itself.
+   *
+   * @param string $prefix
+   *   The Simpletest per-test database prefix. It makes a good name for the
+   *   test MongoDB database.
    */
-  public function setUpTestServices() {
+  public function setUpTestServices($prefix) {
     global $conf;
 
-    $connections = variable_get('mongodb_connections', array());
-    $this->savedDbName = $connections['default']['db'];
-    $connections['default']['db'] = "simpletest_{$this->testId}";
+    $connections = $this->savedConf;
+    $connections['default']['db'] = $prefix;
     $conf['mongodb_connections'] = $connections;
 
+    $this->pass("Setting up database $prefix");
     $this->testDB = mongodb();
 
     $cache_factory = new DefaultBackendFactory();
@@ -171,9 +204,7 @@ trait MongoDbPathTestTrait {
     $this->testDB = NULL;
 
     // Restore a connection to the default MongoDB database.
-    $connections = variable_get('mongodb_connections', array());
-    $connections['default']['db'] = $this->savedDbName;
-    $conf['mongodb_connections'] = $connections;
+    $conf['mongodb_connections'] = $this->savedConf;
     try {
       mongodb();
     }

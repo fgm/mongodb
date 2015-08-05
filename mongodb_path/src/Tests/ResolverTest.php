@@ -29,8 +29,9 @@ class ResolverTest extends \DrupalUnitTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
+    $this->preserveMongoDbConfiguration();
     parent::setUp();
-    $this->setUpTestServices();
+    $this->setUpTestServices($this->databasePrefix);
   }
 
   /**

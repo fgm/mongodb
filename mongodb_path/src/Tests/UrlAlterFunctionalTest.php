@@ -23,7 +23,17 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
+    $this->preserveMongoDbConfiguration();
     parent::setUp('path', 'forum', 'url_alter_test');
+    $this->setUpTestServices($this->databasePrefix);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function tearDown() {
+    $this->tearDownTestServices();
+    parent::tearDown();
   }
 
   /**

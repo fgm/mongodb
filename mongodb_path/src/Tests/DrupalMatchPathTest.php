@@ -32,13 +32,24 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
+    $this->preserveMongoDbConfiguration();
+
     // Set up the database and testing environment.
     parent::setUp();
+    $this->setUpTestServices($this->databasePrefix);
 
     // Set up a random site front page to test the '<front>' placeholder.
     $this->front = $this->randomName();
     variable_set('site_frontpage', $this->front);
     // Refresh our static variables from the database.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function tearDown() {
+    $this->tearDownTestServices();
+    parent::tearDown();
   }
 
   /**

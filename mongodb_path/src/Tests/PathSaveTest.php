@@ -22,9 +22,20 @@ class PathSaveTest extends \DrupalWebTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
+    $this->preserveMongoDbConfiguration();
     // Enable a helper module that implements hook_path_update().
     parent::setUp('path_test');
+    $this->setUpTestServices($this->databasePrefix);
+
     path_test_reset();
+  }
+
+  /**
+   * {@inheritdoc]
+   */
+  public function tearDown() {
+    $this->tearDownTestServices();
+    parent::tearDown();
   }
 
   /**
