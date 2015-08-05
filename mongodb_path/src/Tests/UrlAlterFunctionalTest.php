@@ -11,20 +11,13 @@ namespace Drupal\mongodb_path\Tests;
 
 
 /**
- * Tests hook_url_alter functions.
+ * Tests hook_url_(in|out)bound_alter functions.
+ *
+ * @group MongoDB: Path API
  */
 class UrlAlterFunctionalTest extends \DrupalWebTestCase {
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => t('URL altering'),
-      'description' => t('Tests hook_url_inbound_alter() and hook_url_outbound_alter().'),
-      'group' => t('MongoDB: Path API'),
-    );
-  }
+  use MongoDbPathTestTrait;
 
   /**
    * {@inheritdoc}

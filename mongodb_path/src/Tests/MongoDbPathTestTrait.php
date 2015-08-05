@@ -80,11 +80,12 @@ trait MongoDbPathTestTrait {
   /**
    * Fire an assertion that is always negative.
    *
-   * @param $message
+   * @param string $message
    *   The message to display along with the assertion.
-   * @param $group
+   * @param string $group
    *   The type of assertion - examples are "Browser", "PHP".
-   * @return FALSE
+   *
+   * @return bool
    *
    * @see \DrupalTestCase::pass()
    */
@@ -97,7 +98,8 @@ trait MongoDbPathTestTrait {
    *   The message to display along with the assertion.
    * @param string $group
    *   The type of assertion - examples are "Browser", "PHP".
-   * @return TRUE
+   *
+   * @return bool
    *
    * @see \DrupalTestCase::pass()
    */
@@ -108,7 +110,27 @@ trait MongoDbPathTestTrait {
    *
    * @return string[]
    */
-  public abstract static function getInfo();
+  public static function getInfo() {
+    $class = get_called_class();
+    $rc = new \ReflectionClass($class);
+
+    $name = $rc->getShortName();
+
+    $comment = $rc->getDocComment();
+    $matches = [];
+
+    $error_arg = ['@class' => $class];
+    $sts = preg_match('/^\/\*\*[\s]*\n[\s]*\*[\s]([^\n]*)/s', $comment, $matches);
+    $description = $sts ? $matches[1] : strtr("MongoDB: FIXME Missing name for class @class", $error_arg);
+    $sts = preg_match('/^[\s]+\*[\s]+@group[\s]+(.*)$/m', $comment, $matches);
+    $group = $sts ? $matches[1] : strtr("MongoDB: FIXME Missing group for class @class.", $error_arg);
+
+    return [
+      'name' => $name,
+      'description' => $description,
+      'group' => $group,
+    ];
+  }
 
   /**
    * Override the MongoDB connection, switching to a per-test database.

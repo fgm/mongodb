@@ -11,21 +11,12 @@ namespace Drupal\mongodb_path\Tests;
 
 /**
  * Tests the path_save() function.
+ *
+ * @group MongoDB: Path API
  */
 class PathSaveTest extends \DrupalWebTestCase {
 
   use MongoDbPathTestTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => t('Path save'),
-      'description' => t('Tests that path_save() exposes the previous alias value.'),
-      'group' => t('MongoDB: Path API'),
-    );
-  }
 
   /**
    * {@inheritdoc}

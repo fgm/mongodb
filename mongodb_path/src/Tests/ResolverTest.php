@@ -18,21 +18,12 @@ use Drupal\mongodb_path\Resolver;
  * using the same identification information as the default connection.
  *
  * @package Drupal\mongodb_path\Tests
+ *
+ * @group MongoDB: Path API
  */
 class ResolverTest extends \DrupalUnitTestCase {
 
   use MongoDbPathTestTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'MongoDB Path Resolver unit tests',
-      'description' => 'Tests the resolver without touching the MongoDB database.',
-      'group' => 'MongoDB: Path API',
-    );
-  }
 
   /**
    * {@inheritdoc}

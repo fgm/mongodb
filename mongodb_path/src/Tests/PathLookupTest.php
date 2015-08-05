@@ -11,19 +11,12 @@ namespace Drupal\mongodb_path\Tests;
 
 /**
  * Unit test for drupal_lookup_path().
+ *
+ * @group MongoDB: Path API
  */
 class PathLookupTest extends \DrupalWebTestCase {
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => t('Path lookup'),
-      'description' => t('Tests that drupal_lookup_path() returns correct paths.'),
-      'group' => t('MongoDB: Path API'),
-    );
-  }
+  use MongoDbPathTestTrait;
 
   /**
    * Test that drupal_lookup_path() returns the correct path.

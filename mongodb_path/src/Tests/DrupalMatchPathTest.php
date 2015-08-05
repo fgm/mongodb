@@ -14,6 +14,8 @@ namespace Drupal\mongodb_path\Tests;
  * Unit tests for the drupal_match_path() function in path.inc.
  *
  * @see drupal_match_path().
+ *
+ * @group MongoDB: Path API
  */
 class DrupalMatchPathTest extends \DrupalWebTestCase {
 
@@ -29,17 +31,6 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
   /**
    * {@inheritdoc}
    */
-  public static function getInfo() {
-    return array(
-      'name' => 'Drupal match path',
-      'description' => 'Tests the drupal_match_path() function to make sure it works properly.',
-      'group' => 'MongoDB: Path API',
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function setUp() {
     // Set up the database and testing environment.
     parent::setUp();
@@ -48,7 +39,6 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
     $this->front = $this->randomName();
     variable_set('site_frontpage', $this->front);
     // Refresh our static variables from the database.
-    $this->refreshVariables();
   }
 
   /**
