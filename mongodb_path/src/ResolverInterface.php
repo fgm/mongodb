@@ -70,6 +70,14 @@ interface ResolverInterface {
   public function getRefreshedCachedPaths();
 
   /**
+   * Import the DBTNG aliases to MongoDB.
+   *
+   * @param bool $drop
+   *   (optional) If TRUE, drop the MongoDB aliases prior to importing.
+   */
+  public function import($drop = TRUE);
+
+  /**
    * Is the whitelist set but empty ?
    *
    * Must not be called if the whitelist has not been initialized.

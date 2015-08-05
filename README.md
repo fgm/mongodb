@@ -387,6 +387,7 @@ EXAMPLE:
 If all modules on the site expose their cache bins via `hook_flush_caches()`,
 there is no need to enable the mongodb_cache module.
 
+
 ### mongodb_path
 
 * The `path_inc` settings variable needs to be set in `settings.php`, to the
@@ -399,6 +400,12 @@ there is no need to enable the mongodb_cache module.
   found. Being a state variable rebuilt by the MongoDB Path plugin, it should
   not be modified in `settings.php`, as this would prevent its dynamic
   maintenance.
+  
+If the module is being installed on an existing site instead of an empty one,
+use the `drush mpi` command to import the {url_alias} aliases to MongoDB. That
+command can also be used after the fact to regenerate the url_alias collection
+if a problem occurs: it does not modify the {url_alias} table.
+
 
 ### mongodb_session
 
@@ -408,6 +415,7 @@ EXAMPLE:
     $sessionDir = "$mongoDir/mongodb_session";
     $conf['session_inc']                 = "$sessionDir/mongodb_session.inc";
     $conf['cache_session']               = '\Drupal\mongodb_cache\Cache';
+
 
 ### mongodb_field_storage
 

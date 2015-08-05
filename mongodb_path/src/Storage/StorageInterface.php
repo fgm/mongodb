@@ -33,6 +33,17 @@ interface StorageInterface {
   public function delete(array $criteria);
 
   /**
+   * Get an iterator on the full collection.
+   *
+   * @param int $minId
+   *   The id with which to start the iteration. This id is excluded.
+   *
+   * @return \Traversable
+   *   A traversable result set iterating on UrlAlias objects.
+   */
+  public function getTraversable($minId = -1);
+
+  /**
    * Query the white list from the collection/table.
    *
    * For each alias in the storage, get the top level component of the system

@@ -80,9 +80,9 @@ trait MongoDbPathTestTrait {
   /**
    * Fire an assertion that is always negative.
    *
-   * @param string $message
+   * @param string|null $message
    *   The message to display along with the assertion.
-   * @param string $group
+   * @param string|null $group
    *   The type of assertion - examples are "Browser", "PHP".
    *
    * @return bool
@@ -112,11 +112,11 @@ trait MongoDbPathTestTrait {
    */
   public static function getInfo() {
     $class = get_called_class();
-    $rc = new \ReflectionClass($class);
+    $reflected = new \ReflectionClass($class);
 
-    $name = $rc->getShortName();
+    $name = $reflected->getShortName();
 
-    $comment = $rc->getDocComment();
+    $comment = $reflected->getDocComment();
     $matches = [];
 
     $error_arg = ['@class' => $class];

@@ -194,6 +194,27 @@ class Resolver implements ResolverInterface {
   /**
    * {@inheritdoc}
    */
+  public function import($drop = TRUE) {
+    _mongodb_path_trace();
+    if ($drop) {
+      $this->mongodbStorage->clear();
+      $collection = $this->mongodbStorage->ensureSchema();
+    }
+
+    // TODO implement a batch process using getTraversable($minId).
+    $cursor = $this->rdbStorage->getTraversable();
+
+    /** @var \Drupal\mongodb_path\UrlAlias $alias */
+    foreach ($cursor as $alias) {
+      echo "Saving $alias";
+      $this->mongodbStorage->save($alias->asArray());
+    }
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isWhitelistEmpty() {
     _mongodb_path_trace();
     assert('$this->isWhitelistSet()');

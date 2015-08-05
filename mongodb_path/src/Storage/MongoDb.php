@@ -83,6 +83,8 @@ class MongoDb implements StorageInterface {
    * - langcode: the langcode for an alias
    * - source: the system path for an alias/langcode
    * - alias: the alias for a source/langcode
+   *
+   * @return \MongoCollection
    */
   public function ensureSchema() {
     _mongodb_path_trace();
@@ -120,6 +122,27 @@ class MongoDb implements StorageInterface {
       'language' => 1,
       'pid' => 1,
     ], $options);
+
+    $collection = $this->collection = $this->mongo->selectCollection(static::COLLECTION_NAME);
+    return $collection;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTraversable($minId = -1) {
+    $criteria = [
+      'pid' => [
+        '$gt' => $minId,
+      ]
+    ];
+
+    $sort = [
+      'pid' => -1,
+    ];
+
+    $result = $this->collection->find($criteria)->sort($sort);
+    return $result;
   }
 
   /**

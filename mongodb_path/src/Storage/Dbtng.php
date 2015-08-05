@@ -89,6 +89,25 @@ class Dbtng implements StorageInterface {
   /**
    * {@inheritdoc}
    */
+  public function getTraversable($minId = -1) {
+    $sql = <<<SQL
+SELECT ua.pid, ua.source, ua.alias, ua.language
+FROM url_alias ua
+WHERE pid > :minId
+ORDER BY ua.pid
+SQL;
+
+    $class = '\Drupal\mongodb_path\UrlAlias';
+
+    /** @var \PDOStatement $ret */
+    $ret = db_query($sql, [':minId' => intval($minId)]);
+    $ret->setFetchMode(\PDO::FETCH_CLASS, $class);
+    return $ret;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getWhitelist() {
     _mongodb_path_trace();
 
