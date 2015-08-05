@@ -1,0 +1,57 @@
+<?php
+/**
+ * @file
+ * Contains PathSaveTest.
+ *
+ * This is a replica of the core test with the same name, wrapped with MongoDB
+ * setup and teardown.
+ */
+
+namespace Drupal\mongodb_path\Tests;
+
+/**
+ * Tests the path_save() function.
+ */
+class PathSaveTest extends \DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => t('Path save'),
+      'description' => t('Tests that path_save() exposes the previous alias value.'),
+      'group' => t('MongoDB: Path API'),
+    );
+  }
+
+  function setUp() {
+    // Enable a helper module that implements hook_path_update().
+    parent::setUp('path_test');
+    path_test_reset();
+  }
+
+  /**
+   * Tests that path_save() makes the original path available to modules.
+   */
+  function testDrupalSaveOriginalPath() {
+    $account = $this->drupalCreateUser();
+    $uid = $account->uid;
+    $name = $account->name;
+
+    // Create a language-neutral alias.
+    $path = array(
+      'source' => "user/$uid",
+      'alias' => 'foo',
+    );
+    $path_original = $path;
+    path_save($path);
+
+    // Alter the path.
+    $path['alias'] = 'bar';
+    path_save($path);
+
+    // Test to see if the original alias is available to modules during
+    // hook_path_update().
+    $results = variable_get('path_test_results', array());
+
+    $this->assertIdentical($results['hook_path_update']['original']['alias'], $path_original['alias'], 'Old path alias available to modules during hook_path_update.');
+    $this->assertIdentical($results['hook_path_update']['original']['source'], $path_original['source'], 'Old path alias available to modules during hook_path_update.');
+  }
+}
