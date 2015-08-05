@@ -17,7 +17,7 @@ class MongoDb implements StorageInterface {
   /**
    * Pseudo-typing: defined recognized keys for aliases.
    */
-  const ALIAS_KEYS = [
+  protected $aliasKeys = [
     '_id' => 1,
     'alias' => 1,
     'first' => 1,
@@ -66,7 +66,7 @@ class MongoDb implements StorageInterface {
    */
   public function delete(array $criteria) {
     _mongodb_path_trace();
-    $criteria = array_intersect_key($criteria, static::ALIAS_KEYS);
+    $criteria = array_intersect_key($criteria, $this->aliasKeys);
     $this->collection->remove($criteria);
   }
 
@@ -257,7 +257,7 @@ class MongoDb implements StorageInterface {
     ];
 
     $criterium = array_intersect_key($path, ['pid' => 1]);
-    $path = array_intersect_key($path, static::ALIAS_KEYS);
+    $path = array_intersect_key($path, $this->aliasKeys);
     if (!isset($path['first'])) {
       $path['first'] = strtok($path['source'], '/');
     }

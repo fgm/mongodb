@@ -17,7 +17,7 @@ class Dbtng implements StorageInterface {
   /**
    * Pseudo-typing: defined recognized keys for aliases.
    */
-  const ALIAS_KEYS = [
+  protected $aliasKeys = [
     'alias' => 1,
     'language' => 1,
     'pid' => 1,
@@ -55,7 +55,7 @@ class Dbtng implements StorageInterface {
    */
   public function delete(array $criteria) {
     _mongodb_path_trace();
-    $criteria = array_intersect_key($criteria, static::ALIAS_KEYS);
+    $criteria = array_intersect_key($criteria, $this->aliasKeys);
     $query = $this->connection->delete(static::COLLECTION_NAME);
     foreach ($criteria as $field => $value) {
       $query->condition($field, $value);
@@ -69,7 +69,7 @@ class Dbtng implements StorageInterface {
   public function load(array $criteria) {
     _mongodb_path_trace();
 
-    $criteria = array_intersect_key($criteria, static::ALIAS_KEYS);
+    $criteria = array_intersect_key($criteria, $this->aliasKeys);
     /** @var \SelectQuery $select */
     $select = $this->connection->select('url_alias');
     foreach ($criteria as $field => $value) {
@@ -150,7 +150,7 @@ EOT;
   public function save(array &$path) {
     _mongodb_path_trace();
 
-    $path = array_intersect_key($path, static::ALIAS_KEYS);
+    $path = array_intersect_key($path, $this->aliasKeys);
 
     // Matched not set or set to NULL.
     if (empty($path['pid'])) {
