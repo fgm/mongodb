@@ -461,3 +461,16 @@ If installing mongodb_field_storage from an Install Profile:
 
         module_enable(array('mongodb_field_storage'));
         drupal_flush_all_caches();
+
+TESTING
+-------
+
+Tests assume a working MongoDB connection already set up in your `settings.php`.
+
+### mongodb_path
+
+* Configure the path plugin in your site settings and enable the moongodb_path
+  module.
+* Run the tests from the `MongoDB: Path API` group instead of the "Path API"
+  group: core-equivalent tests are included, but these tests include setting up
+  and tearing down a test MongoDB database, which core tests cannot do.
