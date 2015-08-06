@@ -32,7 +32,14 @@ class Logger implements LoggerInterface {
   protected $database;
 
   /**
-   * Constructs a DbLog object.
+   * The message's placeholders parser.
+   *
+   * @var \Drupal\Core\Logger\LogMessageParserInterface
+   */
+  protected $parser;
+
+  /**
+   * Constructs a Logger object.
    *
    * @param \MongoDB $database
    *   The database object.
@@ -71,4 +78,5 @@ class Logger implements LoggerInterface {
         'timestamp' => $context['timestamp'],
       ]);
   }
+
 }
