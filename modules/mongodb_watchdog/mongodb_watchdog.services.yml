@@ -1,0 +1,9 @@
+parameters:
+  mongodb.watchdog_database: 'drupal'
+
+services:
+  mongodb.watchdog_storage:
+    class: 'MongoDB'
+    factory_service: 'mongodb.database_factory'
+    factory_method: 'get'
+    arguments: ['%mongodb.watchdog_database%']

@@ -17,33 +17,24 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class AdminController implements ContainerInjectionInterface {
 
-  protected $mongo;
+  protected $database;
 
   /**
    * Constructor.
    *
-   * @param \Drupal\mongodb\Connection $mongo
+   * @param \MongoDB $database
    *   The watchdog database.
    */
-  public function __construct(Connection $mongo) {
-    $this->mongo = $mongo;
+  public function __construct(\MongoDB $database) {
+    $this->database = $database;
   }
 
   public function overview() {
-    if ($this->mongo->isAvailable()) {
-      $db = $this->mongo->client()->selectDB('drupal');
-      $collection = $db->selectCollection('watchdog');
-      dsm($collection, 'collection');
-      $indexes = $collection ? $collection->getIndexInfo() : [];
-      $ret = [
-        '#markup' => '<pre>' . var_export($indexes, TRUE) . '</pre>',
-      ];
-    }
-    else {
-      $ret = [
-        '#markup' => t('MongoDB is not available.'),
-      ];
-    }
+    $collection = $this->database->selectCollection('watchdog');
+    $indexes = $collection ? $collection->getIndexInfo() : [];
+    $ret = [
+      '#markup' => '<pre>For ' . $collection->getName() . ': ' . var_export($indexes, TRUE) . '</pre>',
+    ];
 
     return $ret;
   }
@@ -52,15 +43,15 @@ class AdminController implements ContainerInjectionInterface {
    * The controller factory.
    *
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The DIC.
    *
    * @return static
+   *   The database instance.
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\mongodb\ConnectionFactory $factory */
-    $factory = $container->get('mongodb.factory');
+    /** @var \MongoDB $database */
+    $database = $container->get('mongodb.watchdog_storage');
 
-    return new static(
-      $factory->create('default')
-    );
+    return new static($database);
   }
 }
