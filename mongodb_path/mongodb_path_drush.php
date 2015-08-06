@@ -39,7 +39,7 @@ function mongodb_path_drush_command() {
  *  If the connection cannot be established.
  */
 function drush_mongodb_path_import() {
-  $drop = boolval(drush_get_option('drop', 1));
+  $drop = (bool) (drush_get_option('drop', 1));
 
   $resolver = ResolverFactory::create();
   $resolver->import($drop);
