@@ -53,10 +53,10 @@ class Connection {
    * Is the MongoDB connection live ?
    *
    * @return bool
-   *   Return TRUE if the MongoClient is connected.
+   *   Return TRUE if the MongoClient is instantiated.
    */
   public function isAvailable() {
-    return $this->client() && $this->client()->connected;
+    return $this->client();
   }
 
 }

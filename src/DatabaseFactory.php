@@ -41,9 +41,9 @@ class DatabaseFactory {
    */
   public function get($alias) {
     try {
-      $connection = $this->connectionFactory->create($alias);
+      list($connection, $name) = $this->connectionFactory->create($alias);
       $result = $connection->isAvailable()
-        ? $connection->client()->selectDB($alias)
+        ? $connection->client()->selectDB($name)
         : NULL;
     }
     catch (\InvalidArgumentException $e) {

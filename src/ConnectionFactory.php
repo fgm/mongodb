@@ -64,9 +64,11 @@ class ConnectionFactory {
    * @param string $alias
    *   An alias taken from the mongodb connection settings.
    *
-   * @return \Drupal\mongodb\Connection
-   *   Return a pre-existing connection if one is available, a new one
-   *   otherwise. The wrapped client will be either NULL or already connected.
+   * @return mixed[]
+   *   - A \Drupal\mongodb\Connection instance: a pre-existing connection if one
+   *     is available, a new one otherwise. The wrapped client will be either
+   *     NULL or already connected.
+   *   - The name of the database defined for the alias.
    */
   public function create($alias) {
     if ($connection = $this->connectionFromAlias($alias)) {
@@ -105,7 +107,10 @@ class ConnectionFactory {
       $this->clients[$alias] = new Connection(NULL);
     }
 
-    return $this->clients[$alias];
+    return [
+      $this->clients[$alias],
+      $info['db'],
+    ];
   }
 
   /**
