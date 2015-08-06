@@ -1,3 +1,13 @@
+This 8.x-2.x is an EXPERIMENT. It will likely crash, destroy your data, and
+cause various kinds of pains. Do NOT deploy it on a production machine, or on a
+MongoDB instance with useful data.
+
+For most intents and purposes, you should be using the 8.x-1.x branch.
+
+Everything below this line is wrong.
+
+---
+
 CONTENTS OF THIS FILE
 ---------------------
 
