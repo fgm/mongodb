@@ -4,18 +4,10 @@ MongoDB instance with useful data.
 
 For most intents and purposes, you should be using the 8.x-1.x branch.
 
-Everything below this line is wrong.
-
----
-
 CONTENTS OF THIS FILE
 ---------------------
 
  * Introduction
- * Installation
- * Variables
- * Collections
- * Module specific configuration
 
 
 INTRODUCTION
@@ -27,6 +19,59 @@ allowing to store different Drupal data in MongoDB.
 Module                | Information
 ----------------------|---------------------------------------------------------
 mongodb               | Support library for the other modules.
+
+INSTALLATION
+------------
+
+The MongoDB module and sub-modules need some amount of configuration before they
+will properly work. This guide assumes that :
+
+* a [MongoDB][download] 3.0 or later instance is already installed, configured, and available to connect to from the Drupal instance.
+* the site will be running [Drupal][drupal] 8.0-beta14 or later.
+* the interpreter will be [PHP][php] 5.5.* or 5.6.*.
+* the [mongo][mongo] (not [mongodb][mongodb]) PHP extension version 1.5.0 or later is installed and configured. 
+
+[download]: https://www.mongodb.org/downloads
+[drupal]: https://www.drupal.org/project/drupal
+[php]: http://php.net/downloads.php
+[mongo]: http://php.net/mongo
+[mongodb]: http://php.net/mongodb
+
+If MongoDB is installed on localhost, you may view the web admin interface:
+
+    http://localhost:28017/
+
+Upload the module package, as per [Installing contributed modules (Drupal 8)][install],
+then copy the relevant section from the `example.settings.local.php` to your
+`settings.local.php` file if you use one, or `settings.php` otherwise, and
+adapt it to match your MongoDB settings.
+
+[install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
+
+
+TRADEMARKS
+----------
+
+* Drupal is a registered trademark of Dries Buytaert.
+* Mongo, MongoDB and the MongoDB  leaf logo are registered trademarks of MongoDB, Inc.
+
+---
+
+Everything below this line is wrong, leftover from previous versions.
+
+
+
+CONTENTS OF THIS FILE
+---------------------
+
+ * Variables
+ * Collections
+ * Module specific configuration
+
+
+INTRODUCTION
+------------
+
 mongodb_block         | Store block information in MongoDB. Very close to the core block API.
 mongodb_cache         | Store cache in MongoDB.
 mongodb_field_storage | Store fields in MongoDB.
@@ -38,16 +83,8 @@ mongodb_watchdog      | Store watchdog messages in MongoDB.
 INSTALLATION
 ------------
 
-Install as usual, see http://drupal.org/node/895232 for further information.
-
-The MongoDB module and sub-modules need some amount of configuration before they
-will properly work. This guide assumes that a MongoDB instance is already
-installed and configured on localhost or remote server. This module additionally
-provides Drush integration to make queries against the MongoDB databases used by
-Drupal.
-
-If MongoDB is installed on localhost, you may view the web admin interface:
-> http://localhost:28017/
+This module additionally provides Drush integration to make queries against the 
+MongoDB databases used by Drupal.
 
 
 CONFIGURATION VARIABLES
