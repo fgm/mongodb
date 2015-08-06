@@ -8,14 +8,14 @@
 /**
  * Implements hook_install().
  */
-function mongodb_watchdog_install() {
+function Zmongodb_watchdog_install() {
   mongodb_watchdog_ensure_indexes();
 }
 
 /**
  * Implements hook_enable().
  */
-function mongodb_watchdog_enable() {
+function Zmongodb_watchdog_enable() {
   mongodb_watchdog_ensure_indexes();
 }
 
@@ -24,7 +24,7 @@ function mongodb_watchdog_enable() {
  *
  * Drop /all/ the watchdog collections.
  */
-function mongodb_watchdog_uninstall() {
+function Zmongodb_watchdog_uninstall() {
   // Drop the base watchdog collection
   $watchdog_name = variable_get('mongodb_watchdog', 'watchdog');
   $watchdog = mongodb_collection($watchdog_name);
@@ -59,7 +59,7 @@ function mongodb_watchdog_uninstall() {
  * because we write to this collection alot, and the smaller index on two
  * numbers should be much faster to create than one with a string included.
  */
-function mongodb_watchdog_ensure_indexes() {
+function Zmongodb_watchdog_ensure_indexes() {
   $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
 
   // Index for adding/updating increments.
@@ -101,7 +101,7 @@ function mongodb_watchdog_ensure_indexes() {
 /**
  * Changes a variable name that defines a collection to store events.
  */
-function mongodb_watchdog_update_7000() {
+function Zmongodb_watchdog_update_7000() {
   $collection_name = variable_get('mongodb_collectionname', 'watchdog');
   if ($collection_name !== 'watchdog') {
     variable_set('mongodb_watchdog', $collection_name);

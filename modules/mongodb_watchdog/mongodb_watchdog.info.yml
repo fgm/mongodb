@@ -1,0 +1,7 @@
+name: 'MongoDB watchdog'
+description: 'A watchdog implementation using MongoDB'
+package: 'MongoDB'
+type: 'module'
+core: '8.x'
+dependencies:
+  - mongodb

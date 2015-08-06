@@ -9,14 +9,12 @@
 $settings['mongodb_connections'] = [
   'servers' => [
     'default' => [
-      'host' => 'localhost',
-      'port' => 27017,
+      'server' => 'mongodb://localhost:27017',
       'db' => 'drupal',
     ],
     // A DB for volatile data to clear them with a single dropDatabase().
     'volatile' => [
-      'host' => 'localhost',
-      'port' => 27017,
+      'server' => 'mongodb://localhost:27017',
       'db' => 'volatile',
     ],
   ],

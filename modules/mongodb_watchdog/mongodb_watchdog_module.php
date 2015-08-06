@@ -1,0 +1,168 @@
+<?php
+
+/**
+ * @file
+ * Fires watchdog messages to mongodb.
+ */
+
+// ==== Everything below this line is broken ===================================
+
+/**
+ * Implement hook_menu().
+ */
+function mongodb_watchdog_menu() {
+  $items['admin/reports/mongodb'] = array(
+    'title' => 'Recent log entries in MongoDB',
+    'description' => 'View events that have recently been logged in MongoDB.',
+    'page callback' => 'mongodb_watchdog_overview',
+    'access arguments' => array('access site reports'),
+    'file'  => 'mongodb_watchdog.admin.inc',
+  );
+  $items['admin/reports/mongodb/%mongodb_watchdog_event'] = array(
+    'title' => 'MongoDB log details',
+    'page callback' => 'mongodb_watchdog_event',
+    'page arguments' => array(3),
+    'access arguments' => array('access site reports'),
+    'type' => MENU_CALLBACK,
+    'file' => 'mongodb_watchdog.admin.inc',
+  );
+  $items['admin/reports/mongodb/list'] = array(
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'title' => 'Overview',
+  );
+  $items['admin/reports/mongodb/access-denied'] = array(
+    'type' => MENU_LOCAL_TASK,
+    'title' => "Top 'access denied' errors in MongoDB",
+    'description' => "View 'access denied' errors (403s).",
+    'page callback' => 'mongodb_watchdog_page_top',
+    'page arguments' => array('access denied'),
+    'access arguments' => array('access site reports'),
+    'file' => 'mongodb_watchdog.admin.inc',
+  );
+  $items['admin/reports/mongodb/page-not-found'] = array(
+    'type' => MENU_LOCAL_TASK,
+    'title' => "Top 'page not found' errors in MongoDB",
+    'description' => "View 'page not found' errors (404s).",
+    'page callback' => 'mongodb_watchdog_page_top',
+    'page arguments' => array('page not found'),
+    'access arguments' => array('access site reports'),
+    'file' => 'mongodb_watchdog.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Load a MongoDB watchdog event.
+ *
+ * @param string $id
+ *
+ * @return object|FALSE
+ */
+function mongodb_watchdog_event_load($id) {
+  $result = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
+    ->findOne(array('_id' => $id));
+  return $result ? $result : FALSE;
+}
+
+/**
+ * Implements hook_watchdog().
+ *
+ * Refer to issue #1355808 regarding filtering.
+ *
+ * @link http://drupal.org/node/1355808 @endlink
+ */
+function mongodb_watchdog_watchdog(array $log_entry) {
+  $watchdog_limit = variable_get('watchdog_limit', WATCHDOG_DEBUG);
+  if (isset($log_entry['severity']) && $log_entry['severity'] > $watchdog_limit) {
+    return;
+  }
+
+  static $checked_ids = array();
+
+  // Find the function that generated this error.
+  $log_entry = (array) $log_entry;
+  _mongodb_watchdog_enhance_log_entry($log_entry, debug_backtrace());
+  $account = $log_entry['user'];
+  // Special handling for core bug #904994:
+  if (!isset($log_entry['variables'])) {
+    $special_messages = array(
+      'page not found' => 'Page not found: @param',
+      'access denied'  => 'Access denied: @param',
+    );
+    $type = $log_entry['type'];
+    $log_entry['variables'] = array('@param' => $log_entry['message']);
+    $log_entry['message'] = isset($special_messages[$type])
+      ? $special_messages[$log_entry['type']]
+      : '@param';
+  }
+
+  $event = array(
+    'variables' => $log_entry['variables'],
+    'timestamp' => $log_entry['timestamp'],
+    'user' => array('name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')), 'uid' => $log_entry['uid']),
+    'ip' => $log_entry['ip'],
+    'request_uri' => $log_entry['request_uri'],
+    'referer' => $log_entry['referer'],
+    'link' => $log_entry['link'],
+  );
+  unset($log_entry['variables'], $log_entry['user'], $log_entry['ip'], $log_entry['request_uri'], $log_entry['referer'], $log_entry['link']);
+
+  $newobj = array(
+    '$set' => $log_entry,
+    '$inc' => array('count' => 1),
+  );
+  $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
+  $id = md5($log_entry['function'] . ':' . $log_entry['line'] . ':' . $log_entry['severity'] . ':' . $log_entry['type'] . ':' . $log_entry['message']);
+  if (!isset($checked_ids[$id])) {
+    $checked_ids[$id] = $collection->findOne(array('_id' => $id), array('_id' => 1));
+  }
+  $collection->update(array('_id' => $id), $newobj, array('upsert' => TRUE) + mongodb_default_write_options(FALSE));
+  $collection = $collection->db->selectCollection('watchdog_event_' . $id);
+  if (empty($checked_ids[$id])) {
+    $max = variable_get('mongodb_watchdog_items', 10000);
+    $command = array('create' => $collection->getName(), 'capped' => TRUE, 'size' => $max * 1000, "max" => $max);
+    $collection->db->command($command);
+    $checked_ids[$id] = TRUE;
+  }
+  $collection->insert($event, mongodb_default_write_options(FALSE));
+}
+
+/**
+ * Fill in the log_entry function, file, and line.
+ *
+ * @param array $log_entry
+ * @param array $backtrace
+ *
+ * @return void
+ */
+function _mongodb_watchdog_enhance_log_entry(&$log_entry, $backtrace) {
+  // Create list of functions to ignore in backtrace.
+  static $ignore = array(
+    'mongodb_watchdog_watchdog' => 1,
+    'call_user_func_array' => 1,
+    'module_invoke' => 1,
+    'watchdog' => 1,
+    '_drupal_log_error' => 1,
+    '_drupal_error_handler' => 1,
+    '_drupal_error_handler_real' => 1,
+    'theme_render_template' => 1,
+  );
+
+  foreach ($backtrace as $bt) {
+    if (isset($bt['function'])) {
+      if (isset($bt['line']) && !isset($ignore[$bt['function']])) {
+        if (isset($bt['file'])) {
+          $log_entry['file'] = $bt['file'];
+        }
+        $log_entry['function'] = $bt['function'];
+        $log_entry['line'] = $bt['line'];
+        break;
+      }
+      elseif ($bt['function'] == '_drupal_exception_handler') {
+        $e = $bt['args'][0];
+        _mongodb_watchdog_enhance_log_entry($log_entry, $e->getTrace());
+      }
+    }
+  }
+}

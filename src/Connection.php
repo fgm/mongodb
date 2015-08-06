@@ -23,18 +23,11 @@ namespace Drupal\mongodb;
 class Connection {
 
   /**
-   * The latest exception occurred.
-   *
-   * @var \Exception|\MongoConnectionException
-   */
-  protected $exception;
-
-  /**
    * The underlying connection.
    *
    * @var \MongoClient
    */
-  protected $mongo;
+  protected $client;
 
   /**
    * Getter for MongoClient.
@@ -43,26 +36,27 @@ class Connection {
    *   Will be null if the connection has not been established.
    */
   public function client() {
-    return $this->mongo;
+    return $this->client;
   }
 
   /**
    * Constructor.
    *
-   * @param string $server
-   *   A server connection string, like 'localhost:27017'.
-   * @param array $options
-   *   A MongoClient connection options array.
-   * @param array $driver_options
-   *   A MongoClient driver options array
+   * @param \MongoClient $client
+   *   A connected client instance.
    */
-  public function __construct($server, array $options, array $driver_options) {
-    try {
-      $this->mongo = new \MongoClient($server, $options, $driver_options);
-    }
-    catch (\MongoConnectionException $e) {
-      $this->mongo = NULL;
-      $this->exception = $e;
-    }
+  public function __construct(\MongoClient $client) {
+    $this->client = $client;
   }
+
+  /**
+   * Is the MongoDB connection live ?
+   *
+   * @return bool
+   *   Return TRUE if the MongoClient is connected.
+   */
+  public function isAvailable() {
+    return $this->client() && $this->client()->connected;
+  }
+
 }
