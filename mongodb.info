@@ -1,6 +1,0 @@
-name = MongoDB
-description = Integration between Drupal and MongoDB.
-package = MongoDB
-core = 7.x
-files[] = mongodb.module
-files[] = mongodb.install

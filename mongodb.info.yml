@@ -1,0 +1,6 @@
+name: 'MongoDB'
+description: 'Integration between Drupal and MongoDB.'
+type: 'module'
+package: 'MongoDB'
+core: '8.x'
+php: '5.6'

@@ -5,7 +5,7 @@
  * Replace your cache-backend file with this file. See README.txt for details.
  */
 
-include_once dirname(__FILE__) . '/../mongodb.module';
+include_once dirname(__FILE__) . '/../mongodb_module.php';
 
 /**
  * MonogoDB cache implementation.

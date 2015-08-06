@@ -1,0 +1,4 @@
+services:
+  mongodb.factory:
+    class: Drupal\mongodb\ConnectionFactory
+    arguments: ['@settings']

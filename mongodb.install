@@ -1,20 +1,8 @@
 <?php
 
 /**
- * Implement hook_requirements().
+ * @file
+ * Installer for MongoDB module.
  */
-function mongodb_requirements($phase) {
-  $requirements = array();
-  // Ensure translations don't break at install time
-  $t = get_t();
 
-  if (!extension_loaded('mongo')) {
-    $requirements['mongodb'] = array(
-      'title' => $t('Mongodb'),
-      'value' => $t('Not found'),
-      'description' => $t('Mongodb requires the PHP MongoDB extension to be installed.'),
-      'severity' => REQUIREMENT_ERROR,
-    );
-  }
-  return $requirements;
-}
+require_once __DIR__ . '/mongodb_install.php';
