@@ -71,6 +71,9 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
    * Enable modules and create users with specific permissions.
    */
   function setUp() {
+    // Support using the MongoDB cache.
+    drupal_flush_all_caches();
+
     $this->group = t('Setup');
     parent::setUp('mongodb', 'mongodb_watchdog', 'blog', 'poll');
 
@@ -101,6 +104,8 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
     module_load_include('inc', 'mongodb_watchdog', 'mongodb_watchdog.admin');
     mongodb_watchdog_clear_log_submit();
 
+    // Support using the MongoDB cache.
+    drupal_flush_all_caches();
     parent::tearDown();
   }
 

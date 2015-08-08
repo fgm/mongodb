@@ -255,7 +255,7 @@ class MongoDummy {
 function mongodb_collection_name($name) {
   global $db_prefix;
   static $simpletest_prefix;
-  // We call this function earlier than the database is initalized so we would
+  // We call this function earlier than the database is initialized so we would
   // read the parent collection without this.
   if (!isset($simpletest_prefix)) {
     if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);/", $_SERVER['HTTP_USER_AGENT'], $matches)) {

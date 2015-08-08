@@ -28,7 +28,9 @@ mongodb_watchdog      | Store watchdog messages in MongoDB.
 INSTALLATION
 ------------
 
-Install as usual, see http://drupal.org/node/895232 for further information.
+Install as usual, see [http://drupal.org/node/895232][install] for further information.
+
+[install]: http://drupal.org/node/895232 
 
 The MongoDB module and sub-modules need some amount of configuration before they
 will properly work. This guide assumes that a MongoDB instance is already
@@ -37,7 +39,8 @@ provides Drush integration to make queries against the MongoDB databases used by
 Drupal.
 
 If MongoDB is installed on localhost, you may view the web admin interface:
-> http://localhost:28017/
+
+    http://localhost:28017/
 
 
 CONFIGURATION VARIABLES
@@ -136,7 +139,58 @@ EXAMPLE:
 
     $conf['mongodb_debug'] = FALSE;
 
-### 3: mongodb_session
+### 3: mongodb_write_[non]safe_options
+
+These two configuration variables define the default write concern values for
+write operations in "safe" or "non-safe" mode, depending on the array.
+
+* `mongodb_write_safe_options` defaults to `['w' => 1]`
+* `mongodb_write_nonsafe_options` defaults to `['w' => 0]`
+
+Driver version          |  safe == TRUE                | safe == FALSE
+------------------------|------------------------------|--------------
+before 1.3.0            | `['safe' => TRUE]`           | `[]`
+1.3.0 to 1.5.0 excluded | `['safe' => TRUE]`           | `mongodb_write_nonsafe_options`
+1.5.0 and later         | `mongodb_write_safe_options` | `mongodb_write_nonsafe_options`
+
+These variables are used as defaults, so can be overridden per alias in the
+`mongodb_connections`, or per-query.
+
+### 4: mongodb_cache_extra_bins
+
+This optional configuration variable allows the cache plugin to support cache
+expiration even for ill-behaved modules using bins which they do not declare in 
+`hook_flush_caches()`, called "extra bins".
+
+If this variable is not defined, or is set to NULL, meaning unknown, 
+`mongodb_cache.module` will discover extra bins based on collections named 
+`cache_*` and not already declared by other modules. This is useful if all ill-
+behaved modules only use cache bins named `cache_*`.
+
+If any of these ill-behaved modules use bins not named like `cache_*`, these
+bins cannot be discovered that way, and the variable needs to declare all extra 
+bins explicitly. 
+
+EXAMPLE
+
+If module `foo` uses a `foo_bar` bin instead of `cache_foo_bar`, and module 
+`baz` uses bin `cache_baz`, the extra bins need to be declared like this:
+
+    $conf['mongodb_cache_extra_bins'] = ['foo_bar', 'cache_baz'];
+
+If all modules declare their cache bins, which is the normal case, this feature
+is not needed, and the cache plugin can be used on its own, without needing to
+enable the `mongodb_cache` module not define this variable.
+
+
+### 5: mongodb_cache_stampede_delay
+
+This configuration variable defines the number of seconds after an expiration
+during which any other expiration request will be ignored, to prevent expire
+stampedes. It defaults to 5 seconds.
+
+
+### 6: mongodb_session
 
 This variable holds the name of the collection used by the mongodb_session
 sub-module. If not defined, it defaults to `"session"`.
@@ -145,12 +199,12 @@ EXAMPLE:
 
     $conf['mongodb_session'] = 'anyname';
 
-### 4: mongodb_slave
+### 7: mongodb_slave
 
 This variable holds an array of the slaves used for the mongodb field storage
 sub-module. If not defined, it defaults to an empty `array()`.
 
-### 5: mongodb_watchdog
+### 8: mongodb_watchdog
 
 This variable holds the name of the collection used by the mongodb_watchdog
 module. It defaults to `"watchdog"`.
@@ -162,7 +216,7 @@ EXAMPLE:
 Whatever the name of the main collection defined with this variable, the
 per-message-type collections are called `watchdog_(objectId)`.
 
-### 6: mongodb_watchdog_items
+### 9: mongodb_watchdog_items
 
 This variable defines the maximum item limit on the capped collection used by
 the mongodb_watchdog sub-module. If not defined, it defaults to 10000. The
@@ -173,7 +227,7 @@ EXAMPLE:
 
     $conf['mongodb_watchdog_items'] = 15000;
 
-### 7: watchdog_limit
+### 10: watchdog_limit
 
 This variable define the maximum severity level to save into watchdog. Errors
 below this level will be ignored by watchdog. If not defined, all errors will
@@ -187,7 +241,7 @@ See [watchdog_severity_levels()][levels] for further information about Watchdog 
 
 [levels]: http://api.drupal.org/api/drupal/includes--common.inc/function/watchdog_severity_levels/7
 
-### 8: mongodb_collections
+### 11: mongodb_collections
 
 See the COLLECTIONS section below.
 
@@ -251,8 +305,8 @@ If you do not need read_preference you can continue to utilise the existing
 array structure for the 1.3 and more recent drivers.
 
 
-MODULE-SPECIFIC CONFIGURATION
------------------------------
+MODULE-SPECIFIC CONFIGURATION AND STATE
+---------------------------------------
 
 The following configuration variables are needed to use the features provided
 by the the following sub-modules.
@@ -262,12 +316,22 @@ by the the following sub-modules.
 EXAMPLE:
 
     # -- Configure Cache.
-    $conf['cache_backends'][]            = 'sites/all/modules/mongodb/mongodb_cache/mongodb_cache.inc';
-    $conf['cache_default_class']         = 'DrupalMongoDBCache';
+    $conf['cache_backends'][]            = 'sites/all/modules/mongodb/mongodb_cache/mongodb_cache_plugin.php';
+    $conf['cache_default_class']         = '\Drupal\mongodb_cache\Cache';
 
     # -- Don't touch SQL if in Cache.
     $conf['page_cache_without_database'] = TRUE;
     $conf['page_cache_invoke_hooks']     = FALSE;
+
+* The `cache_lifetime` configuration variable applies to all cache bins, and is
+  added to the TTL for non-permanent items.
+* The `cache_flush_<bin_name>` state variables for each bin contains the
+  timestamp of the latest cache garbage collection. Being a state variable
+  rebuilt by the MongoDB Cache plugin, it should not be modified in
+  `settings.php`, as this would prevent its dynamic maintenance.
+
+If all modules on the site expose their cache bins via `hook_flush_caches()`, 
+there is no need to enable the mongodb_cache module.
 
 ### mongodb_session
 
@@ -275,7 +339,7 @@ EXAMPLE:
 
     # Session Caching
     $conf['session_inc']                 = 'sites/all/modules/mongodb/mongodb_session/mongodb_session.inc';
-    $conf['cache_session']               = 'DrupalMongoDBCache';
+    $conf['cache_session']               = '\Drupal\mongodb_cache\Cache';
 
 ### mongodb_field_storage
 
@@ -283,6 +347,17 @@ EXAMPLE:
 
     # Field Storage
     $conf['field_storage_default']       = 'mongodb_field_storage';
+
+
+RUNNING TESTS
+-------------
+
+The cache plugin can run core-equivalent tests : these are the core tests,
+wrapped in a `setUp()`/`tearDown()` sequence supporting the use of a non-SQL 
+cache. Run the tests in the `MongoDB: Cache` group instead of the `Cache` group.
+
+To run tests from the command line via run-tests.sh, use concurrency = 1. The
+current core test wrapping does not support concurrent tests.
 
 
 TROUBLESHOOTING

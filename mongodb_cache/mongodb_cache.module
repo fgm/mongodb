@@ -1,1 +1,8 @@
 <?php
+
+/**
+ * @file
+ * MongoDB cache backend.
+ */
+
+require_once __DIR__ . '/mongodb_cache_module.php';

@@ -1,0 +1,15 @@
+checks:
+  php:
+    code_rating: true
+    duplication: true
+filter:
+  excluded_paths:
+    - 'mongodb_block/*'
+    - 'mongodb_block_ui/*'
+    - 'mongodb_field_storage/*'
+    - 'mongodb_migrate/*'
+    - 'mongodb_queue/*'
+    - 'mongodb_session/*'
+    - 'mongodb_watchdog/*'
+  paths:
+    - 'mongodb_cache/*'
