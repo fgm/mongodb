@@ -53,8 +53,11 @@ function mongodb($alias = 'default', $retry = 3) {
     'connection_options' => array(),
   );
   $host = $connection['host'];
-  $options = $connection['connection_options'] + array('connect' => TRUE);
   $db = $connection['db'];
+  $options = $connection['connection_options'] + array(
+    'connect' => TRUE,
+    'db' => $db,
+  );
   if (!isset($mongo_objects[$host][$db])) {
     try {
       // Use the 1.3 client if available.
