@@ -28,6 +28,13 @@ class Cache implements \DrupalCacheInterface {
   protected $bin;
 
   /**
+   * A closure wrapping MongoBinData::__construct() with its default $type.
+   *
+   * @var \Closure
+   */
+  protected $binDataCreator;
+
+  /**
    * The collection holding the cache data.
    *
    * @var \MongoCollection|\MongoDebugCollection|\MongoDummy
@@ -74,6 +81,50 @@ class Cache implements \DrupalCacheInterface {
 
     $this->stampedeDelay = variable_get('mongodb_cache_stampede_delay', 5);
     $this->flushVarName = "flush_cache_{$bin}";
+
+    $this->binDataCreator = $this->getBinDataCreator();
+  }
+
+  /**
+   * An alternate \MongoBinData constructor using default $type.
+   *
+   * @param mixed $data
+   *   The data to convert to \MongoBinData.
+   *
+   * @return \Closure
+   *   The alternate constructor with $type following the extension version.
+   */
+  protected function createBinData($data) {
+    $creator = $this->binDataCreator;
+    $result = $creator($data);
+    return $result;
+  }
+
+  /**
+   * Return the proper MongoBinData constructor with its type argument.
+   *
+   * The signature of \MongoBinData::__construct() changed in 1.2.11 to require
+   * $type and default to BYTE_ARRAY, then again in 1.5.0 to default to GENERIC.
+   *
+   * @return \Closure
+   *   A closure wrapping the constructor with its expected $type.
+   */
+  protected function getBinDataCreator() {
+    if (version_compare('mongo', '1.2.11') < 0) {
+      $result = function ($data) {
+        return new \MongoBinData($data);
+      };
+    }
+    else {
+      $type = version_compare('mongo', '1.5.0') < 0
+        ? \MongoBinData::BYTE_ARRAY
+        : \MongoBinData::GENERIC;
+      $result = function ($data) use($type) {
+        return new \MongoBinData($data, $type);
+      };
+    }
+
+    return $result;
   }
 
   /**
@@ -219,7 +270,7 @@ class Cache implements \DrupalCacheInterface {
 
     // Use MongoBinData for non-UTF8 strings.
     if (is_string($entry['data']) && !drupal_validate_utf8($entry['data'])) {
-      $entry['data'] = new \MongoBinData($entry['data']);
+      $entry['data'] = $this->createBinData($entry['data']);
     }
 
     try {
