@@ -112,11 +112,9 @@ function mongodb_watchdog_watchdog(array $log_entry) {
     '$inc' => array('count' => 1),
   );
   $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
-  $id = md5($log_entry['function']
-    . ':' . $log_entry['line']
-    . ':' . $log_entry['severity']
-    . ':' . $log_entry['type']
-  );
+  $function = isset($log_entry['function']) ? $log_entry['function'] : '(function unknown)';
+  $line = isset($log_entry['line']) ? $log_entry['line'] : '(line unknown)';
+  $id = md5("$function:$line:" . $log_entry['severity'] . ':' . $log_entry['type']);
   if (!isset($checked_ids[$id])) {
     $checked_ids[$id] = $collection->findOne(array('_id' => $id), array('_id' => 1));
   }
