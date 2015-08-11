@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Install file for MongoDB cache plugin.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function mongodb_cache_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  $requirements = [
+    'mongodb_cache_plugin' => [
+      'title' => $t('MongoDB cache plugin'),
+    ]
+  ];
+  $section = &$requirements['mongodb_cache_plugin'];
+
+  // Confirm that mongodb_cache_plugin.php has been included.
+  if (class_exists('\Drupal\mongodb_cache\Cache', TRUE)) {
+    $section += [
+      'severity' => REQUIREMENT_OK,
+      'value' => $t('Enabled'),
+    ];
+  }
+  else {
+    $readme = 'README.md';
+    $path = function_exists('advanced_help_menu') && function_exists('markdown_filter_info')
+      ? "help/mongodb/$readme"
+      : drupal_get_path('module', 'mongodb') . "/$readme";
+
+    $section += [
+      'severity' => REQUIREMENT_ERROR,
+      'value' => $t('Disabled'),
+      'description' => $t('The module cannot work without the MongoDB path plugin being installed. Check <a href="!readme">README.md</a> and ensure that <code>mongodb_cache_plugin.php</code> is configured correctly in <code>settings.php</code>.', [
+        '!readme' => url($path),
+      ]),
+    ];
+  }
+
+  return $requirements;
+}
