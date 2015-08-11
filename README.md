@@ -43,6 +43,17 @@ If MongoDB is installed on localhost, you may view the web admin interface:
     http://localhost:28017/
 
 
+REQUIREMENTS
+------------
+
+MongoDB module only supports:
+
+* MongoDB server versions 1.3 or higher.
+* `mongo` (not `mongodb`) extension
+* PHP 5.1 or higher.
+    * PHP 5.3 or higher is required for the cache plugin.
+
+
 CONFIGURATION VARIABLES
 -----------------------
 
