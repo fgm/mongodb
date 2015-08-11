@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Fires watchdog messages to mongodb.
+ * Fires watchdog messages to MongoDB.
  */
 
-include_once dirname(__FILE__) . '/../mongodb_module.php';
+include_once __DIR__ . '/../mongodb_module.php';
 
 /**
  * Implements hook_menu().

@@ -34,6 +34,9 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
   public function setUp() {
     $this->preserveMongoDbConfiguration();
 
+    // Ensure compatibility with non-DB cache.
+    drupal_flush_all_caches();
+
     // Set up the database and testing environment.
     parent::setUp();
     $this->setUpTestServices($this->databasePrefix);
@@ -49,6 +52,9 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
    */
   public function tearDown() {
     $this->tearDownTestServices();
+    // Ensure compatibility with non-DB cache.
+    drupal_flush_all_caches();
+
     parent::tearDown();
   }
 

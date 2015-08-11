@@ -24,6 +24,10 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
    */
   public function setUp() {
     $this->preserveMongoDbConfiguration();
+
+    // Support non-DB cache.
+    drupal_flush_all_caches();
+
     parent::setUp('path', 'forum', 'url_alter_test');
     $this->setUpTestServices($this->databasePrefix);
   }
@@ -33,6 +37,10 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
    */
   public function tearDown() {
     $this->tearDownTestServices();
+
+    // Support non-DB cache.
+    drupal_flush_all_caches();
+
     parent::tearDown();
   }
 

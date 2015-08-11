@@ -30,6 +30,7 @@ class ResolverTest extends \DrupalUnitTestCase {
    */
   public function setUp() {
     $this->preserveMongoDbConfiguration();
+
     parent::setUp();
     $this->setUpTestServices($this->databasePrefix);
   }
@@ -39,6 +40,7 @@ class ResolverTest extends \DrupalUnitTestCase {
    */
   public function tearDown() {
     $this->tearDownTestServices();
+
     parent::tearDown();
   }
 

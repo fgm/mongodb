@@ -23,6 +23,10 @@ class PathSaveTest extends \DrupalWebTestCase {
    */
   public function setUp() {
     $this->preserveMongoDbConfiguration();
+
+    // Support non-DB cache.
+    drupal_flush_all_caches();
+
     // Enable a helper module that implements hook_path_update().
     parent::setUp('path_test');
     $this->setUpTestServices($this->databasePrefix);
@@ -31,10 +35,14 @@ class PathSaveTest extends \DrupalWebTestCase {
   }
 
   /**
-   * {@inheritdoc]
+   * {@inheritdoc}
    */
   public function tearDown() {
     $this->tearDownTestServices();
+
+    // Support non-DB cache.
+    drupal_flush_all_caches();
+
     parent::tearDown();
   }
 

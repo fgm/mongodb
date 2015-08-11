@@ -47,7 +47,7 @@ function mongodb_path_requirements() {
   }
   else {
     $ret['mongodb_path_plugin_loaded'] += [
-      'value' => $t('Plugin not loaded.'),
+      'value' => $t('Plugin not loaded from settings.php.'),
       'description' => $t('The module cannot work without the MongoDB path plugin being installed.'),
       'severity' => REQUIREMENT_ERROR,
     ];

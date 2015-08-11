@@ -23,6 +23,10 @@ class PathLookupTest extends \DrupalWebTestCase {
    */
   public function setUp() {
     $this->preserveMongoDbConfiguration();
+
+    // Support non-DB cache.
+    drupal_flush_all_caches();
+
     parent::setUp();
     $this->setUpTestServices($this->databasePrefix);
   }
@@ -32,6 +36,10 @@ class PathLookupTest extends \DrupalWebTestCase {
    */
   public function tearDown() {
     $this->tearDownTestServices();
+
+    // Support non-DB cache.
+    drupal_flush_all_caches();
+
     parent::tearDown();
   }
 
