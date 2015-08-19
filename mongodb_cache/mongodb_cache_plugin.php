@@ -19,6 +19,7 @@ include_once __DIR__ . '/../mongodb.module';
  * cached data. Each cache bin corresponds to a collection by the same name.
  */
 class Cache implements \DrupalCacheInterface {
+  const ERROR_TEMPLATE = 'MongoDB cache problem %except.';
 
   /**
    * The name of the collection holding the cache data.
@@ -40,6 +41,15 @@ class Cache implements \DrupalCacheInterface {
    * @var \MongoCollection|\MongoDebugCollection|\MongoDummy
    */
   protected $collection;
+
+  /**
+   * Has a connection exception already been notified ?
+   *
+   * @var bool
+   *
+   * @see \Drupal\mongodb_cache\Cache::notifyException()
+   */
+  protected static $isExceptionNotified = FALSE;
 
   /**
    * The default write options for this collection: unsafe mode.
@@ -83,6 +93,20 @@ class Cache implements \DrupalCacheInterface {
     $this->flushVarName = "flush_cache_{$bin}";
 
     $this->binDataCreator = $this->getBinDataCreator();
+  }
+
+  /**
+   * Display an exception error message only once.
+   *
+   * @param \MongoConnectionException $e
+   */
+  protected static function notifyException(\MongoConnectionException $e) {
+    if (!self::$isExceptionNotified) {
+      drupal_set_message(t(self::ERROR_TEMPLATE, [
+        '%except' => $e->getMessage(),
+      ]), 'error');
+      self::$isExceptionNotified = TRUE;
+    }
   }
 
   /**
@@ -154,11 +178,18 @@ class Cache implements \DrupalCacheInterface {
    * {@inheritdoc}
    */
   public function get($cid) {
-    // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $this->garbageCollection();
+    try {
+      // Garbage collection necessary when enforcing a minimum cache lifetime.
+      $this->garbageCollection();
 
-    $cache = $this->collection->findOne(['_id' => (string) $cid]);
-    $result = $this->prepareItem($cache);
+      $cache = $this->collection->findOne(['_id' => (string) $cid]);
+      $result = $this->prepareItem($cache);
+    }
+    catch (\MongoConnectionException $e) {
+      self::notifyException($e);
+      $result = FALSE;
+    }
+
     return $result;
   }
 
@@ -166,24 +197,30 @@ class Cache implements \DrupalCacheInterface {
    * {@inheritdoc}
    */
   public function getMultiple(&$cids) {
-    // Garbage collection necessary when enforcing a minimum cache lifetime.
-    $this->garbageCollection();
-
-    $criteria = [
-      '_id' => [
-        '$in' => array_map('strval', $cids),
-      ]
-    ];
-    $result = $this->collection->find($criteria);
-
     $cache = [];
-    foreach ($result as $item) {
-      $item = $this->prepareItem($item);
-      if ($item) {
-        $cache[$item->cid] = $item;
+    try {
+      // Garbage collection necessary when enforcing a minimum cache lifetime.
+      $this->garbageCollection();
+
+      $criteria = [
+        '_id' => [
+          '$in' => array_map('strval', $cids),
+        ]
+      ];
+      $result = $this->collection->find($criteria);
+
+      foreach ($result as $item) {
+        $item = $this->prepareItem($item);
+        if ($item) {
+          $cache[$item->cid] = $item;
+        }
       }
+      $cids = array_diff($cids, array_keys($cache));
     }
-    $cids = array_diff($cids, array_keys($cache));
+    catch (\MongoConnectionException $e) {
+      self::notifyException($e);
+    }
+
     return $cache;
   }
 
