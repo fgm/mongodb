@@ -69,7 +69,8 @@ function mongodb_block_page_build(&$page) {
   $all_regions = system_region_list($theme);
 
   $collection = mongodb_collection('block', $theme);
-  if (!$collection->findOne()) {
+  // Fastest way to check if collection is not empty, per #2072135.
+  if (!$collection->find()->limit(1)->hasNext()) {
     _mongodb_block_rehash($theme);
   }
   $query = array();
