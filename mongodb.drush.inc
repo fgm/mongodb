@@ -51,7 +51,7 @@ function mongodb_drush_command() {
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_DATABASE,
     'description' => 'Execute a query against the site mongodb.',
     'examples' => array(
-      'drush mongodb-query "db.watchdog.find().forEach(function(x){print(tojson(x))});"' => 'Get the watchdog entries.',
+      'drush mongodb-query default "db.watchdog.find().forEach(function(x){print(tojson(x))});"' => 'Get the watchdog message templates.',
     ),
     'arguments' => array(
        'alias' => 'The connection',
@@ -107,9 +107,15 @@ function drush_mongodb_connect($alias = 'default') {
  */
 function drush_mongodb_query($alias = 'default', $query = '') {
   $command = _drush_mongodb_connect($alias);
-  $command .= " --eval '$query'";
-  drush_print(escapeshellcmd($command));
-  drush_print(proc_close(proc_open(escapeshellcmd($command), array(0 => STDIN, 1 => STDOUT, 2 => STDERR), $pipes)));
+  $command .= " --eval $query";
+  $escaped_command = escapeshellcmd($command);
+  $pipes = array();
+  drush_print($escaped_command);
+  drush_print(proc_close(proc_open($escaped_command, array(
+    0 => STDIN,
+    1 => STDOUT,
+    2 => STDERR,
+  ), $pipes)));
 }
 
 /**
@@ -123,11 +129,12 @@ function _drush_mongodb_connect($alias) {
   }
   $connection = $connections[$alias];
   $host = $connection['host'];
+  $host = preg_replace('@^mongodb://@', '', $host);
   $db = $connection['db'];
-  
+
   $query = $host;
   $query .= '/' . $db;
-  
+
   $command = 'mongo ' . $query;
   return $command;
 }
