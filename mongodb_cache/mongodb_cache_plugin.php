@@ -19,8 +19,6 @@ include_once __DIR__ . '/../mongodb.module';
  * cached data. Each cache bin corresponds to a collection by the same name.
  */
 class Cache implements \DrupalCacheInterface {
-  const ERROR_TEMPLATE = 'MongoDB cache problem %except.';
-
   /**
    * The name of the collection holding the cache data.
    *
@@ -48,6 +46,10 @@ class Cache implements \DrupalCacheInterface {
    * @var bool
    *
    * @see \Drupal\mongodb_cache\Cache::notifyException()
+   *
+   * This is a static, because the plugin assumes that connection errors will be
+   * share between all bins, under the hypothesis that all bins will be using
+   * the same connection.
    */
   protected static $isExceptionNotified = FALSE;
 
@@ -102,8 +104,8 @@ class Cache implements \DrupalCacheInterface {
    */
   protected static function notifyException(\MongoConnectionException $e) {
     if (!self::$isExceptionNotified) {
-      drupal_set_message(t(self::ERROR_TEMPLATE, [
-        '%except' => $e->getMessage(),
+      drupal_set_message(t('MongoDB cache problem %exception.', [
+        '%exception' => $e->getMessage(),
       ]), 'error');
       self::$isExceptionNotified = TRUE;
     }
@@ -241,7 +243,12 @@ class Cache implements \DrupalCacheInterface {
           '$ne' => CACHE_PERMANENT,
         ],
       ];
-      $this->collection->remove($criteria, $this->unsafe);
+      try {
+        $this->collection->remove($criteria, $this->unsafe);
+      }
+      catch (\MongoConnectionException $e) {
+        self::notifyException($e);
+      }
 
       // Re-enable the expiration mechanism.
       $this->setFlushTimestamp(REQUEST_TIME + $this->stampedeDelay);
@@ -313,8 +320,25 @@ class Cache implements \DrupalCacheInterface {
     try {
       $this->collection->save($entry, $this->unsafe);
     }
-    catch (\Exception $e) {
+    // Multiple possible exceptions on save(), not just connection-related.
+    catch (\MongoException $e) {
+      self::notifyException($e);
       // The database may not be available, so we'll ignore cache_set requests.
+    }
+  }
+
+  /**
+   * Attempt removing data from the collection, notifying on exceptions.
+   *
+   * @param array|null $criteria
+   *   NULL means to remove all documents from the collection.
+   */
+  protected function attemptRemove($criteria = NULL) {
+    try {
+      $this->collection->remove($criteria, $this->unsafe);
+    }
+    catch (\MongoConnectionException $e) {
+      self::notifyException($e);
     }
   }
 
@@ -322,7 +346,6 @@ class Cache implements \DrupalCacheInterface {
    * {@inheritdoc}
    */
   public function clear($cid = NULL, $wildcard = FALSE) {
-    $collection = $this->collection;
     $minimum_lifetime = variable_get('cache_lifetime', 0);
 
     if (empty($cid)) {
@@ -347,7 +370,7 @@ class Cache implements \DrupalCacheInterface {
               '$lte' => REQUEST_TIME,
             ],
           ];
-          $collection->remove($criteria, $this->unsafe);
+          $this->attemptRemove($criteria);
           $this->setFlushTimestamp(REQUEST_TIME + $this->stampedeDelay);
         }
       }
@@ -359,19 +382,20 @@ class Cache implements \DrupalCacheInterface {
             '$lte' => REQUEST_TIME,
           ],
         ];
-        $collection->remove($criteria, $this->unsafe);
+        $this->attemptRemove($criteria);
       }
     }
     else {
       if ($wildcard) {
         if ($cid == '*') {
-          $collection->remove();
+          $criteria = [];
+          $this->attemptRemove($criteria);
         }
         else {
           $criteria = [
             'cid' => new \MongoRegex('/' . preg_quote($cid) . '.*/'),
           ];
-          $collection->remove($criteria, $this->unsafe);
+          $this->attemptRemove($criteria);
         }
       }
       elseif (is_array($cid)) {
@@ -382,14 +406,14 @@ class Cache implements \DrupalCacheInterface {
               '$in' => array_map('strval', array_splice($cid, 0, 1000)),
             ]
           ];
-          $collection->remove($criteria, $this->unsafe);
+          $this->attemptRemove($criteria);
         } while (count($cid));
       }
       else {
         $criteria = [
           '_id' => (string) $cid,
         ];
-        $collection->remove($criteria, $this->unsafe);
+        $this->attemptRemove($criteria);
       }
     }
   }
@@ -398,7 +422,17 @@ class Cache implements \DrupalCacheInterface {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    return !$this->collection->findOne();
+    try {
+      // Faster than findOne().
+      $result = !$this->collection->find([], ['_id' => 1])->limit(1)->next();
+    }
+    catch (\MongoConnectionException $e) {
+      // An unreachable cache is as good as empty.
+      $result = TRUE;
+      self::notifyException($e);
+    }
+
+    return $result;
   }
 
 }
