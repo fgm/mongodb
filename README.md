@@ -24,13 +24,25 @@ mongodb_queue         | DrupalQueueInterface implementation using MongoDB.
 mongodb_session       | Store sessions in MongoDB.
 mongodb_watchdog      | Store watchdog messages in MongoDB.
 
+The module is a "development" version, and as such its configuration, as well of
+some of its APIs may change with each -dev release: please read this README with
+attention each time you upgrade, to spot changes.
+
+The level of stability of the various components is variable :
+
+* Planned for RC3:
+  * Stable and maintained: mongodb, watchdog
+  * Stable but less maintained: cache, queue
+* Possibly not stable by RC3:
+  * Not maintained regularly: block, block_ui, session, field_storage
+
 
 INSTALLATION
 ------------
 
 Install as usual, see [http://drupal.org/node/895232][install] for further information.
 
-[install]: http://drupal.org/node/895232 
+[install]: http://drupal.org/node/895232
 
 The MongoDB module and sub-modules need some amount of configuration before they
 will properly work. This guide assumes that a MongoDB instance is already
@@ -170,21 +182,21 @@ These variables are used as defaults, so can be overridden per alias in the
 ### 4: mongodb_cache_extra_bins
 
 This optional configuration variable allows the cache plugin to support cache
-expiration even for ill-behaved modules using bins which they do not declare in 
+expiration even for ill-behaved modules using bins which they do not declare in
 `hook_flush_caches()`, called "extra bins".
 
-If this variable is not defined, or is set to NULL, meaning unknown, 
-`mongodb_cache.module` will discover extra bins based on collections named 
+If this variable is not defined, or is set to NULL, meaning unknown,
+`mongodb_cache.module` will discover extra bins based on collections named
 `cache_*` and not already declared by other modules. This is useful if all ill-
 behaved modules only use cache bins named `cache_*`.
 
 If any of these ill-behaved modules use bins not named like `cache_*`, these
-bins cannot be discovered that way, and the variable needs to declare all extra 
-bins explicitly. 
+bins cannot be discovered that way, and the variable needs to declare all extra
+bins explicitly.
 
 EXAMPLE
 
-If module `foo` uses a `foo_bar` bin instead of `cache_foo_bar`, and module 
+If module `foo` uses a `foo_bar` bin instead of `cache_foo_bar`, and module
 `baz` uses bin `cache_baz`, the extra bins need to be declared like this:
 
     $conf['mongodb_cache_extra_bins'] = ['foo_bar', 'cache_baz'];
@@ -341,7 +353,7 @@ EXAMPLE:
   rebuilt by the MongoDB Cache plugin, it should not be modified in
   `settings.php`, as this would prevent its dynamic maintenance.
 
-If all modules on the site expose their cache bins via `hook_flush_caches()`, 
+If all modules on the site expose their cache bins via `hook_flush_caches()`,
 there is no need to enable the mongodb_cache module.
 
 ### mongodb_session
@@ -364,7 +376,7 @@ RUNNING TESTS
 -------------
 
 The cache plugin can run core-equivalent tests : these are the core tests,
-wrapped in a `setUp()`/`tearDown()` sequence supporting the use of a non-SQL 
+wrapped in a `setUp()`/`tearDown()` sequence supporting the use of a non-SQL
 cache. Run the tests in the `MongoDB: Cache` group instead of the `Cache` group.
 
 To run tests from the command line via run-tests.sh, use concurrency = 1. The
