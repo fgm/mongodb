@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Class CacheIsEmptyTest.
+ * Contains \Drupal\mongodb_cache\Tests\CacheIsEmptyTest.
  */
 
 namespace Drupal\mongodb_cache\Tests;

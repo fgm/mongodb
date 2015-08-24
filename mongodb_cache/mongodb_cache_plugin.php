@@ -2,9 +2,10 @@
 
 /**
  * @file
- * MongoDB cache backend.
+ * Contains \Drupal\mongodb_cache\Cache.
  *
- * Replaces the core cache backend file. See README.txt for details.
+ * This is the actual MongoDB cache backend. It replaces the core cache backend
+ * file. See README.md for details.
  */
 
 namespace Drupal\mongodb_cache;

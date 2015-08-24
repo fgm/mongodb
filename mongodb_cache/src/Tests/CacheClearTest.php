@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Class CacheClearTest.
+ * Contains \Drupal\mongodb_cache\Tests\CacheClearTest.
  *
  * This test just wraps the core \CacheClearCase with a setUp()/tearDown()
  * sequence making it compatible with the MongoDB cache plugin.

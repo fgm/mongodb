@@ -2,14 +2,14 @@
 
 /**
  * @file
- * Tests for the MongoDB block UI module
+ * Contains Drupal\mongodb_block_ui\Tests\BlockAdminThemeTest.
  */
 
 namespace Drupal\mongodb_block_ui\Tests;
 
 
 /**
- * Test the block system with admin themes.
+ * Test the MongoDB block UI with admin themes.
  */
 class BlockAdminThemeTest extends \DrupalWebTestCase {
   /**

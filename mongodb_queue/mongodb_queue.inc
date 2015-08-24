@@ -2,7 +2,9 @@
 
 /**
  * @file
- * Queue functionality.
+ * Contains \MongoDBQueue.
+ *
+ * This is the MongoDB Queue API plugin.
  */
 
 class MongoDBQueue implements DrupalQueueInterface {

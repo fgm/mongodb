@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains CacheTestTrait.
+ * Contains \Drupal\mongodb_cache\Tests\CacheTestTrait.
  */
 
 namespace Drupal\mongodb_cache\Tests;
