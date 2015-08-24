@@ -6,6 +6,7 @@
 
 /**
  * Display watchdogs entries in mongodb.
+ *
  * @TODO
  *   Use theme function.
  *   Use exposed filter like dblog.
@@ -19,11 +20,31 @@ function mongodb_watchdog_overview() {
     WATCHDOG_DEBUG    => '',
     WATCHDOG_INFO     => '',
     WATCHDOG_NOTICE   => '',
-    WATCHDOG_WARNING  => theme('image', array('path' => 'misc/watchdog-warning.png', 'alt' => t('warning'), 'title' => t('warning'))),
-    WATCHDOG_ERROR    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error'))),
-    WATCHDOG_CRITICAL => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical'))),
-    WATCHDOG_ALERT    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert'))),
-    WATCHDOG_EMERGENCY    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency'))),
+    WATCHDOG_WARNING  => theme('image', array(
+      'path' => 'misc/watchdog-warning.png',
+      'alt' => t('warning'),
+      'title' => t('warning'),
+    )),
+    WATCHDOG_ERROR    => theme('image', array(
+      'path' => 'misc/watchdog-error.png',
+      'alt' => t('error'),
+      'title' => t('error'),
+    )),
+    WATCHDOG_CRITICAL => theme('image', array(
+      'path' => 'misc/watchdog-error.png',
+      'alt' => t('critical'),
+      'title' => t('critical'),
+    )),
+    WATCHDOG_ALERT    => theme('image', array(
+      'path' => 'misc/watchdog-error.png',
+      'alt' => t('alert'),
+      'title' => t('alert'),
+    )),
+    WATCHDOG_EMERGENCY    => theme('image', array(
+      'path' => 'misc/watchdog-error.png',
+      'alt' => t('emergency'),
+      'title' => t('emergency'),
+    )),
   );
   $classes = array(
     WATCHDOG_DEBUG    => 'mongodb_watchdog-debug',
@@ -52,7 +73,8 @@ function mongodb_watchdog_overview() {
   $build['mongodb_watchdog_clear_log_form'] = drupal_get_form('mongodb_watchdog_clear_log_form');
 
   $header = array(
-    '', // Icon column.
+    // Icon column.
+    '',
     t('#'),
     array('data' => t('Type')),
     array('data' => t('Date')),
@@ -96,7 +118,7 @@ function mongodb_watchdog_overview() {
       ->find(mongodb_watchdog_build_filter_query())
       ->count();
     $pager_total[0] = ceil($pager_total_items[0] / $per_page);
-    $pager_page_array[0] = max(0, min((int) $pager_page_array[0], ((int)$pager_total[0]) - 1));
+    $pager_page_array[0] = max(0, min((int) $pager_page_array[0], ((int) $pager_total[0]) - 1));
     $pager_limits[0] = $per_page;
     $build['pager'] = array(
       '#theme' => 'pager',
@@ -110,8 +132,9 @@ function mongodb_watchdog_overview() {
  * Display watchdogs entry details in MongoDB.
  *
  * @param array $dblog
+ *   A log event in array format.
  */
-function mongodb_watchdog_event($dblog) {
+function mongodb_watchdog_event(array $dblog) {
   $severity = watchdog_severity_levels();
   $rows = array(
     array(
@@ -149,7 +172,8 @@ function mongodb_watchdog_event($dblog) {
     '#attributes' => array('class' => array('dblog-event')),
   );
   // @todo: the count is unreliable, so just get the actual number of entries.
-//$total = min($dblog['count'], variable_get('mongodb_watchdog_items', 10000));
+  // $items_limit = variable_get('mongodb_watchdog_items', 10000);
+  // $total = min($dblog['count'], $items_limit);
   $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
   $collection = $collection->db->selectCollection('watchdog_event_' . $dblog['_id']);
   $total = $collection->count();
@@ -213,7 +237,7 @@ function mongodb_watchdog_event($dblog) {
 }
 
 /**
- * Initialize the global pager variables for use in a mongodb_watchdog event list.
+ * Initialize the pager variables for use in a mongodb_watchdog event list.
  */
 function mongodb_watchdog_pager_init($element, $limit, $total) {
   global $pager_page_array, $pager_total, $pager_total_items;
@@ -226,28 +250,29 @@ function mongodb_watchdog_pager_init($element, $limit, $total) {
   }
   $pager_total_items[$element] = $total;
   $pager_total[$element] = ceil($pager_total_items[$element] / $limit);
-  $pager_page_array[$element] = max(0, min((int)$pager_page_array[$element], ((int)$pager_total[$element]) - 1));
+  $pager_page_array[$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
   return isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
 }
 
 /**
  * Formats a log message for display.
  *
- * @param $dblog
- *   An object with at least the message and variables properties
+ * @param object $dblog
+ *   An object with at least the message and variables properties.
  *
  * @return string
+ *   The formatted message.
  */
 function _mongodb_watchdog_format_message($dblog) {
-  // Legacy messages and user specified text
+  // Legacy messages and user specified text.
   if (!isset($dblog['variables'])) {
     return $dblog['message'];
   }
-  // Message to translate with injected variables
+  // Message to translate with injected variables.
   return t($dblog['message'], $dblog['variables']);
 }
 
-/*
+/**
  * List mongodb_watchdog administration filters that can be applied.
  *
  * @return array
@@ -292,7 +317,8 @@ function mongodb_watchdog_filter_form($form) {
     '#attached' => array(
       'css' => array(
         drupal_get_path('module', 'mongodb_watchdog') . '/mongodb_watchdog.css',
-    )),
+      ),
+    ),
   );
 
   foreach ($filters as $key => $filter) {
@@ -315,7 +341,7 @@ function mongodb_watchdog_filter_form($form) {
   if (!empty($_SESSION['mongodb_watchdog_overview_filter'])) {
     $form['filters']['buttons']['reset'] = array(
       '#type' => 'submit',
-      '#value' => t('Reset')
+      '#value' => t('Reset'),
     );
   }
 
@@ -370,6 +396,7 @@ function _mongodb_watchdog_get_message_types() {
  * Return form for mongodb_watchdog clear button.
  *
  * @ingroup forms
+ *
  * @see dblog_clear_log_submit()
  *
  * @return array
@@ -424,8 +451,10 @@ function mongodb_watchdog_clear_log_submit() {
 /**
  * Build a MongoDB query based on the selected filters.
  *
- * Refer to the @link https://jira.mongodb.org/browse/PHP-1051 Mongo Issue regarding the $in value @endlink
- * Refer to the @link https://jira.mongodb.org/browse/PHP-104 Mongo Issue regarding numeric keys on objects @endlink
+ * @link https://jira.mongodb.org/browse/PHP-1051 Mongo Issue regarding the $in value @endlink
+ *
+ * @link https://jira.mongodb.org/browse/PHP-104 Mongo Issue regarding numeric keys on objects @endlink
+ *
  * @return array
  *   An array to build a MongoDB query.
  */
@@ -436,8 +465,12 @@ function mongodb_watchdog_build_filter_query() {
 
   // Build query.
   $where = $args = array();
-  $types = $_SESSION['mongodb_watchdog_overview_filter']['type'] ? $_SESSION['mongodb_watchdog_overview_filter']['type'] : NULL;
-  $severities = $_SESSION['mongodb_watchdog_overview_filter']['severity'] ? $_SESSION['mongodb_watchdog_overview_filter']['severity'] : NULL;
+  $types = $_SESSION['mongodb_watchdog_overview_filter']['type']
+    ? $_SESSION['mongodb_watchdog_overview_filter']['type']
+    : NULL;
+  $severities = $_SESSION['mongodb_watchdog_overview_filter']['severity']
+    ? $_SESSION['mongodb_watchdog_overview_filter']['severity']
+    : NULL;
 
   $find = array();
   if ($types) {
@@ -454,13 +487,14 @@ function mongodb_watchdog_build_filter_query() {
  * Page callback for "admin/reports/[access-denied|page-not-found]".
  *
  * @return array
+ *   The render array for the page.
  */
 function mongodb_watchdog_page_top($type) {
   $ret = array();
   $type_param = array('%type' => $type);
   $limit = 50;
 
-  // Safety net
+  // Safety net.
   $types = array(
     'page not found',
     'access denied',
@@ -476,7 +510,7 @@ function mongodb_watchdog_page_top($type) {
   $watchdog = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
   $template = $watchdog->findOne(array('type' => $type), array('_id'));
 
-  // findOne() will return NULL if no row is found
+  // findOne() will return NULL if no row is found.
   if (empty($template)) {
     $ret['empty'] = array(
       '#markup' => t('No "%type" message found', $type_param),
@@ -531,14 +565,17 @@ EOT;
 }
 
 /**
- * usort() helper function to sort top entries returned from a group query.
+ * Callback for usort() to sort top entries returned from a group query.
  *
  * @param array $x
+ *   The first value to compare.
  * @param array $y
+ *   The second value to compare.
  *
- * @return boolean
+ * @return bool
+ *   The comparison result.
  */
-function _mongodb_watchdog_sort_top($x, $y) {
+function _mongodb_watchdog_sort_top(array $x, array $y) {
   $cx = $x['count'];
   $cy = $y['count'];
   return $cy - $cx;
