@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * A library of common mechanisms for modules using MongoDB.
+ */
 
 /**
  * @file
@@ -83,6 +87,10 @@ function mongodb($alias = 'default') {
 
 /**
  * Returns a MongoCollection object.
+ *
+ * @param mixed $collection_name
+ *   Can be either a plain collection name or 0-based array containing a
+ *   collection name and a prefix.
  *
  * @return \MongoCollection|\MongoDebugCollection|\MongoDummy
  *   Return a MongoCollection in normal situations, a MongoDebugCollection if
@@ -251,6 +259,12 @@ class MongoDummy {
  * Returns the name to use for the collection.
  *
  * Also works with prefixes and simpletest.
+ *
+ * @param string $name
+ *   The base name for the collection
+ *
+ * @return string
+ *   Unlike the base name, the returned name works with prefixes and simpletest.
  */
 function mongodb_collection_name($name) {
   global $db_prefix;
@@ -275,6 +289,8 @@ function mongodb_collection_name($name) {
 
 /**
  * Implements hook_test_group_finished().
+ *
+ * Testing helper: cleanup after test group.
  *
  * @throws \InvalidArgumentException
  *   If the database cannot be selected.
@@ -315,9 +331,16 @@ function mongodb_set_active_connection($alias, $connection_name = 'default') {
 
 /**
  * Return the next id in a sequence.
+ *
+ * @param string $name
+ *   The name of the sequence
+ * @param int $existing_id
+ *   The minimal value to be generated
+ *
+ * @return int
  */
 function mongodb_next_id($name, $existing_id = 0) {
-  // Atomitcaly get the next id in the sequence.
+  // Atomically get the next id in the sequence.
   $mongo = mongodb();
   $cmd = array(
     'findandmodify' => mongodb_collection_name('sequence'),
