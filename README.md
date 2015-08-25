@@ -363,6 +363,7 @@ MODULE-SPECIFIC CONFIGURATION AND STATE
 The following configuration variables are needed to use the features provided
 by the the following sub-modules.
 
+
 ### mongodb_cache
 
 EXAMPLE:
@@ -386,6 +387,14 @@ EXAMPLE:
 
 If all modules on the site expose their cache bins via `hook_flush_caches()`,
 there is no need to enable the mongodb_cache module.
+
+
+### mongodb_field_storage
+
+EXAMPLE:
+
+    # Field Storage
+    $conf['field_storage_default']       = 'mongodb_field_storage';
 
 
 ### mongodb_path
@@ -417,36 +426,48 @@ EXAMPLE:
     $conf['cache_session']               = '\Drupal\mongodb_cache\Cache';
 
 
-### mongodb_field_storage
-
-EXAMPLE:
-
-    # Field Storage
-    $conf['field_storage_default']       = 'mongodb_field_storage';
-
-
 RUNNING TESTS
 -------------
 
+Tests assume a working MongoDB connection already set up in your `settings.php`,
+including the plugins you want to test, like the cache.
+
 ### Short version:
 
-Run helper from the package directory:
+Run helper from the package directory. Drush needs to be present in your `$PATH`:
 
     bash tests.bash /your_site_root_directory
 
 ### Long version
 
-* The cache plugin can run core-equivalent tests : these are the core tests,
-  wrapped in a `setUp()`/`tearDown()` sequence supporting the use of a non-SQL
-  cache. Run the tests in the `MongoDB: Cache` group instead of `Cache`.
 * Available test groups are "MongoDB: Base", MongoDB: Cache" and "MongoDB:
   Watchdog". The tests in the legacy "MongoDB" group are not usable at this
   point.
-* To run tests from the command line via run-tests.sh
-    * use concurrency = 1. The current core test wrapping does not support
+* The core standard tests like the "Cache" group cannot be used, because 
+  Simpletest does not allow setting up and tearing down a test MongoDB database
+  without modifying the tests, so these tests have core-equivalent versions in
+  the MongoDB:* groups, which just wrap the core tests in such a MongoDB 
+  `setUp()` / `tearDown()` sequence including cache flushing because the tests
+  may change the underlying cache plugin.
+* To run tests from the command line via `scripts/run-tests.sh`
+    * use A Linux/Unix/macOS system
+    * use `--concurrency = 1`. The current core test wrapping does not support
       concurrent tests.
     * check permissions, and run as the web user, like
       `sudo -u www-data run-tests.sh`
+
+#### mongodb_cache
+
+* Configure the cache plugin in your site settings and enable the mongodb_cache 
+  module.
+* Run the tests from the `MongoDB: Cache` group instead of the `Cache` group.
+
+#### mongodb_path
+
+* Configure the path plugin in your site settings and enable the mongodb_path
+  module.
+* Run the tests from the `MongoDB: Path API` group instead of the `Path API`
+  group
 
 
 TROUBLESHOOTING
@@ -462,15 +483,3 @@ If installing mongodb_field_storage from an Install Profile:
         module_enable(array('mongodb_field_storage'));
         drupal_flush_all_caches();
 
-TESTING
--------
-
-Tests assume a working MongoDB connection already set up in your `settings.php`.
-
-### mongodb_path
-
-* Configure the path plugin in your site settings and enable the moongodb_path
-  module.
-* Run the tests from the `MongoDB: Path API` group instead of the "Path API"
-  group: core-equivalent tests are included, but these tests include setting up
-  and tearing down a test MongoDB database, which core tests cannot do.
