@@ -25,6 +25,12 @@ function mongodb_watchdog_enable() {
  * Drop /all/ the watchdog collections.
  */
 function mongodb_watchdog_uninstall() {
+  // This can happen if mongodb.module has already been disabled prior to
+  // uninstalling mongodb_watchdog.
+  if (!module_exists('mongodb')) {
+    drupal_load('module', 'mongodb');
+  }
+
   // Drop the base watchdog collection.
   $watchdog_name = variable_get('mongodb_watchdog', 'watchdog');
   $watchdog = mongodb_collection($watchdog_name);

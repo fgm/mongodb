@@ -39,7 +39,12 @@ function mongodb_requirements($phase) {
     // needed by mongodb_next_id() function.
     $min_version = '1.3';
 
+    // During install, the module is not yet loaded by core.
+    if ($phase == 'install') {
+      require_once __DIR__ . '/mongodb.module';
+    }
     $db = mongodb();
+
     $requirements['mongodb_server'] = array(
       'title' => $t('MongoDB server'),
     );

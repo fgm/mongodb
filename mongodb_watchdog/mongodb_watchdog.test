@@ -21,16 +21,6 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   const LIMIT_VARIABLE = 'watchdog_limit';
 
   /**
-   * Override the default "standard" profile for this test.
-   *
-   * We need to include a test-specific module, which should not be present on a
-   * standard install.
-   *
-   * @var string
-   */
-  protected $profile = 'testing';
-
-  /**
    * An administrator-type user account.
    *
    * @var stdClass
@@ -68,7 +58,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'MongoDB log functionality',
       'description' => 'Generate events and verify watchdog entries; verify user access to log reports based on persmissions.',
-      'group' => 'MongoDB',
+      'group' => 'MongoDB: Watchdog',
     );
   }
 
