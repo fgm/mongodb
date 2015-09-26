@@ -5,7 +5,7 @@
  */
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  */
 function mongodb_help($path, $arg) {
   switch ($path) {
@@ -15,7 +15,6 @@ function mongodb_help($path, $arg) {
           '!project' => 'http://drupal.org/project/mongodb',
           '!mongo' => 'http://www.mongodb.org/',
         ));
-      break;
   }
 }
 
@@ -32,9 +31,13 @@ function mongodb($alias = 'default') {
     $alias = 'default';
   }
   $connection = isset($connections[$alias]) ? $connections[$alias] : array();
-  $connection += array('host' => 'localhost', 'db' => 'drupal', 'connection_options' => array());
+  $connection += array(
+    'host' => 'localhost',
+    'db' => 'drupal',
+    'connection_options' => array(),
+  );
   $host = $connection['host'];
-  $options = $connection['connection_options'] +  array('connect' => TRUE);
+  $options = $connection['connection_options'] + array('connect' => TRUE);
   $db = $connection['db'];
   if (!isset($mongo_objects[$host][$db])) {
     try {
@@ -59,7 +62,7 @@ function mongodb($alias = 'default') {
       $mongo_objects[$host][$db]->connection = $mongo;
     }
     catch (MongoConnectionException $e) {
-      $mongo_objects[$host][$db] = new mongoDummy;
+      $mongo_objects[$host][$db] = new MongoDummy();
       throw $e;
     }
   }
@@ -101,47 +104,114 @@ function mongodb_collection() {
     $collection->setReadPreference($collections[$alias]['read_preference']['preference'], $tags);
   }
   $collection->connection = $mongodb_object->connection;
-  return variable_get('mongodb_debug', FALSE) ? new mongoDebugCollection($collection) : $collection;
+  return variable_get('mongodb_debug', FALSE) ? new MongoDebugCollection($collection) : $collection;
 }
 
-class mongoDebugCollection {
-  function __construct($collection) {
+/**
+ * Class MongoDebugCollection wraps a MongoCollection with debug() instructions.
+ */
+class MongoDebugCollection {
+  /**
+   * Constructor.
+   *
+   * @param MongoCollection $collection
+   *   The collection to wrap.
+   */
+  public function __construct(MongoCollection $collection) {
     $this->collection = $collection;
   }
 
-  function find($query = array(), $fields = array()) {
+  /**
+   * Performs a find() on the original cursor, wrapping it in debug() calls.
+   *
+   * @param array $query
+   *   The query criteria, as in the original MongoCollection::find().
+   * @param array $fields
+   *   The query result fields, as in the original MongoCollection::find().
+   *
+   * @return \MongoDebugCursor
+   *   A new instance of a wrapped cursor.
+   */
+  public function find($query = array(), $fields = array()) {
     debug('find');
     debug($query);
     debug($fields);
-    return new mongoDebugCursor($this->collection->find($query, $fields));
+    return new MongoDebugCursor($this->collection->find($query, $fields));
   }
 
-  function __call($name, $arguments) {
+  /**
+   * {@inheritdoc}
+   */
+  public function __call($name, $arguments) {
     debug($name);
     debug($arguments);
     return call_user_func_array(array($this->collection, $name), $arguments);
   }
+
 }
 
-class mongoDebugCursor {
-  function __construct($collection) {
-    $this->collection = $collection;
+/**
+ * Class MongoDebugCursor wraps a cursor with debug() instructions.
+ */
+class MongoDebugCursor {
+  /**
+   * The cursor wrapped by this instance.
+   *
+   * @var \MongoCursor
+   */
+  protected $cursor;
+
+  /**
+   * Constructor.
+   *
+   * @param MongoCursor $cursor
+   *   The cursor to wrap.
+   */
+  public function __construct(MongoCursor $cursor) {
+    $this->cursor = $cursor;
   }
 
-  function __call($name, $arguments) {
+  /**
+   * {@inheritdoc}
+   */
+  public function __call($name, $arguments) {
     debug($name);
     debug($arguments);
-    return call_user_func_array(array($this->collection, $name), $arguments);
+    return call_user_func_array(array($this->cursor, $name), $arguments);
   }
+
 }
 
-class mongoDummy {
+/**
+ * Class MongoDummy is a mock class usable as a database or collection.
+ *
+ * It accepts any method and ignores it.
+ */
+class MongoDummy {
+
   public $connection;
-  function selectCollection() {
-    return new mongoDummy;
+
+  /**
+   * Pretend to select a collection.
+   *
+   * @return \MongoDummy
+   *   A fake collection object.
+   */
+  public function selectCollection() {
+    return new MongoDummy();
   }
-  function __call($name, $arguments) {
+
+  /**
+   * Accepts any arguments and ignores them.
+   *
+   * @param string $name
+   *   The name of the method being called on the instance.
+   * @param mixed[] $arguments
+   *   The arguments passed to the method.
+   */
+  public function __call($name, array $arguments) {
   }
+
 }
 
 /**
@@ -150,7 +220,7 @@ class mongoDummy {
  * Works with prefixes and simpletest.
  *
  * @param string $name
- *   The base name for the collection
+ *   The base name for the collection.
  *
  * @return string
  *   Unlike the base name, the returned name works with prefixes and simpletest.
@@ -195,10 +265,10 @@ function mongodb_test_group_finished() {
 /**
  * Allow for the database connection we are using to be changed.
  *
- * @param $alias
- *   String the alias that we want to change the connection for.
- * @param $connection_name
- *   String the name of the connection we will use.
+ * @param string $alias
+ *   The alias that we want to change the connection for.
+ * @param string $connection_name
+ *   The name of the connection we will use.
  */
 function mongodb_set_active_connection($alias, $connection_name = 'default') {
   // No need to check if the connection is valid as mongodb() does this.
@@ -215,14 +285,15 @@ function mongodb_set_active_connection($alias, $connection_name = 'default') {
  * Return the next id in a sequence.
  *
  * @param string $name
- *   The name of the sequence
+ *   The name of the sequence.
  * @param int $existing_id
- *   The minimal value to be generated
+ *   The minimal value to be generated.
  *
  * @return int
+ *   The next id.
  */
 function mongodb_next_id($name, $existing_id = 0) {
-  // Atomitcaly get the next id in the sequence.
+  // Atomically get the next id in the sequence.
   $mongo = mongodb();
   $cmd = array(
     'findandmodify' => mongodb_collection_name('sequence'),
@@ -256,8 +327,9 @@ function mongodb_next_id($name, $existing_id = 0) {
 /**
  * Returns default options for MongoDB write operations.
  *
- * @param $safe
+ * @param bool $safe
  *   Set it to FALSE for "fire and forget" write operation.
+ *
  * @return array
  *   Default options for Mongo write operations.
  */

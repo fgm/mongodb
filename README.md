@@ -133,7 +133,7 @@ collection information.
 ### 2: mongodb_debug
 
 A variable primarily for developers, mongodb_debug causes a collection to return
-a `mongoDebugCollection` and `mongoDebugCursor` instead of their normal
+a `MongoDebugCollection` and `MongoDebugCursor` instead of their normal
 equivalents. If not defined, defaults to `FALSE`.
 
     $conf['mongodb_debug'] = FALSE;
