@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Class PackageManagementTest.
+ * Contains \Drupal\mongodb_watchdog\Tests\PackageManagementTest.
  *
  * This test is about install/enable/disable/uninstall operations.
  */
@@ -37,6 +37,22 @@ class PackageManagementTest extends \DrupalWebTestCase {
       'description' => 'install/enable/disable/uninstall operations.',
       'group' => 'MongoDB: Watchdog'
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    drupal_flush_all_caches();
+    parent::setUp();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function tearDown() {
+    drupal_flush_all_caches();
+    parent::tearDown();
   }
 
   /**
