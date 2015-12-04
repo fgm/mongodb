@@ -63,6 +63,10 @@ function mongodb_drush_command() {
     'aliases' => array('mdbq'),
   );
 
+  $items['mongodb-clean-tests'] = [
+    'aliases' => ['mdct'],
+    'description' => 'Clean the Simpletest collections',
+  ];
   return $items;
 }
 
@@ -157,4 +161,23 @@ function drush_mongodb_conf($alias = 'default') {
   }
 
   drush_print_r($specs);
+}
+
+/**
+ * Drush callback: drop the Simpletest leftover collections.
+ *
+ * @throws \MongoConnectionException
+ */
+function drush_mongodb_clean_tests() {
+  /* @var \MongoDB $mongo */
+  $mongo = mongodb();
+  $names = $mongo->getCollectionNames();
+  $count = 0;
+  foreach ($names as $name) {
+    if (strpos($name, 'simpletest') === 0) {
+      $mongo->dropCollection($name);
+      $count++;
+    }
+  }
+  drush_print(dt('Dropped @count collections.', ['@count' => $count]));
 }
