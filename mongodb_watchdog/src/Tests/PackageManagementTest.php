@@ -43,6 +43,7 @@ class PackageManagementTest extends \DrupalWebTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
+    // Support using the MongoDB cache.
     drupal_flush_all_caches();
     parent::setUp();
   }
@@ -51,6 +52,7 @@ class PackageManagementTest extends \DrupalWebTestCase {
    * {@inheritdoc}
    */
   public function tearDown() {
+    // Support using the MongoDB cache.
     drupal_flush_all_caches();
     parent::tearDown();
   }

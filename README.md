@@ -386,8 +386,9 @@ Run helper from the package directory:
 * The cache plugin can run core-equivalent tests : these are the core tests,
   wrapped in a `setUp()`/`tearDown()` sequence supporting the use of a non-SQL
   cache. Run the tests in the `MongoDB: Cache` group instead of `Cache`.
-* Available test groups are "MongoDB: Cache" and "MongoDB: Watchdog". The tests
-  in the legacy "MongoDB" group are not usable at this point.
+* Available test groups are "MongoDB: Base", MongoDB: Cache" and "MongoDB: 
+  Watchdog". The tests in the legacy "MongoDB" group are not usable at this 
+  point.
 * To run tests from the command line via run-tests.sh
     * use concurrency = 1. The current core test wrapping does not support
       concurrent tests.

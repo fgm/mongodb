@@ -16,7 +16,7 @@ WEB_USER=www-data
 # The prefix of the test groups to run.
 PREFIX="MongoDB:"
 # The test groups to run.
-TESTS="Cache Watchdog"
+TESTS="Base Cache Watchdog"
 # The Drupal root directory. Dynamic from script arguments.
 BASE=
 
