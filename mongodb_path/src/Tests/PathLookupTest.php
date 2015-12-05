@@ -12,7 +12,7 @@ namespace Drupal\mongodb_path\Tests;
 /**
  * Unit test for drupal_lookup_path().
  *
- * @group MongoDB: Path API
+ * @group MongoDB: PathAPI
  */
 class PathLookupTest extends \DrupalWebTestCase {
 

@@ -440,9 +440,9 @@ Run helper from the package directory. Drush needs to be present in your `$PATH`
 
 ### Long version
 
-* Available test groups are "MongoDB: Base", MongoDB: Cache" and "MongoDB:
-  Watchdog". The tests in the legacy "MongoDB" group are not usable at this
-  point.
+* Available test groups are "MongoDB: Base", "MongoDB: Cache",
+  "MongoDB: PathAPI", and "MongoDB: Watchdog". The tests in the legacy
+  "MongoDB" group are not usable at this point.
 * The core standard tests like the "Cache" group cannot be used, because 
   Simpletest does not allow setting up and tearing down a test MongoDB database
   without modifying the tests, so these tests have core-equivalent versions in
@@ -466,7 +466,7 @@ Run helper from the package directory. Drush needs to be present in your `$PATH`
 
 * Configure the path plugin in your site settings and enable the mongodb_path
   module.
-* Run the tests from the `MongoDB: Path API` group instead of the `Path API`
+* Run the tests from the `MongoDB: PathAPI` group instead of the `Path API`
   group
 
 

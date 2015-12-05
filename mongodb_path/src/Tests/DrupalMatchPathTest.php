@@ -15,7 +15,7 @@ namespace Drupal\mongodb_path\Tests;
  *
  * @see drupal_match_path().
  *
- * @group MongoDB: Path API
+ * @group MongoDB: PathAPI
  */
 class DrupalMatchPathTest extends \DrupalWebTestCase {
 

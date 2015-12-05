@@ -13,7 +13,7 @@ namespace Drupal\mongodb_path\Tests;
 /**
  * Tests hook_url_(in|out)bound_alter functions.
  *
- * @group MongoDB: Path API
+ * @group MongoDB: PathAPI
  */
 class UrlAlterFunctionalTest extends \DrupalWebTestCase {
 

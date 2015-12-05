@@ -17,8 +17,8 @@ DRUSH=${DRUSH:-drush}
 WEB_USER=${WEB_USER:-www-data}
 # The prefix of the test groups to runTests.
 PREFIX="MongoDB:"
-# The test groups to runTests.
-TESTS="Base Cache Watchdog"
+# The test groups to run.
+TESTS="Base Cache PathAPI Watchdog"
 # The Drupal root directory. Dynamic from script arguments.
 BASE=
 

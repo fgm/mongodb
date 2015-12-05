@@ -12,7 +12,7 @@ namespace Drupal\mongodb_path\Tests;
 /**
  * Tests the path_save() function.
  *
- * @group MongoDB: Path API
+ * @group MongoDB: PathAPI
  */
 class PathSaveTest extends \DrupalWebTestCase {
 

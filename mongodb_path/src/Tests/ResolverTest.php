@@ -19,7 +19,7 @@ use Drupal\mongodb_path\Resolver;
  *
  * @package Drupal\mongodb_path\Tests
  *
- * @group MongoDB: Path API
+ * @group MongoDB: PathAPI
  */
 class ResolverTest extends \DrupalUnitTestCase {
 
