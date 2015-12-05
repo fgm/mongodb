@@ -408,3 +408,4 @@ function mongodb_default_write_options($safe = TRUE) {
     }
   }
 }
+
