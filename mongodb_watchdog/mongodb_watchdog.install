@@ -27,7 +27,7 @@ function mongodb_watchdog_enable() {
  * Drop /all/ the watchdog collections.
  */
 function mongodb_watchdog_uninstall() {
-  // Drop the base watchdog collection
+  // Drop the base watchdog collection.
   $watchdog_name = variable_get('mongodb_watchdog', 'watchdog');
   $watchdog = mongodb_collection($watchdog_name);
   $watchdog->drop();
@@ -67,27 +67,27 @@ function mongodb_watchdog_ensure_indexes() {
   // Index for adding/updating increments.
   $index = array(
     'line' => 1,
-    'timestamp' => -1
+    'timestamp' => -1,
   );
   $collection->ensureIndex($index);
 
   // Index for admin page without filters.
   $index = array(
-    'timestamp' => -1
+    'timestamp' => -1,
   );
   $collection->ensureIndex($index);
 
   // Index for admin page filtering by type.
   $index = array(
     'type' => 1,
-    'timestamp' => -1
+    'timestamp' => -1,
   );
   $collection->ensureIndex($index);
 
   // Index for admin page filtering by severity.
   $index = array(
     'severity' => 1,
-    'timestamp' => -1
+    'timestamp' => -1,
   );
   $collection->ensureIndex($index);
 
@@ -95,7 +95,7 @@ function mongodb_watchdog_ensure_indexes() {
   $index = array(
     'type' => 1,
     'severity' => 1,
-    'timestamp' => -1
+    'timestamp' => -1,
   );
   $collection->ensureIndex($index);
 }
