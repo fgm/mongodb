@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Tests for the block module
+ * Contains \Drupal\mongodb_block_ui\Tests\NewDefaultThemeBlocksTest.
  */
 
 namespace Drupal\mongodb_block_ui\Tests;

@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * Test class for MongoDB_watchdog.
+ * Contains \MongoDBLogTestCase.
  */
 
 /**

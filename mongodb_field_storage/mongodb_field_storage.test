@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Contains \MongoDBFieldAttachStorageTestCase and \MongoDbEntityFieldQueryTestCase.
+ */
+
+/**
  * Execute all the Field storage unit test with MongoDB-based field storage.
  */
 class MongoDBFieldAttachStorageTestCase extends FieldAttachStorageTestCase {

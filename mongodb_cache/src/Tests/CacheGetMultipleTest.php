@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Class CacheGetMultipleUnitTest.
+ * Contains \Drupal\mongodb_cache\Tests\CacheGetMultipleTest.
  */
 
 namespace Drupal\mongodb_cache\Tests;
