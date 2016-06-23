@@ -6,19 +6,24 @@
  * This is the default data to add to your settings.local.php.
  */
 
-$settings['mongodb_connections'] = [
-  'servers' => [
-    'default' => [
-      'server' => 'mongodb://localhost:27017',
-      'db' => 'drupal',
-    ],
-    // A DB for volatile data to clear them with a single dropDatabase().
-    'volatile' => [
-      'server' => 'mongodb://localhost:27017',
-      'db' => 'volatile',
-    ],
-  ],
-  'collections' => [
-    'cache' => 'volatile',
-  ],
-];
+if (!function_exists('configure_mongodb')) {
+  function configure_mongodb(\Drupal\Core\Site\Settings &$settings) {
+    $settings['mongodb'] = [
+      'clients' => [
+        // Client alias => constructor parameters.
+        'default' => [
+          'uri' => 'mongodb://macos:27017',
+          'uriOptions' => [],
+          'driverOptions' => [],
+        ],
+      ],
+      'databases' => [
+        // Collection alias => [ client_alias, collection_name ]
+        'default' => ['default', 'drupal'],
+        'logger' => ['default', 'logger'],
+      ],
+    ];
+  }
+}
+
+configure_mongodb($settings);

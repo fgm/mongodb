@@ -1,0 +1,16 @@
+{
+    "name": "drupal/mongodb",
+    "description": "Drupal driver for MongoDB",
+    "type": "drupal-module",
+    "require": {
+        "mongodb/mongodb": "^1.0.0"
+    },
+    "license": "GPL-2.0+",
+    "authors": [
+        {
+            "name": "Frederic G. MARAND",
+            "email": "fgm@osinet.fr"
+        }
+    ],
+    "minimum-stability": "dev"
+}

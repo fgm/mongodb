@@ -1,15 +1,3 @@
-This 8.x-2.x is an EXPERIMENT. It will likely crash, destroy your data, and
-cause various kinds of pains. Do NOT deploy it on a production machine, or on a
-MongoDB instance with useful data.
-
-For most intents and purposes, you should be using the 8.x-1.x branch.
-
-CONTENTS OF THIS FILE
----------------------
-
- * Introduction
-
-
 INTRODUCTION
 ------------
 
@@ -18,7 +6,14 @@ allowing to store different Drupal data in MongoDB.
 
 Module                | Information
 ----------------------|---------------------------------------------------------
-mongodb               | Support library for the other modules.
+mongodb               | Drupal/Drush wrapper around mongodb-php-library.
+
+This 8.x-2.x is an EXPERIMENT. It will likely crash, destroy your data, and
+cause various kinds of pains. Do NOT deploy it on a production machine, or on a
+MongoDB instance with useful data.
+
+For most intents and purposes, you should be using the 7.x-1.x or 8.x-1.x branch.
+
 
 INSTALLATION
 ------------
@@ -27,9 +22,8 @@ The MongoDB module and sub-modules need some amount of configuration before they
 will properly work. This guide assumes that :
 
 * a [MongoDB][download] 3.0 or later instance is already installed, configured, and available to connect to from the Drupal instance.
-* the site will be running [Drupal][drupal] 8.0-beta14 or later.
-* the interpreter will be [PHP][php] 5.5.* or 5.6.*.
-* the [mongo][mongo] (not [mongodb][mongodb]) PHP extension version 1.5.0 or later is installed and configured. 
+* the site will be running [Drupal][drupal] 8.2.x.
+* the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or later is installed and configured.
 
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/project/drupal
@@ -41,10 +35,14 @@ If MongoDB is installed on localhost, you may view the web admin interface:
 
     http://localhost:28017/
 
-Upload the module package, as per [Installing contributed modules (Drupal 8)][install],
-then copy the relevant section from the `example.settings.local.php` to your
+* Download the module package, as per [Installing contributed modules (Drupal 8)][install]
+* Copy the relevant section from the `example.settings.local.php` to your
 `settings.local.php` file if you use one, or `settings.php` otherwise, and
 adapt it to match your MongoDB settings.
+* At the root of your site, add a composer requiment:
+
+      composer require mongodb/mongodb "^1.0.0"
+* Enable the `mongodb` module. You now have access to the MongoDB services and Drush commands.
 
 [install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
 
@@ -57,7 +55,7 @@ TRADEMARKS
 
 ---
 
-Everything below this line is wrong, leftover from previous versions.
+__Everything below this line is wrong, to be ported from previous versions.__
 
 
 
@@ -83,7 +81,7 @@ mongodb_watchdog      | Store watchdog messages in MongoDB.
 INSTALLATION
 ------------
 
-This module additionally provides Drush integration to make queries against the 
+This module additionally provides Drush integration to make queries against the
 MongoDB databases used by Drupal.
 
 
