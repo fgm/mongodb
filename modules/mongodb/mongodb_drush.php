@@ -90,9 +90,9 @@ function _drush_mongodb_connect($alias) {
   $db = $connection['db'];
 
   $query = $host;
-  $query .= '/' . $db;
+  $query .= "/$db";
 
-  $command = 'mongo ' . $query;
+  $command = "mongo ${query}";
   return $command;
 }
 
@@ -106,6 +106,9 @@ function drush_mongodb_cli($alias = 'default') {
 
 /**
  * Drush callback; Return the connect string.
+ *
+ * @param string $alias
+ *   The alias of a database to connect to.
  */
 function drush_mongodb_connect($alias = 'default') {
   $command = _drush_mongodb_connect($alias);

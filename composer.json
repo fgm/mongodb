@@ -1,16 +1,26 @@
 {
+    "authors": [
+        {
+            "email": "fgm@osinet.fr",
+            "homepage": "http://blog.riff.org",
+            "name": "Frederic G. MARAND"
+        }
+    ],
+    "description": "Drupal 8.2 driver for MongoDB",
+    "keywords": ["drupal", "mongodb"],
+    "license": "GPL-2.0+",
+    "minimum-stability": "dev",
     "name": "drupal/mongodb",
-    "description": "Drupal driver for MongoDB",
-    "type": "drupal-module",
     "require": {
         "mongodb/mongodb": "^1.0.0"
     },
-    "license": "GPL-2.0+",
-    "authors": [
-        {
-            "name": "Frederic G. MARAND",
-            "email": "fgm@osinet.fr"
-        }
-    ],
-    "minimum-stability": "dev"
+    "support": {
+        "docs": "https://github.com/FGM/mongodb/blob/8.x-2.x/README.md",
+        "email": "support@osinet.fr",
+        "irc": "irc://chat.freenode.net:6697/drupal-mongodb",
+        "issues": "https://github.com/FGM/mongodb/issues",
+        "rss": "https://github.com/FGM/mongodb/commits/8.x-2.x.atom",
+        "source": "https://github.com/FGM/mongodb/tree/8.x-2.x"
+    },
+    "type": "drupal-module"
 }

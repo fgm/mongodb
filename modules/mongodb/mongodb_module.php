@@ -13,9 +13,9 @@ use Drupal\Core\Routing\RouteMatchInterface;
 function mongodb_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.mongodb':
-      return '<p>' . t('The Drupal <a href="!project">MongoDB</a> project implements a generic interface to the <a href="!mongo">MongoDB</a> database server.', [
-        '!project' => 'http://drupal.org/project/mongodb',
-        '!mongo' => 'http://www.mongodb.org/',
+      return '<p>' . t('The Drupal <a href=":project">MongoDB</a> project implements a generic interface to the <a href=":mongo">MongoDB</a> database server.', [
+        ':project' => 'http://drupal.org/project/mongodb',
+        ':mongo' => 'http://www.mongodb.org/',
       ]);
   }
 }
@@ -274,7 +274,7 @@ function mongodb_collection_name($name) {
   if (!empty($GLOBALS['drupal_test_info']['test_run_id'])) {
     $simpletest_prefix = $GLOBALS['drupal_test_info']['test_run_id'];
   }
-  return $simpletest_prefix . $name;
+  return "${simpletest_prefix}${name}";
 }
 
 /**
@@ -319,9 +319,19 @@ function mongodb_set_active_connection($alias, $connection_name = 'default') {
 
 /**
  * Return the next id in a sequence.
+ *
+ * @param string $name
+ *   The name of the sequence.
+ * @param int $existing_id
+ *   An existing id.
+ *
+ * @return int
+ *   The next id in the sequence.
+ *
+ * @throws \MongoConnectionException
  */
 function mongodb_next_id($name, $existing_id = 0) {
-  // Atomitcaly get the next id in the sequence.
+  // Atomically get the next id in the sequence.
   $mongo = mongodb();
   $cmd = array(
     'findandmodify' => mongodb_collection_name('sequence'),

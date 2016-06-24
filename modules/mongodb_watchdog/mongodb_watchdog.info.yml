@@ -1,5 +1,5 @@
 name: 'MongoDB watchdog'
-description: 'A watchdog implementation using MongoDB'
+description: 'A logger (watchdog) implementation using MongoDB'
 package: 'MongoDB'
 type: 'module'
 core: '8.x'

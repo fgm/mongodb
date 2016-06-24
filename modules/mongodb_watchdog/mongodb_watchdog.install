@@ -5,108 +5,106 @@
  * MongoDB watchdog install file.
  */
 
+use Drupal\Core\Site\Settings;
+
 /**
  * Implements hook_install().
  */
-function Zmongodb_watchdog_install() {
+function mongodb_watchdog_install() {
   mongodb_watchdog_ensure_indexes();
 }
 
 /**
- * Implements hook_enable().
+ * Implements hook_requirements().
+ *
+ * - Ensure a logger alias
+ * - Ensure the logger alias does not point to the same DB as another alias.
  */
-function Zmongodb_watchdog_enable() {
-  mongodb_watchdog_ensure_indexes();
+function mongodb_watchdog_requirements($phase) {
+  $settings = Settings::get('mongodb');
+  $module = 'mongodb_watchdog';
+
+  $ret = [
+    $module => [
+      'title' => 'MongoDB watchdog',
+    ]
+  ];
+
+  $logger_alias = 'logger';
+  $databases = $settings['databases'];
+  if (!isset($databases[$logger_alias])) {
+    $ret['mongodb-watchdog'] += [
+      'severity' => REQUIREMENT_ERROR,
+      'value' => t('Missing `@alias` database alias in settings.', ['@alias' => $logger_alias]),
+    ];
+    return $ret;
+  }
+
+  list($logger_client, $logger_db) = $databases[$logger_alias];
+  unset($databases[$logger_alias]);
+  $duplicates = [];
+  foreach ($databases as $alias => list($client, $db)) {
+    if ($logger_client == $client && $logger_db == $db) {
+      $duplicates[] = "`$alias`";
+    }
+  }
+  if (!empty($duplicates)) {
+    $ret[$module] += [
+      'severity' => REQUIREMENT_ERROR,
+      'value' => t('The `@alias` alias points to the same database as @others.', [
+        '@alias' => $logger_alias,
+        '@others' => implode(', ', $duplicates),
+      ]),
+      'description' => t('Those databases would also be dropped when uninstalling the watchdog module.')
+    ];
+    return $ret;
+  }
+
+  return $ret;
 }
 
 /**
  * Implements hook_uninstall().
  *
- * Drop /all/ the watchdog collections.
+ * Drop /all/ the watchdog collections by dropping the logger database.
  */
-function Zmongodb_watchdog_uninstall() {
-  // Drop the base watchdog collection
-  $watchdog_name = variable_get('mongodb_watchdog', 'watchdog');
-  $watchdog = mongodb_collection($watchdog_name);
-  $watchdog->drop();
-
-  // Then drop all watchdog event collections in all known database aliases.
-  $aliases = variable_get('mongodb_connections', array());
-  $aliases['default'] = TRUE;
-  $count = 0;
-  $regex = '/\.watchdog_event_[[:xdigit:]]{32}$/';
-  foreach (array_keys($aliases) as $alias) {
-    $db = mongodb($alias);
-    foreach ($db->listCollections() as $collection) {
-      if (preg_match($regex, $collection)) {
-        $collection->drop();
-        $count++;
-      }
-    }
-  }
-  if ($count) {
-    drupal_set_message(format_plural($count, 'Dropped 1 watchdog collection', 'Dropped @count watchdog collections'));
-  }
-
-  variable_del('mongodb_watchdog');
-  variable_del('mongodb_watchdog_items');
+function mongodb_watchdog_uninstall() {
+  /** @var \Drupal\mongodb\DatabaseFactory $df */
+  $df = \Drupal::service('mongodb.database_factory');
+  $logger = $df->get('logger');
+  $logger->drop();
 }
 
 /**
  * Create an index for the watchdog table.
  *
- * This index is on <line, timestamp> instead of <function, line, timestamp>,
- * because we write to this collection alot, and the smaller index on two
+ * The index is on <line, timestamp> instead of <function, line, timestamp>
+ * because we write to this collection a lot, and the smaller index on two
  * numbers should be much faster to create than one with a string included.
  */
-function Zmongodb_watchdog_ensure_indexes() {
-  $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
+function mongodb_watchdog_ensure_indexes() {
+  /** @var \Drupal\mongodb\DatabaseFactory $df */
+  $df = \Drupal::service('mongodb.database_factory');
+  $watchdog = $df
+    ->get('logger')
+    ->selectCollection('watchdog');
 
-  // Index for adding/updating increments.
-  $index = array(
-    'line' => 1,
-    'timestamp' => -1
-  );
-  $collection->ensureIndex($index);
+  $indexes = [
+    // Index for adding/updating increments.
+    [ 'name' => 'for-increments', 'key' => [ 'line' => 1, 'timestamp' => -1 ]],
 
-  // Index for admin page without filters.
-  $index = array(
-    'timestamp' => -1
-  );
-  $collection->ensureIndex($index);
+    // Index for admin page without filters.
+    [ 'name' => 'admin-no-filters', 'key' => [ 'timestamp' => -1 ]],
 
-  // Index for admin page filtering by type.
-  $index = array(
-    'type' => 1,
-    'timestamp' => -1
-  );
-  $collection->ensureIndex($index);
+    // Index for admin page filtering by type.
+    [ 'name' => 'admin-by-type', 'key' => [ 'type' => 1, 'timestamp' => -1 ]],
 
-  // Index for admin page filtering by severity.
-  $index = array(
-    'severity' => 1,
-    'timestamp' => -1
-  );
-  $collection->ensureIndex($index);
+    // Index for admin page filtering by severity.
+    [ 'name' => 'admin-by-severity', 'key' => [ 'severity' => 1, 'timestamp' => -1 ]],
 
-  // Index for admin page filtering by type and severity.
-  $index = array(
-    'type' => 1,
-    'severity' => 1,
-    'timestamp' => -1
-  );
-  $collection->ensureIndex($index);
+    // Index for admin page filtering by type and severity.
+    [ 'name' => 'admin-by-both', 'key' => [ 'type' => 1, 'severity' => 1, 'timestamp' => -1 ]],
+  ];
+
+  $watchdog->createIndexes($indexes);
 }
-
-/**
- * Changes a variable name that defines a collection to store events.
- */
-function Zmongodb_watchdog_update_7000() {
-  $collection_name = variable_get('mongodb_collectionname', 'watchdog');
-  if ($collection_name !== 'watchdog') {
-    variable_set('mongodb_watchdog', $collection_name);
-  }
-  variable_del('mongodb_collectionname');
-  variable_del('mongodb_watchdog_collectionname');
-}
-

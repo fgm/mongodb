@@ -1,5 +1,5 @@
 INTRODUCTION
-------------
+============
 
 MongoDB integration for Drupal. This module is a collection of several modules,
 allowing to store different Drupal data in MongoDB.
@@ -7,6 +7,7 @@ allowing to store different Drupal data in MongoDB.
 Module                | Information
 ----------------------|---------------------------------------------------------
 mongodb               | Drupal/Drush wrapper around mongodb-php-library.
+mongodb_watchdog      | Store logger (watchdog) messages in MongoDB.
 
 This 8.x-2.x is an EXPERIMENT. It will likely crash, destroy your data, and
 cause various kinds of pains. Do NOT deploy it on a production machine, or on a
@@ -16,7 +17,7 @@ For most intents and purposes, you should be using the 7.x-1.x or 8.x-1.x branch
 
 
 INSTALLATION
-------------
+============
 
 The MongoDB module and sub-modules need some amount of configuration before they
 will properly work. This guide assumes that :
@@ -47,15 +48,57 @@ adapt it to match your MongoDB settings.
 [install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
 
 
+CONFIGURATION
+=============
+mongodb_watchdog
+----------------
+
+The module uses a separate database, using the `logger` alias in MongoDB
+settings. Do NOT point that alias to the same database as `default`, because the
+module drops the logger database when uninstalling, which would drop all your
+other data with it.
+
+* `mongodb.watchdog.items`: the maximum item limit on the capped collection used
+  by the module. If not defined, it defaults to 10000. The actual (size-based)
+  limit is derived from this variable, assuming 1 kiB per watchdog entry.
+* `mongodb.watchdog.limit`: the maximum severity level (0 to 7, per RFC 5424) to save
+  into watchdog. Errors below this level (with a higher numerical level) will be
+  ignored by the module. If not defined, all events will saved.
+
+  See [Drupal\Core\Logger\RfcLogLevel][levels] and [Psr\Log\LogLevel][levelnames]
+  for further information about severity levels.
+
+* _Deprecated_ `mongodb_watchdog` used to allow redefining the name of the default watchdog
+  collection. With the module now using a dedicated database, this is no longer
+  useful and that name is no longer configurable.
+
+[levels]: https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Logger%21RfcLogLevel.php/class/RfcLogLevel/8.2.x
+[levelnames]: https://api.drupal.org/api/drupal/vendor%21psr%21log%21Psr%21Log%21LogLevel.php/class/LogLevel/8.2.x
+
+
+DATABASES / COLLECTIONS
+=======================
+
+Module                | Database alias | Collection(s)    | Information
+----------------------|----------------|------------------|-------------------------------
+`mongodb`             | `default`      | (none)           | Checks alias/client consistency
+`mongodb_watchdog`    | `logger`       | `watchdog`       | Event types
+&uarr;                | &uarr;         | `watchdog_*`     | Capped collections for events
+
+Earlier versions used to support a collection aliasing mechanism. With this
+version generalizing dedicated databases per module, this is no longer needed
+and the associated machinery has been removed.
+
+
 TRADEMARKS
-----------
+==========
 
 * Drupal is a registered trademark of Dries Buytaert.
 * Mongo, MongoDB and the MongoDB  leaf logo are registered trademarks of MongoDB, Inc.
 
 ---
 
-__Everything below this line is wrong, to be ported from previous versions.__
+__Everything below this line relates to previous versions, and is likely entirely wrong now.__
 
 
 
@@ -75,7 +118,6 @@ mongodb_cache         | Store cache in MongoDB.
 mongodb_field_storage | Store fields in MongoDB.
 mongodb_queue         | DrupalQueueInterface implementation using MongoDB.
 mongodb_session       | Store sessions in MongoDB.
-mongodb_watchdog      | Store watchdog messages in MongoDB.
 
 
 INSTALLATION
@@ -195,43 +237,6 @@ EXAMPLE:
 This variable holds an array of the slaves used for the mongodb field storage
 sub-module. If not defined, it defaults to an empty `array()`.
 
-### 5: mongodb_watchdog
-
-This variable holds the name of the collection used by the mongodb_watchdog
-module. It defaults to `"watchdog"`.
-
-EXAMPLE:
-
-    $conf['mongodb_watchdog'] = 'drupalogs';
-
-Whatever the name of the main collection defined with this variable, the
-per-message-type collections are called `watchdog_(objectId)`.
-
-### 6: mongodb_watchdog_items
-
-This variable defines the maximum item limit on the capped collection used by
-the mongodb_watchdog sub-module. If not defined, it defaults to 10000. The
-actual (size-based) limit is derived from this variable, assuming 1 kiB per
-watchdog entry.
-
-EXAMPLE:
-
-    $conf['mongodb_watchdog_items'] = 15000;
-
-### 7: watchdog_limit
-
-This variable define the maximum severity level to save into watchdog. Errors
-below this level will be ignored by watchdog. If not defined, all errors will
-saved.
-
-EXAMPLE:
-
-    $conf['watchdog_limit'] = WATCHDOG_CRITICAL;
-
-See [watchdog_severity_levels()][levels] for further information about Watchdog severity levels.
-
-[levels]: http://api.drupal.org/api/drupal/includes--common.inc/function/watchdog_severity_levels/7
-
 ### 8: mongodb_collections
 
 See the COLLECTIONS section below.
@@ -264,7 +269,6 @@ mongodb_queue          | "queue."<queue name foo>
                        | "queue."<queue name bar>
                        | ...
 mongodb_session        | "session" (variable)
-mongodb_watchdog       | "watchdog" (variable)
 
 
 In the following example, the watchdog collection will be handled by
