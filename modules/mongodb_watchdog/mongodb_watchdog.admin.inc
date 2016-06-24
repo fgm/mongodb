@@ -1,110 +1,10 @@
 <?php
 /**
  * @file
- * Settings for mongodb. Moved back to module file.
+ *   Administrative page callbacks for the Database Logging module.
  */
 
-/**
- * Display watchdogs entries in mongodb.
- * @TODO
- *   Use theme function.
- *   Use exposed filter like dblog.
- *
- * @return array
- *   a form array
- */
-function mongodb_watchdog_overview() {
-  $rows = array();
-  $icons = array(
-    WATCHDOG_DEBUG    => '',
-    WATCHDOG_INFO     => '',
-    WATCHDOG_NOTICE   => '',
-    WATCHDOG_WARNING  => theme('image', array('path' => 'misc/watchdog-warning.png', 'alt' => t('warning'), 'title' => t('warning'))),
-    WATCHDOG_ERROR    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error'))),
-    WATCHDOG_CRITICAL => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical'))),
-    WATCHDOG_ALERT    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert'))),
-    WATCHDOG_EMERGENCY    => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency'))),
-  );
-  $classes = array(
-    WATCHDOG_DEBUG    => 'mongodb_watchdog-debug',
-    WATCHDOG_INFO     => 'mongodb_watchdog-info',
-    WATCHDOG_NOTICE   => 'mongodb_watchdog-notice',
-    WATCHDOG_WARNING  => 'mongodb_watchdog-warning',
-    WATCHDOG_ERROR    => 'mongodb_watchdog-error',
-    WATCHDOG_CRITICAL => 'mongodb_watchdog-critical',
-    WATCHDOG_ALERT    => 'mongodb_watchdog-alert',
-    WATCHDOG_EMERGENCY => 'mongodb_watchdog-emergency',
-  );
-
-  global $pager_page_array, $pager_total, $pager_total_items, $pager_limits;
-  $per_page = 50;
-  $page = isset($_GET['page']) ? $_GET['page'] : '';
-  $pager_page_array = explode(',', $page);
-  $on_page = $pager_page_array[0];
-
-  $cursor = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
-    ->find(mongodb_watchdog_build_filter_query())
-    ->limit($per_page)
-    ->skip($on_page * $per_page)
-    ->sort(array('timestamp' => -1));
-
-  $build['mongodb_watchdog_filter_form'] = drupal_get_form('mongodb_watchdog_filter_form');
-  $build['mongodb_watchdog_clear_log_form'] = drupal_get_form('mongodb_watchdog_clear_log_form');
-
-  $header = array(
-    '', // Icon column.
-    t('#'),
-    array('data' => t('Type')),
-    array('data' => t('Date')),
-    t('Source'),
-    t('Message'),
-  );
-
-  $rows = array();
-  foreach ($cursor as $id => $value) {
-    if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
-      $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
-      $collection = $collection->db->selectCollection('watchdog_event_' . $value['_id']);
-      if ($result = $collection->find()->sort(array('$natural' => -1))->limit(1)->getNext()) {
-        $value['file'] = basename($result['variables']['%file']);
-        $value['line'] = $result['variables']['%line'];
-        $value['message'] = '%type in %function';
-        $value['variables'] = $result['variables'];
-      }
-    }
-    $message = truncate_utf8(strip_tags(_mongodb_watchdog_format_message($value)), 56, TRUE, TRUE);
-    $rows[$id] = array(
-      $icons[$value['severity']],
-      isset($value['count']) && $value['count'] > 1 ? $value['count'] : '',
-      t($value['type']),
-      empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
-      empty($value['file']) ? '' : truncate_utf8(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
-      l($message, "admin/reports/mongodb/$id"),
-    );
-  }
-
-  $build['mongodb_watchdog_table'] = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-    '#attributes' => array('id' => 'admin-mongodb_watchdog'),
-  );
-
-  // Add the pager.
-  if ($on_page > 0 || count($rows) >= $per_page) {
-    $pager_total_items[0] = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
-      ->find(mongodb_watchdog_build_filter_query())
-      ->count();
-    $pager_total[0] = ceil($pager_total_items[0] / $per_page);
-    $pager_page_array[0] = max(0, min((int) $pager_page_array[0], ((int) $pager_total[0]) - 1));
-    $pager_limits[0] = $per_page;
-    $build['pager'] = array(
-      '#theme' => 'pager',
-    );
-  }
-
-  return $build;
-}
+use Drupal\Core\Logger\RfcLogLevel;
 
 /**
  * Display watchdogs entry details in MongoDB.
@@ -254,29 +154,36 @@ function _mongodb_watchdog_format_message($dblog) {
   return t($dblog['message'], $dblog['variables']);
 }
 
-/*
- * List mongodb_watchdog administration filters that can be applied.
+/**
+ * Creates a list of database log administration filters that can be applied.
  *
  * @return array
- *   A form array
+ *   Associative array of filters. The top-level keys are used as the form
+ *   element names for the filters, and the values are arrays with the following
+ *   elements:
+ *   - title: Title of the filter.
+ *   - where: The filter condition.
+ *   - options: Array of options for the select list for the filter.
  */
 function mongodb_watchdog_filters() {
   $filters = array();
 
-  foreach (_mongodb_watchdog_get_message_types() as $type) {
-    $types[$type] = $type;
+  foreach (_dblog_get_message_types() as $type) {
+    $types[$type] = t($type);
   }
 
   if (!empty($types)) {
     $filters['type'] = array(
       'title' => t('Type'),
+      'where' => "w.type = ?",
       'options' => $types,
     );
   }
 
   $filters['severity'] = array(
     'title' => t('Severity'),
-    'options' => watchdog_severity_levels(),
+    'where' => 'w.severity = ?',
+    'options' => RfcLogLevel::getLevels(),
   );
 
   return $filters;
