@@ -12,7 +12,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
 use Drupal\mongodb\Connection;
 use Drupal\mongodb_watchdog\Logger;
-use Psr\Log\LoggerInterface;
+use MongoDB\Database;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -39,7 +39,7 @@ class AdminController implements ContainerInjectionInterface {
    *   The watchdog database.
    * @param \Drupal\mongodb_watchdog\Logger $logger
    */
-  public function __construct(\MongoDB $database, Logger $logger) {
+  public function __construct(Database $database, Logger $logger) {
     $this->database = $database;
     $this->logger = $logger;
   }
@@ -87,7 +87,7 @@ class AdminController implements ContainerInjectionInterface {
 
     $rows = array();
     foreach ($cursor as $id => $value) {
-      dsm($value, $id);
+      // dsm($value, $id);
 //      if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
 //        $collection = $this->logger->eventCollection($value['_id']);
 //        $result = $collection->find()
@@ -101,7 +101,7 @@ class AdminController implements ContainerInjectionInterface {
 //          $value['variables'] = $result['variables'];
 //        }
 //      }
-      $message = Unicode::truncate(strip_tags(SafeMarkup::format($value)), 56, TRUE, TRUE);
+      $message = ''; //Unicode::truncate(strip_tags(SafeMarkup::format($value)), 56, TRUE, TRUE);
       $value['count'] = $this->logger->eventCollection($value['_id'])->count();
       $rows[$id] = array(
         $icons[$value['severity']],
@@ -109,7 +109,7 @@ class AdminController implements ContainerInjectionInterface {
         t($value['type']),
         empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
         empty($value['file']) ? '' : Unicode::truncate(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
-        \Drupal::l($message, Url::fromRoute('mongodb_watchdog.detail', ['id' => $id])),
+        \Drupal::l($message, Url::fromRoute('mongodb_watchdog.reports.detail', ['id' => $id])),
       );
     }
 

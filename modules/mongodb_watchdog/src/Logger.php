@@ -27,13 +27,6 @@ class Logger extends AbstractLogger {
   protected $database;
 
   /**
-   * The collection holding message templates.
-   *
-   * @var \MongoDB\Collection
-   */
-  protected $templatesCollection;
-
-  /**
    * The message's placeholders parser.
    *
    * @var \Drupal\Core\Logger\LogMessageParserInterface
@@ -51,7 +44,6 @@ class Logger extends AbstractLogger {
   public function __construct(Database $database, LogMessageParserInterface $parser) {
     $this->database = $database;
     $this->parser = $parser;
-    $this->templatesCollection = $database->selectCollection(static::TEMPLATE_COLLECTION);
   }
 
   /**
@@ -73,19 +65,18 @@ class Logger extends AbstractLogger {
         'severity' => $level,
       ]);
     $template_id = $template_result->getInsertedId();
+
     $event_collection = $this->eventCollection($template_id);
-    $event_collection->insertOne([
+    $event = [
       'hostname' => Unicode::substr($context['ip'], 0, 128),
       'link' => $context['link'],
       'location' => $context['request_uri'],
       'referer' => $context['referer'],
       'timestamp' => $context['timestamp'],
-      'user' => array(
-        // 'name' => isset($account->name) ? $account->name : t('Anonymous')).
-        'uid' => $context['uid'],
-      ),
+      'user' => ['uid' => $context['uid']],
       'variables' => $message_placeholders,
-    ]);
+    ];
+    $event_collection->insertOne($event);
   }
 
   /**
@@ -133,7 +124,7 @@ class Logger extends AbstractLogger {
    * numbers should be much faster to create than one with a string included.
    */
   public function ensureIndexes() {
-    $templates = $this->templatesCollection;
+    $templates = $this->database->selectCollection(static::TEMPLATE_COLLECTION);
     $indexes = [
       // Index for adding/updating increments.
       [
@@ -166,22 +157,6 @@ class Logger extends AbstractLogger {
       ],
     ];
     $templates->createIndexes($indexes);
-  }
-
-  /**
-   * Load a MongoDB watchdog event.
-   *
-   * @param string $id
-   *   The string representation of a MongoId.
-   *
-   * @return \Drupal\mongodb_watchdog\Event|bool
-   *   FALSE if the event cannot be loaded.
-   */
-  public function eventLoad($id) {
-    $criteria = ['_id' => $id];
-    $result = new Event($this->templatesCollection->findOne($criteria));
-    $result = $result ?: FALSE;
-    return $result;
   }
 
 }

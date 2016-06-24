@@ -1,15 +1,15 @@
-mongodb_watchdog.reports_overview:
+mongodb_watchdog.reports.overview:
   title: 'Recent log entries in MongoDB'
   parent: 'system.admin_reports'
   description: 'View events that have recently been logged in MongoDB.'
-  route_name: 'mongodb_watchdog.overview'
+  route_name: 'mongodb_watchdog.reports.overview'
 
-#mongodb_watchdog.reports.denied:
-#  parent: 'mongodb_watchdog.reports_overview'
-#  route_name: 'mongodb_watchdog.reports.denied'
-#  title: "Access denied"
-#
-#mongodb_watchdog.reports.not_found:
-#  parent: 'mongodb_watchdog.reports_overview'
-#  route_name: 'mongodb_watchdog.reports.not_found'
-#  title: "Page not found"
+mongodb_watchdog.reports.top403:
+  parent: 'mongodb_watchdog.reports.overview'
+  route_name: 'mongodb_watchdog.reports.top403'
+  title: "Access denied"
+
+mongodb_watchdog.reports.top404:
+  parent: 'mongodb_watchdog.reports.overview'
+  route_name: 'mongodb_watchdog.reports.top404'
+  title: "Page not found"
