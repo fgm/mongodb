@@ -20,7 +20,7 @@ function mongodb_help($route_name, RouteMatchInterface $route_match) {
   }
 }
 
-// ==== Broken below this line =================================================
+/* ==== Broken below this line ============================================== */
 
 /**
  * Returns an MongoDB object.
@@ -35,7 +35,7 @@ function mongodb_help($route_name, RouteMatchInterface $route_match) {
  *
  * @throws \InvalidArgumentException
  *   If the database cannot be selected.
- * @throws \MongoConnectionException
+ * @throws \MongoDB\Driver\Exception\ConnectionException
  *   If the connection cannot be established.
  *
  * @see mongoDummy
@@ -95,7 +95,7 @@ function mongodb($alias = 'default') {
  *
  * @throws \InvalidArgumentException
  *   If the database cannot be selected.
- * @throws \MongoConnectionException
+ * @throws \MongoDB\Driver\Exception\ConnectionException
  *   If the connection cannot be established.
  */
 function mongodb_collection() {
@@ -139,6 +139,7 @@ function mongodb_collection() {
  * Class MongoDebugCollection is a debug decorator for MongoCollection.
  */
 class MongoDebugCollection {
+
   /**
    * Constructor.
    *
@@ -190,6 +191,7 @@ class MongoDebugCollection {
  * Class MongoDebugCursor is a debug decorator for MongoCollection::find().
  */
 class MongoDebugCursor {
+
   /**
    * Constructor.
    *
@@ -282,7 +284,8 @@ function mongodb_collection_name($name) {
  *
  * @throws \InvalidArgumentException
  *   If the database cannot be selected.
- * @throws \MongoConnectionException
+ *
+ * @throws \MongoDB\Driver\Exception\ConnectionException
  *   If the connection cannot be established.
  */
 function mongodb_test_group_finished() {
@@ -329,6 +332,7 @@ function mongodb_set_active_connection($alias, $connection_name = 'default') {
  *   The next id in the sequence.
  *
  * @throws \MongoConnectionException
+ *   If the connection cannot be established.
  */
 function mongodb_next_id($name, $existing_id = 0) {
   // Atomically get the next id in the sequence.

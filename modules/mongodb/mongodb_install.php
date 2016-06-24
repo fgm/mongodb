@@ -38,9 +38,9 @@ function mongodb_requirements() {
     $ret['mongodb'] += [
       'severity' => REQUIREMENT_ERROR,
       'description' => t('Module needs extension @name @minimum_version or later, found @version.', [
-          '@name' => $extension_name,
-          '@minimum_version' => $minimum_version,
-          '@version' => $extension_version,
+        '@name' => $extension_name,
+        '@minimum_version' => $minimum_version,
+        '@version' => $extension_version,
       ]),
     ];
     return $ret;
@@ -56,7 +56,9 @@ function mongodb_requirements() {
       'description' => [
         '#theme' => 'item_list',
         '#items' => $description,
-    ]];
+      ],
+    ];
+
     return $ret;
   }
 

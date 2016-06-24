@@ -1,9 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Drupal\mongodb\ClientFactory.
- */
-
 namespace Drupal\mongodb;
 
 use Drupal\Core\Site\Settings;
@@ -40,8 +35,17 @@ class ClientFactory {
     $this->settings = $settings->get('mongodb')['clients'];
   }
 
+  /**
+   * Return a Client instance for a given alias.
+   *
+   * @param string $alias
+   *   The alias defined in settings for a Client.
+   *
+   * @return \MongoDB\Client
+   *   A Client instance for the chosen server.
+   */
   public function get($alias) {
-    if (!isset($this->clients[$alias]) || !$this->clients[$alias] instanceof \MongoDB\Client) {
+    if (!isset($this->clients[$alias]) || !$this->clients[$alias] instanceof Client) {
       $info = isset($this->settings[$alias]) ? $this->settings[$alias] : [];
       $info += [
         'uri' => 'mongodb://localhost:27017',
@@ -55,4 +59,5 @@ class ClientFactory {
 
     return $this->clients[$alias];
   }
+
 }

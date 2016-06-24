@@ -7,12 +7,9 @@
 
 namespace Drupal\mongodb_watchdog;
 
-
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Logger\LogMessageParserInterface;
-use Drupal\Core\Logger\RfcLoggerTrait;
 use Psr\Log\AbstractLogger;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class Logger is a PSR/3 Logger using a MongoDB data store.

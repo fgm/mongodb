@@ -1,9 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Drupal\mongodb\DatabaseFactory.
- */
-
 namespace Drupal\mongodb;
 
 use Drupal\Core\Site\Settings;
@@ -64,4 +59,5 @@ class DatabaseFactory {
 
     return $result;
   }
+
 }

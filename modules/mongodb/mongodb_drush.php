@@ -1,9 +1,9 @@
 <?php
-
 /**
  * @file
  * Provides drush integration for MongoDB.
  */
+
 /**
  * Implements hook_drush_command().
  */
@@ -28,100 +28,31 @@ function mongodb_drush_command() {
     'aliases' => ['mdbs'],
   );
 
-  // TODO : to be ported to D8.
-  /*
-  $items['mongodb-connect'] = array(
-    'description' => 'A string for connecting to the mongodb.',
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_CONFIGURATION,
-//     'options' => $options,
-    'arguments' => array(
-       'alias' => 'The connection',
-    ),
-  );
-
-  $items['mongodb-cli'] = array(
-    'description' => "Open a mongodb command-line interface using Drupal's credentials.",
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_CONFIGURATION,
-//     'options' => $options,
-    'examples' => array(
-      '`drush mongodb-connect`' => 'Connect to the mongodb.',
-    ),
-    'arguments' => array(
-       'alias' => 'The connection',
-    ),
-    'aliases' => array('mdbc'),
-  );
-
-  */
-
   return $items;
 }
 
 /**
- * Implementation of hook_drush_help().
+ * Implements hook_drush_help().
  */
 function mongodb_drush_help($section) {
   switch ($section) {
     case 'drush:mongodb-settings':
       return dt('Show MongoDB settings.');
+
     case 'drush:mongodb-find':
       return dt("Usage: drush [options] mongodb-find <query>...\n<query> is a single JSON selector.");
-//    case 'drush:mongodb-connect':
-//      return dt('A string which connects to the current database.');
-//    case 'drush:mongodb-cli':
-//      return dt('Quickly enter the mongodb shell.');
-//    // TODO
-//    case 'drush:mongodb-dump':
-//      return dt('Prints the whole database to STDOUT or save to a file.');
   }
-}
-
-/**
- * Returns the basic shell command string.
- */
-function _drush_mongodb_connect($alias) {
-  $connections = variable_get('mongodb_connections', array());
-  $connections += array('default' => array('host' => 'localhost', 'db' => 'drupal'));
-  if (!isset($connections[$alias])) {
-    $alias = 'default';
-  }
-  $connection = $connections[$alias];
-  $host = $connection['host'];
-  $db = $connection['db'];
-
-  $query = $host;
-  $query .= "/$db";
-
-  $command = "mongo ${query}";
-  return $command;
-}
-
-/**
- * Drush callback; Start the mongodb shell.
- */
-function drush_mongodb_cli($alias = 'default') {
-  $command = _drush_mongodb_connect($alias);
-  drush_print(proc_close(proc_open(escapeshellcmd($command), array(0 => STDIN, 1 => STDOUT, 2 => STDERR), $pipes)));
-}
-
-/**
- * Drush callback; Return the connect string.
- *
- * @param string $alias
- *   The alias of a database to connect to.
- */
-function drush_mongodb_connect($alias = 'default') {
-  $command = _drush_mongodb_connect($alias);
-  drush_print($command);
 }
 
 /**
  * Drush callback; Execute a find against a Mongodb database.
  *
  * @param string $collection
+ *   The name of a collection to query.
  * @param string $selector
- *   JSON
+ *   JSON.
  * @param string $alias
+ *   The alias for the database in which to perform the find().
  */
 function drush_mongodb_find($collection, $selector = '{}', $alias = 'default') {
   /** @var \MongoDB\Database $db */
@@ -131,8 +62,9 @@ function drush_mongodb_find($collection, $selector = '{}', $alias = 'default') {
       'typeMap' => [
         'root' => 'array',
         'document' => 'array',
-        'array' => 'array'
-      ]])
+        'array' => 'array',
+      ],
+    ])
     ->toArray();
   drush_print_r($docs);
 }
