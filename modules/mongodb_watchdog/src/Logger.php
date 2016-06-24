@@ -1,14 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains MongoDB Logger.
- */
-
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Logger\LogMessageParserInterface;
+use MongoDB\Database;
+use MongoDB\Driver\Exception\InvalidArgumentException;
 use Psr\Log\AbstractLogger;
 
 /**
@@ -20,20 +17,19 @@ class Logger extends AbstractLogger {
 
   const TEMPLATE_COLLECTION = 'watchdog';
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
-  const EVENT_COLLECTIONS_PATTERN = '/watchdog_event_[[:xdigit:]]{32}$/';
-
+  const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{24}$';
 
   /**
    * The logger storage.
    *
-   * @var \MongoDB
+   * @var \MongoDB\Database
    */
   protected $database;
 
   /**
    * The collection holding message templates.
    *
-   * @var \MongoCollection
+   * @var \MongoDB\Collection
    */
   protected $templatesCollection;
 
@@ -47,12 +43,12 @@ class Logger extends AbstractLogger {
   /**
    * Constructs a Logger object.
    *
-   * @param \MongoDB $database
+   * @param \MongoDB\Database $database
    *   The database object.
    * @param \Drupal\Core\Logger\LogMessageParserInterface $parser
    *   The parser to use when extracting message variables.
    */
-  public function __construct(\MongoDB $database, LogMessageParserInterface $parser) {
+  public function __construct(Database $database, LogMessageParserInterface $parser) {
     $this->database = $database;
     $this->parser = $parser;
     $this->templatesCollection = $database->selectCollection(static::TEMPLATE_COLLECTION);
@@ -67,40 +63,45 @@ class Logger extends AbstractLogger {
 
     // Convert PSR3-style messages to SafeMarkup::format() style, so they can be
     // translated too in runtime.
-    $message_placeholders = $this->parser->parseMessagePlaceholders($message,
-      $context);
+    $message_placeholders = $this->parser->parseMessagePlaceholders($message, $context);
 
-    $this->database
+    $template_result = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
-      ->insert([
-        'uid' => $context['uid'],
+      ->insertOne([
         'type' => Unicode::substr($context['channel'], 0, 64),
         'message' => $message,
-        'variables' => serialize($message_placeholders),
         'severity' => $level,
-        'link' => $context['link'],
-        'location' => $context['request_uri'],
-        'referer' => $context['referer'],
-        'hostname' => Unicode::substr($context['ip'], 0, 128),
-        'timestamp' => $context['timestamp'],
       ]);
+    $template_id = $template_result->getInsertedId();
+    $event_collection = $this->eventCollection($template_id);
+    $event_collection->insertOne([
+      'hostname' => Unicode::substr($context['ip'], 0, 128),
+      'link' => $context['link'],
+      'location' => $context['request_uri'],
+      'referer' => $context['referer'],
+      'timestamp' => $context['timestamp'],
+      'user' => array(
+        // 'name' => isset($account->name) ? $account->name : t('Anonymous')).
+        'uid' => $context['uid'],
+      ),
+      'variables' => $message_placeholders,
+    ]);
   }
 
   /**
    * List the event collections.
    *
-   * @return \MongoCollection[]
+   * @return \MongoDB\Collection[]
    *   The collections with a name matching the event pattern.
    */
   public function eventCollections() {
-    $result = [];
-    foreach ($this->database->listCollections() as $collection) {
-      $name = $collection->getName();
-      if (preg_match(static::EVENT_COLLECTIONS_PATTERN, $name)) {
-        $result[] = $collection;
-      }
-    }
-
+    echo static::EVENT_COLLECTIONS_PATTERN;
+    $options = [
+      'filter' => [
+        'name' => ['$regex' => static::EVENT_COLLECTIONS_PATTERN],
+      ],
+    ];
+    $result = iterator_to_array($this->database->listCollections($options));
     return $result;
   }
 
@@ -110,13 +111,18 @@ class Logger extends AbstractLogger {
    * @param string $template_id
    *   The string representation of a template \MongoId.
    *
-   * @return \MongoCollection
+   * @return \MongoDB\Collection
    *   A collection object for the specified template id.
    */
   public function eventCollection($template_id) {
     $collection_name = static::EVENT_COLLECTION_PREFIX . $template_id;
-    assert('preg_match(static::EVENT_COLLECTIONS_PATTERN, $collection_name)');
-    return $this->database->selectCollection($collection_name);
+    if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $collection_name)) {
+      throw new InvalidArgumentException(t('Invalid watchdog template id `@id`.', [
+        '@id' => $collection_name,
+      ]));
+    }
+    $collection = $this->database->selectCollection($collection_name);
+    return $collection;
   }
 
   /**
@@ -131,34 +137,35 @@ class Logger extends AbstractLogger {
     $indexes = [
       // Index for adding/updating increments.
       [
-        'line' => 1,
-        'timestamp' => -1
+        'name' => 'for-increments',
+        'key' => ['line' => 1, 'timestamp' => -1],
       ],
+
       // Index for admin page without filters.
       [
-        'timestamp' => -1
+        'name' => 'admin-no-filters',
+        'key' => ['timestamp' => -1],
       ],
+
       // Index for admin page filtering by type.
       [
-        'type' => 1,
-        'timestamp' => -1
+        'name' => 'admin-by-type',
+        'key' => ['type' => 1, 'timestamp' => -1],
       ],
+
       // Index for admin page filtering by severity.
       [
-        'severity' => 1,
-        'timestamp' => -1
+        'name' => 'admin-by-severity',
+        'key' => ['severity' => 1, 'timestamp' => -1],
       ],
+
       // Index for admin page filtering by type and severity.
       [
-        'type' => 1,
-        'severity' => 1,
-        'timestamp' => -1
+        'name' => 'admin-by-both',
+        'key' => ['type' => 1, 'severity' => 1, 'timestamp' => -1],
       ],
     ];
-
-    foreach ($indexes as $index) {
-      $templates->ensureIndex($index);
-    }
+    $templates->createIndexes($indexes);
   }
 
   /**
@@ -177,28 +184,4 @@ class Logger extends AbstractLogger {
     return $result;
   }
 
-  /**
-   * Drop the logger collections.
-   *
-   * @return int
-   *   The number of collections dropped.
-   */
-  public function uninstall() {
-    $count = 0;
-
-    $collections = $this->eventCollections();
-    foreach ($collections as $collection) {
-      $status = $collection->drop();
-      if ($status['ok'] == 1) {
-        ++$count;
-      }
-    }
-
-    $status = $this->templatesCollection->drop();
-    if ($status['ok'] == 1) {
-      ++$count;
-    }
-
-    return $count;
-  }
 }

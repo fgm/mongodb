@@ -5,10 +5,10 @@
  * Fires watchdog messages to mongodb.
  */
 
-// ==== Everything below this line is broken ===================================
+/* ==== Everything below this line is broken ================================ */
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function mongodb_watchdog_menu() {
   $items['admin/reports/mongodb'] = array(
@@ -56,8 +56,10 @@ function mongodb_watchdog_menu() {
  * Load a MongoDB watchdog event.
  *
  * @param string $id
+ *   The event id.
  *
- * @return object|FALSE
+ * @return object|false
+ *   A loaded event.
  */
 function mongodb_watchdog_event_load($id) {
   $result = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
@@ -100,7 +102,10 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   $event = array(
     'variables' => $log_entry['variables'],
     'timestamp' => $log_entry['timestamp'],
-    'user' => array('name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')), 'uid' => $log_entry['uid']),
+    'user' => array(
+      'name' => isset($account->name) ? $account->name : variable_get('anonymous', t('Anonymous')),
+      'uid' => $log_entry['uid'],
+    ),
     'ip' => $log_entry['ip'],
     'request_uri' => $log_entry['request_uri'],
     'referer' => $log_entry['referer'],
@@ -121,7 +126,12 @@ function mongodb_watchdog_watchdog(array $log_entry) {
   $collection = $collection->db->selectCollection('watchdog_event_' . $id);
   if (empty($checked_ids[$id])) {
     $max = variable_get('mongodb_watchdog_items', 10000);
-    $command = array('create' => $collection->getName(), 'capped' => TRUE, 'size' => $max * 1000, "max" => $max);
+    $command = array(
+      'create' => $collection->getName(),
+      'capped' => TRUE,
+      'size' => $max * 1000,
+      "max" => $max,
+    );
     $collection->db->command($command);
     $checked_ids[$id] = TRUE;
   }
@@ -132,9 +142,9 @@ function mongodb_watchdog_watchdog(array $log_entry) {
  * Fill in the log_entry function, file, and line.
  *
  * @param array $log_entry
+ *   An event information to be logger.
  * @param array $backtrace
- *
- * @return void
+ *   A call stack.
  */
 function _mongodb_watchdog_enhance_log_entry(&$log_entry, $backtrace) {
   // Create list of functions to ignore in backtrace.

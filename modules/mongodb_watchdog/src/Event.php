@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains MongoDb watchdog event.
- */
-
 namespace Drupal\mongodb_watchdog;
 
 /**
@@ -13,12 +8,15 @@ namespace Drupal\mongodb_watchdog;
  * @package Drupal\mongodb_watchdog
  */
 class Event {
+
+  // @codingStandardsIgnoreStart
   /**
    * The string representation of a MongoId.
    *
    * @var int
    */
   public $_id;
+  // @codingStandardsIgnoreEnd
 
   /**
    * User id.
@@ -97,11 +95,24 @@ class Event {
    *   The event in array form.
    */
   public function __construct(array $event) {
-    $keys = ['_id', 'hostname', 'link', 'location', 'message', 'referrer', 'severity', 'timestamp', 'type', 'uid', 'variables'];
+    $keys = [
+      '_id',
+      'hostname',
+      'link',
+      'location',
+      'message',
+      'referrer',
+      'severity',
+      'timestamp',
+      'type',
+      'uid',
+      'variables',
+    ];
     foreach ($keys as $key) {
       if (isset($event[$key])) {
         $this->$key = $event[$key];
       }
     }
   }
+
 }

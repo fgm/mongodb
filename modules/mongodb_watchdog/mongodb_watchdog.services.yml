@@ -1,16 +1,16 @@
 parameters:
 
 services:
-#  mongodb.watchdog_storage:
-#    class: 'MongoDB\Database'
-#    factory_service: 'mongodb.database_factory'
-#    factory_method: 'get'
-#    arguments: ['logger']
+  mongodb.watchdog_storage:
+    class: 'MongoDB\Database'
+    factory: ['@mongodb.database_factory', 'get']
+    arguments: ['logger']
 
-#  mongodb.logger:
-#    class: Drupal\mongodb_watchdog\Logger
-#    arguments:
-#      # - '@mongodb.watchdog_storage'
-#      - '@logger.log_message_parser'
-#    tags:
-#      - { name: logger }
+  mongodb.logger:
+    class: Drupal\mongodb_watchdog\Logger
+    arguments:
+      - '@mongodb.watchdog_storage'
+      - '@logger.log_message_parser'
+    tags:
+      - { name: logger }
+      - { name: backend_overridable }

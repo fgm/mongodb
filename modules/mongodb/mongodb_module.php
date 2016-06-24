@@ -140,6 +140,8 @@ function mongodb_collection() {
  */
 class MongoDebugCollection {
 
+  protected $collection;
+
   /**
    * Constructor.
    *
@@ -191,6 +193,8 @@ class MongoDebugCollection {
  * Class MongoDebugCursor is a debug decorator for MongoCollection::find().
  */
 class MongoDebugCursor {
+
+  protected $collection;
 
   /**
    * Constructor.
