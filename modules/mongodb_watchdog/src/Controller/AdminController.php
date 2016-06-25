@@ -13,6 +13,8 @@ use Drupal\Core\Url;
 use Drupal\mongodb\Connection;
 use Drupal\mongodb_watchdog\Logger;
 use MongoDB\Database;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -39,7 +41,7 @@ class AdminController implements ContainerInjectionInterface {
    *   The watchdog database.
    * @param \Drupal\mongodb_watchdog\Logger $logger
    */
-  public function __construct(Database $database, Logger $logger) {
+  public function __construct(Database $database, LoggerInterface $logger) {
     $this->database = $database;
     $this->logger = $logger;
   }
@@ -62,14 +64,14 @@ class AdminController implements ContainerInjectionInterface {
    */
   public function overview() {
     $icons = array(
-      WATCHDOG_DEBUG     => '',
-      WATCHDOG_INFO      => '',
-      WATCHDOG_NOTICE    => '',
-      WATCHDOG_WARNING   => ['#theme' => 'image', 'path' => 'misc/watchdog-warning.png', 'alt' => t('warning'), 'title' => t('warning')],
-      WATCHDOG_ERROR     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error')],
-      WATCHDOG_CRITICAL  => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical')],
-      WATCHDOG_ALERT     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert')],
-      WATCHDOG_EMERGENCY => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency')],
+      LogLevel::DEBUG     => '',
+      LogLevel::INFO      => '',
+      LogLevel::NOTICE    => '',
+      LogLevel::WARNING   => ['#theme' => 'image', 'path' => 'misc/watchdog-warning.png', 'alt' => t('warning'), 'title' => t('warning')],
+      LogLevel::ERROR     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error')],
+      LogLevel::CRITICAL  => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical')],
+      LogLevel::ALERT     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert')],
+      LogLevel::EMERGENCY => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency')],
     );
 
     $collection = $this->database->selectCollection(Logger::TEMPLATE_COLLECTION);
@@ -86,6 +88,7 @@ class AdminController implements ContainerInjectionInterface {
     );
 
     $rows = array();
+    $this->logger->warning("Some @info", ['@info' => 'Is info']);
     foreach ($cursor as $id => $value) {
       // dsm($value, $id);
 //      if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
@@ -102,9 +105,9 @@ class AdminController implements ContainerInjectionInterface {
 //        }
 //      }
       $message = ''; //Unicode::truncate(strip_tags(SafeMarkup::format($value)), 56, TRUE, TRUE);
-      $value['count'] = $this->logger->eventCollection($value['_id'])->count();
+      //$value['count'] = $this->logger->eventCollection($value['_id'])->count();
       $rows[$id] = array(
-        $icons[$value['severity']],
+        //$icons[$value['severity']],
         isset($value['count']) && $value['count'] > 1 ? intval($value['count']) : 0,
         t($value['type']),
         empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
@@ -137,7 +140,7 @@ class AdminController implements ContainerInjectionInterface {
     /** @var \MongoDB $database */
     $database = $container->get('mongodb.watchdog_storage');
     /** @var \Drupal\mongodb_watchdog\Logger $logger */
-    $logger = $container->get('mongodb.logger');
+    $logger = $container->get('logger.factory')->get('mongodb_watchdog');
 
     return new static($database, $logger);
   }

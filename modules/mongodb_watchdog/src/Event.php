@@ -2,12 +2,14 @@
 
 namespace Drupal\mongodb_watchdog;
 
+use MongoDB\BSON\Unserializable;
+
 /**
  * Class Event.
  *
  * @package Drupal\mongodb_watchdog
  */
-class Event {
+class Event implements Unserializable {
 
   // @codingStandardsIgnoreStart
   /**
@@ -115,4 +117,32 @@ class Event {
     }
   }
 
+  /**
+   * Load a MongoDB watchdog event.
+   *
+   * @param string $id
+   *   The string representation of a MongoId.
+   *
+   * @return \Drupal\mongodb_watchdog\Event|bool
+   *   FALSE if the event cannot be loaded.
+   */
+  public function find($template_id) {
+    $criteria = ['_id' => new ObjectID($id)];
+    $options = [
+      'typeMap' => [
+        'array' => 'array',
+        'document' => 'array',
+        'root' => 'Drupal\mongodb_watchdog\Event',
+      ],
+    ];
+
+    $result = $this->templatesCollection->findOne($criteria, $options);
+    var_dump($result);
+    return $result;
+  }
+
+  function bsonUnserialize(array $data) {
+    $event = new static($data);
+    return $event;
+  }
 }

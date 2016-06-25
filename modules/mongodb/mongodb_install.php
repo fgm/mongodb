@@ -64,8 +64,10 @@ function mongodb_requirements() {
 
   $client_aliases = isset($settings['clients']) ? $settings['clients'] : [];
   $warnings = [];
+  $ok = TRUE;
   foreach ($databases as $database => list($client, $name)) {
     if (empty($client_aliases[$client])) {
+      $ok = FALSE;
       $warnings[] = t('Database "@db" references undefined client "@client".', [
         '@db' => $database,
         '@client' => $client,
@@ -81,7 +83,7 @@ function mongodb_requirements() {
     '#items' => array_merge($description, $warnings),
   ];
 
-  if (!empty($warnings)) {
+  if (!$ok) {
     $ret['mongodb'] += [
       'value' => t('Inconsistent database/client settings.'),
       'severity' => REQUIREMENT_ERROR,

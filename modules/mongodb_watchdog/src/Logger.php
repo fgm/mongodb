@@ -2,7 +2,10 @@
 
 namespace Drupal\mongodb_watchdog;
 
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
@@ -17,7 +20,7 @@ class Logger extends AbstractLogger {
 
   const TEMPLATE_COLLECTION = 'watchdog';
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
-  const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{24}$';
+  const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{32}$';
 
   /**
    * The logger storage.
@@ -47,26 +50,106 @@ class Logger extends AbstractLogger {
   }
 
   /**
+   * Fill in the log_entry function, file, and line.
+   *
+   * @param array $log_entry
+   *   An event information to be logger.
+   * @param array $backtrace
+   *   A call stack.
+   */
+  function enhanceLogEntry(&$log_entry, $backtrace) {
+    // Create list of functions to ignore in backtrace.
+    static $ignored = array(
+      'call_user_func_array' => 1,
+      '_drupal_log_error' => 1,
+      '_drupal_error_handler' => 1,
+      '_drupal_error_handler_real' => 1,
+      // 'theme_render_template' => 1,
+      'Drupal\mongodb_watchdog\Logger::log' => 1,
+      'Drupal\Core\Logger\LoggerChannel::log' => 1,
+      'Drupal\Core\Logger\LoggerChannel::alert' => 1,
+      'Drupal\Core\Logger\LoggerChannel::critical' => 1,
+      'Drupal\Core\Logger\LoggerChannel::debug' => 1,
+      'Drupal\Core\Logger\LoggerChannel::emergency' => 1,
+      'Drupal\Core\Logger\LoggerChannel::error' => 1,
+      'Drupal\Core\Logger\LoggerChannel::info' => 1,
+      'Drupal\Core\Logger\LoggerChannel::notice' => 1,
+      'Drupal\Core\Logger\LoggerChannel::warning' => 1,
+    );
+
+    foreach ($backtrace as $bt) {
+      if (isset($bt['function'])) {
+        $function = empty($bt['class']) ? $bt['function'] : $bt['class'] . '::' . $bt['function'];
+        if (empty($ignored[$function])) {
+          $log_entry['%function'] = $function;
+          /* Some part of the stack, like the line or file info, may be missing.
+           * @see http://stackoverflow.com/questions/4581969/why-is-debug-backtrace-not-including-line-number-sometimes
+           * No need to fetch the line using reflection: it would be redundant
+           * with the name of the function.
+           */
+          $log_entry['%line'] = isset($bt['line']) ? $bt['line'] : NULL;
+          if (empty($bt['file'])) {
+            $reflected_method = new \ReflectionMethod($function);
+            $bt['file'] = $reflected_method->getFileName();
+          }
+
+          $log_entry['%file'] = $bt['file'];
+          break;
+        }
+        elseif ($bt['function'] == '_drupal_exception_handler') {
+          $e = $bt['args'][0];
+          $this->enhanceLogEntry($log_entry, $e->getTrace());
+        }
+      }
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function log($level, $message, array $context = []) {
-    // Remove any backtraces since they may contain an unserializable variable.
-    unset($context['backtrace']);
-
+  public function log($level, $template, array $context = []) {
     // Convert PSR3-style messages to SafeMarkup::format() style, so they can be
     // translated too in runtime.
-    $message_placeholders = $this->parser->parseMessagePlaceholders($message, $context);
+    $message_placeholders = $this->parser->parseMessagePlaceholders($template, $context);
 
+    // If code location information is all present, as for errors/exceptions,
+    // then use it to build the message template id.
+    $type = $context['channel'];
+    $location_info = [
+      '%type' => 1,
+      '@message' => 1,
+      '%function' => 1,
+      '%file' => 1,
+      '%line' => 1,
+    ];
+    if (!empty(array_diff_key($location_info, $message_placeholders))) {
+      $this->enhanceLogEntry($message_placeholders, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
+    }
+    $file = $message_placeholders['%file'];
+    $line = $message_placeholders['%line'];
+    $function = $message_placeholders['%function'];
+    $key = "${type}:${level}:${file}:${line}:${function}";
+    $template_id = md5($key);
+
+    $selector = [ '_id' => $template_id ];
+    $update = [
+      '_id' => $template_id,
+      'type' => Unicode::substr($context['channel'], 0, 64),
+      'message' => $template,
+      'severity' => $level,
+    ];
+    $options = [ 'upsert' => TRUE ];
     $template_result = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
-      ->insertOne([
-        'type' => Unicode::substr($context['channel'], 0, 64),
-        'message' => $message,
-        'severity' => $level,
-      ]);
-    $template_id = $template_result->getInsertedId();
+      ->replaceOne($selector, $update, $options);
+    $template_result->getUpsertedId();
 
     $event_collection = $this->eventCollection($template_id);
+    foreach ($message_placeholders as &$placeholder) {
+      if ($placeholder instanceof MarkupInterface) {
+        $placeholder = Xss::filterAdmin($placeholder);
+      }
+    }
     $event = [
       'hostname' => Unicode::substr($context['ip'], 0, 128),
       'link' => $context['link'],
