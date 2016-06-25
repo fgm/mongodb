@@ -242,4 +242,13 @@ class Logger extends AbstractLogger {
     $templates->createIndexes($indexes);
   }
 
+  /**
+   * Return the event templates collection.
+   *
+   * @return \MongoDB\Collection
+   *   The collection.
+   */
+  public function templateCollection() {
+    return $this->database->selectCollection(static::TEMPLATE_COLLECTION);
+  }
 }
