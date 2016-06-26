@@ -1,7 +1,7 @@
 mongodb_watchdog.reports.overview:
   path: '/admin/reports/mongodb/watchdog'
   defaults:
-    _controller: '\Drupal\mongodb_watchdog\Controller\AdminController::overview'
+    _controller: '\Drupal\mongodb_watchdog\Controller\OverviewController::overview'
     _title: 'Recent log messages in MongoDB'
   requirements:
     _permission: 'access site reports'

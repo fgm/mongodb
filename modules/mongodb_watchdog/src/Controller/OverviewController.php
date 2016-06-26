@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains AdminController.
- */
-
 namespace Drupal\mongodb_watchdog\Controller;
 
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Logger\RfcLogLevel;
@@ -21,11 +17,9 @@ use Drupal\Core\Form\FormBuilderInterface;
 
 
 /**
- * Class AdminController.
- *
- * @package Drupal\mongodb_watchdog
+ * Class OverviewController provides the main MongoDB Watchdog report page.
  */
-class AdminController extends ControllerBase {
+class OverviewController extends ControllerBase {
 
   /**
    * The MongoDB database for the logger alias.
@@ -48,6 +42,7 @@ class AdminController extends ControllerBase {
    */
   protected $watchdog;
 
+  /**
    * The module handler service.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -102,7 +97,7 @@ class AdminController extends ControllerBase {
     );
 
     $collection = $this->watchdog->templateCollection();
-    $templates = $collection->find([], TopController::LEGACY_TYPE_MAP)->toArray();
+    $templates = $collection->find([], Logger::LEGACY_TYPE_MAP)->toArray();
 ksm($templates);
     $this->moduleHandler->loadInclude('mongodb_watchdog', 'admin.inc');
 
@@ -135,14 +130,14 @@ ksm($templates);
 //          }
 //        }
         $message = Unicode::truncate(strip_tags(SafeMarkup::format($value['message'], [])), 56, TRUE, TRUE);
-        $value['count'] = 0; // $this->logger->eventCollection($value['_id'])->count();
+        $value['count'] = $this->watchdog->eventCollection($value['_id'])->count();
         $rows[$id] = [
           $icons[$value['severity']],
           isset($value['count']) && $value['count'] > 1 ? intval($value['count']) : 0,
           t($value['type']),
           empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
           empty($value['file']) ? '' : Unicode::truncate(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
-          \Drupal::l($message, Url::fromRoute('mongodb_watchdog.reports.detail', ['id' => $id])),
+          \Drupal::l($message, Url::fromRoute('mongodb_watchdog.reports.detail', ['event_template' => $id])),
         ];
       }
 
