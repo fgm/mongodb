@@ -9,6 +9,7 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Url;
 use Drupal\mongodb_watchdog\Logger;
 use MongoDB\Database;
@@ -79,6 +80,7 @@ class AdminController extends ControllerBase {
     $this->logger = $logger;
     $this->moduleHandler = $module_handler;
     $this->formBuilder = $form_builder;
+    $this->watchdog = $watchdog;
   }
 
   /**
@@ -89,19 +91,19 @@ class AdminController extends ControllerBase {
    */
   public function overview() {
     $icons = array(
-      LogLevel::DEBUG     => '',
-      LogLevel::INFO      => '',
-      LogLevel::NOTICE    => '',
-      LogLevel::WARNING   => ['#theme' => 'image', 'path' => 'misc/watchdog-warning.png', 'alt' => t('warning'), 'title' => t('warning')],
-      LogLevel::ERROR     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error')],
-      LogLevel::CRITICAL  => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical')],
-      LogLevel::ALERT     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert')],
-      LogLevel::EMERGENCY => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency')],
+      RfcLogLevel::DEBUG     => '',
+      RfcLogLevel::INFO      => '',
+      RfcLogLevel::NOTICE    => '',
+      RfcLogLevel::WARNING   => ['#theme' => 'image', 'path' => 'misc/watchdog-warning.png', 'alt' => t('warning'), 'title' => t('warning')],
+      RfcLogLevel::ERROR     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error')],
+      RfcLogLevel::CRITICAL  => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical')],
+      RfcLogLevel::ALERT     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert')],
+      RfcLogLevel::EMERGENCY => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency')],
     );
 
-    $collection = $this->database->selectCollection(Logger::TEMPLATE_COLLECTION);
-    $cursor = $collection->find();
-
+    $collection = $this->watchdog->templateCollection();
+    $templates = $collection->find([], TopController::LEGACY_TYPE_MAP)->toArray();
+ksm($templates);
     $this->moduleHandler->loadInclude('mongodb_watchdog', 'admin.inc');
 
     $build['dblog_filter_form'] = $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\MongodbWatchdogFilterForm');
@@ -117,10 +119,8 @@ class AdminController extends ControllerBase {
     );
 
     $rows = array();
-    foreach ($cursor as $id => $value) {
+    foreach ($templates as $id => $value) {
       if ($id < 5) {
-        kint($value, $id);
-        kint($value->_id);
 //        if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
 //          $collection = $this->logger->eventCollection($value['_id']);
 //          $result = $collection->find()
@@ -137,7 +137,7 @@ class AdminController extends ControllerBase {
         $message = Unicode::truncate(strip_tags(SafeMarkup::format($value['message'], [])), 56, TRUE, TRUE);
         $value['count'] = 0; // $this->logger->eventCollection($value['_id'])->count();
         $rows[$id] = [
-          $icons[$value->severity],
+          $icons[$value['severity']],
           isset($value['count']) && $value['count'] > 1 ? intval($value['count']) : 0,
           t($value['type']),
           empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
