@@ -3,7 +3,6 @@
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Component\Render\MarkupInterface;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Logger\LogMessageParserInterface;
@@ -57,14 +56,13 @@ class Logger extends AbstractLogger {
    * @param array $backtrace
    *   A call stack.
    */
-  function enhanceLogEntry(&$log_entry, $backtrace) {
+  protected function enhanceLogEntry(&$log_entry, $backtrace) {
     // Create list of functions to ignore in backtrace.
     static $ignored = array(
       'call_user_func_array' => 1,
       '_drupal_log_error' => 1,
       '_drupal_error_handler' => 1,
       '_drupal_error_handler_real' => 1,
-      // 'theme_render_template' => 1,
       'Drupal\mongodb_watchdog\Logger::log' => 1,
       'Drupal\Core\Logger\LoggerChannel::log' => 1,
       'Drupal\Core\Logger\LoggerChannel::alert' => 1,
@@ -83,7 +81,9 @@ class Logger extends AbstractLogger {
         if (empty($ignored[$function])) {
           $log_entry['%function'] = $function;
           /* Some part of the stack, like the line or file info, may be missing.
-           * @see http://stackoverflow.com/questions/4581969/why-is-debug-backtrace-not-including-line-number-sometimes
+           *
+           * @see http://goo.gl/8s75df
+           *
            * No need to fetch the line using reflection: it would be redundant
            * with the name of the function.
            */
@@ -131,14 +131,14 @@ class Logger extends AbstractLogger {
     $key = "${type}:${level}:${file}:${line}:${function}";
     $template_id = md5($key);
 
-    $selector = [ '_id' => $template_id ];
+    $selector = ['_id' => $template_id];
     $update = [
       '_id' => $template_id,
       'type' => Unicode::substr($context['channel'], 0, 64),
       'message' => $template,
       'severity' => $level,
     ];
-    $options = [ 'upsert' => TRUE ];
+    $options = ['upsert' => TRUE];
     $template_result = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
       ->replaceOne($selector, $update, $options);
@@ -251,4 +251,5 @@ class Logger extends AbstractLogger {
   public function templateCollection() {
     return $this->database->selectCollection(static::TEMPLATE_COLLECTION);
   }
+
 }

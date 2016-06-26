@@ -88,7 +88,6 @@ class AdminController implements ContainerInjectionInterface {
     );
 
     $rows = array();
-    $this->logger->warning("Some @info", ['@info' => 'Is info']);
     foreach ($cursor as $id => $value) {
       // dsm($value, $id);
 //      if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
