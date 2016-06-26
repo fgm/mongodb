@@ -35,3 +35,11 @@ mongodb_watchdog.reports.top404:
     _controller: '\Drupal\mongodb_watchdog\Controller\TopController::top404'
   requirements:
     _permission: 'access site reports'
+
+mongodb_watchdog.reports.clear_confirm:
+  path: '/admin/reports/mongodb/confirm'
+  defaults:
+    _form: '\Drupal\mongodb_watchdog\Form\ClearConfirmForm'
+    _title: 'Confirm deletion of all logged events'
+  requirements:
+    _permission: 'access site reports'

@@ -14,3 +14,9 @@ mongodb_watchdog.reports.top404:
   title: 'Path not found'
   base_route: mongodb_watchdog.reports.overview
   weight: 2
+
+mongodb_watchdog.reports.clear:
+  base_route: mongodb_watchdog.reports.overview
+  route_name: mongodb_watchdog.reports.clear_confirm
+  title: 'Delete'
+  weight: 3
