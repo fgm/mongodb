@@ -64,7 +64,7 @@ class Logger extends AbstractLogger {
    * @param array $backtrace
    *   A call stack.
    */
-  protected function enhanceLogEntry(&$log_entry, $backtrace) {
+  protected function enhanceLogEntry(array &$log_entry, array $backtrace) {
     // Create list of functions to ignore in backtrace.
     static $ignored = array(
       'call_user_func_array' => 1,

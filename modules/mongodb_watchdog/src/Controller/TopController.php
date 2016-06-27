@@ -136,6 +136,9 @@ class TopController implements ContainerInjectionInterface {
   /**
    * Generic controller for admin/reports/mongodb/<top report>.
    *
+   * @param string $type
+   *   The type of top report to produce.
+   *
    * @return array
    *   A render array.
    */

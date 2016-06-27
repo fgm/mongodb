@@ -29,6 +29,13 @@ class EventController {
   protected $dateFormatter;
 
   /**
+   * The absolute path to the site home.
+   *
+   * @var string
+   */
+  protected $front;
+
+  /**
    * An instance cache for user accounts, which are used in a loop.
    *
    * @var array
@@ -56,7 +63,8 @@ class EventController {
     DateFormatterInterface $date_formatter,
     Logger $watchdog) {
     $this->anonymous = $config->get('user.settings')->get('anonymous');
-    $this->baseLength = Unicode::strlen(Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString()) - 1;
+    $this->front = Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString();
+    $this->baseLength = Unicode::strlen($this->front) - 1;
     $this->dateFormatter = $date_formatter;
     $this->watchdog = $watchdog;
   }
@@ -81,9 +89,12 @@ class EventController {
     $ret = [
       $this->dateFormatter->format($event->timestamp),
       $this->userCache[$uid],
-      Link::fromTextAndUrl(Unicode::substr($event->location, $this->baseLength),
-        Url::fromUri($event->location)
-      ),
+      // Locations generated from Drush/Console will not necessarily match the
+      // site home URL, and will not therefore not necessarily be reachable, so
+      // we only generate a link if the location is "within" the site.
+      (Unicode::strpos($event->location, $this->front) === 0)
+        ? Link::fromTextAndUrl(Unicode::substr($event->location, $this->baseLength), Url::fromUri($event->location))
+        : $event->location,
       empty($event->referrer) ? '' : Link::fromTextAndUrl($event->referrer, Url::fromUri($event->referrer)),
       $event->hostname,
       $template->asString($event->variables),

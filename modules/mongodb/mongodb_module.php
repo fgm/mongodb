@@ -46,7 +46,7 @@ function mongodb($alias = 'default') {
   if (!isset($connections[$alias])) {
     $alias = 'default';
   }
-  $connection = isset($connections[$alias]) ? $connections[$alias] : array();
+  $connection = $connections[$alias] ?? [];
   $connection += array(
     'host' => 'localhost',
     'db' => 'drupal',

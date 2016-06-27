@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains AdminController.
@@ -8,14 +9,11 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
-use Drupal\mongodb\Connection;
-use Drupal\mongodb_watchdog\EventTemplate;
 use Drupal\mongodb_watchdog\Logger;
 use MongoDB\Database;
-use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -26,16 +24,22 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class AdminController implements ContainerInjectionInterface {
 
   /**
+   * The MongoDB database for the logger alias.
+   *
    * @var \MongoDB
    */
   protected $database;
 
   /**
+   * The core logger channel, to log intervening events.
+   *
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
 
   /**
+   * The MongoDB logger, to load events.
+   *
    * @var \Drupal\mongodb_watchdog\Logger
    */
   protected $watchdog;
@@ -43,7 +47,7 @@ class AdminController implements ContainerInjectionInterface {
   /**
    * Constructor.
    *
-   * @param \MongoDB $database
+   * @param \MongoDB\Database $database
    *   The watchdog database.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service, to log intervening events.
@@ -90,19 +94,21 @@ class AdminController implements ContainerInjectionInterface {
     $rows = array();
     foreach ($cursor as $id => $value) {
       // dsm($value, $id);
-//      if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
-//        $collection = $this->logger->eventCollection($value['_id']);
-//        $result = $collection->find()
-//                             ->sort(array('$natural' => -1))
-//                             ->limit(1)
-//                             ->getNext();
-//        if ($value) {
-//          $value['file'] = basename($result['variables']['%file']);
-//          $value['line'] = $result['variables']['%line'];
-//          $value['message'] = '%type in %function';
-//          $value['variables'] = $result['variables'];
-//        }
-//      }
+      /*
+      if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
+        $collection = $this->logger->eventCollection($value['_id']);
+        $result = $collection->find()
+                             ->sort(array('$natural' => -1))
+                             ->limit(1)
+                             ->getNext();
+        if ($value) {
+          $value['file'] = basename($result['variables']['%file']);
+          $value['line'] = $result['variables']['%line'];
+          $value['message'] = '%type in %function';
+          $value['variables'] = $result['variables'];
+        }
+      }
+      */
       $message = ''; //Unicode::truncate(strip_tags(SafeMarkup::format($value)), 56, TRUE, TRUE);
       //$value['count'] = $this->logger->eventCollection($value['_id'])->count();
       $rows[$id] = array(
