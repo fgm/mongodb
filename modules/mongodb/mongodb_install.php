@@ -8,19 +8,19 @@
 use Drupal\Core\Site\Settings;
 
 /**
- * Implements hook_requirements().
+ * Requirements check: MongoDB extension.
+ *
+ * @param array $ret
+ *   The running requirements array
+ * @param string $extension_name
+ *   The name of the extension to check.
+ *
+ * @return bool
+ *   Did requirements check succeed ?
  */
-function mongodb_requirements() {
-  $extension_name = 'mongodb';
-  $minimum_version = '1.1.7';
-
-  $ret['mongodb'] = [
-    'title' => t('Mongodb'),
-    'severity' => REQUIREMENT_OK,
-  ];
-  $description = [];
-
-  if (!extension_loaded($extension_name)) {
+function _mongodb_requirements_extension(array &$ret, $extension_name) {
+  $success = extension_loaded($extension_name);
+  if (!$success) {
     $ret['mongodb'] += array(
       'value' => t('Extension not loaded'),
       'description' => t('Mongodb requires the non-legacy PHP MongoDB extension (@name) to be installed.', [
@@ -28,13 +28,32 @@ function mongodb_requirements() {
       ]),
       'severity' => REQUIREMENT_ERROR,
     );
-    return $ret;
   }
+  return $success;
+}
 
+/**
+ * Requirements check: extension version.
+ *
+ * @param array $ret
+ *   The running requirements array.
+ * @param array $description
+ *   The running description array.
+ * @param string $extension_name
+ *   The name of the extension to check.
+ *
+ * @return bool
+ *   Did requirements check succeed ?
+ */
+function _mongodb_requirements_extension_version(array &$ret, array &$description, $extension_name) {
+  $minimum_version = '1.1.7';
   $extension_version = phpversion($extension_name);
   $version_status = version_compare($extension_version, $minimum_version);
-
-  if ($version_status < 0) {
+  $success = $version_status >= 0;
+  if ($success) {
+    $description[] = t('Extension version @version found.', ['@version' => $extension_version]);
+  }
+  else {
     $ret['mongodb'] += [
       'severity' => REQUIREMENT_ERROR,
       'description' => t('Module needs extension @name @minimum_version or later, found @version.', [
@@ -43,13 +62,27 @@ function mongodb_requirements() {
         '@version' => $extension_version,
       ]),
     ];
-    return $ret;
   }
-  $description[] = t('Extension version @version found.', ['@version' => $extension_version]);
 
-  $settings = Settings::get('mongodb');
-  $databases = isset($settings['databases']) ? $settings['databases'] : [];
-  if (empty($databases)) {
+  return $success;
+}
+
+/**
+ * Requirements check: existence of the client aliases.
+ *
+ * @param array $ret
+ *   The running requirements array.
+ * @param array $description
+ *   The running description array.
+ * @param array $databases
+ *   The databases array, sanitized from settings.
+ *
+ * @return bool
+ *   Did requirements check succeed ?
+ */
+function _mongodb_requirements_aliases(array &$ret, array &$description, array $databases) {
+  $success = !empty($databases);
+  if (!$success) {
     $ret['mongodb'] += [
       'severity' => REQUIREMENT_WARNING,
       'value' => t('No database aliases found in settings. Did you actually configure your settings ?'),
@@ -58,24 +91,40 @@ function mongodb_requirements() {
         '#items' => $description,
       ],
     ];
-
-    return $ret;
   }
 
-  $client_aliases = isset($settings['clients']) ? $settings['clients'] : [];
+  return $success;
+}
+
+/**
+ * Requirements check: database vs clients consistency.
+ *
+ * @param array $settings
+ *   The mongodb settings.
+ * @param array $databases
+ *   The databases, sanitized from settings.
+ * @param array $description
+ *   The running description array.
+ *
+ * @return bool
+ *   Did requirements check succeed ?
+ */
+function _mongodb_requirements_databases(array $settings, array $databases, array &$description) {
+  $client_aliases = $settings['clients'] ?? [];
   $warnings = [];
-  $ok = TRUE;
+  $success = TRUE;
   foreach ($databases as $database => list($client, $name)) {
     if (empty($client_aliases[$client])) {
-      $ok = FALSE;
+      $success = FALSE;
       $warnings[] = t('Database "@db" references undefined client "@client".', [
         '@db' => $database,
         '@client' => $client,
       ]);
     }
-    else {
-      $warnings = [t('Databases and clients are consistent.')];
-    }
+  }
+
+  if ($success) {
+    $warnings = [t('Databases and clients are consistent.')];
   }
 
   $description = [
@@ -83,7 +132,38 @@ function mongodb_requirements() {
     '#items' => array_merge($description, $warnings),
   ];
 
-  if (!$ok) {
+  return $success;
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function mongodb_requirements() {
+  $extension_name = 'mongodb';
+
+  $ret = [];
+  $ret['mongodb'] = [
+    'title' => t('Mongodb'),
+    'severity' => REQUIREMENT_OK,
+  ];
+  $description = [];
+
+  if (!_mongodb_requirements_extension($ret, $extension_name)) {
+    return $ret;
+  }
+
+  if (!_mongodb_requirements_extension_version($ret, $description, $extension_name)) {
+    return $ret;
+  }
+
+  $settings = Settings::get('mongodb');
+  $databases = $settings['databases'] ?? [];
+
+  if (!_mongodb_requirements_aliases($ret, $description, $databases)) {
+    return $ret;
+  }
+
+  if (!_mongodb_requirements_databases($settings, $databases, $description)) {
     $ret['mongodb'] += [
       'value' => t('Inconsistent database/client settings.'),
       'severity' => REQUIREMENT_ERROR,

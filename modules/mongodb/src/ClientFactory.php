@@ -46,7 +46,7 @@ class ClientFactory {
    */
   public function get($alias) {
     if (!isset($this->clients[$alias]) || !$this->clients[$alias] instanceof Client) {
-      $info = isset($this->settings[$alias]) ? $this->settings[$alias] : [];
+      $info = $this->settings[$alias] ?? [];
       $info += [
         'uri' => 'mongodb://localhost:27017',
         'uriOptions' => [],

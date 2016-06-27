@@ -9,14 +9,18 @@ mongodb_watchdog.reports.overview:
     _admin_route: TRUE
 
 mongodb_watchdog.reports.detail:
-  path: '/admin/reports/mongodb/watchdog/{id}'
+  path: '/admin/reports/mongodb/watchdog/{event_template}'
   defaults:
-    _controller: '\Drupal\mongodb_watchdog\Controller\AdminController::detail'
+    _controller: '\Drupal\mongodb_watchdog\Controller\DetailController::detail'
     _title: 'Recent log messages in MongoDB: detail'
+    _title_callback: '\Drupal\mongodb_watchdog\Controller\DetailController::detailTitle'
   requirements:
     _permission: 'access site reports'
   options:
     _admin_route: TRUE
+    parameters:
+      event_template:
+        type: mongodb_watchdog_event_template
 
 mongodb_watchdog.reports.top403:
   path: '/admin/reports/mongodb/watchdog/access-denied'

@@ -10,6 +10,19 @@ use MongoDB\BSON\Unserializable;
  * @package Drupal\mongodb_watchdog
  */
 class Event implements Unserializable {
+  const KEYS = [
+    '_id',
+    'hostname',
+    'link',
+    'location',
+    'message',
+    'referrer',
+    'severity',
+    'timestamp',
+    'type',
+    'uid',
+    'variables',
+  ];
 
   // @codingStandardsIgnoreStart
   /**
@@ -97,52 +110,18 @@ class Event implements Unserializable {
    *   The event in array form.
    */
   public function __construct(array $event) {
-    $keys = [
-      '_id',
-      'hostname',
-      'link',
-      'location',
-      'message',
-      'referrer',
-      'severity',
-      'timestamp',
-      'type',
-      'uid',
-      'variables',
-    ];
-    foreach ($keys as $key) {
-      if (isset($event[$key])) {
-        $this->$key = $event[$key];
+    $this->bsonUnserialize($event);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function bsonUnserialize(array $data) {
+    foreach (static::KEYS as $key) {
+      if (isset($data[$key])) {
+        $this->{$key} = $data[$key];
       }
     }
   }
 
-  /**
-   * Load a MongoDB watchdog event.
-   *
-   * @param string $id
-   *   The string representation of a MongoId.
-   *
-   * @return \Drupal\mongodb_watchdog\Event|bool
-   *   FALSE if the event cannot be loaded.
-   */
-  public function find($template_id) {
-    $criteria = ['_id' => new ObjectID($id)];
-    $options = [
-      'typeMap' => [
-        'array' => 'array',
-        'document' => 'array',
-        'root' => 'Drupal\mongodb_watchdog\Event',
-      ],
-    ];
-
-    $result = $this->templatesCollection->findOne($criteria, $options);
-    var_dump($result);
-    return $result;
-  }
-
-  function bsonUnserialize(array $data) {
-    $event = new static($data);
-    return $event;
-  }
 }

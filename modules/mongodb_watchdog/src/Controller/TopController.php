@@ -99,14 +99,6 @@ class TopController implements ContainerInjectionInterface {
    *   - ok: 1.0 in case of success.
    */
   public function group(Collection $collection, $key, $cond, $reduce, $initial) {
-    $options = [
-      'typeMap' => [
-        'array' => 'array',
-        'document' => 'array',
-        'root' => 'array',
-      ],
-    ];
-
     $cursor = $this->db->command([
       'group' => [
         'ns' => $collection->getCollectionName(),
@@ -115,7 +107,7 @@ class TopController implements ContainerInjectionInterface {
         'initial' => $initial,
         '$reduce' => new Javascript($reduce),
       ],
-    ], $options);
+    ], Logger::LEGACY_TYPE_MAP);
 
     $ret = $cursor->toArray();
     $ret = reset($ret);
@@ -143,6 +135,9 @@ class TopController implements ContainerInjectionInterface {
 
   /**
    * Generic controller for admin/reports/mongodb/<top report>.
+   *
+   * @param string $type
+   *   The type of top report to produce.
    *
    * @return array
    *   A render array.

@@ -4,3 +4,8 @@
 #mongodb-watchdog-filter-form .form-type-select {
   display: inline-block;
 }
+
+.mongodb_watchdog-detail caption {
+  font-size: larger;
+  font-weight: bolder;
+}

@@ -2,9 +2,9 @@
 
 namespace Drupal\mongodb_watchdog\Form;
 
+use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\mongodb_watchdog\Logger;
 use MongoDB\Database;
 use Symfony\Component\DependencyInjection\ContainerInterface;

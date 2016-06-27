@@ -21,6 +21,14 @@ class Logger extends AbstractLogger {
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
   const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{32}$';
 
+  const LEGACY_TYPE_MAP = [
+    'typeMap' => [
+      'array' => 'array',
+      'document' => 'array',
+      'root' => 'array',
+    ],
+  ];
+
   /**
    * The logger storage.
    *
@@ -56,7 +64,7 @@ class Logger extends AbstractLogger {
    * @param array $backtrace
    *   A call stack.
    */
-  protected function enhanceLogEntry(&$log_entry, $backtrace) {
+  protected function enhanceLogEntry(array &$log_entry, array $backtrace) {
     // Create list of functions to ignore in backtrace.
     static $ignored = array(
       'call_user_func_array' => 1,

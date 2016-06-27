@@ -64,6 +64,8 @@ other data with it.
 * `mongodb.watchdog.limit`: the maximum severity level (0 to 7, per RFC 5424) to save
   into watchdog. Errors below this level (with a higher numerical level) will be
   ignored by the module. If not defined, all events will saved.
+* `mongodb.watchdog.items_per_page`: the maximum number of events displayed on
+  the event details page.
 
   See [Drupal\Core\Logger\RfcLogLevel][levels] and [Psr\Log\LogLevel][levelnames]
   for further information about severity levels.
