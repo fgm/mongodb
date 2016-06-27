@@ -47,3 +47,13 @@ mongodb_watchdog.reports.clear_confirm:
     _title: 'Confirm deletion of all logged events'
   requirements:
     _permission: 'access site reports'
+
+mongodb_watchdog.config:
+  path: '/admin/config/system/mongodb/watchdog'
+  defaults:
+    _form: 'Drupal\mongodb_watchdog\Form\ConfigForm'
+    _title: 'MongoDB: watchdog configuration'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer site configuration'
