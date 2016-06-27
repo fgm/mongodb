@@ -20,3 +20,8 @@ mongodb_watchdog.reports.clear:
   route_name: mongodb_watchdog.reports.clear_confirm
   title: 'Delete'
   weight: 3
+
+mongodb_watchdog.config:
+  title: 'Watchdog config'
+  route_name: mongodb_watchdog.config
+  base_route: system.admin_config_system
