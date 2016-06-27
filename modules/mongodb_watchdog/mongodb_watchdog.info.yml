@@ -3,7 +3,7 @@ description: 'A logger (watchdog) implementation using MongoDB'
 package: 'MongoDB'
 type: 'module'
 core: '8.x'
-# This modules uses scalar type hinting.
+# This package uses the null coalescing operator..
 php: 7.x
 dependencies:
   - mongodb

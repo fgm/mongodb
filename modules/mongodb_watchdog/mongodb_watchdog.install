@@ -35,7 +35,7 @@ function mongodb_watchdog_requirements($phase) {
   $logger_alias = 'logger';
   $databases = $settings['databases'];
   if (!isset($databases[$logger_alias])) {
-    $ret['mongodb-watchdog'] += [
+    $ret[$module] += [
       'severity' => REQUIREMENT_ERROR,
       'value' => t('Missing `@alias` database alias in settings.', ['@alias' => $logger_alias]),
     ];

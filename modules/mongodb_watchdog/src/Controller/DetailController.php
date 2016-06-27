@@ -6,7 +6,7 @@ use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\mongodb_watchdog\EventController;
-use Drupal\mongodb_watchdog\EventTemplate;use Drupal\mongodb_watchdog\Logger;
+use Drupal\mongodb_watchdog\EventTemplate;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
