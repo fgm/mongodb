@@ -3,15 +3,45 @@
 namespace Drupal\mongodb_watchdog\Form;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Class ConfigForm provides configuration for the MongoDB watchdog module.
+ */
 class ConfigForm extends ConfigFormBase {
 
   /**
    * Name of the config being edited.
    */
   const CONFIG_NAME = 'mongodb_watchdog.settings';
+
+  protected $typed;
+
+  /**
+   * ConfigForm constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The core config.factory service.
+   * @param array $typed
+   *   The type config for the module.
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, array $typed) {
+    parent::__construct($config_factory);
+    $this->typed = $typed;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('config.typed')->getDefinition('mongodb_watchdog.settings')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -22,10 +52,14 @@ class ConfigForm extends ConfigFormBase {
       if (Unicode::substr($key, 0, 1) === '_') {
         continue;
       }
+      $schema = $this->typed['mapping'][$key];
+      list($title, $description) = explode(': ', $schema['label']);
       $form[$key] = [
-        '#title' => Unicode::ucfirst(str_replace('_', ' ', $key)),
+        '#title' => $title,
+        '#description' => $description,
         '#type' => 'number',
-        '#min' => 1,
+        '#min' => $schema['min'] ?? 0,
+        '#max' => $schema['max'] ?? PHP_INT_MAX,
         '#default_value' => $default_value,
       ];
     }
@@ -66,4 +100,5 @@ class ConfigForm extends ConfigFormBase {
   public function getFormId() {
     return 'mongodb_watchdog_config';
   }
+
 }
