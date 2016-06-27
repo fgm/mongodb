@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\mongodb_watchdog\Logger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -14,10 +15,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ConfigForm extends ConfigFormBase {
 
   /**
-   * Name of the config being edited.
+   * Typed schema for the configuration.
+   *
+   * @var array
    */
-  const CONFIG_NAME = 'mongodb_watchdog.settings';
-
   protected $typed;
 
   /**
@@ -47,7 +48,7 @@ class ConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config(static::CONFIG_NAME);
+    $config = $this->config(Logger::CONFIG_NAME);
     foreach ($config->getRawData() as $key => $default_value) {
       if (Unicode::substr($key, 0, 1) === '_') {
         continue;
@@ -55,12 +56,12 @@ class ConfigForm extends ConfigFormBase {
       $schema = $this->typed['mapping'][$key];
       list($title, $description) = explode(': ', $schema['label']);
       $form[$key] = [
-        '#title' => $title,
-        '#description' => $description,
-        '#type' => 'number',
-        '#min' => $schema['min'] ?? 0,
-        '#max' => $schema['max'] ?? PHP_INT_MAX,
         '#default_value' => $default_value,
+        '#description' => $description,
+        '#max' => $schema['max'] ?? PHP_INT_MAX,
+        '#min' => $schema['min'] ?? 0,
+        '#title' => $title,
+        '#type' => 'number',
       ];
     }
 
@@ -72,7 +73,7 @@ class ConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = $this->config(static::CONFIG_NAME);
+    $config = $this->config(Logger::CONFIG_NAME);
     foreach (array_keys($config->getRawData()) as $key) {
       $config->set($key, intval($form_state->getValue($key)));
     }

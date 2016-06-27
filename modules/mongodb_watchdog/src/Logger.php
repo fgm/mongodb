@@ -5,6 +5,7 @@ namespace Drupal\mongodb_watchdog;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
@@ -16,6 +17,7 @@ use Psr\Log\AbstractLogger;
  * @package Drupal\mongodb_watchdog
  */
 class Logger extends AbstractLogger {
+  const CONFIG_NAME = 'mongodb_watchdog.settings';
 
   const TEMPLATE_COLLECTION = 'watchdog';
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
@@ -37,6 +39,13 @@ class Logger extends AbstractLogger {
   protected $database;
 
   /**
+   * The minimum logging level.
+   *
+   * @var int
+   */
+  protected $limit;
+
+  /**
    * The message's placeholders parser.
    *
    * @var \Drupal\Core\Logger\LogMessageParserInterface
@@ -51,9 +60,10 @@ class Logger extends AbstractLogger {
    * @param \Drupal\Core\Logger\LogMessageParserInterface $parser
    *   The parser to use when extracting message variables.
    */
-  public function __construct(Database $database, LogMessageParserInterface $parser) {
+  public function __construct(Database $database, LogMessageParserInterface $parser, ConfigFactoryInterface $config) {
     $this->database = $database;
     $this->parser = $parser;
+    $this->limit = $config->get(static::CONFIG_NAME)->get('limit');
   }
 
   /**
@@ -116,6 +126,10 @@ class Logger extends AbstractLogger {
    * {@inheritdoc}
    */
   public function log($level, $template, array $context = []) {
+    if ($level > $this->limit) {
+      return;
+    }
+    
     // Convert PSR3-style messages to SafeMarkup::format() style, so they can be
     // translated too in runtime.
     $message_placeholders = $this->parser->parseMessagePlaceholders($template, $context);
