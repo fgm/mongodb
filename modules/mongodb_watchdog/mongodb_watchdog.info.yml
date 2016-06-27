@@ -3,5 +3,7 @@ description: 'A logger (watchdog) implementation using MongoDB'
 package: 'MongoDB'
 type: 'module'
 core: '8.x'
+# This modules uses scalar type hinting.
+php: 7.x
 dependencies:
   - mongodb

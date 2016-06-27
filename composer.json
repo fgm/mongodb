@@ -12,6 +12,8 @@
     "minimum-stability": "dev",
     "name": "drupal/mongodb",
     "require": {
+        "php": "^7.0",
+        "ext-mongodb": "^1.1.7",
         "mongodb/mongodb": "^1.0.0"
     },
     "support": {

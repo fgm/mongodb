@@ -21,6 +21,14 @@ class Logger extends AbstractLogger {
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
   const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{32}$';
 
+  const LEGACY_TYPE_MAP = [
+    'typeMap' => [
+      'array' => 'array',
+      'document' => 'array',
+      'root' => 'array',
+    ],
+  ];
+
   /**
    * The logger storage.
    *
