@@ -7,7 +7,7 @@
  */
 
 if (!function_exists('configure_mongodb')) {
-  function configure_mongodb(\Drupal\Core\Site\Settings &$settings) {
+  function configure_mongodb(\Drupal\Core\Site\Settings & $settings) {
     $settings['mongodb'] = [
       'clients' => [
         // Client alias => constructor parameters.
