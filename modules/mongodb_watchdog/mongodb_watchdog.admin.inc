@@ -96,7 +96,7 @@ function mongodb_watchdog_overview() {
       ->find(mongodb_watchdog_build_filter_query())
       ->count();
     $pager_total[0] = ceil($pager_total_items[0] / $per_page);
-    $pager_page_array[0] = max(0, min((int) $pager_page_array[0], ((int)$pager_total[0]) - 1));
+    $pager_page_array[0] = max(0, min((int) $pager_page_array[0], ((int) $pager_total[0]) - 1));
     $pager_limits[0] = $per_page;
     $build['pager'] = array(
       '#theme' => 'pager',
@@ -214,6 +214,8 @@ function mongodb_watchdog_event($dblog) {
 
 /**
  * Initialize the global pager variables for use in a mongodb_watchdog event list.
+ * @param integer $element
+ * @param integer $limit
  */
 function mongodb_watchdog_pager_init($element, $limit, $total) {
   global $pager_page_array, $pager_total, $pager_total_items;
@@ -226,7 +228,7 @@ function mongodb_watchdog_pager_init($element, $limit, $total) {
   }
   $pager_total_items[$element] = $total;
   $pager_total[$element] = ceil($pager_total_items[$element] / $limit);
-  $pager_page_array[$element] = max(0, min((int)$pager_page_array[$element], ((int)$pager_total[$element]) - 1));
+  $pager_page_array[$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
   return isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
 }
 
