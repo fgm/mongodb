@@ -6,12 +6,13 @@
  */
 
 use Drupal\Core\Site\Settings;
+use Drupal\mongodb_watchdog\Logger;
 
 /**
  * Implements hook_install().
  */
 function mongodb_watchdog_install() {
-  /** @var \Drupal\mongodb_watchdog\Logger $logger */
+  /** @var Logger $logger */
   $logger = \Drupal::service('mongodb.logger');
   $logger->ensureIndexes();
 }
@@ -60,6 +61,33 @@ function mongodb_watchdog_requirements($phase) {
       'description' => t('Those databases would also be dropped when uninstalling the watchdog module.'),
     ];
     return $ret;
+  }
+
+  if (PHP_SAPI !== 'cli') {
+    $request_tracking = \Drupal::config(Logger::CONFIG_NAME)->get('request_tracking');
+    $server = \Drupal::request()->server;
+    if (!function_exists('apache_get_modules')
+    || (!in_array('mod_unique_id', apache_get_modules()))
+    || (!$server->has('UNIQUE_ID'))
+    || (!$server->has('REDIRECT_UNIQUE_ID'))) {
+      $ret[$module] += [
+        'severity' => REQUIREMENT_INFO,
+        'value' => t('No mod_unique_id'),
+        'description' => t('The site is not served by Apache with a working mod_unique_id: request tracking is not available.'),
+      ];
+      return $ret;
+    }
+
+    if (!$request_tracking) {
+      $ret[$module] += [
+        'severity' => REQUIREMENT_INFO,
+        'value' => t('Unused mod_unique_id'),
+        'description' => t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or <a href=":config">enable request tracking</a> for a better logging experience.', [
+          ':config' => \Drupal\Core\Url::fromRoute('mongodb_watchdog.config')->toString(),
+        ]),
+      ];
+      return $ret;
+    }
   }
 }
 

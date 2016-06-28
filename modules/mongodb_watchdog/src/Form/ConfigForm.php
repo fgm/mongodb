@@ -58,11 +58,27 @@ class ConfigForm extends ConfigFormBase {
       $form[$key] = [
         '#default_value' => $default_value,
         '#description' => $description,
-        '#max' => $schema['max'] ?? PHP_INT_MAX,
-        '#min' => $schema['min'] ?? 0,
         '#title' => $title,
-        '#type' => 'number',
       ];
+
+      switch ($schema['type']) {
+        case 'integer':
+          $form[$key] += [
+            '#max' => $schema['max'] ?? PHP_INT_MAX,
+            '#min' => $schema['min'] ?? 0,
+            '#type' => 'number',
+          ];
+          break;
+
+        case 'boolean':
+          $form[$key] += [
+            '#type' => 'checkbox',
+          ];
+          break;
+
+        default:
+          break;
+      }
     }
 
     $form = parent::buildForm($form, $form_state);

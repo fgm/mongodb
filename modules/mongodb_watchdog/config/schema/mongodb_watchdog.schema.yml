@@ -15,3 +15,7 @@ mongodb_watchdog.settings:
       label: 'Items per page: Maximum number of rows on event detail page:'
       type: integer
       min: 1
+    request_tracking:
+      label: 'Request tracking: Enable the per-request event page. Requires mod_unique_id.'
+      type: boolean
+
