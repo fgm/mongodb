@@ -10,6 +10,7 @@ use Drupal\Core\Logger\LogMessageParserInterface;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use Psr\Log\AbstractLogger;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Class Logger is a PSR/3 Logger using a MongoDB data store.
@@ -60,20 +61,26 @@ class Logger extends AbstractLogger {
   protected $parser;
 
   /**
-   * Constructs a Logger object.
+   * Logger constructor.
    *
    * @param \MongoDB\Database $database
    *   The database object.
    * @param \Drupal\Core\Logger\LogMessageParserInterface $parser
    *   The parser to use when extracting message variables.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The core config_factory service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $stack
+   *   The core request_stack service.
    */
-  public function __construct(Database $database, LogMessageParserInterface $parser, ConfigFactoryInterface $config_factory) {
+  public function __construct(Database $database, LogMessageParserInterface $parser, ConfigFactoryInterface $config_factory, RequestStack $stack) {
     $this->database = $database;
     $this->parser = $parser;
+    $this->requestStack = $stack;
 
     $config = $config_factory->get(static::CONFIG_NAME);
     $this->limit = $config->get('limit');
     $this->items = $config->get('items');
+    $this->requestTracking = $config->get('request_tracking');
   }
 
   /**
@@ -205,6 +212,13 @@ class Logger extends AbstractLogger {
       'user' => ['uid' => $context['uid']],
       'variables' => $message_placeholders,
     ];
+    if ($this->requestTracking) {
+      // Fetch the current request on each event to support subrequest nesting.
+      $event['requestTracking_id'] = $this->requestStack
+        ->getCurrentRequest()
+        ->server
+        ->get('UNIQUE_ID');
+    }
     $event_collection->insertOne($event);
   }
 

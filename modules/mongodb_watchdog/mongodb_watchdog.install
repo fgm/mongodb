@@ -12,7 +12,7 @@ use Drupal\mongodb_watchdog\Logger;
  * Implements hook_install().
  */
 function mongodb_watchdog_install() {
-  /** @var Logger $logger */
+  /** @var \Drupal\mongodb_watchdog\Logger $logger */
   $logger = \Drupal::service('mongodb.logger');
   $logger->ensureIndexes();
 }
