@@ -84,7 +84,7 @@ class ConfigForm extends ConfigFormBase {
   /**
    * Gets the configuration names that will be editable.
    *
-   * @return array
+   * @return string[]
    *   An array of configuration object names that are editable if called in
    *   conjunction with the trait's config() method.
    */

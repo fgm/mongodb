@@ -121,7 +121,7 @@ class EventController {
     $selector = [];
     $options = [
       'limit' => $limit,
-      'sort' => ['timestamp' => -1],
+      'sort' => ['$natural' => -1],
       'typeMap' => [
         'array' => 'array',
         'document' => 'array',

@@ -7,12 +7,12 @@
  */
 
 if (!function_exists('configure_mongodb')) {
-  function configure_mongodb(\Drupal\Core\Site\Settings &$settings) {
+  function configure_mongodb(array &$settings) {
     $settings['mongodb'] = [
       'clients' => [
         // Client alias => constructor parameters.
         'default' => [
-          'uri' => 'mongodb://macos:27017',
+          'uri' => 'mongodb://localhost:27017',
           'uriOptions' => [],
           'driverOptions' => [],
         ],
