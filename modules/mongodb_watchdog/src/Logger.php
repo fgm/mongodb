@@ -39,6 +39,13 @@ class Logger extends AbstractLogger {
   protected $database;
 
   /**
+   * The limit for the capped event collections.
+   *
+   * @var int
+   */
+  protected $items;
+
+  /**
    * The minimum logging level.
    *
    * @var int
@@ -60,10 +67,13 @@ class Logger extends AbstractLogger {
    * @param \Drupal\Core\Logger\LogMessageParserInterface $parser
    *   The parser to use when extracting message variables.
    */
-  public function __construct(Database $database, LogMessageParserInterface $parser, ConfigFactoryInterface $config) {
+  public function __construct(Database $database, LogMessageParserInterface $parser, ConfigFactoryInterface $config_factory) {
     $this->database = $database;
     $this->parser = $parser;
-    $this->limit = $config->get(static::CONFIG_NAME)->get('limit');
+
+    $config = $config_factory->get(static::CONFIG_NAME);
+    $this->limit = $config->get('limit');
+    $this->items = $config->get('items');
   }
 
   /**
@@ -129,7 +139,7 @@ class Logger extends AbstractLogger {
     if ($level > $this->limit) {
       return;
     }
-    
+
     // Convert PSR3-style messages to SafeMarkup::format() style, so they can be
     // translated too in runtime.
     $message_placeholders = $this->parser->parseMessagePlaceholders($template, $context);
@@ -164,9 +174,23 @@ class Logger extends AbstractLogger {
     $template_result = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
       ->replaceOne($selector, $update, $options);
-    $template_result->getUpsertedId();
 
     $event_collection = $this->eventCollection($template_id);
+    if ($template_result->getUpsertedCount()) {
+      // Capped collections are actually size-based, not count-based, so "items"
+      // is only a maximum, assuming event documents weigh 1kB, but the actual
+      // number of items stored may be lower if items are heavier.
+      // We do not use 'autoindexid' for greater speed, because:
+      // - it does not work on replica sets,
+      // - it is deprecated in MongoDB 3.2 and going away in 3.4.
+      $options = [
+        'capped' => TRUE,
+        'size' => $this->items * 1024,
+        'max' => $this->items,
+      ];
+      $this->database->createCollection($event_collection->getCollectionName(), $options);
+    }
+
     foreach ($message_placeholders as &$placeholder) {
       if ($placeholder instanceof MarkupInterface) {
         $placeholder = Xss::filterAdmin($placeholder);
