@@ -42,7 +42,8 @@ If MongoDB is installed on localhost, you may view the web admin interface:
 adapt it to match your MongoDB settings.
 * At the root of your site, add a composer requiment:
 
-      composer require mongodb/mongodb "^1.0.0"
+        composer require mongodb/mongodb "^1.0.0"
+      
 * Enable the `mongodb` module. You now have access to the MongoDB services and Drush commands.
 
 [install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
