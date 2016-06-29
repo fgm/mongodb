@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class Logger extends AbstractLogger {
   const CONFIG_NAME = 'mongodb_watchdog.settings';
 
+  const TRACKER_COLLECTION = 'watchdog_tracker';
   const TEMPLATE_COLLECTION = 'watchdog';
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
   const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{32}$';
@@ -59,6 +60,15 @@ class Logger extends AbstractLogger {
    * @var \Drupal\Core\Logger\LogMessageParserInterface
    */
   protected $parser;
+
+  /**
+   * An array of templates already used in this request.
+   *
+   * Used only with request tracking enabled.
+   *
+   * @var string[]
+   */
+  protected $templates = [];
 
   /**
    * Logger constructor.
@@ -181,6 +191,23 @@ class Logger extends AbstractLogger {
     $template_result = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
       ->replaceOne($selector, $update, $options);
+    // Only add the template if if has not already been added.
+    if ($this->requestTracking) {
+      $request_id = $this->requestStack
+        ->getCurrentRequest()
+        ->server
+        ->get('UNIQUE_ID');
+
+      if (isset($this->templates[$template_id])) {
+        $this->templates[$template_id]++;
+      }
+      else {
+        $this->templates[$template_id] = 1;
+        $selector = ['_id' => $request_id];
+        $update = ['$addToSet' => ['templates' => $template_id]];
+        $this->trackerCollection()->updateOne($selector, $update, $options);
+      }
+    }
 
     $event_collection = $this->eventCollection($template_id);
     if ($template_result->getUpsertedCount()) {
@@ -214,10 +241,7 @@ class Logger extends AbstractLogger {
     ];
     if ($this->requestTracking) {
       // Fetch the current request on each event to support subrequest nesting.
-      $event['requestTracking_id'] = $this->requestStack
-        ->getCurrentRequest()
-        ->server
-        ->get('UNIQUE_ID');
+      $event['requestTracking_id'] = $request_id;
     }
     $event_collection->insertOne($event);
   }
@@ -300,6 +324,16 @@ class Logger extends AbstractLogger {
       ],
     ];
     $templates->createIndexes($indexes);
+  }
+
+  /**
+   * Return the request events tracker collection.
+   *
+   * @return \MongoDB\Collection
+   *   The collection.
+   */
+  public function trackerCollection() {
+    return $this->database->selectCollection(static::TRACKER_COLLECTION);
   }
 
   /**
