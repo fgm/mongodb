@@ -71,6 +71,13 @@ class Logger extends AbstractLogger {
   protected $templates = [];
 
   /**
+   * A sequence number for log events during a request.
+   *
+   * @var int
+   */
+  protected $sequence = 0;
+
+  /**
    * Logger constructor.
    *
    * @param \MongoDB\Database $database
@@ -242,6 +249,8 @@ class Logger extends AbstractLogger {
     if ($this->requestTracking) {
       // Fetch the current request on each event to support subrequest nesting.
       $event['requestTracking_id'] = $request_id;
+      $event['requestTracking_sequence'] = $this->sequence;
+      $this->sequence++;
     }
     $event_collection->insertOne($event);
   }
@@ -324,6 +333,72 @@ class Logger extends AbstractLogger {
       ],
     ];
     $templates->createIndexes($indexes);
+  }
+
+  /**
+   * Return the events having occurred during a given request.
+   *
+   * @param string $unsafe_request_id
+   *   The raw request_id.
+   * @return array
+   *   An array of [template, event] arrays, ordered by occurrence order.
+   */
+  public function requestEvents(string $unsafe_request_id) {
+    $templates = $this->requestTemplates($unsafe_request_id);
+    $request_id = "$unsafe_request_id";
+    $events = [];
+    $options = [
+      'typeMap' => [
+        'array' => 'array',
+        'document' => 'array',
+        'root' => '\Drupal\mongodb_watchdog\Event',
+      ],
+    ];
+
+    /**
+     * @var string $template_id
+     * @var \Drupal\mongodb_watchdog\EventTemplate $template
+     */
+    foreach ($templates as $template_id => $template) {
+      $event_collection = $this->eventCollection($template_id);
+      $selector = ['requestTracking_id' => $request_id];
+      $cursor = $event_collection->find($selector, $options);
+      $events[$template_id] = [];
+      /** @var \Drupal\mongodb_watchdog\Event $event */
+      foreach ($cursor as $event) {
+        $events[$event->requestTracking_sequence] = [
+          $template,
+          $event,
+        ];
+      }
+    }
+    return $events;
+  }
+
+  public function requestTemplates(string $unsafe_request_id) {
+    $request_id = "${unsafe_request_id}";
+    $selector = ['_id' => $request_id];
+
+    $doc = $this->trackerCollection()->findOne($selector, static::LEGACY_TYPE_MAP);
+    if (empty($doc) || empty($doc['templates'])) {
+      return [];
+    }
+
+    $selector = ['_id' => ['$in' => $doc['templates']]];
+    $options = [
+      'typeMap' => [
+        'array' => 'array',
+        'document' => 'array',
+        'root' => '\Drupal\mongodb_watchdog\EventTemplate',
+      ],
+    ];
+    $templates = [];
+    $cursor = $this->templateCollection()->find($selector, $options);
+    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
+    foreach ($cursor as $template) {
+      $templates[$template->_id] = $template;
+    }
+    return $templates;
   }
 
   /**

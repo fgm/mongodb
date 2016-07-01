@@ -9,11 +9,11 @@ Module                | Information
 mongodb               | Drupal/Drush wrapper around mongodb-php-library.
 mongodb_watchdog      | Store logger (watchdog) messages in MongoDB.
 
-This 8.x-2.x is an EXPERIMENT. It will likely crash, destroy your data, and
-cause various kinds of pains. Do NOT deploy it on a production machine, or on a
+This 8.x-2.x is not yet stable. It will likely crash, destroy your data, and
+cause various kinds of pain. Do NOT deploy it on a production machine, or on a
 MongoDB instance with useful data.
 
-For most intents and purposes, you should be using the 7.x-1.x or 8.x-1.x branch.
+For most intents and purposes, you should be using the 7.x-1.x branch.
 
 
 INSTALLATION
@@ -23,7 +23,7 @@ The MongoDB module and sub-modules need some amount of configuration before they
 will properly work. This guide assumes that :
 
 * a [MongoDB][download] 3.0 or later instance is already installed, configured, and available to connect to from the Drupal instance.
-* the site will be running [Drupal][drupal] 8.2.x.
+* the site will be running [Drupal][drupal] 8.1.x or 8.2.x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or later is installed and configured.
 
 [download]: https://www.mongodb.org/downloads
@@ -43,7 +43,7 @@ adapt it to match your MongoDB settings.
 * At the root of your site, add a composer requiment:
 
         composer require mongodb/mongodb "^1.0.0"
-      
+
 * Enable the `mongodb` module. You now have access to the MongoDB services and Drush commands.
 
 [install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
