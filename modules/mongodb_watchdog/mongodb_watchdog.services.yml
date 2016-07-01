@@ -16,6 +16,7 @@ services:
       - '@mongodb.watchdog_storage'
       - '@logger.log_message_parser'
       - '@config.factory'
+      - '@request_stack'
 
     tags:
       - { name: logger }

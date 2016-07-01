@@ -22,6 +22,8 @@ class Event implements Unserializable {
     'type',
     'uid',
     'variables',
+    'requestTracking_id',
+    'requestTracking_sequence',
   ];
 
   // @codingStandardsIgnoreStart
@@ -53,6 +55,20 @@ class Event implements Unserializable {
    * @var string
    */
   public $message;
+
+  /**
+   * The identifier of the request during which this event occurred.
+   *
+   * @var string
+   */
+  public $requestTracking_id;
+
+  /**
+   * The sequence number of the event during the request when it happened.
+   *
+   * @var int
+   */
+  public $requestTracking_sequence;
 
   /**
    * The template parameters.

@@ -4,8 +4,11 @@ mongodb_watchdog.settings:
   mapping:
     items:
       type: integer
-      label: 'Items: Size of capped event collection:'
+      label: 'Items: Size of capped events collections.'
       min: 1
+    requests:
+      type: integer
+      label: 'Requests: Size of capped requests collection. Only used if request tracking is enabled.'
     limit:
       type: integer
       label: 'Level limit: RFC 5424 (syslog) level.'
@@ -15,3 +18,7 @@ mongodb_watchdog.settings:
       label: 'Items per page: Maximum number of rows on event detail page:'
       type: integer
       min: 1
+    request_tracking:
+      label: 'Request tracking: Enable the per-request event page. Requires mod_unique_id.'
+      type: boolean
+

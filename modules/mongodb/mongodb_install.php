@@ -143,7 +143,7 @@ function mongodb_requirements() {
 
   $ret = [];
   $ret['mongodb'] = [
-    'title' => t('Mongodb'),
+    'title' => t('MongoDB'),
     'severity' => REQUIREMENT_OK,
   ];
   $description = [];

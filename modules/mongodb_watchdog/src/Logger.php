@@ -10,6 +10,7 @@ use Drupal\Core\Logger\LogMessageParserInterface;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use Psr\Log\AbstractLogger;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Class Logger is a PSR/3 Logger using a MongoDB data store.
@@ -19,6 +20,7 @@ use Psr\Log\AbstractLogger;
 class Logger extends AbstractLogger {
   const CONFIG_NAME = 'mongodb_watchdog.settings';
 
+  const TRACKER_COLLECTION = 'watchdog_tracker';
   const TEMPLATE_COLLECTION = 'watchdog';
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
   const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{32}$';
@@ -60,20 +62,42 @@ class Logger extends AbstractLogger {
   protected $parser;
 
   /**
-   * Constructs a Logger object.
+   * An array of templates already used in this request.
+   *
+   * Used only with request tracking enabled.
+   *
+   * @var string[]
+   */
+  protected $templates = [];
+
+  /**
+   * A sequence number for log events during a request.
+   *
+   * @var int
+   */
+  protected $sequence = 0;
+
+  /**
+   * Logger constructor.
    *
    * @param \MongoDB\Database $database
    *   The database object.
    * @param \Drupal\Core\Logger\LogMessageParserInterface $parser
    *   The parser to use when extracting message variables.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The core config_factory service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $stack
+   *   The core request_stack service.
    */
-  public function __construct(Database $database, LogMessageParserInterface $parser, ConfigFactoryInterface $config_factory) {
+  public function __construct(Database $database, LogMessageParserInterface $parser, ConfigFactoryInterface $config_factory, RequestStack $stack) {
     $this->database = $database;
     $this->parser = $parser;
+    $this->requestStack = $stack;
 
     $config = $config_factory->get(static::CONFIG_NAME);
     $this->limit = $config->get('limit');
     $this->items = $config->get('items');
+    $this->requestTracking = $config->get('request_tracking');
   }
 
   /**
@@ -174,6 +198,23 @@ class Logger extends AbstractLogger {
     $template_result = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
       ->replaceOne($selector, $update, $options);
+    // Only add the template if if has not already been added.
+    if ($this->requestTracking) {
+      $request_id = $this->requestStack
+        ->getCurrentRequest()
+        ->server
+        ->get('UNIQUE_ID');
+
+      if (isset($this->templates[$template_id])) {
+        $this->templates[$template_id]++;
+      }
+      else {
+        $this->templates[$template_id] = 1;
+        $selector = ['_id' => $request_id];
+        $update = ['$addToSet' => ['templates' => $template_id]];
+        $this->trackerCollection()->updateOne($selector, $update, $options);
+      }
+    }
 
     $event_collection = $this->eventCollection($template_id);
     if ($template_result->getUpsertedCount()) {
@@ -189,6 +230,14 @@ class Logger extends AbstractLogger {
         'max' => $this->items,
       ];
       $this->database->createCollection($event_collection->getCollectionName(), $options);
+
+      // Do not create this index by default, as its cost is useless if request
+      // tracking is not enabled.
+      if ($this->requestTracking) {
+        $key = ['requestTracking_id' => 1];
+        $options = ['name' => 'admin-by-request'];
+        $event_collection->createIndex($key, $options);
+      }
     }
 
     foreach ($message_placeholders as &$placeholder) {
@@ -205,6 +254,12 @@ class Logger extends AbstractLogger {
       'user' => ['uid' => $context['uid']],
       'variables' => $message_placeholders,
     ];
+    if ($this->requestTracking) {
+      // Fetch the current request on each event to support subrequest nesting.
+      $event['requestTracking_id'] = $request_id;
+      $event['requestTracking_sequence'] = $this->sequence;
+      $this->sequence++;
+    }
     $event_collection->insertOne($event);
   }
 
@@ -285,7 +340,84 @@ class Logger extends AbstractLogger {
         'key' => ['type' => 1, 'severity' => 1, 'timestamp' => -1],
       ],
     ];
+
     $templates->createIndexes($indexes);
+  }
+
+  /**
+   * Return the events having occurred during a given request.
+   *
+   * @param string $unsafe_request_id
+   *   The raw request_id.
+   * @return array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]>
+   *   An array of [template, event] arrays, ordered by occurrence order.
+   */
+  public function requestEvents(string $unsafe_request_id) {
+    $templates = $this->requestTemplates($unsafe_request_id);
+    $request_id = "$unsafe_request_id";
+    $selector = ['requestTracking_id' => $request_id];
+    $events = [];
+    $options = [
+      'typeMap' => [
+        'array' => 'array',
+        'document' => 'array',
+        'root' => '\Drupal\mongodb_watchdog\Event',
+      ],
+    ];
+
+    /**
+     * @var string $template_id
+     * @var \Drupal\mongodb_watchdog\EventTemplate $template
+     */
+    foreach ($templates as $template_id => $template) {
+      $event_collection = $this->eventCollection($template_id);
+      $cursor = $event_collection->find($selector, $options);
+      /** @var \Drupal\mongodb_watchdog\Event $event */
+      foreach ($cursor as $event) {
+        $events[$event->requestTracking_sequence] = [
+          $template,
+          $event,
+        ];
+      }
+    }
+
+    return $events;
+  }
+
+  public function requestTemplates(string $unsafe_request_id) {
+    $request_id = "${unsafe_request_id}";
+    $selector = ['_id' => $request_id];
+
+    $doc = $this->trackerCollection()->findOne($selector, static::LEGACY_TYPE_MAP);
+    if (empty($doc) || empty($doc['templates'])) {
+      return [];
+    }
+
+    $selector = ['_id' => ['$in' => $doc['templates']]];
+    $options = [
+      'typeMap' => [
+        'array' => 'array',
+        'document' => 'array',
+        'root' => '\Drupal\mongodb_watchdog\EventTemplate',
+      ],
+    ];
+    $templates = [];
+    $cursor = $this->templateCollection()->find($selector, $options);
+    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
+    foreach ($cursor as $template) {
+      $templates[$template->_id] = $template;
+    }
+    return $templates;
+  }
+
+  /**
+   * Return the request events tracker collection.
+   *
+   * @return \MongoDB\Collection
+   *   The collection.
+   */
+  public function trackerCollection() {
+    return $this->database->selectCollection(static::TRACKER_COLLECTION);
   }
 
   /**
