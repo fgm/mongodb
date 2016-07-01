@@ -230,6 +230,14 @@ class Logger extends AbstractLogger {
         'max' => $this->items,
       ];
       $this->database->createCollection($event_collection->getCollectionName(), $options);
+
+      // Do not create this index by default, as its cost is useless if request
+      // tracking is not enabled.
+      if ($this->requestTracking) {
+        $key = ['requestTracking_id' => 1];
+        $options = ['name' => 'admin-by-request'];
+        $event_collection->createIndex($key, $options);
+      }
     }
 
     foreach ($message_placeholders as &$placeholder) {
@@ -332,6 +340,7 @@ class Logger extends AbstractLogger {
         'key' => ['type' => 1, 'severity' => 1, 'timestamp' => -1],
       ],
     ];
+
     $templates->createIndexes($indexes);
   }
 
