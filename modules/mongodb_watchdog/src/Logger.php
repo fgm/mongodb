@@ -340,12 +340,13 @@ class Logger extends AbstractLogger {
    *
    * @param string $unsafe_request_id
    *   The raw request_id.
-   * @return array
+   * @return array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]>
    *   An array of [template, event] arrays, ordered by occurrence order.
    */
   public function requestEvents(string $unsafe_request_id) {
     $templates = $this->requestTemplates($unsafe_request_id);
     $request_id = "$unsafe_request_id";
+    $selector = ['requestTracking_id' => $request_id];
     $events = [];
     $options = [
       'typeMap' => [
@@ -361,9 +362,7 @@ class Logger extends AbstractLogger {
      */
     foreach ($templates as $template_id => $template) {
       $event_collection = $this->eventCollection($template_id);
-      $selector = ['requestTracking_id' => $request_id];
       $cursor = $event_collection->find($selector, $options);
-      $events[$template_id] = [];
       /** @var \Drupal\mongodb_watchdog\Event $event */
       foreach ($cursor as $event) {
         $events[$event->requestTracking_sequence] = [
@@ -372,6 +371,7 @@ class Logger extends AbstractLogger {
         ];
       }
     }
+
     return $events;
   }
 

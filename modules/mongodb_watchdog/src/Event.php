@@ -23,7 +23,7 @@ class Event implements Unserializable {
     'uid',
     'variables',
     'requestTracking_id',
-    'requestTracking_sequence'
+    'requestTracking_sequence',
   ];
 
   // @codingStandardsIgnoreStart
@@ -65,7 +65,7 @@ class Event implements Unserializable {
 
   /**
    * The sequence number of the event during the request when it happened.
-   * 
+   *
    * @var int
    */
   public $requestTracking_sequence;
