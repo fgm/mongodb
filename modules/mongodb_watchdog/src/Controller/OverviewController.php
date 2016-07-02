@@ -12,7 +12,6 @@ use Drupal\mongodb_watchdog\Event;
 use Drupal\mongodb_watchdog\EventTemplate;
 use Drupal\mongodb_watchdog\Form\OverviewFilterForm;
 use Drupal\mongodb_watchdog\Logger;
-use MongoDB\Database;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -43,13 +42,6 @@ class OverviewController extends ControllerBase {
   ];
 
   /**
-   * The MongoDB database for the logger alias.
-   *
-   * @var \MongoDB\Database
-   */
-  protected $database;
-
-  /**
    * The core date.formatter service.
    *
    * @var \Drupal\Core\Datetime\DateFormatterInterface
@@ -78,7 +70,7 @@ class OverviewController extends ControllerBase {
   protected $moduleHandler;
 
   /**
-   * The length of the disk path to DRUPAL_ROOT, plus 1.
+   * The length of the disk path to DRUPAL_ROOT.
    *
    * @var int
    *
@@ -96,8 +88,6 @@ class OverviewController extends ControllerBase {
   /**
    * Constructor.
    *
-   * @param \MongoDB\Database $database
-   *   The watchdog database.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service, to log intervening events.
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
@@ -108,13 +98,11 @@ class OverviewController extends ControllerBase {
    *   The form builder service.
    */
   public function __construct(
-    Database $database,
     LoggerInterface $logger,
     Logger $watchdog,
     ModuleHandlerInterface $module_handler,
     FormBuilderInterface $form_builder,
     DateFormatterInterface $date_formatter) {
-    $this->database = $database;
     $this->dateFormatter = $date_formatter;
     $this->formBuilder = $form_builder;
     $this->logger = $logger;
@@ -122,7 +110,7 @@ class OverviewController extends ControllerBase {
     $this->watchdog = $watchdog;
 
     // Add terminal "/".
-    $this->rootLength = Unicode::strlen(DRUPAL_ROOT) + 1;
+    $this->rootLength = Unicode::strlen(DRUPAL_ROOT);
 
   }
 
@@ -130,9 +118,6 @@ class OverviewController extends ControllerBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \MongoDB\Database $database */
-    $database = $container->get('mongodb.watchdog_storage');
-
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
     $date_formatter = $container->get('date.formatter');
 
@@ -148,7 +133,7 @@ class OverviewController extends ControllerBase {
     /** @var \Drupal\mongodb_watchdog\Logger $logger */
     $watchdog = $container->get('mongodb.logger');
 
-    return new static($database, $logger, $watchdog, $module_handler, $form_builder, $date_formatter);
+    return new static($logger, $watchdog, $module_handler, $form_builder, $date_formatter);
   }
 
   /**
@@ -203,20 +188,27 @@ class OverviewController extends ControllerBase {
     }
 
     $file = $event->variables['%file'] ?? '';
-    $hover = $file
-      ? Unicode::substr($file, $this->rootLength)
-      : '';
-    $file = Unicode::truncate(basename($file), 30);
+    if ($file && strncmp($file, DRUPAL_ROOT, $this->rootLength) === 0) {
+      $hover = Unicode::substr($file, $this->rootLength + 1);
+      $file = Unicode::truncate(basename($file), 30);
+    }
+    else {
+      $hover = NULL;
+    }
+
     $line = $event->variables['%line'] ?? NULL;
     $cell = [
       '#type' => 'html_tag',
       '#tag' => 'span',
       '#value' => "${file}#${line}",
-      '#attributes' => [
+    ];
+
+    if ($hover) {
+      $cell['#attributes'] = [
         'class' => 'mongodb_watchdog__code_path',
         'title' => $hover,
-      ],
-    ];
+      ];
+    }
 
     return $cell;
   }
@@ -251,11 +243,11 @@ class OverviewController extends ControllerBase {
   public function overviewRows() {
     $header = [
       t('#'),
+      t('Latest'),
       t('Severity'),
       t('Type'),
-      t('Latest'),
-      t('Source'),
       t('Message'),
+      t('Source'),
     ];
     $rows = [];
     $levels = RfcLogLevel::getLevels();
@@ -266,16 +258,16 @@ class OverviewController extends ControllerBase {
     foreach ($cursor as $template) {
       $row = [];
       $row[] = $template->count;
+      $row[] = $this->dateFormatter->format($template->changed, 'short');
       $row[] = [
         'class' => static::SEVERITY_CLASSES[$template->severity],
         'data' => $levels[$template->severity],
       ];
       $row[] = $template->type;
-      $row[] = $this->dateFormatter->format($template->changed, 'short');
+      $row[] = $this->getEventLink($template);
       $row[] = [
         'data' => $this->getEventSource($template, $row),
       ];
-      $row[] = $this->getEventLink($template);
 
       $rows[] = $row;
     }

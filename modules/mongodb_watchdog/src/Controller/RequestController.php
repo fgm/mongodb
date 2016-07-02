@@ -5,6 +5,7 @@ namespace Drupal\mongodb_watchdog\Controller;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\mongodb_watchdog\Logger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -87,10 +88,8 @@ class RequestController implements ContainerInjectionInterface {
     }
 
     $ret = [
-      'request' => [
-        '#type' => 'table',
-        '#rows' => $rows,
-      ],
+      '#type' => 'table',
+      '#rows' => $rows,
     ];
     return $ret;
   }
@@ -124,8 +123,15 @@ class RequestController implements ContainerInjectionInterface {
       $row = [
         ['data' => $event->requestTracking_sequence],
         $template->type,
-        $levels[$template->severity],
-        ['data' => $template->asString($event->variables)],
+        [
+          'data' => $levels[$template->severity],
+          'class' => OverviewController::SEVERITY_CLASSES[$template->severity],
+        ],
+        [
+          'data' => Link::createFromRoute($template->asString($event->variables), 'mongodb_watchdog.reports.detail', [
+            'event_template' => $template->_id,
+          ]),
+        ],
         $this->simplifyPath($event->variables['%file']),
         $event->variables['%line'],
       ];
@@ -133,11 +139,9 @@ class RequestController implements ContainerInjectionInterface {
     }
 
     $ret = [
-      'events' => [
-        '#type' => 'table',
-        '#rows' => $rows,
-        '#header' => $header,
-      ],
+      '#type' => 'table',
+      '#rows' => $rows,
+      '#header' => $header,
     ];
     return $ret;
   }
@@ -182,8 +186,13 @@ class RequestController implements ContainerInjectionInterface {
    */
   public function track($unique_id) {
     $events = $this->watchdog->requestEvents($unique_id);
-    $ret = $this->buildTrackRequest($unique_id, $events)
-      + $this->buildTrackRows($events);
+    $ret = [
+      '#attached' => [
+        'library' => ['mongodb_watchdog/styling'],
+      ],
+      'request' => $this->buildTrackRequest($unique_id, $events),
+      'events' => $this->buildTrackRows($events),
+    ];
     return $ret;
   }
 

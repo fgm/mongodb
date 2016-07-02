@@ -75,10 +75,10 @@ class DetailController implements ContainerInjectionInterface {
     $event_header = [
       t('Date'),
       t('User'),
+      t('Message'),
       t('Location'),
       t('Referrer'),
       t('Hostname'),
-      t('Message'),
       t('Operations'),
     ];
 

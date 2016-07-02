@@ -1,4 +1,9 @@
-/* text-decoration-style support is still too low in 2016 */
+/**
+ * Used for shortened code paths to hint a title attribute exists for hovering.
+ * - text-decoration-style support is still too low in 2016
+ *
+ * @see \Drupal\mongodb_watchdog\Controller\OverviewController::getEventSource()
+ */
 .mongodb_watchdog__code_path {
   background-clip: padding-box;
   border-bottom: 1px dotted;

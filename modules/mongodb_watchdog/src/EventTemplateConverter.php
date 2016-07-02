@@ -62,7 +62,7 @@ class EventTemplateConverter implements ParamConverterInterface {
     // Returns null if there is no match, as expected by ParamConverter.
     $template = $this->watchdog->templateCollection()->findOne($selector, $options);
     if (empty($template)) {
-      $this->logger->debug('Invalid event template id: %id', ['%id' => $value]);
+      $this->logger->notice('Invalid event template id: %id', ['%id' => $value]);
     }
     return $template;
   }

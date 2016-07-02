@@ -8,51 +8,6 @@
 /* ==== Everything below this line is broken ================================ */
 
 /**
- * Implements hook_menu().
- */
-function mongodb_watchdog_menu() {
-  $items['admin/reports/mongodb'] = array(
-    'title' => 'Recent log entries in MongoDB',
-    'description' => 'View events that have recently been logged in MongoDB.',
-    'page callback' => 'mongodb_watchdog_overview',
-    'access arguments' => array('access site reports'),
-    'file'  => 'mongodb_watchdog.admin.inc',
-  );
-  $items['admin/reports/mongodb/%mongodb_watchdog_event'] = array(
-    'title' => 'MongoDB log details',
-    'page callback' => 'mongodb_watchdog_event',
-    'page arguments' => array(3),
-    'access arguments' => array('access site reports'),
-    'type' => MENU_CALLBACK,
-    'file' => 'mongodb_watchdog.admin.inc',
-  );
-  $items['admin/reports/mongodb/list'] = array(
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'title' => 'Overview',
-  );
-  $items['admin/reports/mongodb/access-denied'] = array(
-    'type' => MENU_LOCAL_TASK,
-    'title' => "Top 'access denied' errors in MongoDB",
-    'description' => "View 'access denied' errors (403s).",
-    'page callback' => 'mongodb_watchdog_page_top',
-    'page arguments' => array('access denied'),
-    'access arguments' => array('access site reports'),
-    'file' => 'mongodb_watchdog.admin.inc',
-  );
-  $items['admin/reports/mongodb/page-not-found'] = array(
-    'type' => MENU_LOCAL_TASK,
-    'title' => "Top 'page not found' errors in MongoDB",
-    'description' => "View 'page not found' errors (404s).",
-    'page callback' => 'mongodb_watchdog_page_top',
-    'page arguments' => array('page not found'),
-    'access arguments' => array('access site reports'),
-    'file' => 'mongodb_watchdog.admin.inc',
-  );
-
-  return $items;
-}
-
-/**
  * Load a MongoDB watchdog event.
  *
  * @param string $id

@@ -76,7 +76,7 @@ class ClearConfirmForm extends ConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $_SESSION['mongodb_watchdog_overview_filter'] = [];
     $this->database->drop();
-    $this->logger->ensureIndexes();
+    $this->logger->ensureSchema();
     drupal_set_message($this->t('Database log cleared.'));
     $form_state->setRedirectUrl($this->getCancelUrl());
   }

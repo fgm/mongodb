@@ -10,8 +10,8 @@ use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
+use MongoDB\Driver\Exception\RuntimeException;
 use Psr\Log\AbstractLogger;
-use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -64,6 +64,13 @@ class Logger extends AbstractLogger {
   protected $parser;
 
   /**
+   * The "requests" setting.
+   *
+   * @var int
+   */
+  protected $requests;
+
+  /**
    * An array of templates already used in this request.
    *
    * Used only with request tracking enabled.
@@ -99,6 +106,7 @@ class Logger extends AbstractLogger {
     $config = $config_factory->get(static::CONFIG_NAME);
     $this->limit = $config->get('limit');
     $this->items = $config->get('items');
+    $this->requests = $config->get('requests');
     $this->requestTracking = $config->get('request_tracking');
   }
 
@@ -204,22 +212,20 @@ class Logger extends AbstractLogger {
     $template_result = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
       ->updateOne($selector, $update, $options);
-    // Only add the template if if has not already been added.
-    if ($this->requestTracking) {
+
+    // Only insert each template once per request.
+    if ($this->requestTracking && !isset($this->templates[$template_id])) {
       $request_id = $this->requestStack
         ->getCurrentRequest()
         ->server
         ->get('UNIQUE_ID');
 
-      if (isset($this->templates[$template_id])) {
-        $this->templates[$template_id]++;
-      }
-      else {
-        $this->templates[$template_id] = 1;
-        $selector = ['_id' => $request_id];
-        $update = ['$addToSet' => ['templates' => $template_id]];
-        $this->trackerCollection()->updateOne($selector, $update, $options);
-      }
+      $this->templates[$template_id] = 1;
+      $track = [
+        'request_id' => $request_id,
+        'template_id' => $template_id,
+      ];
+      $this->trackerCollection()->insertOne($track);
     }
 
     $event_collection = $this->eventCollection($template_id);
@@ -307,13 +313,72 @@ class Logger extends AbstractLogger {
   }
 
   /**
-   * Ensure indexes are set on the collections.
+   * Ensure a collection is capped with the proper size.
+   *
+   * @param string $name
+   *   The collection name.
+   * @param int $size
+   *   The collection size cap.
+   *
+   * @return \MongoDB\Collection
+   *   The collection, usable for additional commands like index creation.
+   *
+   * @TODO support sharded clusters: convertToCapped does not support them.
+   *
+   * @see https://docs.mongodb.com/manual/reference/command/convertToCapped
+   *
+   * Note that MongoDB 3.2 still misses a propert exists() command, which is the
+   * reason for the weird try/catch logic.
+   *
+   * @see https://jira.mongodb.org/browse/SERVER-1938
+   */
+  public function ensureCappedCollection($name, $size) {
+    try {
+      $stats = $this->database->command([
+        'collStats' => $name,
+      ], static::LEGACY_TYPE_MAP)->toArray()[0];
+    }
+    catch (RuntimeException $e) {
+      // 59 is expected if the collection was not found. Other values are not.
+      if ($e->getCode() !== 59) {
+        throw $e;
+      }
+
+      $this->database->createCollection($name);
+      $stats = $this->database->command([
+        'collStats' => $name,
+      ], static::LEGACY_TYPE_MAP)->toArray()[0];
+    }
+
+    $collection = $this->database->selectCollection($name);
+    if (!empty($stats['capped'])) {
+      return $collection;
+    }
+
+    $this->database->command([
+      'convertToCapped' => $name,
+      'size' => $size,
+    ]);
+    return $collection;
+  }
+
+  /**
+   * Ensure indexes are set on the collections and tracker collection is capped.
    *
    * First index is on <line, timestamp> instead of <function, line, timestamp>,
    * because we write to this collection a lot, and the smaller index on two
    * numbers should be much faster to create than one with a string included.
    */
-  public function ensureIndexes() {
+  public function ensureSchema() {
+    $trackerCollection = $this->ensureCappedCollection(static::TRACKER_COLLECTION, $this->requests * 1024);
+    $indexes = [
+      [
+        'name' => 'tracker-request',
+        'key' => ['request_id' => 1],
+      ],
+    ];
+    $trackerCollection->createIndexes($indexes);
+
     $indexes = [
       // Index for adding/updating increments.
       [
@@ -347,6 +412,7 @@ class Logger extends AbstractLogger {
     ];
 
     $this->templateCollection()->createIndexes($indexes);
+
   }
 
   /**
@@ -354,10 +420,11 @@ class Logger extends AbstractLogger {
    *
    * @param string $unsafe_request_id
    *   The raw request_id.
+   *
    * @return array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]>
    *   An array of [template, event] arrays, ordered by occurrence order.
    */
-  public function requestEvents(string $unsafe_request_id) {
+  public function requestEvents($unsafe_request_id) {
     $templates = $this->requestTemplates($unsafe_request_id);
     $request_id = "$unsafe_request_id";
     $selector = ['requestTracking_id' => $request_id];
@@ -389,16 +456,38 @@ class Logger extends AbstractLogger {
     return $events;
   }
 
-  public function requestTemplates(string $unsafe_request_id) {
+  /**
+   * Return an array of templates uses during a given request.
+   *
+   * @param string $unsafe_request_id
+   *   A request "unique_id".
+   *
+   * @return array
+   *   An array of EventTemplate instances.
+   */
+  public function requestTemplates($unsafe_request_id) {
     $request_id = "${unsafe_request_id}";
-    $selector = ['_id' => $request_id];
+    $selector = [
+      'request_id' => $request_id,
+    ];
 
-    $doc = $this->trackerCollection()->findOne($selector, static::LEGACY_TYPE_MAP);
-    if (empty($doc) || empty($doc['templates'])) {
+    $cursor = $this
+      ->trackerCollection()
+      ->find($selector, static::LEGACY_TYPE_MAP + [
+        'projection' => [
+          '_id' => 0,
+          'template_id' => 1
+        ]
+      ]);
+    $template_ids = [];
+    foreach ($cursor as $request) {
+      $template_ids[] = $request['template_id'];
+    }
+    if (empty($template_ids)) {
       return [];
     }
 
-    $selector = ['_id' => ['$in' => $doc['templates']]];
+    $selector = ['_id' => ['$in' => $template_ids]];
     $options = [
       'typeMap' => [
         'array' => 'array',
@@ -436,10 +525,15 @@ class Logger extends AbstractLogger {
   }
 
   /**
+   * Return templates matching type and level criteria.
+   *
    * @param string[] $types
+   *   An array of EventTemplate types. May be a hash.
    * @param string[]|int[] $levels
+   *   An array of severity levels.
    *
    * @return \MongoDB\Driver\Cursor
+   *   A query result for the templates.
    */
   public function templates(array $types = [], array $levels = []) {
     $selector = [];
@@ -470,6 +564,7 @@ class Logger extends AbstractLogger {
    * Return the template types actually present in storage.
    *
    * @return string[]
+   *   An array of distinct EventTemplate types.
    */
   public function templateTypes() {
     $ret = $this->templateCollection()->distinct('type');
