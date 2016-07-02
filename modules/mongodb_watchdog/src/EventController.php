@@ -70,7 +70,7 @@ class EventController {
   }
 
   /**
-   * Provide a table rows representation of an event occurrence.
+   * Provide a table row representation of an event occurrence.
    *
    * @param \Drupal\mongodb_watchdog\EventTemplate $template
    *   The template for which the occurrence exists.
@@ -98,7 +98,9 @@ class EventController {
       empty($event->referrer) ? '' : Link::fromTextAndUrl($event->referrer, Url::fromUri($event->referrer)),
       $event->hostname,
       $template->asString($event->variables),
-      [],
+      isset($event->requestTracking_id)
+        ? Link::createFromRoute(t('Request'), 'mongodb_watchdog.reports.request', ['unique_id' => $event->requestTracking_id])
+        : '',
     ];
     return $ret;
   }
