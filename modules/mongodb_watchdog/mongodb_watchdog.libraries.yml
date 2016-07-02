@@ -4,9 +4,3 @@ styling:
       css/mongodb_watchdog.component.css: {}
     theme:
       css/mongodb_watchdog.theme.css: {}
-
-drupal.mongodb_watchdog:
-  version: VERSION
-  css:
-    component:
-      css/mongodb_watchdog.module.css: {}

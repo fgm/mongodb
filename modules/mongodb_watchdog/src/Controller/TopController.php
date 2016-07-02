@@ -14,6 +14,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Class TopController implements the Top403/Top404 controllers.
  */
 class TopController implements ContainerInjectionInterface {
+  const TYPES = [
+    'page not found',
+    'access denied',
+  ];
 
   /**
    * The database holding the logger collections.
@@ -147,12 +151,7 @@ class TopController implements ContainerInjectionInterface {
     $type_param = ['%type' => $type];
     $limit = 50;
 
-    // Safety net.
-    $types = [
-      'page not found',
-      'access denied',
-    ];
-    if (!in_array($type, $types)) {
+    if (!in_array($type, static::TYPES)) {
       $error = t('Unknown top report type: %type', $type_param);
       drupal_set_message($error, 'error');
       $this->logger->warning('Unknown top report type: %type', $type_param);

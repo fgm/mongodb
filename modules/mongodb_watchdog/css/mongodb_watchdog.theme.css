@@ -1,3 +1,11 @@
+/* text-decoration-style support is still too low in 2016 */
+.mongodb_watchdog__code_path {
+  background-clip: padding-box;
+  border-bottom: 1px dotted;
+  border-color: rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+}
+
 .mongodb_watchdog__severity_emergency {
   background: #FF2020;
 }

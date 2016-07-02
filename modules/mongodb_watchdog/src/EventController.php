@@ -87,7 +87,7 @@ class EventController {
     }
 
     $ret = [
-      $this->dateFormatter->format($event->timestamp),
+      $this->dateFormatter->format($event->timestamp, 'short'),
       $this->userCache[$uid],
       // Locations generated from Drush/Console will not necessarily match the
       // site home URL, and will not therefore not necessarily be reachable, so

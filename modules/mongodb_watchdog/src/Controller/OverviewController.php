@@ -5,8 +5,11 @@ namespace Drupal\mongodb_watchdog\Controller;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
-use Drupal\Core\Url;
+use Drupal\mongodb_watchdog\Event;
+use Drupal\mongodb_watchdog\EventTemplate;
 use Drupal\mongodb_watchdog\Form\OverviewFilterForm;
 use Drupal\mongodb_watchdog\Logger;
 use MongoDB\Database;
@@ -20,6 +23,13 @@ use Drupal\Core\Form\FormBuilderInterface;
  * Class OverviewController provides the main MongoDB Watchdog report page.
  */
 class OverviewController extends ControllerBase {
+  const EVENT_TYPE_MAP = [
+    'typeMap' => [
+      'array' => 'array',
+      'document' => 'array',
+      'root' => 'Drupal\mongodb_watchdog\Event',
+    ],
+  ];
   const SEVERITY_PREFIX = 'mongodb_watchdog__severity_';
   const SEVERITY_CLASSES = [
     RfcLogLevel::DEBUG => self::SEVERITY_PREFIX . LogLevel::DEBUG,
@@ -35,9 +45,23 @@ class OverviewController extends ControllerBase {
   /**
    * The MongoDB database for the logger alias.
    *
-   * @var \MongoDB
+   * @var \MongoDB\Database
    */
   protected $database;
+
+  /**
+   * The core date.formatter service.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  /**
+   * The form builder service.
+   *
+   * @var \Drupal\Core\Form\FormBuilderInterface
+   */
+  protected $formBuilder;
 
   /**
    * The core logger channel, to log intervening events.
@@ -47,13 +71,6 @@ class OverviewController extends ControllerBase {
   protected $logger;
 
   /**
-   * The MongoDB logger, to load events.
-   *
-   * @var \Drupal\mongodb_watchdog\Logger
-   */
-  protected $watchdog;
-
-  /**
    * The module handler service.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -61,11 +78,20 @@ class OverviewController extends ControllerBase {
   protected $moduleHandler;
 
   /**
-   * The form builder service.
+   * The length of the disk path to DRUPAL_ROOT, plus 1.
    *
-   * @var \Drupal\Core\Form\FormBuilderInterface
+   * @var int
+   *
+   * @see \Drupal\mongodb_watchdog\Controller\OverviewController::getEventSource()
    */
-  protected $formBuilder;
+  protected $rootLength;
+
+  /**
+   * The MongoDB logger, to load events.
+   *
+   * @var \Drupal\mongodb_watchdog\Logger
+   */
+  protected $watchdog;
 
   /**
    * Constructor.
@@ -86,20 +112,29 @@ class OverviewController extends ControllerBase {
     LoggerInterface $logger,
     Logger $watchdog,
     ModuleHandlerInterface $module_handler,
-    FormBuilderInterface $form_builder) {
+    FormBuilderInterface $form_builder,
+    DateFormatterInterface $date_formatter) {
     $this->database = $database;
+    $this->dateFormatter = $date_formatter;
     $this->formBuilder = $form_builder;
     $this->logger = $logger;
     $this->moduleHandler = $module_handler;
     $this->watchdog = $watchdog;
+
+    // Add terminal "/".
+    $this->rootLength = Unicode::strlen(DRUPAL_ROOT) + 1;
+
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \MongoDB $database */
+    /** @var \MongoDB\Database $database */
     $database = $container->get('mongodb.watchdog_storage');
+
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = $container->get('date.formatter');
 
     /** @var \Drupal\Core\Form\FormBuilderInterface $form_builder */
     $form_builder = $container->get('form_builder');
@@ -113,7 +148,77 @@ class OverviewController extends ControllerBase {
     /** @var \Drupal\mongodb_watchdog\Logger $logger */
     $watchdog = $container->get('mongodb.logger');
 
-    return new static($database, $logger, $watchdog, $module_handler, $form_builder);
+    return new static($database, $logger, $watchdog, $module_handler, $form_builder, $date_formatter);
+  }
+
+  /**
+   * Build the link to the event or top report for the event template.
+   *
+   * @param \Drupal\mongodb_watchdog\EventTemplate $template
+   *   The event template for which to buildl the link.
+   *
+   * @return string
+   *   An internal link in string form.
+   */
+  protected function getEventLink(EventTemplate $template) {
+    switch ($template->type) {
+      case 'page not found':
+        $cell = Link::createFromRoute(t('( Top 404 )'), 'mongodb_watchdog.reports.top404');
+        break;
+
+      case 'access denied':
+        $cell = Link::createFromRoute(t('( Top 403 )'), 'mongodb_watchdog.reports.top403');
+        break;
+
+      default:
+        // Limited-length message.
+        $message = Unicode::truncate(strip_tags(SafeMarkup::format($template->message, [])), 56, TRUE, TRUE);
+        $cell = Link::createFromRoute($message, 'mongodb_watchdog.reports.detail', [
+          'event_template' => $template->_id,
+        ]);
+        break;
+    }
+
+    return $cell;
+  }
+
+  /**
+   * Get the location in source code where the event was logged.
+   *
+   * @param \Drupal\mongodb_watchdog\EventTemplate $template
+   *   The template for which to find a source location.
+   *
+   * @return array
+   *   A render array for the source location, possibly empty or wrong.
+   */
+  protected function getEventSource(EventTemplate $template) {
+    if (in_array($template->type, TopController::TYPES)) {
+      return '';
+    }
+
+    $event_collection = $this->watchdog->eventCollection($template->_id);
+    $event = $event_collection->findOne([], static::EVENT_TYPE_MAP);
+    if (!($event instanceof Event)) {
+      return '';
+    }
+
+    $file = $event->variables['%file'] ?? '';
+    $hover = $file
+      ? Unicode::substr($file, $this->rootLength)
+      : '';
+    $file = Unicode::truncate(basename($file), 30);
+    $line = $event->variables['%line'] ?? NULL;
+    $cell = [
+      '#type' => 'html_tag',
+      '#tag' => 'span',
+      '#value' => "${file}#${line}",
+      '#attributes' => [
+        'class' => 'mongodb_watchdog__code_path',
+        'title' => $hover,
+      ],
+    ];
+
+    return $cell;
   }
 
   /**
@@ -124,31 +229,21 @@ class OverviewController extends ControllerBase {
    */
   public function overview() {
     $ret = [
+      'filter_form' => $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm'),
+      'rows' => $this->overviewRows(),
+      'pager' => [
+        '#type' => 'pager',
+      ],
       '#attached' => [
-        'library' => ['mongodb_watchdog/styling']
-      ]
-    ] + $this->overviewFilters()
-      + $this->overviewRows();
+        'library' => ['mongodb_watchdog/styling'],
+      ],
+    ];
 
-    $ret += $this->overview7();
     return $ret;
   }
 
   /**
-   * Build the filters area on top of the event rows.
-   *
-   * @return array
-   *   A render array.
-   */
-  public function overviewFilters() {
-    $build = [
-      'filter_form' => $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm')
-    ];
-    return $build;
-  }
-
-  /**
-   * Build the event rows
+   * Build a table from the event rows.
    *
    * @return array
    *   A render array.
@@ -157,12 +252,16 @@ class OverviewController extends ControllerBase {
     $header = [
       t('#'),
       t('Severity'),
-
+      t('Type'),
+      t('Latest'),
+      t('Source'),
+      t('Message'),
     ];
     $rows = [];
     $levels = RfcLogLevel::getLevels();
     $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
     $cursor = $this->watchdog->templates($filters['type'] ?? [], $filters['severity'] ?? []);
+
     /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
     foreach ($cursor as $template) {
       $row = [];
@@ -171,93 +270,21 @@ class OverviewController extends ControllerBase {
         'class' => static::SEVERITY_CLASSES[$template->severity],
         'data' => $levels[$template->severity],
       ];
+      $row[] = $template->type;
+      $row[] = $this->dateFormatter->format($template->changed, 'short');
+      $row[] = [
+        'data' => $this->getEventSource($template, $row),
+      ];
+      $row[] = $this->getEventLink($template);
+
       $rows[] = $row;
     }
+
     return [
-      'rows' => [
-        '#type' => 'table',
-        '#header' => $header,
-        '#rows' => $rows,
-      ],
-    ];
-  }
-
-  /**
-   * Controller for mongodb_watchdog.overview.
-   *
-   * @return array
-   *   A render array.
-   */
-  public function overview7() {
-    $icons = array(
-      RfcLogLevel::DEBUG     => '',
-      RfcLogLevel::INFO      => '',
-      RfcLogLevel::NOTICE    => '',
-      RfcLogLevel::WARNING   => ['#theme' => 'image', 'path' => 'misc/watchdog-warning.png', 'alt' => t('warning'), 'title' => t('warning')],
-      RfcLogLevel::ERROR     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error')],
-      RfcLogLevel::CRITICAL  => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical')],
-      RfcLogLevel::ALERT     => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert')],
-      RfcLogLevel::EMERGENCY => ['#theme' => 'image', 'path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency')],
-    );
-
-    $collection = $this->watchdog->templateCollection();
-    $templates = $collection->find([], Logger::LEGACY_TYPE_MAP)->toArray();
-    $this->moduleHandler->loadInclude('mongodb_watchdog', 'admin.inc');
-
-
-    $header = array(
-      // Icon column.
-      '',
-      t('#'),
-      array('data' => t('Type')),
-      array('data' => t('Date')),
-      t('Source'),
-      t('Message'),
-    );
-
-    $rows = array();
-    foreach ($templates as $id => $value) {
-      if ($id < 5) {
-//        if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
-//          $collection = $this->logger->eventCollection($value['_id']);
-//          $result = $collection->find()
-//            ->sort(['$natural' => -1])
-//            ->limit(1)
-//            ->getNext();
-//          if ($value) {
-//            $value['file'] = basename($result['variables']['%file']);
-//            $value['line'] = $result['variables']['%line'];
-//            $value['message'] = '%type in %function';
-//            $value['variables'] = $result['variables'];
-//          }
-//        }
-        $message = Unicode::truncate(strip_tags(SafeMarkup::format($value['message'], [])), 56, TRUE, TRUE);
-        $value['count'] = $this->watchdog->eventCollection($value['_id'])->count();
-        $rows[$id] = [
-          $icons[$value['severity']],
-          isset($value['count']) && $value['count'] > 1 ? intval($value['count']) : 0,
-          t($value['type']),
-          empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
-          empty($value['file']) ? '' : Unicode::truncate(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
-          \Drupal::l($message, Url::fromRoute('mongodb_watchdog.reports.detail', ['event_template' => $id])),
-        ];
-      }
-
-    }
-
-    $build['mongodb_watchdog_table'] = array(
-      '#theme' => 'table',
+      '#type' => 'table',
       '#header' => $header,
       '#rows' => $rows,
-      '#attributes' => ['id' => 'admin-mongodb_watchdog'],
-      '#attached' => array(
-        'library' => array('mongodb_watchdog/drupal.mongodb_watchdog'),
-      ),
-    );
-
-    $build['mongodb_watchdog_pager'] = array('#type' => 'pager');
-
-    return $build;
+    ];
   }
 
 }
