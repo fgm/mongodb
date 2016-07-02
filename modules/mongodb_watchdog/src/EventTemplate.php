@@ -22,6 +22,20 @@ class EventTemplate implements Unserializable {
   public $_id;
 
   /**
+   * Latest event insertion for the template.
+   *
+   * @var int
+   */
+  public $changed;
+
+  /**
+   * Event count for the template.
+   *
+   * @var int
+   */
+  public $count;
+
+  /**
    * The message "type": a Drupal logger "channel".
    *
    * @var string
@@ -63,6 +77,14 @@ class EventTemplate implements Unserializable {
       '_id' => [
         'label' => t('ID'),
       ],
+      'changed' => [
+        'label' => t('Changed'),
+        'creation_callback' => 'intval',
+      ],
+      'count' => [
+        'label' => t('Count'),
+        'creation_callback' => 'intval',
+      ],
       'type' => [
         'label' => t('Type'),
       ],
@@ -85,9 +107,10 @@ class EventTemplate implements Unserializable {
    */
   public function bsonUnserialize(array $data) {
     foreach (static::keys() as $key => $info) {
+      $datum = $data[$key] ?? NULL;
       $this->{$key} = isset($info['creation_callback'])
-        ? $info['creation_callback']($data[$key])
-        : $data[$key];
+        ? $info['creation_callback']($datum)
+        : $datum;
     }
   }
 
