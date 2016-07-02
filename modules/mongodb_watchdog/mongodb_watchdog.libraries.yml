@@ -2,3 +2,5 @@ styling:
   css:
     component:
       css/mongodb_watchdog.component.css: {}
+    theme:
+      css/mongodb_watchdog.theme.css: {}

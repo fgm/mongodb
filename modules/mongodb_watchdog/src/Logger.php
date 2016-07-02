@@ -7,9 +7,11 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
+use Drupal\Core\Logger\RfcLogLevel;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use Psr\Log\AbstractLogger;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -189,15 +191,19 @@ class Logger extends AbstractLogger {
 
     $selector = ['_id' => $template_id];
     $update = [
-      '_id' => $template_id,
-      'type' => Unicode::substr($context['channel'], 0, 64),
-      'message' => $template,
-      'severity' => $level,
+      '$inc' => ['count' => 1],
+      '$set' => [
+        '_id' => $template_id,
+        'message' => $template,
+        'severity' => $level,
+        'changed' => time(),
+        'type' => Unicode::substr($context['channel'], 0, 64),
+      ],
     ];
     $options = ['upsert' => TRUE];
     $template_result = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
-      ->replaceOne($selector, $update, $options);
+      ->updateOne($selector, $update, $options);
     // Only add the template if if has not already been added.
     if ($this->requestTracking) {
       $request_id = $this->requestStack
@@ -308,40 +314,39 @@ class Logger extends AbstractLogger {
    * numbers should be much faster to create than one with a string included.
    */
   public function ensureIndexes() {
-    $templates = $this->database->selectCollection(static::TEMPLATE_COLLECTION);
     $indexes = [
       // Index for adding/updating increments.
       [
         'name' => 'for-increments',
-        'key' => ['line' => 1, 'timestamp' => -1],
+        'key' => ['line' => 1, 'changed' => -1],
       ],
 
-      // Index for admin page without filters.
+      // Index for overview page without filters.
       [
-        'name' => 'admin-no-filters',
-        'key' => ['timestamp' => -1],
+        'name' => 'overview-no-filters',
+        'key' => ['changed' => -1],
       ],
 
-      // Index for admin page filtering by type.
+      // Index for overview page filtering by type.
       [
-        'name' => 'admin-by-type',
-        'key' => ['type' => 1, 'timestamp' => -1],
+        'name' => 'overview-by-type',
+        'key' => ['type' => 1, 'changed' => -1],
       ],
 
-      // Index for admin page filtering by severity.
+      // Index for overview page filtering by severity.
       [
-        'name' => 'admin-by-severity',
-        'key' => ['severity' => 1, 'timestamp' => -1],
+        'name' => 'overview-by-severity',
+        'key' => ['severity' => 1, 'changed' => -1],
       ],
 
-      // Index for admin page filtering by type and severity.
+      // Index for overview page filtering by type and severity.
       [
-        'name' => 'admin-by-both',
-        'key' => ['type' => 1, 'severity' => 1, 'timestamp' => -1],
+        'name' => 'overview-by-both',
+        'key' => ['type' => 1, 'severity' => 1, 'changed' => -1],
       ],
     ];
 
-    $templates->createIndexes($indexes);
+    $this->templateCollection()->createIndexes($indexes);
   }
 
   /**
@@ -428,6 +433,47 @@ class Logger extends AbstractLogger {
    */
   public function templateCollection() {
     return $this->database->selectCollection(static::TEMPLATE_COLLECTION);
+  }
+
+  /**
+   * @param string[] $types
+   * @param string[]|int[] $levels
+   *
+   * @return \MongoDB\Driver\Cursor
+   */
+  public function templates(array $types = [], array $levels = []) {
+    $selector = [];
+    if (!empty($types)) {
+      $selector['type'] = ['$in' => array_values($types)];
+    }
+    if (!empty($levels) && count($levels) !== count(RfcLogLevel::getLevels())) {
+      // Severity levels come back from the session as strings, not integers.
+      $selector['severity'] = ['$in' => array_values(array_map('intval', $levels))];
+    }
+    $options = [
+      'sort' => [
+        'count' => -1,
+        'changed' => -1,
+      ],
+      'typeMap' => [
+        'array' => 'array',
+        'document' => 'array',
+        'root' => '\Drupal\mongodb_watchdog\EventTemplate',
+      ],
+    ];
+
+    $cursor = $this->templateCollection()->find($selector, $options);
+    return $cursor;
+  }
+
+  /**
+   * Return the template types actually present in storage.
+   *
+   * @return string[]
+   */
+  public function templateTypes() {
+    $ret = $this->templateCollection()->distinct('type');
+    return $ret;
   }
 
 }

@@ -1,0 +1,38 @@
+/* text-decoration-style support is still too low in 2016 */
+.mongodb_watchdog__code_path {
+  background-clip: padding-box;
+  border-bottom: 1px dotted;
+  border-color: rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+}
+
+.mongodb_watchdog__severity_emergency {
+  background: #FF2020;
+}
+
+.mongodb_watchdog__severity_alert {
+  background: #FF80FF;
+}
+.mongodb_watchdog__severity_critical {
+  background: #C0A0FF;
+}
+
+.mongodb_watchdog__severity_error {
+  background: #FFB00D;
+}
+
+.mongodb_watchdog__severity_warning {
+  background: #FFE080;
+}
+
+.mongodb_watchdog__severity_notice {
+  background: #40A000;
+}
+
+.mongodb_watchdog__severity_info {
+  background: #A0E0A0;
+}
+
+.mongodb_watchdog__severity_debug {
+  background: #B0E0FF;
+}

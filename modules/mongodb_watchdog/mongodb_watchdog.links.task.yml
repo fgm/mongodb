@@ -1,18 +1,18 @@
 mongodb_watchdog.reports.overview:
-  route_name: mongodb_watchdog.reports.overview
-  title: 'Main report'
   base_route: mongodb_watchdog.reports.overview
+  route_name: mongodb_watchdog.reports.overview
+  title: 'View'
 
 mongodb_watchdog.reports.top403:
+  base_route: mongodb_watchdog.reports.overview
   route_name: mongodb_watchdog.reports.top403
   title: 'Access denied'
-  base_route: mongodb_watchdog.reports.overview
   weight: 1
 
 mongodb_watchdog.reports.top404:
+  base_route: mongodb_watchdog.reports.overview
   route_name: mongodb_watchdog.reports.top404
   title: 'Path not found'
-  base_route: mongodb_watchdog.reports.overview
   weight: 2
 
 mongodb_watchdog.reports.clear:
