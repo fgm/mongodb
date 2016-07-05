@@ -1,7 +1,12 @@
+# IDE files
 /.idea/
-/site/
-/vendor/
 
+# Generated files
+## MkDocs
+/site/
+
+## Composer
+/vendor/
 composer.lock
 coverage.clover
 .DS_Store
