@@ -453,6 +453,7 @@ class Logger extends AbstractLogger {
       }
     }
 
+    ksort($events);
     return $events;
   }
 
