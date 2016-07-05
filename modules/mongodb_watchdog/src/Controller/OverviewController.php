@@ -17,6 +17,7 @@ use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class OverviewController provides the main MongoDB Watchdog report page.
@@ -54,6 +55,13 @@ class OverviewController extends ControllerBase {
    * @var \Drupal\Core\Form\FormBuilderInterface
    */
   protected $formBuilder;
+
+  /**
+   * The items_per_page configuration value.
+   *
+   * @var int
+   */
+  protected $itemsPerPage;
 
   /**
    * The core logger channel, to log intervening events.
@@ -96,18 +104,25 @@ class OverviewController extends ControllerBase {
    *   A module handler.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder service.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The core date_formatter service.
+   * @param int $items_per_page
+   *   The items_per_page configuration value.
    */
   public function __construct(
     LoggerInterface $logger,
     Logger $watchdog,
     ModuleHandlerInterface $module_handler,
     FormBuilderInterface $form_builder,
-    DateFormatterInterface $date_formatter) {
+    DateFormatterInterface $date_formatter,
+    $items_per_page) {
     $this->dateFormatter = $date_formatter;
     $this->formBuilder = $form_builder;
     $this->logger = $logger;
     $this->moduleHandler = $module_handler;
     $this->watchdog = $watchdog;
+
+    $this->itemsPerPage = $items_per_page;
 
     // Add terminal "/".
     $this->rootLength = Unicode::strlen(DRUPAL_ROOT);
@@ -133,7 +148,11 @@ class OverviewController extends ControllerBase {
     /** @var \Drupal\mongodb_watchdog\Logger $logger */
     $watchdog = $container->get('mongodb.logger');
 
-    return new static($logger, $watchdog, $module_handler, $form_builder, $date_formatter);
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = $container->get('config.factory');
+    $items_per_page = $config_factory->get('mongodb_watchdog.settings')->get('items_per_page');
+
+    return new static($logger, $watchdog, $module_handler, $form_builder, $date_formatter, $items_per_page);
   }
 
   /**
@@ -219,10 +238,12 @@ class OverviewController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  public function overview() {
+  public function overview(Request $request) {
+    $page = $this->setupPager($request);
+
     $ret = [
       'filter_form' => $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm'),
-      'rows' => $this->overviewRows(),
+      'rows' => $this->overviewRows($page),
       'pager' => [
         '#type' => 'pager',
       ],
@@ -237,10 +258,13 @@ class OverviewController extends ControllerBase {
   /**
    * Build a table from the event rows.
    *
+   * @param int $page
+   *   The number of the page to display.
+   *
    * @return array
    *   A render array.
    */
-  public function overviewRows() {
+  public function overviewRows($page) {
     $header = [
       t('#'),
       t('Latest'),
@@ -252,7 +276,9 @@ class OverviewController extends ControllerBase {
     $rows = [];
     $levels = RfcLogLevel::getLevels();
     $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
-    $cursor = $this->watchdog->templates($filters['type'] ?? [], $filters['severity'] ?? []);
+    $skip = $page * $this->itemsPerPage;
+    $limit = $this->itemsPerPage;
+    $cursor = $this->watchdog->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit);
 
     /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
     foreach ($cursor as $template) {
@@ -277,6 +303,34 @@ class OverviewController extends ControllerBase {
       '#header' => $header,
       '#rows' => $rows,
     ];
+  }
+
+  /**
+   * Set up the templates pager.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
+   *
+   * @return int
+   *   The number of the page to display, starting at 0.
+   */
+  public function setupPager(Request $request) {
+    $count = $this->watchdog->templatesCount();
+    $height = $this->itemsPerPage;
+    pager_default_initialize($count, $height);
+
+    $page = intval($request->query->get('page'));
+    if ($page < 0) {
+      $page = 0;
+    }
+    else {
+      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX));
+      if ($page > $page_max) {
+        $page = $page_max;
+      }
+    }
+
+    return $page;
   }
 
 }

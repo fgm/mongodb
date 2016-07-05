@@ -43,9 +43,12 @@ class RequestController implements ContainerInjectionInterface {
    *   The MongoDB logger service, to load event data.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The core date.formatter service.
+   * @param int $items_per_page
+   *   The items_per_page configuration value.
    */
-  public function __construct(Logger $watchdog, DateFormatterInterface $date_formatter) {
+  public function __construct(Logger $watchdog, DateFormatterInterface $date_formatter, $items_per_page) {
     $this->dateFormatter = $date_formatter;
+    $this->itemsPerPage = $items_per_page;
     $this->watchdog = $watchdog;
 
     // Add terminal "/".
@@ -156,7 +159,10 @@ class RequestController implements ContainerInjectionInterface {
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
     $date_formatter = $container->get('date.formatter');
 
-    return new static($watchdog, $date_formatter);
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = $container->get('config_factory');
+    $items_per_page = $config_factory->get('mongdodb_watchdog.settings')->get('items_per_page');
+    return new static($watchdog, $date_formatter, $items_per_page);
   }
 
   /**

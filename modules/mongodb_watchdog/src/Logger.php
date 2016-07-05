@@ -458,6 +458,13 @@ class Logger extends AbstractLogger {
   }
 
   /**
+   * Return the number of event templates.
+   */
+  public function templatesCount() {
+    return $this->templateCollection()->count([]);
+  }
+
+    /**
    * Return an array of templates uses during a given request.
    *
    * @param string $unsafe_request_id
@@ -532,11 +539,15 @@ class Logger extends AbstractLogger {
    *   An array of EventTemplate types. May be a hash.
    * @param string[]|int[] $levels
    *   An array of severity levels.
+   * @param int $skip
+   *   The number of templates to skip before the first one displayed.
+   * @param int $limit
+   *   The maximum number of templates to return.
    *
    * @return \MongoDB\Driver\Cursor
    *   A query result for the templates.
    */
-  public function templates(array $types = [], array $levels = []) {
+  public function templates(array $types = [], array $levels = [], $skip = 0, $limit = 0) {
     $selector = [];
     if (!empty($types)) {
       $selector['type'] = ['$in' => array_values($types)];
@@ -556,6 +567,12 @@ class Logger extends AbstractLogger {
         'root' => '\Drupal\mongodb_watchdog\EventTemplate',
       ],
     ];
+    if ($skip) {
+      $options['skip'] = $skip;
+    }
+    if ($limit) {
+      $options['limit'] = $limit;
+    }
 
     $cursor = $this->templateCollection()->find($selector, $options);
     return $cursor;
