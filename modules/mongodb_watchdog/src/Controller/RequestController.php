@@ -160,7 +160,7 @@ class RequestController implements ContainerInjectionInterface {
     $date_formatter = $container->get('date.formatter');
 
     /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
-    $config_factory = $container->get('config_factory');
+    $config_factory = $container->get('config.factory');
     $items_per_page = $config_factory->get('mongdodb_watchdog.settings')->get('items_per_page');
     return new static($watchdog, $date_formatter, $items_per_page);
   }
@@ -191,6 +191,11 @@ class RequestController implements ContainerInjectionInterface {
    *   A render array.
    */
   public function track($unique_id) {
+    $logger = \Drupal::logger('test');
+    for ($i = 0 ; $i < 1 ; $i++) {
+      $logger->log($i % 8, 'I = @i', ['@i' => $i]);
+    }
+
     $events = $this->watchdog->requestEvents($unique_id);
     $ret = [
       '#attached' => [
