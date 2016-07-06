@@ -324,7 +324,7 @@ class OverviewController extends ControllerBase {
       $page = 0;
     }
     else {
-      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX));
+      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX) - 1);
       if ($page > $page_max) {
         $page = $page_max;
       }

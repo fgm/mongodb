@@ -4,11 +4,14 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Template\Attribute;
 use Drupal\mongodb_watchdog\EventController;
 use Drupal\mongodb_watchdog\EventTemplate;
+use Drupal\mongodb_watchdog\Logger;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class DetailController implements the controller for the event detail page.
@@ -23,6 +26,27 @@ class DetailController implements ContainerInjectionInterface {
   protected $eventController;
 
   /**
+   * The items_per_page configuration value.
+   *
+   * @var int
+   */
+  protected $itemsPerPage;
+
+  /**
+   * The logger.mongodb_watchdog logger channel, to log events.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
+   * The MongoDB logger service, to load events.
+   *
+   * @var \Drupal\mongodb_watchdog\Logger
+   */
+  protected $watchdog;
+
+  /**
    * Constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
@@ -32,10 +56,13 @@ class DetailController implements ContainerInjectionInterface {
    * @param \Drupal\Core\Config\ImmutableConfig $config
    *   The module configuration.
    */
-  public function __construct(LoggerInterface $logger, EventController $event_controller, ImmutableConfig $config) {
+  public function __construct(Logger $watchdog, LoggerInterface $logger, EventController $event_controller, ImmutableConfig $config) {
     $this->config = $config;
     $this->eventController = $event_controller;
     $this->logger = $logger;
+    $this->watchdog = $watchdog;
+
+    $this->itemsPerPage = $config->get('items_per_page');
   }
 
   /**
@@ -48,10 +75,13 @@ class DetailController implements ContainerInjectionInterface {
     /** @var \Drupal\mongodb_watchdog\EventController $eventController */
     $eventController = $container->get('mongodb.watchdog_event_controller');
 
+    /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
+    $watchdog = $container->get('mongodb.logger');
+
     /** @var array $config */
     $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
 
-    return new static($logger, $eventController, $config);
+    return new static($watchdog, $logger, $eventController, $config);
   }
 
   /**
@@ -63,9 +93,10 @@ class DetailController implements ContainerInjectionInterface {
    * @return array
    *   A render array.
    */
-  public function detail(EventTemplate $event_template) {
+  public function detail(EventTemplate $event_template, Request $request) {
+    $page = $this->setupPager($event_template, $request);
     $template_rows = $this->detailHeader($event_template);
-    $event_rows = $this->detailRows($event_template);
+    $event_rows = $this->detailRows($event_template, $page);
 
     $base = [
       '#attributes' => new Attribute(['class' => 'mongodb_watchdog-detail']),
@@ -95,42 +126,11 @@ class DetailController implements ContainerInjectionInterface {
         '#header' => $event_header,
         '#rows' => $event_rows,
       ],
+      'pager' => [
+        '#type' => 'pager',
+      ],
     ];
 
-    if ($footer = $this->detailFooter($event_template, $event_rows)) {
-      $ret['extra'] = [
-        '#markup' => $footer,
-      ];
-    }
-
-    return $ret;
-  }
-
-  /**
-   * Report on the extra event occurrences.
-   *
-   * @param \Drupal\mongodb_watchdog\EventTemplate $event_template
-   *   The event template.
-   * @param array $event_rows
-   *   The event rows array.
-   *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|null
-   *   A message about the remaining events not displayed on the page, or NULL
-   *   if there are no additional messages.
-   *
-   * @XXX Maybe replace by a pager later ?
-   */
-  protected function detailFooter(EventTemplate $event_template, array $event_rows) {
-    $display_count = count($event_rows);
-    $ret = NULL;
-    if ($display_count >= $this->config->get('items_per_page')) {
-      $count = $this->eventController->count($event_template);
-      if ($count > $display_count) {
-        $ret = t('There are also @count more older occurrences of this event', [
-          '@count' => $count - $display_count,
-        ]);
-      }
-    }
     return $ret;
   }
 
@@ -147,13 +147,14 @@ class DetailController implements ContainerInjectionInterface {
     $rows = [];
     foreach (EventTemplate::keys() as $key => $info) {
       $value = $template->{$key};
-      $rows[] = [
+      $row = [
         [
           'header' => TRUE,
           'data' => $info['label'],
         ],
         isset($info['display_callback']) ? $info['display_callback']($value) : $value,
       ];
+      $rows[] = $row;
     }
     return $rows;
   }
@@ -163,14 +164,18 @@ class DetailController implements ContainerInjectionInterface {
    *
    * @param \Drupal\mongodb_watchdog\EventTemplate $template
    *   The event template.
+   * @param int $page
+   *   The page number, starting at 0.
    *
    * @return array
    *   A table render array.
    */
-  protected function detailRows(EventTemplate $template) {
+  protected function detailRows(EventTemplate $template, $page) {
     $rows = [];
+    $skip = $page * $this->itemsPerPage;
+    $limit = $this->itemsPerPage;
+    $events = $this->eventController->find($template, $skip, $limit);
 
-    $events = $this->eventController->find($template, NULL, $this->config->get('items_per_page'));
     /** @var \Drupal\mongodb_watchdog\Event $event */
     foreach ($events as $event) {
       $rows[] = $this->eventController->asTableRow($template, $event);
@@ -189,6 +194,34 @@ class DetailController implements ContainerInjectionInterface {
    */
   public function detailTitle(EventTemplate $event_template) {
     return t('MongoDB events: "@template"', ['@template' => $event_template->message]);
+  }
+
+  /**
+   * Set up the events pager.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
+   *
+   * @return int
+   *   The number of the page to display, starting at 0.
+   */
+  public function setupPager(EventTemplate $template, Request $request) {
+    $count = $this->watchdog->eventCount($template);
+    $height = $this->itemsPerPage;
+    pager_default_initialize($count, $height);
+
+    $page = intval($request->query->get('page'));
+    if ($page < 0) {
+      $page = 0;
+    }
+    else {
+      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX) - 1);
+      if ($page > $page_max) {
+        $page = $page_max;
+      }
+    }
+
+    return $page;
   }
 
 }

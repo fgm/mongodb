@@ -276,43 +276,6 @@ class Logger extends AbstractLogger {
   }
 
   /**
-   * List the event collections.
-   *
-   * @return \MongoDB\Collection[]
-   *   The collections with a name matching the event pattern.
-   */
-  public function eventCollections() {
-    echo static::EVENT_COLLECTIONS_PATTERN;
-    $options = [
-      'filter' => [
-        'name' => ['$regex' => static::EVENT_COLLECTIONS_PATTERN],
-      ],
-    ];
-    $result = iterator_to_array($this->database->listCollections($options));
-    return $result;
-  }
-
-  /**
-   * Return a collection, given its template id.
-   *
-   * @param string $template_id
-   *   The string representation of a template \MongoId.
-   *
-   * @return \MongoDB\Collection
-   *   A collection object for the specified template id.
-   */
-  public function eventCollection($template_id) {
-    $collection_name = static::EVENT_COLLECTION_PREFIX . $template_id;
-    if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $collection_name)) {
-      throw new InvalidArgumentException(t('Invalid watchdog template id `@id`.', [
-        '@id' => $collection_name,
-      ]));
-    }
-    $collection = $this->database->selectCollection($collection_name);
-    return $collection;
-  }
-
-  /**
    * Ensure a collection is capped with the proper size.
    *
    * @param string $name
@@ -413,6 +376,59 @@ class Logger extends AbstractLogger {
 
     $this->templateCollection()->createIndexes($indexes);
 
+  }
+
+  /**
+   * Return a collection, given its template id.
+   *
+   * @param string $template_id
+   *   The string representation of a template \MongoId.
+   *
+   * @return \MongoDB\Collection
+   *   A collection object for the specified template id.
+   */
+  public function eventCollection($template_id) {
+    $collection_name = static::EVENT_COLLECTION_PREFIX . $template_id;
+    if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $collection_name)) {
+      throw new InvalidArgumentException(t('Invalid watchdog template id `@id`.', [
+        '@id' => $collection_name,
+      ]));
+    }
+    $collection = $this->database->selectCollection($collection_name);
+    return $collection;
+  }
+
+  /**
+   * List the event collections.
+   *
+   * @return \MongoDB\Collection[]
+   *   The collections with a name matching the event pattern.
+   */
+  public function eventCollections() {
+    echo static::EVENT_COLLECTIONS_PATTERN;
+    $options = [
+      'filter' => [
+        'name' => ['$regex' => static::EVENT_COLLECTIONS_PATTERN],
+      ],
+    ];
+    $result = iterator_to_array($this->database->listCollections($options));
+    return $result;
+  }
+
+  /**
+   * Return the number of events for a template.
+   *
+   * @param \Drupal\mongodb_watchdog\EventTemplate $template
+   *   A template for which to count events.
+   *
+   * @return int
+   *   The number of matching events.
+   */
+  /**
+   * @return int
+   */
+  public function eventCount(EventTemplate $template) {
+    return $this->eventCollection($template->_id)->count();
   }
 
   /**

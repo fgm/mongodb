@@ -110,18 +110,19 @@ class EventController {
    *
    * @param \Drupal\mongodb_watchdog\EventTemplate $template
    *   The template for which to find events.
-   * @param string $first_id
-   *   The string representation of the first event to match.
+   * @param string $skip
+   *   The string representation of the number of events to skip.
    * @param int $limit
-   *   The limit on the number of objects to return.
+   *   The limit on the number of events to return.
    *
    * @return \MongoDB\Driver\Cursor
    *   A cursor to the event occurrences.
    */
-  public function find(EventTemplate $template, $first_id, $limit) {
+  public function find(EventTemplate $template, $skip, $limit) {
     $collection = $this->watchdog->eventCollection($template->_id);
     $selector = [];
     $options = [
+      'skip' => $skip,
       'limit' => $limit,
       'sort' => ['$natural' => -1],
       'typeMap' => [
@@ -133,21 +134,6 @@ class EventController {
 
     $result = $collection->find($selector, $options);
     return $result;
-  }
-
-  /**
-   * Return the number of event occurrences for a given template.
-   *
-   * @param \Drupal\mongodb_watchdog\EventTemplate $template
-   *   The template for which to count events.
-   *
-   * @return int
-   *   The number of occurrences.
-   */
-  public function count(EventTemplate $template) {
-    $collection = $this->watchdog->eventCollection($template->_id);
-    $ret = $collection->count();
-    return $ret;
   }
 
 }
