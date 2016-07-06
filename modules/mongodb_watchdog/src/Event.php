@@ -2,6 +2,7 @@
 
 namespace Drupal\mongodb_watchdog;
 
+use Drupal\Core\Logger\RfcLogLevel;
 use MongoDB\BSON\Unserializable;
 
 /**
@@ -68,7 +69,7 @@ class Event implements Unserializable {
    *
    * @var int
    */
-  public $requestTracking_sequence;
+  public $requestTracking_sequence = 0;
 
   /**
    * The template parameters.
@@ -82,7 +83,7 @@ class Event implements Unserializable {
    *
    * @var int
    */
-  public $severity;
+  public $severity = RfcLogLevel::DEBUG;
 
   /**
    * A link provided by the event emitter. Optional.
@@ -117,7 +118,7 @@ class Event implements Unserializable {
    *
    * @var int
    */
-  public $timestamp;
+  public $timestamp = 0;
 
   /**
    * Constructor.
