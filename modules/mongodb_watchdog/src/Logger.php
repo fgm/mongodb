@@ -54,7 +54,7 @@ class Logger extends AbstractLogger {
    *
    * @var int
    */
-  protected $limit;
+  protected $limit = RfcLogLevel::DEBUG;
 
   /**
    * The message's placeholders parser.
