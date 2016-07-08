@@ -11,7 +11,7 @@ use Drupal\Core\Site\Settings;
  * Requirements check: MongoDB extension.
  *
  * @param array $ret
- *   The running requirements array
+ *   The running requirements array.
  * @param string $extension_name
  *   The name of the extension to check.
  *
