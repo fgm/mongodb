@@ -4,6 +4,8 @@ namespace Drupal\mongodb\Tests;
 
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\mongodb\ClientFactory;
+use Drupal\mongodb\DatabaseFactory;
 
 /**
  * Class MongoDbTestBase provides basic setUp()/tearDown() for MongoDB.
@@ -63,4 +65,15 @@ abstract class MongoDbTestBase extends KernelTestBase {
     ]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function tearDown() {
+    $clientFactory = new ClientFactory($this->settings);
+    $databaseFactory = new DatabaseFactory($clientFactory, $this->settings);
+    $databaseFactory->get(static::DB_DEFAULT_ALIAS)
+      ->drop();
+
+    parent::tearDown();
+  }
 }

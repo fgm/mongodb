@@ -51,13 +51,13 @@ class DatabaseFactoryTest extends MongoDbTestBase {
   public function testGetSadUnsetAlias() {
     try {
       $this->databaseFactory->get(static::DB_UNSET_ALIAS);
-      $this->fail("Should not have returned a value for an unset database alias.");
+      $this->fail('Should not have returned a value for an unset database alias.');
     }
     catch (\InvalidArgumentException $e) {
       $this->assertTrue(TRUE, 'Throws expected exception for unset database alias.');
     }
     catch (\Exception $e) {
-      $this->fail("Unexpected exception thrown for unset alias: @exception", [
+      $this->fail('Unexpected exception thrown for unset alias: @exception', [
         '@exception' => $e->getMessage(),
       ]);
     }
@@ -67,8 +67,8 @@ class DatabaseFactoryTest extends MongoDbTestBase {
    * Test referencing an alias pointing to an ill-formed (empty) database name.
    */
   public function testGetSadAliasForBadDatabase() {
-    $db = $this->databaseFactory->get(static::DB_INVALID_ALIAS);
-    $this->assertNull($db, "Selecting an invalid alias returns a null database.");
+    $database = $this->databaseFactory->get(static::DB_INVALID_ALIAS);
+    $this->assertNull($database, 'Selecting an invalid alias returns a null database.');
   }
 
 }
