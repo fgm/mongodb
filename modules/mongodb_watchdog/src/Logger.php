@@ -424,9 +424,6 @@ class Logger extends AbstractLogger {
    * @return int
    *   The number of matching events.
    */
-  /**
-   * @return int
-   */
   public function eventCount(EventTemplate $template) {
     return $this->eventCollection($template->_id)->count();
   }
@@ -434,16 +431,25 @@ class Logger extends AbstractLogger {
   /**
    * Return the events having occurred during a given request.
    *
-   * @param string $unsafe_request_id
-   *   The raw request_id.
+   * @param string $requestId
+   *   The request unique_id.
+   * @param int $skip
+   *   The number of events to skip in the result.
+   * @param int $limit
+   *   The maximum number of events to return.
    *
    * @return array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]>
    *   An array of [template, event] arrays, ordered by occurrence order.
    */
-  public function requestEvents($unsafe_request_id) {
-    $templates = $this->requestTemplates($unsafe_request_id);
-    $request_id = "$unsafe_request_id";
-    $selector = ['requestTracking_id' => $request_id];
+  public function requestEvents($requestId, $skip = 0, $limit = 0) {
+    $templates = $this->requestTemplates($requestId);
+    $selector = [
+      'requestTracking_id' => $requestId,
+      'requestTracking_sequence' => [
+        '$gte' => $skip,
+        '$lt' => $skip + $limit,
+      ],
+    ];
     $events = [];
     $options = [
       'typeMap' => [
@@ -474,19 +480,49 @@ class Logger extends AbstractLogger {
   }
 
   /**
+   * Count events matching a request unique_id.
+   *
+   * XXX This implementation may be very inefficient in case of a request gone
+   * bad generating non-templated varying messages: #requests is O(#templates).
+   *
+   * @param string $requestId
+   *   The unique_id of the request.
+   *
+   * @return int
+   *   The number of events matching the unique_id.
+   */
+  public function requestEventsCount($requestId) {
+    if (empty($requestId)) {
+      return 0;
+    }
+
+    $templates = $this->requestTemplates($requestId);
+    $count = 0;
+    foreach ($templates as $template) {
+      $eventCollection = $this->eventCollection($template->_id);
+      $selector = [
+        'requestTracking_id' => $requestId,
+      ];
+      $count += $eventCollection->count($selector);
+    }
+
+    return $count;
+  }
+
+  /**
    * Return the number of event templates.
    */
   public function templatesCount() {
     return $this->templateCollection()->count([]);
   }
 
-    /**
+  /**
    * Return an array of templates uses during a given request.
    *
    * @param string $unsafe_request_id
    *   A request "unique_id".
    *
-   * @return array
+   * @return \Drupal\mongodb_watchdog\EventTemplate[]
    *   An array of EventTemplate instances.
    */
   public function requestTemplates($unsafe_request_id) {
@@ -500,8 +536,8 @@ class Logger extends AbstractLogger {
       ->find($selector, static::LEGACY_TYPE_MAP + [
         'projection' => [
           '_id' => 0,
-          'template_id' => 1
-        ]
+          'template_id' => 1,
+        ],
       ]);
     $template_ids = [];
     foreach ($cursor as $request) {

@@ -99,7 +99,7 @@ class EventController {
       empty($event->referrer) ? '' : Link::fromTextAndUrl($event->referrer, Url::fromUri($event->referrer)),
       $event->hostname,
       isset($event->requestTracking_id)
-        ? Link::createFromRoute(t('Request'), 'mongodb_watchdog.reports.request', ['unique_id' => $event->requestTracking_id])
+        ? Link::createFromRoute(t('Request'), 'mongodb_watchdog.reports.request', ['uniqueId' => $event->requestTracking_id])
         : '',
     ];
     return $ret;
