@@ -9,6 +9,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\mongodb_watchdog\Logger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Implements the controller for the request events page.
@@ -21,6 +22,13 @@ class RequestController implements ContainerInjectionInterface {
    * @var \Drupal\Core\Datetime\DateFormatterInterface
    */
   protected $dateFormatter;
+
+  /**
+   * The items_per_page configuration value.
+   *
+   * @var int
+   */
+  protected $itemsPerPage;
 
   /**
    * The length of the absolute path to the site root, in runes.
@@ -43,9 +51,12 @@ class RequestController implements ContainerInjectionInterface {
    *   The MongoDB logger service, to load event data.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The core date.formatter service.
+   * @param int $items_per_page
+   *   The items_per_page configuration value.
    */
-  public function __construct(Logger $watchdog, DateFormatterInterface $date_formatter) {
+  public function __construct(Logger $watchdog, DateFormatterInterface $date_formatter, $items_per_page) {
     $this->dateFormatter = $date_formatter;
+    $this->itemsPerPage = $items_per_page;
     $this->watchdog = $watchdog;
 
     // Add terminal "/".
@@ -65,10 +76,14 @@ class RequestController implements ContainerInjectionInterface {
    */
   public function buildTrackRequest($unique_id, array $events) {
     if ($events) {
+      $row = array_slice($events, 0, 1);
       /** @var \Drupal\mongodb_watchdog\Event $first */
-      $first = $events[0][1];
+      list($template, $first) = reset($row);
+
       $location = $first->location;
-      $timestamp = $this->dateFormatter->format($first->timestamp, 'long');
+      $timestamp = isset($first->timestamp)
+        ? $this->dateFormatter->format($first->timestamp, 'long')
+        : t('No information');
     }
     else {
       $location = $timestamp = t('No information');
@@ -115,10 +130,8 @@ class RequestController implements ContainerInjectionInterface {
     $rows = [];
     $levels = RfcLogLevel::getLevels();
 
-    /**
-     * @var \Drupal\mongodb_watchdog\EventTemplate $template
-     * @var \Drupal\mongodb_watchdog\Event $event
-     */
+    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
+    /** @var \Drupal\mongodb_watchdog\Event $event */
     foreach ($events as list($template, $event)) {
       $row = [
         ['data' => $event->requestTracking_sequence],
@@ -156,7 +169,40 @@ class RequestController implements ContainerInjectionInterface {
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
     $date_formatter = $container->get('date.formatter');
 
-    return new static($watchdog, $date_formatter);
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = $container->get('config.factory');
+    $items_per_page = $config_factory->get('mongodb_watchdog.settings')->get('items_per_page');
+    return new static($watchdog, $date_formatter, $items_per_page);
+  }
+
+  /**
+   * Set up the templates pager.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
+   * @param int $uniqueId
+   *   The uniqueId of the current request.
+   *
+   * @return int
+   *   The number of the page to display, starting at 0.
+   */
+  public function setupPager(Request $request, $uniqueId) {
+    $count = $this->watchdog->requestEventsCount($uniqueId);
+    $height = $this->itemsPerPage;
+    pager_default_initialize($count, $height);
+
+    $page = intval($request->query->get('page'));
+    if ($page < 0) {
+      $page = 0;
+    }
+    else {
+      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX) - 1);
+      if ($page > $page_max) {
+        $page = $page_max;
+      }
+    }
+
+    return $page;
   }
 
   /**
@@ -178,20 +224,31 @@ class RequestController implements ContainerInjectionInterface {
   /**
    * Controller.
    *
-   * @param string $unique_id
-   *   The unique request id from mod_unique_id.
+   * @param string $uniqueId
+   *   The unique request id from mod_unique_id. Unsafe.
    *
    * @return array
    *   A render array.
    */
-  public function track($unique_id) {
-    $events = $this->watchdog->requestEvents($unique_id);
+  public function track(Request $request, $uniqueId) {
+    if (!preg_match('/[\w-]+/', $uniqueId)) {
+      return ['#markup' => ''];
+    }
+
+    $page = $this->setupPager($request, $uniqueId);
+    $skip = $page * $this->itemsPerPage;
+    $height = $this->itemsPerPage;
+
+    $events = $this->watchdog->requestEvents($uniqueId, $skip, $height);
     $ret = [
       '#attached' => [
         'library' => ['mongodb_watchdog/styling'],
       ],
-      'request' => $this->buildTrackRequest($unique_id, $events),
+      'request' => $this->buildTrackRequest($uniqueId, $events),
       'events' => $this->buildTrackRows($events),
+      'pager' => [
+        '#type' => 'pager',
+      ],
     ];
     return $ret;
   }

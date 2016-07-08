@@ -54,7 +54,7 @@ class Logger extends AbstractLogger {
    *
    * @var int
    */
-  protected $limit;
+  protected $limit = RfcLogLevel::DEBUG;
 
   /**
    * The message's placeholders parser.
@@ -276,43 +276,6 @@ class Logger extends AbstractLogger {
   }
 
   /**
-   * List the event collections.
-   *
-   * @return \MongoDB\Collection[]
-   *   The collections with a name matching the event pattern.
-   */
-  public function eventCollections() {
-    echo static::EVENT_COLLECTIONS_PATTERN;
-    $options = [
-      'filter' => [
-        'name' => ['$regex' => static::EVENT_COLLECTIONS_PATTERN],
-      ],
-    ];
-    $result = iterator_to_array($this->database->listCollections($options));
-    return $result;
-  }
-
-  /**
-   * Return a collection, given its template id.
-   *
-   * @param string $template_id
-   *   The string representation of a template \MongoId.
-   *
-   * @return \MongoDB\Collection
-   *   A collection object for the specified template id.
-   */
-  public function eventCollection($template_id) {
-    $collection_name = static::EVENT_COLLECTION_PREFIX . $template_id;
-    if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $collection_name)) {
-      throw new InvalidArgumentException(t('Invalid watchdog template id `@id`.', [
-        '@id' => $collection_name,
-      ]));
-    }
-    $collection = $this->database->selectCollection($collection_name);
-    return $collection;
-  }
-
-  /**
    * Ensure a collection is capped with the proper size.
    *
    * @param string $name
@@ -416,18 +379,77 @@ class Logger extends AbstractLogger {
   }
 
   /**
+   * Return a collection, given its template id.
+   *
+   * @param string $template_id
+   *   The string representation of a template \MongoId.
+   *
+   * @return \MongoDB\Collection
+   *   A collection object for the specified template id.
+   */
+  public function eventCollection($template_id) {
+    $collection_name = static::EVENT_COLLECTION_PREFIX . $template_id;
+    if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $collection_name)) {
+      throw new InvalidArgumentException(t('Invalid watchdog template id `@id`.', [
+        '@id' => $collection_name,
+      ]));
+    }
+    $collection = $this->database->selectCollection($collection_name);
+    return $collection;
+  }
+
+  /**
+   * List the event collections.
+   *
+   * @return \MongoDB\Collection[]
+   *   The collections with a name matching the event pattern.
+   */
+  public function eventCollections() {
+    echo static::EVENT_COLLECTIONS_PATTERN;
+    $options = [
+      'filter' => [
+        'name' => ['$regex' => static::EVENT_COLLECTIONS_PATTERN],
+      ],
+    ];
+    $result = iterator_to_array($this->database->listCollections($options));
+    return $result;
+  }
+
+  /**
+   * Return the number of events for a template.
+   *
+   * @param \Drupal\mongodb_watchdog\EventTemplate $template
+   *   A template for which to count events.
+   *
+   * @return int
+   *   The number of matching events.
+   */
+  public function eventCount(EventTemplate $template) {
+    return $this->eventCollection($template->_id)->count();
+  }
+
+  /**
    * Return the events having occurred during a given request.
    *
-   * @param string $unsafe_request_id
-   *   The raw request_id.
+   * @param string $requestId
+   *   The request unique_id.
+   * @param int $skip
+   *   The number of events to skip in the result.
+   * @param int $limit
+   *   The maximum number of events to return.
    *
    * @return array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]>
    *   An array of [template, event] arrays, ordered by occurrence order.
    */
-  public function requestEvents($unsafe_request_id) {
-    $templates = $this->requestTemplates($unsafe_request_id);
-    $request_id = "$unsafe_request_id";
-    $selector = ['requestTracking_id' => $request_id];
+  public function requestEvents($requestId, $skip = 0, $limit = 0) {
+    $templates = $this->requestTemplates($requestId);
+    $selector = [
+      'requestTracking_id' => $requestId,
+      'requestTracking_sequence' => [
+        '$gte' => $skip,
+        '$lt' => $skip + $limit,
+      ],
+    ];
     $events = [];
     $options = [
       'typeMap' => [
@@ -458,12 +480,49 @@ class Logger extends AbstractLogger {
   }
 
   /**
+   * Count events matching a request unique_id.
+   *
+   * XXX This implementation may be very inefficient in case of a request gone
+   * bad generating non-templated varying messages: #requests is O(#templates).
+   *
+   * @param string $requestId
+   *   The unique_id of the request.
+   *
+   * @return int
+   *   The number of events matching the unique_id.
+   */
+  public function requestEventsCount($requestId) {
+    if (empty($requestId)) {
+      return 0;
+    }
+
+    $templates = $this->requestTemplates($requestId);
+    $count = 0;
+    foreach ($templates as $template) {
+      $eventCollection = $this->eventCollection($template->_id);
+      $selector = [
+        'requestTracking_id' => $requestId,
+      ];
+      $count += $eventCollection->count($selector);
+    }
+
+    return $count;
+  }
+
+  /**
+   * Return the number of event templates.
+   */
+  public function templatesCount() {
+    return $this->templateCollection()->count([]);
+  }
+
+  /**
    * Return an array of templates uses during a given request.
    *
    * @param string $unsafe_request_id
    *   A request "unique_id".
    *
-   * @return array
+   * @return \Drupal\mongodb_watchdog\EventTemplate[]
    *   An array of EventTemplate instances.
    */
   public function requestTemplates($unsafe_request_id) {
@@ -477,8 +536,8 @@ class Logger extends AbstractLogger {
       ->find($selector, static::LEGACY_TYPE_MAP + [
         'projection' => [
           '_id' => 0,
-          'template_id' => 1
-        ]
+          'template_id' => 1,
+        ],
       ]);
     $template_ids = [];
     foreach ($cursor as $request) {
@@ -532,11 +591,15 @@ class Logger extends AbstractLogger {
    *   An array of EventTemplate types. May be a hash.
    * @param string[]|int[] $levels
    *   An array of severity levels.
+   * @param int $skip
+   *   The number of templates to skip before the first one displayed.
+   * @param int $limit
+   *   The maximum number of templates to return.
    *
    * @return \MongoDB\Driver\Cursor
    *   A query result for the templates.
    */
-  public function templates(array $types = [], array $levels = []) {
+  public function templates(array $types = [], array $levels = [], $skip = 0, $limit = 0) {
     $selector = [];
     if (!empty($types)) {
       $selector['type'] = ['$in' => array_values($types)];
@@ -556,6 +619,12 @@ class Logger extends AbstractLogger {
         'root' => '\Drupal\mongodb_watchdog\EventTemplate',
       ],
     ];
+    if ($skip) {
+      $options['skip'] = $skip;
+    }
+    if ($limit) {
+      $options['limit'] = $limit;
+    }
 
     $cursor = $this->templateCollection()->find($selector, $options);
     return $cursor;
