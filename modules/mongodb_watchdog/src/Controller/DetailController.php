@@ -4,7 +4,6 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Template\Attribute;
 use Drupal\mongodb_watchdog\EventController;
 use Drupal\mongodb_watchdog\EventTemplate;

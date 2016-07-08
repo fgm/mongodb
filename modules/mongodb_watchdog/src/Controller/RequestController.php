@@ -130,10 +130,8 @@ class RequestController implements ContainerInjectionInterface {
     $rows = [];
     $levels = RfcLogLevel::getLevels();
 
-    /**
-     * @var \Drupal\mongodb_watchdog\EventTemplate $template
-     * @var \Drupal\mongodb_watchdog\Event $event
-     */
+    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
+    /** @var \Drupal\mongodb_watchdog\Event $event */
     foreach ($events as list($template, $event)) {
       $row = [
         ['data' => $event->requestTracking_sequence],
