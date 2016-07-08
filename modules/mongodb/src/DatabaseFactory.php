@@ -1,6 +1,7 @@
 <?php
 namespace Drupal\mongodb;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Site\Settings;
 
 /**
@@ -45,15 +46,18 @@ class DatabaseFactory {
    *   The selected database, or NULL if an error occurred.
    */
   public function get($alias) {
+    if (!isset($this->settings[$alias])) {
+      throw new \InvalidArgumentException(new FormattableMarkup('Nonexistent database alias: @alias', [
+        '@alias' => $alias,
+      ]));
+    }
     try {
       list($client_alias, $database) = $this->settings[$alias];
       $client = $this->clientFactory->get($client_alias);
       $result = $client->selectDatabase($database);
     }
+    // Includes its descendant \MongoDb\Exception\InvalidArgumentException.
     catch (\InvalidArgumentException $e) {
-      $result = NULL;
-    }
-    catch (\MongoConnectionException $e) {
       $result = NULL;
     }
 
