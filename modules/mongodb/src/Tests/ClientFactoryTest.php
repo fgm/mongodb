@@ -35,7 +35,9 @@ class ClientFactoryTest extends KernelTestBase {
    */
   public function setUp() {
     parent::setUp();
-    $this->uri = $_SERVER['MONGODB_URI'] ?? static::DEFAUlT_URI;
+    // $_ENV if it comes from phpunit.xml <env>
+    // $_SERVER if it comes from the phpunit command line environment
+    $this->uri = $_ENV['MONGODB_URL'] ?? $_SERVER['MONGODB_URI'] ?? static::DEFAULT_URI;
 
     $this->settings = new Settings([
       'mongodb' => [
@@ -71,7 +73,7 @@ class ClientFactoryTest extends KernelTestBase {
     }
     catch (ConnectionTimeoutException $e) {
       $this->fail(new FormattableMarkup("Could not connect to server on @uri. Enable one on @default or specify one in MONGODB_URI.", [
-        '@default' => static::DEFAUlT_URI,
+        '@default' => static::DEFAULT_URI,
         '@uri' => $this->uri,
       ]));
     }
