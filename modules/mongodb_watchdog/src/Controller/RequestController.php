@@ -58,10 +58,12 @@ class RequestController extends ControllerBase {
   /**
    * Controller.
    *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
    * @param string $uniqueId
    *   The unique request id from mod_unique_id. Unsafe.
    *
-   * @return array
+   * @return array <string,array|string>
    *   A render array.
    */
   public function build(Request $request, $uniqueId) {
@@ -141,7 +143,7 @@ class RequestController extends ControllerBase {
    * @param array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]> $events
    *   A fully loaded array of events and their templates.
    *
-   * @return array
+   * @return array<string,array|string> 
    *   A render array for a table.
    */
   public function buildRows(array $events) {

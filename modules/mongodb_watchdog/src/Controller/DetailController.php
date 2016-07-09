@@ -53,7 +53,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $event_template
    *   The event template.
    *
-   * @return array A render array.
+   * @return array<string,array>
    *   A render array.
    */
   public function build(Request $request, EventTemplate $event_template) {

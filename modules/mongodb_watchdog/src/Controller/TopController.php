@@ -126,7 +126,7 @@ class TopController implements ContainerInjectionInterface {
    * @param array $y
    *   The second value to compare.
    *
-   * @return bool
+   * @return int
    *   The comparison result.
    *
    * @see \Drupal\mongodb_watchdog\Controller\TopController::top()
@@ -134,7 +134,7 @@ class TopController implements ContainerInjectionInterface {
   protected function topSort(array $x, array $y) {
     $cx = $x['count'];
     $cy = $y['count'];
-    return $cy - $cx;
+    return intval($cy - $cx);
   }
 
   /**

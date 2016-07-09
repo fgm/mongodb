@@ -136,7 +136,7 @@ class OverviewController extends ControllerBase {
    * @param int $page
    *   The number of the page to display.
    *
-   * @return array
+   * @return array<string,array|string>
    *   A render array.
    */
   public function buildRows($page) {
@@ -226,8 +226,8 @@ class OverviewController extends ControllerBase {
         $cell = Link::createFromRoute(t('( Top 403 )'), 'mongodb_watchdog.reports.top403');
         break;
 
+      // Limited-length message.
       default:
-        // Limited-length message.
         $message = Unicode::truncate(strip_tags(SafeMarkup::format($template->message, [])), 56, TRUE, TRUE);
         $cell = Link::createFromRoute($message, 'mongodb_watchdog.reports.detail', [
           'event_template' => $template->_id,
@@ -248,14 +248,16 @@ class OverviewController extends ControllerBase {
    *   A render array for the source location, possibly empty or wrong.
    */
   protected function getEventSource(EventTemplate $template) {
+    $cell = ['#markup' => ''];
+
     if (in_array($template->type, TopController::TYPES)) {
-      return '';
+      return $cell;
     }
 
     $event_collection = $this->watchdog->eventCollection($template->_id);
     $event = $event_collection->findOne([], static::EVENT_TYPE_MAP);
     if (!($event instanceof Event)) {
-      return '';
+      return $cell;
     }
 
     $file = $event->variables['%file'] ?? '';
