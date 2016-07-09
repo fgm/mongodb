@@ -4,7 +4,7 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
@@ -57,13 +57,6 @@ class OverviewController extends ControllerBase {
   protected $formBuilder;
 
   /**
-   * The items_per_page configuration value.
-   *
-   * @var int
-   */
-  protected $itemsPerPage;
-
-  /**
    * The core logger channel, to log intervening events.
    *
    * @var \Psr\Log\LoggerInterface
@@ -94,7 +87,7 @@ class OverviewController extends ControllerBase {
   protected $watchdog;
 
   /**
-   * Constructor.
+   * Controller constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service, to log intervening events.
@@ -106,8 +99,8 @@ class OverviewController extends ControllerBase {
    *   The form builder service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The core date_formatter service.
-   * @param int $items_per_page
-   *   The items_per_page configuration value.
+   * @param \Drupal\Core\Config\ImmutableConfig $config
+   *   The module configuration.
    */
   public function __construct(
     LoggerInterface $logger,
@@ -115,18 +108,90 @@ class OverviewController extends ControllerBase {
     ModuleHandlerInterface $module_handler,
     FormBuilderInterface $form_builder,
     DateFormatterInterface $date_formatter,
-    $items_per_page) {
+    ImmutableConfig $config) {
+    parent::__construct($config);
     $this->dateFormatter = $date_formatter;
     $this->formBuilder = $form_builder;
     $this->logger = $logger;
     $this->moduleHandler = $module_handler;
     $this->watchdog = $watchdog;
 
-    $this->itemsPerPage = $items_per_page;
-
     // Add terminal "/".
     $this->rootLength = Unicode::strlen(DRUPAL_ROOT);
 
+  }
+
+  /**
+   * Controller.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function build(Request $request) {
+    $page = $this->setupPager($request);
+
+    $ret = [
+      'filter_form' => $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm'),
+      'rows' => $this->buildRows($page),
+      'pager' => [
+        '#type' => 'pager',
+      ],
+      '#attached' => [
+        'library' => ['mongodb_watchdog/styling'],
+      ],
+    ];
+
+    return $ret;
+  }
+
+  /**
+   * Build a table from the event rows.
+   *
+   * @param int $page
+   *   The number of the page to display.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function buildRows($page) {
+    $header = [
+      t('#'),
+      t('Latest'),
+      t('Severity'),
+      t('Type'),
+      t('Message'),
+      t('Source'),
+    ];
+    $rows = [];
+    $levels = RfcLogLevel::getLevels();
+    $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
+    $skip = $page * $this->itemsPerPage;
+    $limit = $this->itemsPerPage;
+    $cursor = $this->watchdog->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit);
+
+    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
+    foreach ($cursor as $template) {
+      $row = [];
+      $row[] = $template->count;
+      $row[] = $this->dateFormatter->format($template->changed, 'short');
+      $row[] = [
+        'class' => static::SEVERITY_CLASSES[$template->severity],
+        'data' => $levels[$template->severity],
+      ];
+      $row[] = $template->type;
+      $row[] = $this->getEventLink($template);
+      $row[] = [
+        'data' => $this->getEventSource($template, $row),
+      ];
+
+      $rows[] = $row;
+    }
+
+    return [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+    ];
   }
 
   /**
@@ -148,11 +213,10 @@ class OverviewController extends ControllerBase {
     /** @var \Drupal\mongodb_watchdog\Logger $logger */
     $watchdog = $container->get('mongodb.logger');
 
-    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
-    $config_factory = $container->get('config.factory');
-    $items_per_page = $config_factory->get('mongodb_watchdog.settings')->get('items_per_page');
+    /** @var \Drupal\Core\Config\ImmutableConfig $config */
+    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
 
-    return new static($logger, $watchdog, $module_handler, $form_builder, $date_formatter, $items_per_page);
+    return new static($logger, $watchdog, $module_handler, $form_builder, $date_formatter, $config);
   }
 
   /**
@@ -230,79 +294,6 @@ class OverviewController extends ControllerBase {
     }
 
     return $cell;
-  }
-
-  /**
-   * Controller for mongodb_watchdog.overview.
-   *
-   * @return array
-   *   A render array.
-   */
-  public function overview(Request $request) {
-    $page = $this->setupPager($request);
-
-    $ret = [
-      'filter_form' => $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm'),
-      'rows' => $this->overviewRows($page),
-      'pager' => [
-        '#type' => 'pager',
-      ],
-      '#attached' => [
-        'library' => ['mongodb_watchdog/styling'],
-      ],
-    ];
-
-    return $ret;
-  }
-
-  /**
-   * Build a table from the event rows.
-   *
-   * @param int $page
-   *   The number of the page to display.
-   *
-   * @return array
-   *   A render array.
-   */
-  public function overviewRows($page) {
-    $header = [
-      t('#'),
-      t('Latest'),
-      t('Severity'),
-      t('Type'),
-      t('Message'),
-      t('Source'),
-    ];
-    $rows = [];
-    $levels = RfcLogLevel::getLevels();
-    $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
-    $skip = $page * $this->itemsPerPage;
-    $limit = $this->itemsPerPage;
-    $cursor = $this->watchdog->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit);
-
-    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
-    foreach ($cursor as $template) {
-      $row = [];
-      $row[] = $template->count;
-      $row[] = $this->dateFormatter->format($template->changed, 'short');
-      $row[] = [
-        'class' => static::SEVERITY_CLASSES[$template->severity],
-        'data' => $levels[$template->severity],
-      ];
-      $row[] = $template->type;
-      $row[] = $this->getEventLink($template);
-      $row[] = [
-        'data' => $this->getEventSource($template, $row),
-      ];
-
-      $rows[] = $row;
-    }
-
-    return [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-    ];
   }
 
   /**

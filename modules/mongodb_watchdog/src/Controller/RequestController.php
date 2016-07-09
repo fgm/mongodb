@@ -3,6 +3,7 @@
 namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Link;
@@ -14,7 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Implements the controller for the request events page.
  */
-class RequestController implements ContainerInjectionInterface {
+class RequestController extends ControllerBase implements ContainerInjectionInterface {
 
   /**
    * The core date.formatter service.
@@ -24,13 +25,6 @@ class RequestController implements ContainerInjectionInterface {
   protected $dateFormatter;
 
   /**
-   * The items_per_page configuration value.
-   *
-   * @var int
-   */
-  protected $itemsPerPage;
-
-  /**
    * The length of the absolute path to the site root, in runes.
    *
    * @var int
@@ -38,29 +32,65 @@ class RequestController implements ContainerInjectionInterface {
   protected $rootLength;
 
   /**
-   * The mongodb_watchdog logger, to access events.
+   * The MongoDB logger, to load events.
    *
    * @var \Drupal\mongodb_watchdog\Logger
    */
   protected $watchdog;
 
   /**
-   * RequestController constructor.
+   * Controller constructor.
    *
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
    *   The MongoDB logger service, to load event data.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The core date.formatter service.
-   * @param int $items_per_page
-   *   The items_per_page configuration value.
+   * @param \Drupal\Core\Config\ImmutableConfig $config
+   *   The module configuration.
    */
-  public function __construct(Logger $watchdog, DateFormatterInterface $date_formatter, $items_per_page) {
+  public function __construct(
+    Logger $watchdog,
+    DateFormatterInterface $date_formatter,
+    ImmutableConfig $config) {
+    parent::__construct($config);
     $this->dateFormatter = $date_formatter;
-    $this->itemsPerPage = $items_per_page;
     $this->watchdog = $watchdog;
 
     // Add terminal "/".
     $this->rootLength = Unicode::strlen(DRUPAL_ROOT) + 1;
+  }
+
+  /**
+   * Controller.
+   *
+   * @param string $uniqueId
+   *   The unique request id from mod_unique_id. Unsafe.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function build(Request $request, $uniqueId) {
+    if (!preg_match('/[\w-]+/', $uniqueId)) {
+      return ['#markup' => ''];
+    }
+
+    $page = $this->setupPager($request, $uniqueId);
+    $skip = $page * $this->itemsPerPage;
+    $height = $this->itemsPerPage;
+
+    $events = $this->watchdog->requestEvents($uniqueId, $skip, $height);
+    $ret = [
+      'request' => $this->buildRequest($uniqueId, $events),
+      'events' => $this->buildRows($events),
+      'pager' => [
+        '#type' => 'pager',
+      ],
+      '#attached' => [
+        'library' => ['mongodb_watchdog/styling'],
+      ],
+    ];
+
+    return $ret;
   }
 
   /**
@@ -74,7 +104,7 @@ class RequestController implements ContainerInjectionInterface {
    * @return array
    *   A render array for a table.
    */
-  public function buildTrackRequest($unique_id, array $events) {
+  public function buildRequest($unique_id, array $events) {
     if ($events) {
       $row = array_slice($events, 0, 1);
       /** @var \Drupal\mongodb_watchdog\Event $first */
@@ -118,7 +148,7 @@ class RequestController implements ContainerInjectionInterface {
    * @return array
    *   A render array for a table.
    */
-  public function buildTrackRows(array $events) {
+  public function buildRows(array $events) {
     $header = [
       t('Sequence'),
       t('Type'),
@@ -169,10 +199,10 @@ class RequestController implements ContainerInjectionInterface {
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
     $date_formatter = $container->get('date.formatter');
 
-    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
-    $config_factory = $container->get('config.factory');
-    $items_per_page = $config_factory->get('mongodb_watchdog.settings')->get('items_per_page');
-    return new static($watchdog, $date_formatter, $items_per_page);
+    /** @var \Drupal\Core\Config\ImmutableConfig $config */
+    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
+
+    return new static($watchdog, $date_formatter, $config);
   }
 
   /**
@@ -218,38 +248,6 @@ class RequestController implements ContainerInjectionInterface {
     $ret = (Unicode::strpos($path, DRUPAL_ROOT) === 0)
       ? Unicode::substr($path, $this->rootLength)
       : $path;
-    return $ret;
-  }
-
-  /**
-   * Controller.
-   *
-   * @param string $uniqueId
-   *   The unique request id from mod_unique_id. Unsafe.
-   *
-   * @return array
-   *   A render array.
-   */
-  public function track(Request $request, $uniqueId) {
-    if (!preg_match('/[\w-]+/', $uniqueId)) {
-      return ['#markup' => ''];
-    }
-
-    $page = $this->setupPager($request, $uniqueId);
-    $skip = $page * $this->itemsPerPage;
-    $height = $this->itemsPerPage;
-
-    $events = $this->watchdog->requestEvents($uniqueId, $skip, $height);
-    $ret = [
-      '#attached' => [
-        'library' => ['mongodb_watchdog/styling'],
-      ],
-      'request' => $this->buildTrackRequest($uniqueId, $events),
-      'events' => $this->buildTrackRows($events),
-      'pager' => [
-        '#type' => 'pager',
-      ],
-    ];
     return $ret;
   }
 

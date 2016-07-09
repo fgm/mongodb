@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Class DetailController implements the controller for the event detail page.
  */
-class DetailController implements ContainerInjectionInterface {
+class DetailController extends ControllerBase implements ContainerInjectionInterface {
 
   /**
    * The mongodb.watchdog_event_controller service.
@@ -25,13 +25,6 @@ class DetailController implements ContainerInjectionInterface {
   protected $eventController;
 
   /**
-   * The items_per_page configuration value.
-   *
-   * @var int
-   */
-  protected $itemsPerPage;
-
-  /**
    * The logger.mongodb_watchdog logger channel, to log events.
    *
    * @var \Psr\Log\LoggerInterface
@@ -39,14 +32,14 @@ class DetailController implements ContainerInjectionInterface {
   protected $logger;
 
   /**
-   * The MongoDB logger service, to load events.
+   * The MongoDB logger, to load events.
    *
    * @var \Drupal\mongodb_watchdog\Logger
    */
   protected $watchdog;
 
   /**
-   * Constructor.
+   * Controller constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service, to log intervening events.
@@ -55,47 +48,33 @@ class DetailController implements ContainerInjectionInterface {
    * @param \Drupal\Core\Config\ImmutableConfig $config
    *   The module configuration.
    */
-  public function __construct(Logger $watchdog, LoggerInterface $logger, EventController $event_controller, ImmutableConfig $config) {
+  public function __construct(
+    Logger $watchdog,
+    LoggerInterface $logger,
+    EventController $event_controller,
+    ImmutableConfig $config) {
+    parent::__construct($config);
     $this->config = $config;
     $this->eventController = $event_controller;
     $this->logger = $logger;
     $this->watchdog = $watchdog;
-
-    $this->itemsPerPage = $config->get('items_per_page');
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    /** @var \Psr\Log\LoggerInterface $logger */
-    $logger = $container->get('logger.channel.mongodb_watchdog');
-
-    /** @var \Drupal\mongodb_watchdog\EventController $eventController */
-    $eventController = $container->get('mongodb.watchdog_event_controller');
-
-    /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
-    $watchdog = $container->get('mongodb.logger');
-
-    /** @var array $config */
-    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
-
-    return new static($watchdog, $logger, $eventController, $config);
-  }
-
-  /**
-   * Controller for mongodb_watchdog.detail.
+   * Controller.
    *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
    * @param \Drupal\mongodb_watchdog\EventTemplate $event_template
    *   The event template.
    *
-   * @return array
+   * @return array A render array.
    *   A render array.
    */
-  public function detail(EventTemplate $event_template, Request $request) {
+  public function build(Request $request, EventTemplate $event_template) {
     $page = $this->setupPager($event_template, $request);
-    $template_rows = $this->detailHeader($event_template);
-    $event_rows = $this->detailRows($event_template, $page);
+    $template_rows = $this->buildHeader($event_template);
+    $event_rows = $this->buildRows($event_template, $page);
 
     $base = [
       '#attributes' => new Attribute(['class' => 'mongodb_watchdog-detail']),
@@ -113,9 +92,6 @@ class DetailController implements ContainerInjectionInterface {
     ];
 
     $ret = [
-      "#attached" => [
-        'library' => 'mongodb_watchdog/styling',
-      ],
       'template' => $base + [
         '#caption' => t('Event template'),
         '#rows' => $template_rows,
@@ -127,6 +103,9 @@ class DetailController implements ContainerInjectionInterface {
       ],
       'pager' => [
         '#type' => 'pager',
+      ],
+      '#attached' => [
+        'library' => ['mongodb_watchdog/styling'],
       ],
     ];
 
@@ -142,7 +121,7 @@ class DetailController implements ContainerInjectionInterface {
    * @return array
    *   A table render array.
    */
-  protected function detailHeader(EventTemplate $template) {
+  protected function buildHeader(EventTemplate $template) {
     $rows = [];
     foreach (EventTemplate::keys() as $key => $info) {
       $value = $template->{$key};
@@ -169,7 +148,7 @@ class DetailController implements ContainerInjectionInterface {
    * @return array
    *   A table render array.
    */
-  protected function detailRows(EventTemplate $template, $page) {
+  protected function buildRows(EventTemplate $template, $page) {
     $rows = [];
     $skip = $page * $this->itemsPerPage;
     $limit = $this->itemsPerPage;
@@ -191,8 +170,27 @@ class DetailController implements ContainerInjectionInterface {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The page title.
    */
-  public function detailTitle(EventTemplate $event_template) {
+  public function buildTitle(EventTemplate $event_template) {
     return t('MongoDB events: "@template"', ['@template' => $event_template->message]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var \Psr\Log\LoggerInterface $logger */
+    $logger = $container->get('logger.channel.mongodb_watchdog');
+
+    /** @var \Drupal\mongodb_watchdog\EventController $eventController */
+    $eventController = $container->get('mongodb.watchdog_event_controller');
+
+    /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
+    $watchdog = $container->get('mongodb.logger');
+
+    /** @var \Drupal\Core\Config\ImmutableConfig $config */
+    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
+
+    return new static($watchdog, $logger, $eventController, $config);
   }
 
   /**

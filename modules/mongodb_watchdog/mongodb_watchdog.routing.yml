@@ -1,7 +1,7 @@
 mongodb_watchdog.reports.overview:
   path: '/admin/reports/mongodb/watchdog'
   defaults:
-    _controller: '\Drupal\mongodb_watchdog\Controller\OverviewController::overview'
+    _controller: '\Drupal\mongodb_watchdog\Controller\OverviewController::build'
     _title: 'Recent log messages in MongoDB'
   requirements:
     _permission: 'access site reports'
@@ -11,9 +11,9 @@ mongodb_watchdog.reports.overview:
 mongodb_watchdog.reports.detail:
   path: '/admin/reports/mongodb/watchdog/{event_template}'
   defaults:
-    _controller: '\Drupal\mongodb_watchdog\Controller\DetailController::detail'
+    _controller: '\Drupal\mongodb_watchdog\Controller\DetailController::build'
     _title: 'Recent log messages in MongoDB: detail'
-    _title_callback: '\Drupal\mongodb_watchdog\Controller\DetailController::detailTitle'
+    _title_callback: '\Drupal\mongodb_watchdog\Controller\DetailController::buildTitle'
   requirements:
     _permission: 'access site reports'
   options:
@@ -25,7 +25,7 @@ mongodb_watchdog.reports.detail:
 mongodb_watchdog.reports.request:
   path: '/admin/reports/mongodb/watchdog/request/{uniqueId}'
   defaults:
-    _controller: '\Drupal\mongodb_watchdog\Controller\RequestController::track'
+    _controller: '\Drupal\mongodb_watchdog\Controller\RequestController::build'
     _title: 'Recent log messages in MongoDB: events on a request'
   requirements:
     _permission: 'access site reports'
