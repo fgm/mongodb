@@ -53,6 +53,8 @@ class Logger extends AbstractLogger {
    * The minimum logging level.
    *
    * @var int
+   *
+   * @see https://drupal.org/node/1355808
    */
   protected $limit = RfcLogLevel::DEBUG;
 
@@ -168,6 +170,8 @@ class Logger extends AbstractLogger {
 
   /**
    * {@inheritdoc}
+   *
+   * @see https://drupal.org/node/1355808
    */
   public function log($level, $template, array $context = []) {
     if ($level > $this->limit) {
