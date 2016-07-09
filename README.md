@@ -16,6 +16,9 @@ mongodb_watchdog      | Store logger (watchdog) messages in MongoDB.
 
 As its name implies, this release is currently alpha-level only. Use at your own risk.
 
+Documentation is available on [Github pages]
+
+[Github pages]: https://fgm.github.io/mongodb/
 
 
 INSTALLATION
