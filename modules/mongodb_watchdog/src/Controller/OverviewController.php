@@ -57,13 +57,6 @@ class OverviewController extends ControllerBase {
   protected $formBuilder;
 
   /**
-   * The core logger channel, to log intervening events.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
    * The module handler service.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -80,41 +73,33 @@ class OverviewController extends ControllerBase {
   protected $rootLength;
 
   /**
-   * The MongoDB logger, to load events.
-   *
-   * @var \Drupal\mongodb_watchdog\Logger
-   */
-  protected $watchdog;
-
-  /**
    * Controller constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service, to log intervening events.
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
    *   The MongoDB logger, to load stored events.
+   * @param \Drupal\Core\Config\ImmutableConfig $config
+   *   The module configuration.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   A module handler.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The core date_formatter service.
-   * @param \Drupal\Core\Config\ImmutableConfig $config
-   *   The module configuration.
    */
   public function __construct(
     LoggerInterface $logger,
     Logger $watchdog,
+    ImmutableConfig $config,
     ModuleHandlerInterface $module_handler,
     FormBuilderInterface $form_builder,
-    DateFormatterInterface $date_formatter,
-    ImmutableConfig $config) {
-    parent::__construct($config);
+    DateFormatterInterface $date_formatter) {
+    parent::__construct($logger, $watchdog, $config);
+
     $this->dateFormatter = $date_formatter;
     $this->formBuilder = $form_builder;
-    $this->logger = $logger;
     $this->moduleHandler = $module_handler;
-    $this->watchdog = $watchdog;
 
     // Add terminal "/".
     $this->rootLength = Unicode::strlen(DRUPAL_ROOT);
@@ -187,36 +172,38 @@ class OverviewController extends ControllerBase {
       $rows[] = $row;
     }
 
-    return [
+    $ret = [
       '#type' => 'table',
       '#header' => $header,
       '#rows' => $rows,
     ];
+
+    return $ret;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    /** @var \Psr\Log\LoggerInterface $logger */
+    $logger = $container->get('logger.channel.mongodb_watchdog');
+
+    /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
+    $watchdog = $container->get('mongodb.logger');
+
+    /** @var \Drupal\Core\Config\ImmutableConfig $config */
+    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
+
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
     $date_formatter = $container->get('date.formatter');
 
     /** @var \Drupal\Core\Form\FormBuilderInterface $form_builder */
     $form_builder = $container->get('form_builder');
 
-    /** @var \Psr\Log\LoggerInterface $logger */
-    $logger = $container->get('logger.channel.mongodb_watchdog');
-
     /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
     $module_handler = $container->get('module_handler');
 
-    /** @var \Drupal\mongodb_watchdog\Logger $logger */
-    $watchdog = $container->get('mongodb.logger');
-
-    /** @var \Drupal\Core\Config\ImmutableConfig $config */
-    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
-
-    return new static($logger, $watchdog, $module_handler, $form_builder, $date_formatter, $config);
+    return new static($logger, $watchdog, $config, $module_handler, $form_builder, $date_formatter);
   }
 
   /**
@@ -297,7 +284,7 @@ class OverviewController extends ControllerBase {
   }
 
   /**
-   * Set up the templates pager.
+   * Set up the pager.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.

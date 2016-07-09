@@ -9,13 +9,14 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\mongodb_watchdog\Logger;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Implements the controller for the request events page.
  */
-class RequestController extends ControllerBase implements ContainerInjectionInterface {
+class RequestController extends ControllerBase {
 
   /**
    * The core date.formatter service.
@@ -32,29 +33,24 @@ class RequestController extends ControllerBase implements ContainerInjectionInte
   protected $rootLength;
 
   /**
-   * The MongoDB logger, to load events.
-   *
-   * @var \Drupal\mongodb_watchdog\Logger
-   */
-  protected $watchdog;
-
-  /**
    * Controller constructor.
    *
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger service, to log intervening events.
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
-   *   The MongoDB logger service, to load event data.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
-   *   The core date.formatter service.
+   *   The MongoDB logger, to load stored events.
    * @param \Drupal\Core\Config\ImmutableConfig $config
    *   The module configuration.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The core date.formatter service.
    */
   public function __construct(
+    LoggerInterface $logger,
     Logger $watchdog,
-    DateFormatterInterface $date_formatter,
-    ImmutableConfig $config) {
-    parent::__construct($config);
+    ImmutableConfig $config,
+    DateFormatterInterface $date_formatter) {
+    parent::__construct($logger, $watchdog, $config);
     $this->dateFormatter = $date_formatter;
-    $this->watchdog = $watchdog;
 
     // Add terminal "/".
     $this->rootLength = Unicode::strlen(DRUPAL_ROOT) + 1;
@@ -183,9 +179,10 @@ class RequestController extends ControllerBase implements ContainerInjectionInte
 
     $ret = [
       '#type' => 'table',
-      '#rows' => $rows,
       '#header' => $header,
+      '#rows' => $rows,
     ];
+
     return $ret;
   }
 
@@ -193,20 +190,23 @@ class RequestController extends ControllerBase implements ContainerInjectionInte
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    /** @var \Psr\Log\LoggerInterface $logger */
+    $logger = $container->get('logger.channel.mongodb_watchdog');
+
     /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
     $watchdog = $container->get('mongodb.logger');
-
-    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
-    $date_formatter = $container->get('date.formatter');
 
     /** @var \Drupal\Core\Config\ImmutableConfig $config */
     $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
 
-    return new static($watchdog, $date_formatter, $config);
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = $container->get('date.formatter');
+
+    return new static($logger, $watchdog, $config, $date_formatter);
   }
 
   /**
-   * Set up the templates pager.
+   * Set up the pager.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
