@@ -3,7 +3,6 @@
 namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Core\Config\ImmutableConfig;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\mongodb_watchdog\EventController;
 use Drupal\mongodb_watchdog\EventTemplate;
@@ -58,7 +57,8 @@ class DetailController extends ControllerBase {
    *   A render array.
    */
   public function build(Request $request, EventTemplate $event_template) {
-    $page = $this->setupPager($request, $event_template);
+    $count = $this->watchdog->eventCount($event_template);
+    $page = $this->setupPager($request, $count);
     $template_rows = $this->buildHeader($event_template);
     $event_rows = $this->buildRows($event_template, $page);
 
@@ -177,34 +177,6 @@ class DetailController extends ControllerBase {
     $eventController = $container->get('mongodb.watchdog_event_controller');
 
     return new static($logger, $watchdog, $config, $eventController);
-  }
-
-  /**
-   * Set up the pager.
-   *
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current request.
-   *
-   * @return int
-   *   The number of the page to display, starting at 0.
-   */
-  public function setupPager(Request $request, EventTemplate $template) {
-    $count = $this->watchdog->eventCount($template);
-    $height = $this->itemsPerPage;
-    pager_default_initialize($count, $height);
-
-    $page = intval($request->query->get('page'));
-    if ($page < 0) {
-      $page = 0;
-    }
-    else {
-      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX) - 1);
-      if ($page > $page_max) {
-        $page = $page_max;
-      }
-    }
-
-    return $page;
   }
 
 }

@@ -5,7 +5,6 @@ namespace Drupal\mongodb_watchdog\Controller;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\mongodb_watchdog\Logger;
@@ -70,7 +69,8 @@ class RequestController extends ControllerBase {
       return ['#markup' => ''];
     }
 
-    $page = $this->setupPager($request, $uniqueId);
+    $count = $this->watchdog->requestEventsCount($uniqueId);
+    $page = $this->setupPager($request, $count);
     $skip = $page * $this->itemsPerPage;
     $height = $this->itemsPerPage;
 
@@ -203,36 +203,6 @@ class RequestController extends ControllerBase {
     $date_formatter = $container->get('date.formatter');
 
     return new static($logger, $watchdog, $config, $date_formatter);
-  }
-
-  /**
-   * Set up the pager.
-   *
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current request.
-   * @param int $uniqueId
-   *   The uniqueId of the current request.
-   *
-   * @return int
-   *   The number of the page to display, starting at 0.
-   */
-  public function setupPager(Request $request, $uniqueId) {
-    $count = $this->watchdog->requestEventsCount($uniqueId);
-    $height = $this->itemsPerPage;
-    pager_default_initialize($count, $height);
-
-    $page = intval($request->query->get('page'));
-    if ($page < 0) {
-      $page = 0;
-    }
-    else {
-      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX) - 1);
-      if ($page > $page_max) {
-        $page = $page_max;
-      }
-    }
-
-    return $page;
   }
 
   /**

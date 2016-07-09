@@ -113,7 +113,8 @@ class OverviewController extends ControllerBase {
    *   A render array.
    */
   public function build(Request $request) {
-    $page = $this->setupPager($request);
+    $count = $this->watchdog->templatesCount();
+    $page = $this->setupPager($request, $count);
 
     $ret = [
       'filter_form' => $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm'),
@@ -281,34 +282,6 @@ class OverviewController extends ControllerBase {
     }
 
     return $cell;
-  }
-
-  /**
-   * Set up the pager.
-   *
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current request.
-   *
-   * @return int
-   *   The number of the page to display, starting at 0.
-   */
-  public function setupPager(Request $request) {
-    $count = $this->watchdog->templatesCount();
-    $height = $this->itemsPerPage;
-    pager_default_initialize($count, $height);
-
-    $page = intval($request->query->get('page'));
-    if ($page < 0) {
-      $page = 0;
-    }
-    else {
-      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX) - 1);
-      if ($page > $page_max) {
-        $page = $page_max;
-      }
-    }
-
-    return $page;
   }
 
 }
