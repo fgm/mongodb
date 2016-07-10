@@ -89,9 +89,9 @@ class TopController extends ControllerBase {
    */
   protected function buildMainTable(array $rows) {
     $ret = [
-      '#type' => 'table',
       '#header' => $this->buildMainTableHeader(),
       '#rows' => $this->buildMainTableRows($rows),
+      '#type' => 'table',
     ];
     return $ret;
   }

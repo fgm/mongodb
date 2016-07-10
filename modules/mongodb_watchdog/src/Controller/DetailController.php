@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Class DetailController implements the controller for the event detail page.
+ * The controller for the event detail page.
  */
 class DetailController extends ControllerBase {
 
@@ -32,17 +32,17 @@ class DetailController extends ControllerBase {
    *   The MongoDB logger, to load stored events.
    * @param \Drupal\Core\Config\ImmutableConfig $config
    *   The module configuration.
-   * @param \Drupal\mongodb_watchdog\EventController $event_controller
+   * @param \Drupal\mongodb_watchdog\EventController $eventController
    *   The event controller service.
    */
   public function __construct(
     LoggerInterface $logger,
     Logger $watchdog,
     ImmutableConfig $config,
-    EventController $event_controller) {
+    EventController $eventController) {
     parent::__construct($logger, $watchdog, $config);
 
-    $this->eventController = $event_controller;
+    $this->eventController = $eventController;
   }
 
   /**
@@ -50,24 +50,59 @@ class DetailController extends ControllerBase {
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
-   * @param \Drupal\mongodb_watchdog\EventTemplate $event_template
+   * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The event template.
    *
    * @return array<string,array>
    *   A render array.
    */
-  public function build(Request $request, EventTemplate $event_template) {
-    $count = $this->watchdog->eventCount($event_template);
-    $page = $this->setupPager($request, $count);
-    $template_rows = $this->buildHeader($event_template);
-    $event_rows = $this->buildRows($event_template, $page);
+  public function build(Request $request, EventTemplate $eventTemplate) {
+    $top = $this->getTop($eventTemplate);
 
-    $base = [
-      '#attributes' => new Attribute(['class' => 'mongodb_watchdog-detail']),
+    $rows = $this->getRowData($request, $eventTemplate);
+    $main = empty($rows)
+      ? [
+        '#markup' => t('No occurrence of this event found in logger.'),
+        '#prefix' => '<div class="mongodb_watchdog__message">',
+        '#suffix' => '</div>',
+      ]
+      : $this->buildMainTable($rows, $eventTemplate);
+
+    $ret = $this->buildDefaults($main, $top);
+    return $ret;
+  }
+
+  /**
+   * Build the main table.
+   *
+   * @param \Drupal\mongodb_watchdog\Event[] $events
+   *   The event data.
+   * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
+   *   The template for which to built the detail lines.
+   *
+   * @return array<string,string|array>
+   *   A render array for the main table.
+   */
+  protected function buildMainTable(array $events, EventTemplate $eventTemplate) {
+    $ret = [
+      '#attributes' => new Attribute(['class' => 'mongodb_watchdog__detail']),
+      '#caption' => t('Event occurrences'),
+      '#header' => $this->buildMainTableHeader(),
+      '#rows' => $this->buildMainTableRows($events, $eventTemplate),
       '#type' => 'table',
     ];
 
-    $event_header = [
+    return $ret;
+  }
+
+  /**
+   * Build the main table header.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   *   A table header array.
+   */
+  protected function buildMainTableHeader() {
+    $header = [
       t('Date'),
       t('User'),
       t('Message'),
@@ -77,87 +112,42 @@ class DetailController extends ControllerBase {
       t('Operations'),
     ];
 
-    $ret = [
-      'template' => $base + [
-        '#caption' => t('Event template'),
-        '#rows' => $template_rows,
-      ],
-      'events' => $base + [
-        '#caption' => t('Event occurrences'),
-        '#header' => $event_header,
-        '#rows' => $event_rows,
-      ],
-      'pager' => [
-        '#type' => 'pager',
-      ],
-      '#attached' => [
-        'library' => ['mongodb_watchdog/styling'],
-      ],
-    ];
-
-    return $ret;
+    return $header;
   }
 
   /**
-   * Build the heading rows on the event occurrences page.
+   * Build the main table rows.
    *
-   * @param \Drupal\mongodb_watchdog\EventTemplate $template
-   *   The event template.
+   * @param \Drupal\mongodb_watchdog\Event[] $events
+   *   The event row data.
+   * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
+   *   The template for these events.
    *
-   * @return array
-   *   A table render array.
+   * @return array<string,array|string>
+   *   A render array for a table.
    */
-  protected function buildHeader(EventTemplate $template) {
+  protected function buildMainTableRows(array $events, EventTemplate $eventTemplate) {
     $rows = [];
-    foreach (EventTemplate::keys() as $key => $info) {
-      $value = $template->{$key};
-      $row = [
-        [
-          'header' => TRUE,
-          'data' => $info['label'],
-        ],
-        isset($info['display_callback']) ? $info['display_callback']($value) : $value,
-      ];
-      $rows[] = $row;
-    }
-    return $rows;
-  }
 
-  /**
-   * Build the occurrence rows on the event occurrences page.
-   *
-   * @param \Drupal\mongodb_watchdog\EventTemplate $template
-   *   The event template.
-   * @param int $page
-   *   The page number, starting at 0.
-   *
-   * @return array
-   *   A table render array.
-   */
-  protected function buildRows(EventTemplate $template, $page) {
-    $rows = [];
-    $skip = $page * $this->itemsPerPage;
-    $limit = $this->itemsPerPage;
-    $events = $this->eventController->find($template, $skip, $limit);
-
-    /** @var \Drupal\mongodb_watchdog\Event $event */
     foreach ($events as $event) {
-      $rows[] = $this->eventController->asTableRow($template, $event);
+      // TODO bring this back from "model": it is a display method.
+      $rows[] = $this->eventController->asTableRow($eventTemplate, $event);
     }
+
     return $rows;
   }
 
   /**
    * Title callback for mongodb_watchdog.detail.
    *
-   * @param \Drupal\mongodb_watchdog\EventTemplate $event_template
+   * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The event template for which the title is built.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The page title.
    */
-  public function buildTitle(EventTemplate $event_template) {
-    return t('MongoDB events: "@template"', ['@template' => $event_template->message]);
+  public function buildTitle(EventTemplate $eventTemplate) {
+    return t('MongoDB events: "@template"', ['@template' => $eventTemplate->message]);
   }
 
   /**
@@ -177,6 +167,62 @@ class DetailController extends ControllerBase {
     $eventController = $container->get('mongodb.watchdog_event_controller');
 
     return new static($logger, $watchdog, $config, $eventController);
+  }
+
+  /**
+   * Obtain the data from the logger.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request. Needed for paging.
+   * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
+   *   The template for which to build the detail page.
+   *
+   * @return \Drupal\mongodb_watchdog\Event[]
+   *   The data array.
+   */
+  protected function getRowData(Request $request, EventTemplate $eventTemplate) {
+    $count = $this->watchdog->eventCount($eventTemplate);
+    $page = $this->setupPager($request, $count);
+    $skip = $page * $this->itemsPerPage;
+    $limit = $this->itemsPerPage;
+
+    $rows = $this->eventController
+      ->find($eventTemplate, $skip, $limit)
+      ->toArray();
+
+    return $rows;
+  }
+
+  /**
+   * Build the heading rows on the event occurrences page.
+   *
+   * @param \Drupal\mongodb_watchdog\EventTemplate|null $eventTemplate
+   *   The template for which to provide details. Not actually expected to be
+   *   NULL, but this is needed to remain compatible with parent class.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   *   A render array for a table.
+   */
+  protected function getTop(EventTemplate $eventTemplate = NULL) {
+    $rows = [];
+    foreach ($eventTemplate->keys() as $key => $info) {
+      $value = $eventTemplate->{$key};
+      $row = [];
+      $row[] = [
+        'header' => TRUE,
+        'data' => $info['label'],
+      ];
+      $row[] = isset($info['display_callback']) ? $info['display_callback']($value) : $value;
+      $rows[] = $row;
+    }
+
+    $ret = [
+      '#caption' => t('Event template'),
+      '#rows' => $rows,
+      '#type' => 'table',
+    ];
+
+    return $ret;
   }
 
 }

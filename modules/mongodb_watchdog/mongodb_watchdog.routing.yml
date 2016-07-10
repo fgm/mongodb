@@ -9,7 +9,7 @@ mongodb_watchdog.reports.overview:
     _admin_route: TRUE
 
 mongodb_watchdog.reports.detail:
-  path: '/admin/reports/mongodb/watchdog/{event_template}'
+  path: '/admin/reports/mongodb/watchdog/{eventTemplate}'
   defaults:
     _controller: '\Drupal\mongodb_watchdog\Controller\DetailController::build'
     _title: 'Recent log messages in MongoDB: detail'
@@ -19,7 +19,7 @@ mongodb_watchdog.reports.detail:
   options:
     _admin_route: TRUE
     parameters:
-      event_template:
+      eventTemplate:
         type: mongodb_watchdog_event_template
 
 mongodb_watchdog.reports.request:

@@ -20,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Class OverviewController provides the main MongoDB Watchdog report page.
+ * The controller for the logger overview page.
  */
 class OverviewController extends ControllerBase {
   const EVENT_TYPE_MAP = [
@@ -142,10 +142,11 @@ class OverviewController extends ControllerBase {
    */
   protected function buildMainTable(array $rows) {
     $ret = [
-      '#type' => 'table',
       '#header' => $this->buildMainTableHeader(),
       '#rows' => $this->buildMainTableRows($rows),
+      '#type' => 'table',
     ];
+
     return $ret;
   }
 
@@ -172,12 +173,12 @@ class OverviewController extends ControllerBase {
    * Build the main table rows.
    *
    * @param \Drupal\mongodb_watchdog\EventTemplate[] $templates
-   *   The template data.
+   *   The event template data.
    *
    * @return array<string,array|string>
    *   A render array for a table.
    */
-  public function buildMainTableRows(array $templates) {
+  protected function buildMainTableRows(array $templates) {
     $rows = [];
     $levels = RfcLogLevel::getLevels();
 
@@ -318,9 +319,10 @@ class OverviewController extends ControllerBase {
     $count = $this->watchdog->templatesCount();
     $page = $this->setupPager($request, $count);
     $skip = $page * $this->itemsPerPage;
+    $limit = $this->itemsPerPage;
+
     $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
 
-    $limit = $this->itemsPerPage;
     $rows = $this->watchdog
       ->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit)
       ->toArray();
