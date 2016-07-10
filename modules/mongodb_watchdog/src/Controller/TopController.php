@@ -2,18 +2,19 @@
 
 namespace Drupal\mongodb_watchdog\Controller;
 
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\mongodb_watchdog\Logger;
 use MongoDB\BSON\Javascript;
 use MongoDB\Collection;
 use MongoDB\Database;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Class TopController implements the Top403/Top404 controllers.
+ * The Top403/Top404 controllers.
  */
-class TopController implements ContainerInjectionInterface {
+class TopController extends ControllerBase {
   const TYPES = [
     'page not found',
     'access denied',
@@ -24,60 +25,177 @@ class TopController implements ContainerInjectionInterface {
    *
    * @var \MongoDB\Database
    */
-  protected $db;
-
-  /**
-   * The logger channel service, used to log events.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
-   * The concrete logger instance, used to access data.
-   *
-   * @var \Drupal\mongodb_watchdog\Logger
-   */
-  protected $watchdog;
+  protected $database;
 
   /**
    * TopController constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
-   *   The logger channel service, to log errors occurring.
+   *   The logger service, to log intervening events.
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
-   *   The MongoDB Logger service, to load the events.
-   * @param \MongoDB\Database $db
+   *   The MongoDB logger, to load stored events.
+   * @param \Drupal\Core\Config\ImmutableConfig $config
+   *   The module configuration.
+   * @param \MongoDB\Database $database
    *   Needed because there is no group() command in phplib yet.
    *
    * @see https://jira.mongodb.org/browse/PHPLIB-177
    */
-  public function __construct(LoggerInterface $logger, Logger $watchdog, Database $db) {
-    $this->db = $db;
-    $this->logger = $logger;
-    $this->watchdog = $watchdog;
+  public function __construct(
+    LoggerInterface $logger,
+    Logger $watchdog,
+    ImmutableConfig $config,
+    Database $database) {
+    parent::__construct($logger, $watchdog, $config);
+
+    $this->database = $database;
   }
 
   /**
-   * The controller for /admin/reports/mongodb/access-denied.
+   * Controller.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
+   * @param string $type
+   *   The type of top report to produce.
    *
    * @return array
    *   A render array.
    */
-  public function top403() {
-    $ret = $this->top('access denied');
+  public function build(Request $request, $type) {
+    $counts = $this->getRowData($request, $type);
+    if (empty($counts)) {
+      $ret['empty'] = array(
+        '#markup' => t('No "%type" message found', ['%type' => $type]),
+        '#prefix' => '<div class="mongodb-watchdog-message">',
+        '#suffix' => '</div>',
+      );
+      return $ret;
+    }
+
+    $main = $this->buildMainTable($counts);
+    $ret = $this->buildDefaults($main);
     return $ret;
   }
 
   /**
-   * The controller for /admin/reports/mongodb/page-not-found.
+   * Build the main table.
+   *
+   * @param array $counts
+   *   The event data.
+   *
+   * @return array<string,string|array>
+   *   A render array for the main table.
+   */
+  protected function buildMainTable(array $counts) {
+    $ret = [
+      '#type' => 'table',
+      '#header' => $this->buildMainTableHeader(),
+      '#rows' => $this->buildMainTableRows($counts),
+    ];
+    return $ret;
+  }
+
+  /**
+   * Build the main table header.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   *   A table header array.
+   */
+  protected function buildMainTableHeader() {
+    $header = array(
+      t('#'),
+      t('Paths'),
+    );
+
+    return $header;
+  }
+
+  /**
+   * Build the main table rows.
+   *
+   * @param int[] $counts
+   *   The array of counts per 403/404 page.
+   *
+   * @return array<string,array|string>
+   *   A render array for a table.
+   */
+  protected function buildMainTableRows($counts) {
+    $rows = array();
+    foreach ($counts as $count) {
+      $rows[] = array(
+        $count['count'],
+        $count['variables.@uri'],
+      );
+    }
+
+    return $rows;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var \Psr\Log\LoggerInterface $logger */
+    $logger = $container->get('logger.channel.mongodb_watchdog');
+
+    /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
+    $watchdog = $container->get('mongodb.logger');
+
+    /** @var \Drupal\Core\Config\ImmutableConfig $config */
+    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
+
+    /** @var \MongoDB\Database $database */
+    $database = $container->get('mongodb.watchdog_storage');
+
+    return new static($logger, $watchdog, $config, $database);
+  }
+
+  /**
+   * Obtain the data from the logger.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request. Needed for paging.
+   * @param string $type
+   *   The type of top list to retrieve.
    *
    * @return array
-   *   A render array.
+   *   The data array.
    */
-  public function top404() {
-    $ret = $this->top('page not found');
-    return $ret;
+  protected function getRowData(Request $request, $type) {
+    // Find _id for the error type.
+    $templateCollection = $this->watchdog->templateCollection();
+    $template = $templateCollection->findOne(['type' => $type], ['_id']);
+    if (empty($template)) {
+      return [];
+    }
+
+    // Find occurrences of error type.
+    $collectionName = $template['_id'];
+    $eventCollection = $this->watchdog->eventCollection($collectionName);
+
+    $key = ['variables.@uri' => 1];
+    $cond = [];
+    $reducer = <<<JAVASCRIPT
+function reducer(doc, accumulator) { 
+  accumulator.count++; 
+}
+JAVASCRIPT;
+
+    $initial = ['count' => 0];
+    $counts = $this->group($eventCollection, $key, $cond, $reducer, $initial);
+    if (empty($counts['ok'])) {
+      return [];
+    }
+
+    $counts = $counts['retval'];
+    usort($counts, [$this, 'topSort']);
+
+    $page = $this->setupPager($request, count($counts));
+    $skip = $page * $this->itemsPerPage;
+    $counts = array_slice($counts, $skip, $this->itemsPerPage);
+
+    return $counts;
   }
 
   /**
@@ -103,7 +221,7 @@ class TopController implements ContainerInjectionInterface {
    *   - ok: 1.0 in case of success.
    */
   public function group(Collection $collection, $key, $cond, $reduce, $initial) {
-    $cursor = $this->db->command([
+    $cursor = $this->database->command([
       'group' => [
         'ns' => $collection->getCollectionName(),
         'key' => $key,
@@ -121,115 +239,18 @@ class TopController implements ContainerInjectionInterface {
   /**
    * Callback for usort() to sort top entries returned from a group query.
    *
-   * @param array $x
+   * @param array $first
    *   The first value to compare.
-   * @param array $y
+   * @param array $second
    *   The second value to compare.
    *
    * @return int
    *   The comparison result.
    *
-   * @see \Drupal\mongodb_watchdog\Controller\TopController::top()
+   * @see \Drupal\mongodb_watchdog\Controller\TopController::build()
    */
-  protected function topSort(array $x, array $y) {
-    $cx = $x['count'];
-    $cy = $y['count'];
-    return intval($cy - $cx);
-  }
-
-  /**
-   * Generic controller for admin/reports/mongodb/<top report>.
-   *
-   * @param string $type
-   *   The type of top report to produce.
-   *
-   * @return array
-   *   A render array.
-   */
-  protected function top($type) {
-    $ret = [];
-    $type_param = ['%type' => $type];
-    $limit = 50;
-
-    if (!in_array($type, static::TYPES)) {
-      $error = t('Unknown top report type: %type', $type_param);
-      drupal_set_message($error, 'error');
-      $this->logger->warning('Unknown top report type: %type', $type_param);
-      $ret = [
-        '#markup' => '',
-      ];
-      return $ret;
-    }
-
-    // Find _id for the error type.
-    $template_collection = $this->watchdog->templateCollection();
-    $template = $template_collection->findOne(['type' => $type], ['_id']);
-
-    // Method findOne() will return NULL if no row is found.
-    $ret['empty'] = array(
-      '#markup' => t('No "%type" message found', $type_param),
-      '#prefix' => '<div class="mongodb-watchdog-message">',
-      '#suffix' => '</div>',
-    );
-    if (empty($template)) {
-      return $ret;
-    }
-
-    // Find occurrences of error type.
-    $collection_name = $template['_id'];
-    $event_collection = $this->watchdog->eventCollection($collection_name);
-
-    $key = ['variables.@uri' => 1];
-    $cond = [];
-    $reduce = <<<EOT
-function (doc, accumulator) { 
-  accumulator.count++; 
-}
-EOT;
-    $initial = ['count' => 0];
-    $counts = $this->group($event_collection, $key, $cond, $reduce, $initial);
-
-    if (empty($counts['ok'])) {
-      return $ret;
-    }
-
-    $counts = $counts['retval'];
-    usort($counts, [$this, 'topSort']);
-    $counts = array_slice($counts, 0, $limit);
-
-    $header = array(
-      t('#'),
-      t('Paths'),
-    );
-    $rows = array();
-    foreach ($counts as $count) {
-      $rows[] = array(
-        $count['count'],
-        $count['variables.@uri'],
-      );
-    }
-
-    $ret = array(
-      '#theme' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-    );
-    return $ret;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    /** @var \Psr\Log\LoggerInterface $logger */
-    $logger = $container->get('logger.factory')->get('mongodb_watchdog');
-
-    /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
-    $watchdog = $container->get('mongodb.logger');
-
-    /** @var \MongoDB\Database $db */
-    $db = $container->get('mongodb.watchdog_storage');
-    return new static($logger, $watchdog, $db);
+  protected function topSort(array $first, array $second) {
+    return $second['count'] <=> $first['count'];
   }
 
 }

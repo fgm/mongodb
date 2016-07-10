@@ -44,6 +44,34 @@ abstract class ControllerBase extends CoreControllerBase {
   }
 
   /**
+   * The default build() implementation.
+   *
+   * Cannot be a build() method because each controller build() has a
+   * different signature.
+   *
+   * @param array $main
+   *   A render array for the main table.
+   * @param array|null $top
+   *   A render array for the top element present on some controllers results.
+   *
+   * @return array<string,string|array>
+   *   A render array for the whole controller.
+   */
+  protected function buildDefaults(array $main, array $top = NULL) {
+    $ret = empty($top) ? [] : ['top' => $top];
+
+    $ret += [
+      'main' => $main,
+      'pager' => ['#type' => 'pager'],
+      '#attached' => [
+        'library' => ['mongodb_watchdog/styling'],
+      ],
+    ];
+
+    return $ret;
+  }
+
+  /**
    * Set up the pager.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
