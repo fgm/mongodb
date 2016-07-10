@@ -15,6 +15,13 @@ use Drupal\user\Entity\User;
 class EventController {
 
   /**
+   * The name of the anonymous user account.
+   *
+   * @var string
+   */
+  protected $anonymous;
+
+  /**
    * The length of the absolute home URL.
    *
    * @var int
@@ -62,8 +69,10 @@ class EventController {
   public function __construct(ConfigFactoryInterface $config,
     DateFormatterInterface $date_formatter,
     Logger $watchdog) {
-    $this->anonymous = $config->get('user.settings')->get('anonymous');
+    // Needed for other values so build it first.
     $this->front = Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString();
+
+    $this->anonymous = $config->get('user.settings')->get('anonymous');
     $this->baseLength = Unicode::strlen($this->front) - 1;
     $this->dateFormatter = $date_formatter;
     $this->watchdog = $watchdog;

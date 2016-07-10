@@ -1,7 +1,7 @@
 mongodb_watchdog.reports.overview:
   path: '/admin/reports/mongodb/watchdog'
   defaults:
-    _controller: '\Drupal\mongodb_watchdog\Controller\OverviewController::overview'
+    _controller: '\Drupal\mongodb_watchdog\Controller\OverviewController::build'
     _title: 'Recent log messages in MongoDB'
   requirements:
     _permission: 'access site reports'
@@ -9,23 +9,23 @@ mongodb_watchdog.reports.overview:
     _admin_route: TRUE
 
 mongodb_watchdog.reports.detail:
-  path: '/admin/reports/mongodb/watchdog/{event_template}'
+  path: '/admin/reports/mongodb/watchdog/{eventTemplate}'
   defaults:
-    _controller: '\Drupal\mongodb_watchdog\Controller\DetailController::detail'
+    _controller: '\Drupal\mongodb_watchdog\Controller\DetailController::build'
     _title: 'Recent log messages in MongoDB: detail'
-    _title_callback: '\Drupal\mongodb_watchdog\Controller\DetailController::detailTitle'
+    _title_callback: '\Drupal\mongodb_watchdog\Controller\DetailController::buildTitle'
   requirements:
     _permission: 'access site reports'
   options:
     _admin_route: TRUE
     parameters:
-      event_template:
+      eventTemplate:
         type: mongodb_watchdog_event_template
 
 mongodb_watchdog.reports.request:
   path: '/admin/reports/mongodb/watchdog/request/{uniqueId}'
   defaults:
-    _controller: '\Drupal\mongodb_watchdog\Controller\RequestController::track'
+    _controller: '\Drupal\mongodb_watchdog\Controller\RequestController::build'
     _title: 'Recent log messages in MongoDB: events on a request'
   requirements:
     _permission: 'access site reports'
@@ -40,7 +40,8 @@ mongodb_watchdog.reports.top403:
   defaults:
     _title: "Top 'access denied' errors in MongoDB"
     _description: "View 'access denied' errors (403s)."
-    _controller: '\Drupal\mongodb_watchdog\Controller\TopController::top403'
+    _controller: '\Drupal\mongodb_watchdog\Controller\TopController::build'
+    type: 'access denied'
   requirements:
     _permission: 'access site reports'
 
@@ -49,7 +50,8 @@ mongodb_watchdog.reports.top404:
   defaults:
     _title: "Top 'page not found' errors in MongoDB"
     _description: "View 'page not found' errors (404s)."
-    _controller: '\Drupal\mongodb_watchdog\Controller\TopController::top404'
+    _controller: '\Drupal\mongodb_watchdog\Controller\TopController::build'
+    type: 'page not found'
   requirements:
     _permission: 'access site reports'
 

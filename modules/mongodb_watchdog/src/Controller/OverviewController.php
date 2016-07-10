@@ -4,7 +4,7 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
@@ -20,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Class OverviewController provides the main MongoDB Watchdog report page.
+ * The controller for the logger overview page.
  */
 class OverviewController extends ControllerBase {
   const EVENT_TYPE_MAP = [
@@ -57,20 +57,6 @@ class OverviewController extends ControllerBase {
   protected $formBuilder;
 
   /**
-   * The items_per_page configuration value.
-   *
-   * @var int
-   */
-  protected $itemsPerPage;
-
-  /**
-   * The core logger channel, to log intervening events.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
    * The module handler service.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -87,42 +73,33 @@ class OverviewController extends ControllerBase {
   protected $rootLength;
 
   /**
-   * The MongoDB logger, to load events.
-   *
-   * @var \Drupal\mongodb_watchdog\Logger
-   */
-  protected $watchdog;
-
-  /**
-   * Constructor.
+   * Controller constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service, to log intervening events.
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
    *   The MongoDB logger, to load stored events.
+   * @param \Drupal\Core\Config\ImmutableConfig $config
+   *   The module configuration.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   A module handler.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The core date_formatter service.
-   * @param int $items_per_page
-   *   The items_per_page configuration value.
    */
   public function __construct(
     LoggerInterface $logger,
     Logger $watchdog,
+    ImmutableConfig $config,
     ModuleHandlerInterface $module_handler,
     FormBuilderInterface $form_builder,
-    DateFormatterInterface $date_formatter,
-    $items_per_page) {
+    DateFormatterInterface $date_formatter) {
+    parent::__construct($logger, $watchdog, $config);
+
     $this->dateFormatter = $date_formatter;
     $this->formBuilder = $form_builder;
-    $this->logger = $logger;
     $this->moduleHandler = $module_handler;
-    $this->watchdog = $watchdog;
-
-    $this->itemsPerPage = $items_per_page;
 
     // Add terminal "/".
     $this->rootLength = Unicode::strlen(DRUPAL_ROOT);
@@ -130,29 +107,120 @@ class OverviewController extends ControllerBase {
   }
 
   /**
+   * Controller.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function build(Request $request) {
+    $top = $this->getTop();
+
+    $rows = $this->getRowData($request);
+    $main = empty($rows)
+      ? $this->buildEmpty(t('No event found in logger.'))
+      : $this->buildMainTable($rows);
+
+    $ret = $this->buildDefaults($main, $top);
+    return $ret;
+  }
+
+  /**
+   * Build the main table.
+   *
+   * @param \Drupal\mongodb_watchdog\EventTemplate[] $rows
+   *   The template data.
+   *
+   * @return array<string,string|array>
+   *   A render array for the main table.
+   */
+  protected function buildMainTable(array $rows) {
+    $ret = [
+      '#header' => $this->buildMainTableHeader(),
+      '#rows' => $this->buildMainTableRows($rows),
+      '#type' => 'table',
+    ];
+
+    return $ret;
+  }
+
+  /**
+   * Build the main table header.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   *   A table header array.
+   */
+  protected function buildMainTableHeader() {
+    $header = [
+      t('#'),
+      t('Latest'),
+      t('Severity'),
+      t('Type'),
+      t('Message'),
+      t('Source'),
+    ];
+
+    return $header;
+  }
+
+  /**
+   * Build the main table rows.
+   *
+   * @param \Drupal\mongodb_watchdog\EventTemplate[] $templates
+   *   The event template data.
+   *
+   * @return array<string,array|string>
+   *   A render array for a table.
+   */
+  protected function buildMainTableRows(array $templates) {
+    $rows = [];
+    $levels = RfcLogLevel::getLevels();
+
+    foreach ($templates as $template) {
+      $row = [];
+      $row[] = $template->count;
+      $row[] = $this->dateFormatter->format($template->changed, 'short');
+      $row[] = [
+        'class' => static::SEVERITY_CLASSES[$template->severity],
+        'data' => $levels[$template->severity],
+      ];
+      $row[] = $template->type;
+      $row[] = $this->getEventLink($template);
+      $row[] = [
+        'data' => $this->getEventSource($template, $row),
+      ];
+
+      $rows[] = $row;
+    }
+
+    return $rows;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    /** @var \Psr\Log\LoggerInterface $logger */
+    $logger = $container->get('logger.channel.mongodb_watchdog');
+
+    /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
+    $watchdog = $container->get('mongodb.logger');
+
+    /** @var \Drupal\Core\Config\ImmutableConfig $config */
+    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
+
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
     $date_formatter = $container->get('date.formatter');
 
     /** @var \Drupal\Core\Form\FormBuilderInterface $form_builder */
     $form_builder = $container->get('form_builder');
 
-    /** @var \Psr\Log\LoggerInterface $logger */
-    $logger = $container->get('logger.channel.mongodb_watchdog');
-
     /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
     $module_handler = $container->get('module_handler');
 
-    /** @var \Drupal\mongodb_watchdog\Logger $logger */
-    $watchdog = $container->get('mongodb.logger');
-
-    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
-    $config_factory = $container->get('config.factory');
-    $items_per_page = $config_factory->get('mongodb_watchdog.settings')->get('items_per_page');
-
-    return new static($logger, $watchdog, $module_handler, $form_builder, $date_formatter, $items_per_page);
+    return new static($logger, $watchdog, $config, $module_handler, $form_builder, $date_formatter);
   }
 
   /**
@@ -174,11 +242,11 @@ class OverviewController extends ControllerBase {
         $cell = Link::createFromRoute(t('( Top 403 )'), 'mongodb_watchdog.reports.top403');
         break;
 
+      // Limited-length message.
       default:
-        // Limited-length message.
         $message = Unicode::truncate(strip_tags(SafeMarkup::format($template->message, [])), 56, TRUE, TRUE);
         $cell = Link::createFromRoute($message, 'mongodb_watchdog.reports.detail', [
-          'event_template' => $template->_id,
+          'eventTemplate' => $template->_id,
         ]);
         break;
     }
@@ -196,14 +264,16 @@ class OverviewController extends ControllerBase {
    *   A render array for the source location, possibly empty or wrong.
    */
   protected function getEventSource(EventTemplate $template) {
+    $cell = ['#markup' => ''];
+
     if (in_array($template->type, TopController::TYPES)) {
-      return '';
+      return $cell;
     }
 
     $event_collection = $this->watchdog->eventCollection($template->_id);
     $event = $event_collection->findOne([], static::EVENT_TYPE_MAP);
     if (!($event instanceof Event)) {
-      return '';
+      return $cell;
     }
 
     $file = $event->variables['%file'] ?? '';
@@ -233,104 +303,38 @@ class OverviewController extends ControllerBase {
   }
 
   /**
-   * Controller for mongodb_watchdog.overview.
-   *
-   * @return array
-   *   A render array.
-   */
-  public function overview(Request $request) {
-    $page = $this->setupPager($request);
-
-    $ret = [
-      'filter_form' => $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm'),
-      'rows' => $this->overviewRows($page),
-      'pager' => [
-        '#type' => 'pager',
-      ],
-      '#attached' => [
-        'library' => ['mongodb_watchdog/styling'],
-      ],
-    ];
-
-    return $ret;
-  }
-
-  /**
-   * Build a table from the event rows.
-   *
-   * @param int $page
-   *   The number of the page to display.
-   *
-   * @return array
-   *   A render array.
-   */
-  public function overviewRows($page) {
-    $header = [
-      t('#'),
-      t('Latest'),
-      t('Severity'),
-      t('Type'),
-      t('Message'),
-      t('Source'),
-    ];
-    $rows = [];
-    $levels = RfcLogLevel::getLevels();
-    $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
-    $skip = $page * $this->itemsPerPage;
-    $limit = $this->itemsPerPage;
-    $cursor = $this->watchdog->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit);
-
-    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
-    foreach ($cursor as $template) {
-      $row = [];
-      $row[] = $template->count;
-      $row[] = $this->dateFormatter->format($template->changed, 'short');
-      $row[] = [
-        'class' => static::SEVERITY_CLASSES[$template->severity],
-        'data' => $levels[$template->severity],
-      ];
-      $row[] = $template->type;
-      $row[] = $this->getEventLink($template);
-      $row[] = [
-        'data' => $this->getEventSource($template, $row),
-      ];
-
-      $rows[] = $row;
-    }
-
-    return [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-    ];
-  }
-
-  /**
-   * Set up the templates pager.
+   * Obtain the data from the logger.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current request.
+   *   The current request. Needed for paging.
    *
-   * @return int
-   *   The number of the page to display, starting at 0.
+   * @return \Drupal\mongodb_watchdog\EventTemplate[]
+   *   The data array.
    */
-  public function setupPager(Request $request) {
+  protected function getRowData(Request $request) {
     $count = $this->watchdog->templatesCount();
-    $height = $this->itemsPerPage;
-    pager_default_initialize($count, $height);
+    $page = $this->setupPager($request, $count);
+    $skip = $page * $this->itemsPerPage;
+    $limit = $this->itemsPerPage;
 
-    $page = intval($request->query->get('page'));
-    if ($page < 0) {
-      $page = 0;
-    }
-    else {
-      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX) - 1);
-      if ($page > $page_max) {
-        $page = $page_max;
-      }
-    }
+    $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
 
-    return $page;
+    $rows = $this->watchdog
+      ->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit)
+      ->toArray();
+
+    return $rows;
+  }
+
+  /**
+   * Return the top element.
+   *
+   * @return array
+   *   A render array for the top filter form.
+   */
+  protected function getTop() {
+    $top = $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm');
+    return $top;
   }
 
 }

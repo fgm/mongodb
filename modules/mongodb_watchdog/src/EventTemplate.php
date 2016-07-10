@@ -69,7 +69,7 @@ class EventTemplate implements Unserializable {
   /**
    * List the template keys and their behaviours.
    *
-   * @return array
+   * @return array<string,array>
    *   A properties by key array.
    */
   public static function keys() {
