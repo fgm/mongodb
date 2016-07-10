@@ -109,37 +109,53 @@ class OverviewController extends ControllerBase {
   /**
    * Controller.
    *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request.
+   *
    * @return array
    *   A render array.
    */
   public function build(Request $request) {
-    $count = $this->watchdog->templatesCount();
-    $page = $this->setupPager($request, $count);
+    $top = $this->getTop();
 
-    $ret = [
-      'filter_form' => $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm'),
-      'rows' => $this->buildRows($page),
-      'pager' => [
-        '#type' => 'pager',
-      ],
-      '#attached' => [
-        'library' => ['mongodb_watchdog/styling'],
-      ],
-    ];
+    $rows = $this->getRowData($request);
+    $main = empty($rows)
+      ? [
+        '#markup' => t('No event found in logger.'),
+        '#prefix' => '<div class="mongodb_watchdog__message">',
+        '#suffix' => '</div>',
+      ]
+      : $this->buildMainTable($rows);
 
+    $ret = $this->buildDefaults($main, $top);
     return $ret;
   }
 
   /**
-   * Build a table from the event rows.
+   * Build the main table.
    *
-   * @param int $page
-   *   The number of the page to display.
+   * @param \Drupal\mongodb_watchdog\EventTemplate[] $rows
+   *   The template data.
    *
-   * @return array<string,array|string>
-   *   A render array.
+   * @return array<string,string|array>
+   *   A render array for the main table.
    */
-  public function buildRows($page) {
+  protected function buildMainTable(array $rows) {
+    $ret = [
+      '#type' => 'table',
+      '#header' => $this->buildMainTableHeader(),
+      '#rows' => $this->buildMainTableRows($rows),
+    ];
+    return $ret;
+  }
+
+  /**
+   * Build the main table header.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   *   A table header array.
+   */
+  protected function buildMainTableHeader() {
     $header = [
       t('#'),
       t('Latest'),
@@ -148,15 +164,24 @@ class OverviewController extends ControllerBase {
       t('Message'),
       t('Source'),
     ];
+
+    return $header;
+  }
+
+  /**
+   * Build the main table rows.
+   *
+   * @param \Drupal\mongodb_watchdog\EventTemplate[] $templates
+   *   The template data.
+   *
+   * @return array<string,array|string>
+   *   A render array for a table.
+   */
+  public function buildMainTableRows(array $templates) {
     $rows = [];
     $levels = RfcLogLevel::getLevels();
-    $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
-    $skip = $page * $this->itemsPerPage;
-    $limit = $this->itemsPerPage;
-    $cursor = $this->watchdog->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit);
 
-    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
-    foreach ($cursor as $template) {
+    foreach ($templates as $template) {
       $row = [];
       $row[] = $template->count;
       $row[] = $this->dateFormatter->format($template->changed, 'short');
@@ -173,13 +198,7 @@ class OverviewController extends ControllerBase {
       $rows[] = $row;
     }
 
-    $ret = [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-    ];
-
-    return $ret;
+    return $rows;
   }
 
   /**
@@ -284,6 +303,40 @@ class OverviewController extends ControllerBase {
     }
 
     return $cell;
+  }
+
+  /**
+   * Obtain the data from the logger.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request. Needed for paging.
+   *
+   * @return \Drupal\mongodb_watchdog\EventTemplate[]
+   *   The data array.
+   */
+  protected function getRowData(Request $request) {
+    $count = $this->watchdog->templatesCount();
+    $page = $this->setupPager($request, $count);
+    $skip = $page * $this->itemsPerPage;
+    $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
+
+    $limit = $this->itemsPerPage;
+    $rows = $this->watchdog
+      ->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit)
+      ->toArray();
+
+    return $rows;
+  }
+
+  /**
+   * Return the top element.
+   *
+   * @return array
+   *   A render array for the top filter form.
+   */
+  protected function getTop() {
+    $top = $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm');
+    return $top;
   }
 
 }

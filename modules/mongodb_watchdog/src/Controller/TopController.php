@@ -63,35 +63,35 @@ class TopController extends ControllerBase {
    *   A render array.
    */
   public function build(Request $request, $type) {
-    $counts = $this->getRowData($request, $type);
-    if (empty($counts)) {
-      $ret['empty'] = array(
-        '#markup' => t('No "%type" message found', ['%type' => $type]),
-        '#prefix' => '<div class="mongodb-watchdog-message">',
-        '#suffix' => '</div>',
-      );
-      return $ret;
-    }
+    $top = $this->getTop();
 
-    $main = $this->buildMainTable($counts);
-    $ret = $this->buildDefaults($main);
+    $rows = $this->getRowData($request, $type);
+    $main = empty($rows)
+      ? [
+        '#markup' => t('No "%type" message found', ['%type' => $type]),
+        '#prefix' => '<div class="mongodb_watchdog__message">',
+        '#suffix' => '</div>',
+      ]
+      : $this->buildMainTable($rows);
+
+    $ret = $this->buildDefaults($main, $top);
     return $ret;
   }
 
   /**
    * Build the main table.
    *
-   * @param array $counts
+   * @param array $rows
    *   The event data.
    *
    * @return array<string,string|array>
    *   A render array for the main table.
    */
-  protected function buildMainTable(array $counts) {
+  protected function buildMainTable(array $rows) {
     $ret = [
       '#type' => 'table',
       '#header' => $this->buildMainTableHeader(),
-      '#rows' => $this->buildMainTableRows($counts),
+      '#rows' => $this->buildMainTableRows($rows),
     ];
     return $ret;
   }
@@ -103,10 +103,10 @@ class TopController extends ControllerBase {
    *   A table header array.
    */
   protected function buildMainTableHeader() {
-    $header = array(
+    $header = [
       t('#'),
       t('Paths'),
-    );
+    ];
 
     return $header;
   }
@@ -114,19 +114,20 @@ class TopController extends ControllerBase {
   /**
    * Build the main table rows.
    *
-   * @param int[] $counts
+   * @param array[] $counts
    *   The array of counts per 403/404 page.
    *
    * @return array<string,array|string>
    *   A render array for a table.
    */
   protected function buildMainTableRows($counts) {
-    $rows = array();
+    $rows = [];
     foreach ($counts as $count) {
-      $rows[] = array(
+      $row = [
         $count['count'],
         $count['variables.@uri'],
-      );
+      ];
+      $rows[] = $row;
     }
 
     return $rows;

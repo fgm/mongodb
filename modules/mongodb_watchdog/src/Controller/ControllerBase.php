@@ -72,6 +72,17 @@ abstract class ControllerBase extends CoreControllerBase {
   }
 
   /**
+   * Return the top element: empty by default.
+   *
+   * @return array
+   *   A render array for the top filter form.
+   */
+  protected function getTop() {
+    $top = NULL;
+    return $top;
+  }
+
+  /**
    * Set up the pager.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
