@@ -7,13 +7,15 @@ use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\mongodb_watchdog\Event;
 use Drupal\mongodb_watchdog\Logger;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Implements the controller for the request events page.
+ * The controller for the request events page.
  */
 class RequestController extends ControllerBase {
 
@@ -25,11 +27,25 @@ class RequestController extends ControllerBase {
   protected $dateFormatter;
 
   /**
+   * A RfcLogLevel instance, to avoid static access.
+   *
+   * @var \Drupal\Core\Logger\RfcLogLevel
+   */
+  protected $rfcLogLevel;
+
+  /**
    * The length of the absolute path to the site root, in runes.
    *
    * @var int
    */
   protected $rootLength;
+
+  /**
+   * A Unicode instance, to avoid static access.
+   *
+   * @var \Drupal\Component\Utility\Unicode
+   */
+  protected $unicode;
 
   /**
    * Controller constructor.
@@ -40,19 +56,28 @@ class RequestController extends ControllerBase {
    *   The MongoDB logger, to load stored events.
    * @param \Drupal\Core\Config\ImmutableConfig $config
    *   The module configuration.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The core date.formatter service.
+   * @param \Drupal\Component\Utility\Unicode $unicode
+   *   A Unicode instance, to avoid static access.
+   * @param \Drupal\Core\Logger\RfcLogLevel $rfcLogLevel
+   *   A RfcLogLevel instance, to avoid static access.
    */
   public function __construct(
     LoggerInterface $logger,
     Logger $watchdog,
     ImmutableConfig $config,
-    DateFormatterInterface $date_formatter) {
+    DateFormatterInterface $dateFormatter,
+    Unicode $unicode,
+    RfcLogLevel $rfcLogLevel) {
     parent::__construct($logger, $watchdog, $config);
-    $this->dateFormatter = $date_formatter;
+
+    $this->dateFormatter = $dateFormatter;
+    $this->rfcLogLevel = $rfcLogLevel;
+    $this->unicode = $unicode;
 
     // Add terminal "/".
-    $this->rootLength = Unicode::strlen(DRUPAL_ROOT) + 1;
+    $this->rootLength = $this->unicode->strlen(DRUPAL_ROOT) + 1;
   }
 
   /**
@@ -63,90 +88,55 @@ class RequestController extends ControllerBase {
    * @param string $uniqueId
    *   The unique request id from mod_unique_id. Unsafe.
    *
-   * @return array <string,array|string>
+   * @return array<string,string|array>
    *   A render array.
    */
   public function build(Request $request, $uniqueId) {
-    if (!preg_match('/[\w-]+/', $uniqueId)) {
-      return ['#markup' => ''];
+    if (!preg_match('/^[\w-@]+$/', $uniqueId)) {
+      throw new NotFoundHttpException(t('Request ID is not well-formed.'));
     }
 
-    $count = $this->watchdog->requestEventsCount($uniqueId);
-    $page = $this->setupPager($request, $count);
-    $skip = $page * $this->itemsPerPage;
-    $height = $this->itemsPerPage;
+    $events = $this->getRowData($request, $uniqueId);
 
-    $events = $this->watchdog->requestEvents($uniqueId, $skip, $height);
-    $ret = [
-      'request' => $this->buildRequest($uniqueId, $events),
-      'events' => $this->buildRows($events),
-      'pager' => [
-        '#type' => 'pager',
-      ],
-      '#attached' => [
-        'library' => ['mongodb_watchdog/styling'],
-      ],
-    ];
-
-    return $ret;
-  }
-
-  /**
-   * Build the top part of the page, about the request.
-   *
-   * @param string $unique_id
-   *   The unique request id.
-   * @param array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]> $events
-   *   A fully loaded array of events and their templates.
-   *
-   * @return array
-   *   A render array for a table.
-   */
-  public function buildRequest($unique_id, array $events) {
-    if ($events) {
-      $row = array_slice($events, 0, 1);
-      /** @var \Drupal\mongodb_watchdog\Event $first */
-      list($template, $first) = reset($row);
-
-      $location = $first->location;
-      $timestamp = isset($first->timestamp)
-        ? $this->dateFormatter->format($first->timestamp, 'long')
-        : t('No information');
+    if (empty($events)) {
+      $top = NULL;
+      $main = $this->buildEmpty(t('No events found for this request.'));
     }
     else {
-      $location = $timestamp = t('No information');
+      list(, $first) = reset($events);
+      $top = $this->getTop($uniqueId, $first);
+      $main = $this->buildMainTable($events);
     }
 
-    $rows = [
-      [t('Request ID'), $unique_id],
-      [t('Location'), $location],
-      [t('Date/time'), $timestamp],
-    ];
+    $ret = $this->buildDefaults($main, $top);
+    return $ret;
+  }
 
-    foreach ($rows as &$row) {
-      $row[0] = [
-        'data' => $row[0],
-        'header' => TRUE,
-      ];
-    }
-
+  /**
+   * Build the main table.
+   *
+   * @param array $rows
+   *   The event data.
+   *
+   * @return array<string,string|array>
+   *   A render array for the main table.
+   */
+  protected function buildMainTable(array $rows) {
     $ret = [
+      '#header' => $this->buildMainTableHeader(),
+      '#rows' => $this->buildMainTableRows($rows),
       '#type' => 'table',
-      '#rows' => $rows,
     ];
     return $ret;
   }
 
   /**
-   * Build the bottom part of the page, about the events during the request.
+   * Build the main table header.
    *
-   * @param array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]> $events
-   *   A fully loaded array of events and their templates.
-   *
-   * @return array<string,array|string> 
-   *   A render array for a table.
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   *   A table header array.
    */
-  public function buildRows(array $events) {
+  protected function buildMainTableHeader() {
     $header = [
       t('Sequence'),
       t('Type'),
@@ -155,37 +145,44 @@ class RequestController extends ControllerBase {
       t('File'),
       t('Line'),
     ];
+
+    return $header;
+  }
+
+  /**
+   * Build the main table rows.
+   *
+   * @param array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]> $events
+   *   A fully loaded array of events and their templates.
+   *
+   * @return array<string,array|string>
+   *   A render array for a table.
+   */
+  protected function buildMainTableRows(array $events) {
     $rows = [];
-    $levels = RfcLogLevel::getLevels();
+    $levels = $this->rfcLogLevel->getLevels();
 
     /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
     /** @var \Drupal\mongodb_watchdog\Event $event */
     foreach ($events as list($template, $event)) {
-      $row = [
-        ['data' => $event->requestTracking_sequence],
-        $template->type,
-        [
-          'data' => $levels[$template->severity],
-          'class' => OverviewController::SEVERITY_CLASSES[$template->severity],
-        ],
-        [
-          'data' => Link::createFromRoute($template->asString($event->variables), 'mongodb_watchdog.reports.detail', [
-            'event_template' => $template->_id,
-          ]),
-        ],
-        $this->simplifyPath($event->variables['%file']),
-        $event->variables['%line'],
+      $row = [];
+      $row[] = ['data' => $event->requestTracking_sequence];
+      $row[] = $template->type;
+      $row[] = [
+        'data' => $levels[$template->severity],
+        'class' => OverviewController::SEVERITY_CLASSES[$template->severity],
       ];
+      $row[] = [
+        'data' => Link::createFromRoute($template->asString($event->variables), 'mongodb_watchdog.reports.detail', [
+          'eventTemplate' => $template->_id,
+        ]),
+      ];
+      $row[] = $this->simplifyPath($event->variables['%file']);
+      $row[] = $event->variables['%line'];
       $rows[] = $row;
     }
 
-    $ret = [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-    ];
-
-    return $ret;
+    return $rows;
   }
 
   /**
@@ -201,10 +198,73 @@ class RequestController extends ControllerBase {
     /** @var \Drupal\Core\Config\ImmutableConfig $config */
     $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
 
-    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
-    $date_formatter = $container->get('date.formatter');
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter */
+    $dateFormatter = $container->get('date.formatter');
 
-    return new static($logger, $watchdog, $config, $date_formatter);
+    $rfcLogLevel = new RfcLogLevel();
+    $unicode = new Unicode();
+
+    return new static($logger, $watchdog, $config, $dateFormatter, $unicode, $rfcLogLevel);
+  }
+
+  /**
+   * Obtain the data from the logger.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request. Needed for paging.
+   * @param string $uniqueId
+   *   The request for which to build the detail page.
+   *
+   * @return \Drupal\mongodb_watchdog\Event[]
+   *   The data array.
+   */
+  protected function getRowData(Request $request, $uniqueId) {
+    $count = $this->watchdog->requestEventsCount($uniqueId);
+    $page = $this->setupPager($request, $count);
+    $skip = $page * $this->itemsPerPage;
+    $height = $this->itemsPerPage;
+
+    $events = $this->watchdog->requestEvents($uniqueId, $skip, $height);
+    return $events;
+  }
+
+  /**
+   * Build the heading rows on the per-request event occurrences page.
+   *
+   * @param string $uniqueId
+   *   The unique request id.
+   * @param \Drupal\mongodb_watchdog\Event $first
+   *   A fully loaded array of events and their templates.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   *   A render array for a table.
+   */
+  protected function getTop($uniqueId = NULL, Event $first = NULL) {
+    $location = $first->location;
+    $timestamp = isset($first->timestamp)
+      ? $this->dateFormatter->format($first->timestamp, 'long')
+      : t('No information');
+
+    $rows = [
+      [t('Request ID'), $uniqueId],
+      [t('Location'), $location],
+      [t('Date/time'), $timestamp],
+    ];
+
+    foreach ($rows as &$row) {
+      $row[0] = [
+        'data' => $row[0],
+        'header' => TRUE,
+      ];
+    }
+
+    $ret = [
+      '#caption' => t('Request'),
+      '#rows' => $rows,
+      '#type' => 'table',
+    ];
+
+    return $ret;
   }
 
   /**
@@ -217,9 +277,10 @@ class RequestController extends ControllerBase {
    *   A relative path if possible, otherwise the input path.
    */
   public function simplifyPath($path) {
-    $ret = (Unicode::strpos($path, DRUPAL_ROOT) === 0)
-      ? Unicode::substr($path, $this->rootLength)
+    $ret = ($this->unicode->strpos($path, DRUPAL_ROOT) === 0)
+      ? $this->unicode->substr($path, $this->rootLength)
       : $path;
+
     return $ret;
   }
 

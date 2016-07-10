@@ -4,6 +4,7 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Controller\ControllerBase as CoreControllerBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\mongodb_watchdog\Logger;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -66,6 +67,25 @@ abstract class ControllerBase extends CoreControllerBase {
       '#attached' => [
         'library' => ['mongodb_watchdog/styling'],
       ],
+    ];
+
+    return $ret;
+  }
+
+  /**
+   * Build markup for a message about the lack of results.
+   *
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $markup
+   *   The message proper.
+   *
+   * @return array<string,string|\Drupal\Core\StringTranslation\TranslatableMarkup>
+   *   A render array for a message.
+   */
+  protected function buildEmpty(TranslatableMarkup $markup) {
+    $ret = [
+      '#markup' => $markup,
+      '#prefix' => '<div class="mongodb_watchdog__message">',
+      '#suffix' => '</div>',
     ];
 
     return $ret;

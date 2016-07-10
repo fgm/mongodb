@@ -67,11 +67,7 @@ class TopController extends ControllerBase {
 
     $rows = $this->getRowData($request, $type);
     $main = empty($rows)
-      ? [
-        '#markup' => t('No "%type" message found', ['%type' => $type]),
-        '#prefix' => '<div class="mongodb_watchdog__message">',
-        '#suffix' => '</div>',
-      ]
+      ? $this->buildEmpty(t('No "%type" message found', ['%type' => $type]))
       : $this->buildMainTable($rows);
 
     $ret = $this->buildDefaults($main, $top);

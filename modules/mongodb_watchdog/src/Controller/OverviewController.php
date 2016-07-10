@@ -120,11 +120,7 @@ class OverviewController extends ControllerBase {
 
     $rows = $this->getRowData($request);
     $main = empty($rows)
-      ? [
-        '#markup' => t('No event found in logger.'),
-        '#prefix' => '<div class="mongodb_watchdog__message">',
-        '#suffix' => '</div>',
-      ]
+      ? $this->buildEmpty(t('No event found in logger.'))
       : $this->buildMainTable($rows);
 
     $ret = $this->buildDefaults($main, $top);
@@ -250,7 +246,7 @@ class OverviewController extends ControllerBase {
       default:
         $message = Unicode::truncate(strip_tags(SafeMarkup::format($template->message, [])), 56, TRUE, TRUE);
         $cell = Link::createFromRoute($message, 'mongodb_watchdog.reports.detail', [
-          'event_template' => $template->_id,
+          'eventTemplate' => $template->_id,
         ]);
         break;
     }

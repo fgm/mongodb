@@ -53,7 +53,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The event template.
    *
-   * @return array<string,array>
+   * @return array<string,string|array>
    *   A render array.
    */
   public function build(Request $request, EventTemplate $eventTemplate) {
@@ -61,11 +61,7 @@ class DetailController extends ControllerBase {
 
     $rows = $this->getRowData($request, $eventTemplate);
     $main = empty($rows)
-      ? [
-        '#markup' => t('No occurrence of this event found in logger.'),
-        '#prefix' => '<div class="mongodb_watchdog__message">',
-        '#suffix' => '</div>',
-      ]
+      ? $this->buildEmpty(t('No occurrence of this event found in logger.'))
       : $this->buildMainTable($rows, $eventTemplate);
 
     $ret = $this->buildDefaults($main, $top);
@@ -194,7 +190,7 @@ class DetailController extends ControllerBase {
   }
 
   /**
-   * Build the heading rows on the event occurrences page.
+   * Build the heading rows on the per-template event occurrences page.
    *
    * @param \Drupal\mongodb_watchdog\EventTemplate|null $eventTemplate
    *   The template for which to provide details. Not actually expected to be
