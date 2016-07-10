@@ -11,6 +11,10 @@
   text-decoration: none;
 }
 
+.mongodb_watchdog__message {
+  font-style: italic;
+}
+
 .mongodb_watchdog__severity_emergency {
   background: #FF2020;
 }
