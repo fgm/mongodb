@@ -2,13 +2,13 @@ language: php
 
 php:
   - '7.0'
-  - hhvm
+  #- hhvm
 
 matrix:
   fast_finish: true
-  allow_failures:
-    - php:
-      - hhvm
+#  allow_failures:
+#    - php:
+#      - hhvm
 
 mysql:
   database: travis_ci_mongodb
@@ -33,9 +33,6 @@ install:
   # see: https://github.com/drush-ops/drush#install---composer
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
 
-  # install drush globally
-  - composer global require -v drush/drush
-
   # Configure PHP (mongodb is included by default).
   - echo 'date.timezone = "Europe/Paris"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
 
@@ -59,9 +56,6 @@ before_script:
   - cd drupal-8.2.x-dev
   - mkdir -p modules/custom
 
-  # apply patch so that run-tests.sh returns error code when executing Simpletests.
-  - wget -q -O - https://www.drupal.org/files/issues/run_tests_sh_should-2189345-53.patch | patch -p1
-
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database travis_ci_mongodb'
   - php -d sendmail_path=`which true` ~/.composer/vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_mongodb mongodb
@@ -71,7 +65,7 @@ before_script:
   - ls -al
   #- ln -s $(readlink -e $(cd -)) drupal-8.2.x-dev/modules/custom/mongodb
   - cd mongodb/drupal
-  - drush -y en mongodb mongodb_watchdog
+  - vendor/bin/drush -y en mongodb mongodb_watchdog
 
   # Not needed: we don't have any web tests at this point.
   # start a web server on port 8080, run in the background; wait for initialization.
