@@ -60,8 +60,8 @@ before_script:
   - php -d sendmail_path=`which true` ~/.composer/vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_mongodb mongodb
 
   # reference and enable mongodb modules in build site
-  pwd
-  ls -al
+  - pwd
+  - ls -al
   #- ln -s $(readlink -e $(cd -)) drupal-8.2.x-dev/modules/custom/mongodb
   - cd mongodb/drupal
   - drush -y en mongodb mongodb_watchdog
