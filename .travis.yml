@@ -36,8 +36,8 @@ install:
   # Configure PHP (mongodb is included by default).
   - echo 'date.timezone = "Europe/Paris"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
 
-  # install the PHP MongoDB library in the project
-  - composer require -v "mongodb/mongodb:^1.0.0"
+  # install Drush and the PHP MongoDB library in the project
+  - composer require -v "drush/drush" "mongodb/mongodb:^1.0.0"
 
   # Restore XDebug for coverage: need to back it up during removal else it won't be there to readd.
   #- phpenv config-add xdebug.ini
