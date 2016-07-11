@@ -40,13 +40,19 @@ install:
   #- phpenv config-add xdebug.ini
 
 before_script:
+  # Code runs in /home/travis/build, which is the checkout root.
 
   # remove Xdebug as we don't need it, is slows everything, and it causes
   # PHP Fatal error:  Maximum function nesting level of '256' reached
   #- phpenv config-rm xdebug.ini
-
+  - echo "Avant cd, pwd"
+  - pwd
+  - ls -alR
   # navigate out of module directory to prevent blown stack by recursive module lookup
   - cd ../..
+  - echo "Après cd, pwd"
+  - pwd
+  - ls -alR
 
   # download Drupal 8.2 core.
   - wget -q -O - http://ftp.drupal.org/files/projects/drupal-8.2.x-dev.tar.gz | tar xz
@@ -58,11 +64,6 @@ before_script:
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database travis_ci_mongodb'
-  - pwd
-  - ls -al
-  - ls -al vendor
-  - ls -al vendor/bin
-  - ls -alR modules
   - php -d sendmail_path=`which true` vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_mongodb mongodb
 
   # reference and enable mongodb modules in build site
