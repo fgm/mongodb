@@ -20,7 +20,6 @@ before_install:
 
   # MongoDB extension is preinstalled but not enabled by default.
   - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-  - phpdismod xdebug
 
 install:
   # install php packages required for running a web server from drush on php 7
@@ -38,9 +37,6 @@ install:
 
   # install the PHP MongoDB library in the project
   - composer require mongodb/mongodb "^1.0.0"
-
-  # restore xdebug
-  - phpenmod xdebug
 
 before_script:
 
