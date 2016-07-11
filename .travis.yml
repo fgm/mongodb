@@ -36,9 +36,6 @@ install:
   # Configure PHP (mongodb is included by default).
   - echo 'date.timezone = "Europe/Paris"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
 
-  # install Drush and the PHP MongoDB library in the project
-  - composer require -v "drush/drush" "mongodb/mongodb:^1.0.0"
-
   # Restore XDebug for coverage: need to back it up during removal else it won't be there to readd.
   #- phpenv config-add xdebug.ini
 
@@ -56,13 +53,19 @@ before_script:
   - cd drupal-8.2.x-dev
   - mkdir -p modules/custom
 
+  # install Drush and the PHP MongoDB library in the project
+  - composer require -v "drush/drush" "mongodb/mongodb:^1.0.0"
+
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database travis_ci_mongodb'
+  - pwd
+  - ls -al
+  - ls -al vendor
+  - ls -al vendor/bin
+  - ls -alR modules
   - php -d sendmail_path=`which true` vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_mongodb mongodb
 
   # reference and enable mongodb modules in build site
-  - pwd
-  - ls -al
   #- ln -s $(readlink -e $(cd -)) drupal-8.2.x-dev/modules/custom/mongodb
   - cd mongodb/drupal
   - vendor/bin/drush -y en mongodb mongodb_watchdog
