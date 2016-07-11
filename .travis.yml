@@ -21,6 +21,7 @@ addons:
     - mongodb-3.2-precise
     packages:
     - mongodb-org-server
+    - mongodb-org-server
 
 mysql:
   database: travis_ci_mongodb
@@ -50,6 +51,7 @@ install:
 
   # Restore XDebug for coverage: need to back it up during removal else it won't be there to readd.
   #- phpenv config-add xdebug.ini
+  mongo --version
 
 before_script:
   # Code runs in /home/travis/build, which is the checkout root.
