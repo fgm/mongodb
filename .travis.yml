@@ -43,7 +43,7 @@ install:
   - composer require -v "mongodb/mongodb:^1.0.0"
 
   # Restore XDebug for coverage
-  - phpenv config-add xdebug.ini
+  #- phpenv config-add xdebug.ini
 
 before_script:
 
