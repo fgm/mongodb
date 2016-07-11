@@ -61,9 +61,12 @@ before_script:
   - mysql -e 'create database travis_ci_mongodb'
   - php -d sendmail_path=`which true` vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_mongodb mongodb
 
+  # Define "logger" alias for mongodb_watchdog.
+  - echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/settings.php
+
   # reference and enable mongodb modules in build site
   #- ln -s $(readlink -e $(cd -)) drupal-8.2.x-dev/modules/custom/mongodb
-  - vendor/bin/drush -y en mongodb mongodb_watchdog
+  - vendor/bin/drush -y en mongodb_watchdog
 
   # Not needed: we don't have any web tests at this point.
   # start a web server on port 8080, run in the background; wait for initialization.
