@@ -294,12 +294,16 @@ class Logger extends AbstractLogger {
    *
    * @see https://docs.mongodb.com/manual/reference/command/convertToCapped
    *
-   * Note that MongoDB 3.2 still misses a propert exists() command, which is the
+   * Note that MongoDB 3.2 still misses a proper exists() command, which is the
    * reason for the weird try/catch logic.
    *
    * @see https://jira.mongodb.org/browse/SERVER-1938
    */
   public function ensureCappedCollection($name, $size) {
+    if ($size == 0) {
+      drupal_set_message('Abnormal size 0 ensuring capped collection, defaulting.', 'error');
+      $size = 100000;
+    }
     try {
       $stats = $this->database->command([
         'collStats' => $name,
