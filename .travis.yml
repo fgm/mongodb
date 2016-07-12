@@ -51,7 +51,7 @@ install:
 
   # Restore XDebug for coverage: need to back it up during removal else it won't be there to readd.
   #- phpenv config-add xdebug.ini
-  mongo --version
+  - mongo --version
 
 before_script:
   # Code runs in /home/travis/build, which is the checkout root.
