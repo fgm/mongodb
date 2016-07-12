@@ -305,9 +305,11 @@ class Logger extends AbstractLogger {
       $size = 100000;
     }
     try {
-      $stats = $this->database->command([
+      $command = [
         'collStats' => $name,
-      ], static::LEGACY_TYPE_MAP)->toArray()[0];
+      ];
+      var_dump($command);
+      $stats = $this->database->command($command, static::LEGACY_TYPE_MAP)->toArray()[0];
     }
     catch (RuntimeException $e) {
       // 59 is expected if the collection was not found. Other values are not.
@@ -326,10 +328,12 @@ class Logger extends AbstractLogger {
       return $collection;
     }
 
-    $this->database->command([
+    $command =  [
       'convertToCapped' => $name,
       'size' => $size,
-    ]);
+    ];
+    var_dump($command);
+    $this->database->command($command);
     return $collection;
   }
 
