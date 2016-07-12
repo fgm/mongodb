@@ -78,7 +78,12 @@ before_script:
   - chmod 644 sites/default/settings.php
 
   # Define "logger" alias for mongodb_watchdog.
-  - echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
+  - grep -vF php modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
+  - echo "Settings 30 last lines:\n";
+  - tail -30 sites/default/settings.php
+  - echo "Logger:\n"
+  - cat modules/contrib/mongodb/src/Logger.php
+  #- echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
 
   # reference and enable mongodb modules in build site
   #- ln -s $(readlink -e $(cd -)) drupal-8.2.x-dev/modules/custom/mongodb
