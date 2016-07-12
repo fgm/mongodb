@@ -300,40 +300,58 @@ class Logger extends AbstractLogger {
    * @see https://jira.mongodb.org/browse/SERVER-1938
    */
   public function ensureCappedCollection($name, $size) {
+echo __LINE__ . "\n";
     if ($size == 0) {
+      echo __LINE__ . " if size == 0\n";
       drupal_set_message('Abnormal size 0 ensuring capped collection, defaulting.', 'error');
       $size = 100000;
+      echo __LINE__ . " size = 100k\n";
     }
     try {
       $command = [
         'collStats' => $name,
       ];
+      echo __LINE__ . " try collstats\n";
       var_dump($command);
+      echo __LINE__ . "that was collstats command\n";
       $stats = $this->database->command($command, static::LEGACY_TYPE_MAP)->toArray()[0];
+      echo __LINE__ . " after collstats command\n";
     }
     catch (RuntimeException $e) {
+      echo __LINE__ . " RT caught\n";
       // 59 is expected if the collection was not found. Other values are not.
       if ($e->getCode() !== 59) {
+        echo __LINE__ . " exception not 59\n";
         throw $e;
+        echo __LINE__ . " rethrown \n";
       }
+      echo __LINE__ . " exception 59, creating collection\n";
 
       $this->database->createCollection($name);
+      echo __LINE__ . " collection $name created, trying collstats again\n";
       $stats = $this->database->command([
         'collStats' => $name,
       ], static::LEGACY_TYPE_MAP)->toArray()[0];
+      echo __LINE__ . " after stats command again\n";
     }
+    echo __LINE__ . " after collstats try, selecting collection $name\n";
 
     $collection = $this->database->selectCollection($name);
+    echo __LINE__ . " collection $name selected\n";
     if (!empty($stats['capped'])) {
+      echo __LINE__ . " stats capped " . print_r($stats, true) . " returning collection\n";
       return $collection;
     }
 
+    echo __LINE__ . " stats did not include capped\n";
     $command =  [
       'convertToCapped' => $name,
       'size' => $size,
     ];
     var_dump($command);
+    echo __LINE__ . " converttocapped command\n";
     $this->database->command($command);
+    echo __LINE__ . " after capped command conversion\n";
     return $collection;
   }
 
@@ -345,14 +363,18 @@ class Logger extends AbstractLogger {
    * numbers should be much faster to create than one with a string included.
    */
   public function ensureSchema() {
+    echo "Ensuring trackerCollection" . static::TRACKER_COLLECTION . ", requests " . $this->requests * 1024 . "\n";
     $trackerCollection = $this->ensureCappedCollection(static::TRACKER_COLLECTION, $this->requests * 1024);
+    echo "After ensuring trackerCollection\n";
     $indexes = [
       [
         'name' => 'tracker-request',
         'key' => ['request_id' => 1],
       ],
     ];
+    echo "Before createIndexes for tracker-request\n";
     $trackerCollection->createIndexes($indexes);
+    echo "After createIndexes for tracker-request\n";
 
     $indexes = [
       // Index for adding/updating increments.
@@ -386,8 +408,9 @@ class Logger extends AbstractLogger {
       ],
     ];
 
+    echo "Before createIndexes for templates collection\n";
     $this->templateCollection()->createIndexes($indexes);
-
+    echo "After createIndexes for templates collection\n";
   }
 
   /**
