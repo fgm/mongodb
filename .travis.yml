@@ -21,7 +21,6 @@ addons:
     - mongodb-3.2-precise
     packages:
     - mongodb-org-server
-    - mongodb-org-shell
 
 mysql:
   database: travis_ci_mongodb
@@ -51,7 +50,6 @@ install:
 
   # Restore XDebug for coverage: need to back it up during removal else it won't be there to readd.
   #- phpenv config-add xdebug.ini
-  - mongo --version
 
 before_script:
   # Code runs in /home/travis/build, which is the checkout root.
@@ -79,10 +77,8 @@ before_script:
 
   # Define "logger" alias for mongodb_watchdog.
   - grep -vF php modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
-  - echo "Settings 30 last lines:\n";
-  - tail -30 sites/default/settings.php
   - echo "Logger:\n"
-  - cat modules/contrib/mongodb/src/Logger.php
+  - cat modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
   #- echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
 
   # reference and enable mongodb modules in build site
