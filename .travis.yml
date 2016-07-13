@@ -54,7 +54,7 @@ install:
 before_script:
   # Code runs in /home/travis/build, which is the checkout root.
   - echo "START OF BEFORE SCRIPT, Logger:\n"
-  - cat FGM/mongodb/modules/mongodb_watchdog/src/Logger.php
+  - cat modules/mongodb_watchdog/src/Logger.php
 
   # remove Xdebug as we don't need it, is slows everything, and it causes
   # PHP Fatal error:  Maximum function nesting level of '256' reached
