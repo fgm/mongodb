@@ -88,4 +88,4 @@ before_script:
   # - drush runserver 127.0.0.1:8080 &
   #- until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
 
-script: vendor/bin/phpunit -c core/phpunit.xml.dist modules/contrib/mongodb
+script: SIMPLETEST_DB=mysql://root:@127.0.0.1/travis_ci_mongodb vendor/bin/phpunit -c core/phpunit.xml.dist modules/contrib/mongodb
