@@ -84,7 +84,7 @@ abstract class ControllerBase extends CoreControllerBase {
   protected function buildEmpty(TranslatableMarkup $markup) {
     $ret = [
       '#markup' => $markup,
-      '#prefix' => '<div class="mongodb_watchdog__message">',
+      '#prefix' => '<div class="mongodb-watchdog__message">',
       '#suffix' => '</div>',
     ];
 
