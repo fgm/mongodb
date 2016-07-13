@@ -126,7 +126,7 @@ class OverviewFilterForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'mongodb_watchdog_filter_form';
+    return 'mongodb-watchdog__filter-form';
   }
 
   /**
