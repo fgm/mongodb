@@ -53,8 +53,6 @@ install:
 
 before_script:
   # Code runs in /home/travis/build, which is the checkout root.
-  - echo "START OF BEFORE SCRIPT, Logger:\n"
-  - grep __LINE__ modules/mongodb_watchdog/src/Logger.php
 
   # remove Xdebug as we don't need it, is slows everything, and it causes
   # PHP Fatal error:  Maximum function nesting level of '256' reached
@@ -67,30 +65,18 @@ before_script:
   - cd drupal-8.2.x-dev
   - mkdir -p modules/contrib
   - mv ../FGM/mongodb modules/contrib
-  - echo "After MV"
-  - grep __LINE__ modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
-  - sum modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
 
   # install Drush and the PHP MongoDB library in the project
   - composer require -v "drush/drush" "mongodb/mongodb:^1.0.0"
-  - echo "After composer require"
-  - grep __LINE__ modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
-  - sum modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database travis_ci_mongodb'
   - php -d sendmail_path=`which true` vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_mongodb
-  - echo "After Drush QD"
-  - grep __LINE__ modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
-  - sum modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
   - chmod 755 sites/default
   - chmod 644 sites/default/settings.php
 
   # Define "logger" alias for mongodb_watchdog.
   - tail --lines=+8 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
-  - echo "RIGHT BEFORE ENABLING Logger:\n"
-  - grep __LINE__ modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
-  - sum modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
   #- echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
 
   # reference and enable mongodb modules in build site
@@ -102,5 +88,5 @@ before_script:
   # - drush runserver 127.0.0.1:8080 &
   #- until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
 
-script: phpunit -c core/phpunit.xml.dist --uri=http://127.0.0.1:8080 modules/contrib/mongodb
+script: phpunit -c core/phpunit.xml.dist modules/contrib/mongodb
 
