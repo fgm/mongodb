@@ -4,44 +4,44 @@
  *
  * @see \Drupal\mongodb_watchdog\Controller\OverviewController::getEventSource()
  */
-.mongodb_watchdog__code_path {
+.mongodb-watchdog__code-path {
   background-clip: padding-box;
   border-bottom: 1px dotted;
   border-color: rgba(0, 0, 0, 0.3);
   text-decoration: none;
 }
 
-.mongodb_watchdog__message {
+.mongodb-watchdog__message {
   font-style: italic;
 }
 
-.mongodb_watchdog__severity_emergency {
+.mongodb-watchdog__severity--emergency {
   background: #FF2020;
 }
 
-.mongodb_watchdog__severity_alert {
+.mongodb-watchdog__severity--alert {
   background: #FF80FF;
 }
-.mongodb_watchdog__severity_critical {
+.mongodb-watchdog__severity--critical {
   background: #C0A0FF;
 }
 
-.mongodb_watchdog__severity_error {
+.mongodb-watchdog__severity--error {
   background: #FFB00D;
 }
 
-.mongodb_watchdog__severity_warning {
+.mongodb-watchdog__severity--warning {
   background: #FFE080;
 }
 
-.mongodb_watchdog__severity_notice {
+.mongodb-watchdog__severity--notice {
   background: #40A000;
 }
 
-.mongodb_watchdog__severity_info {
+.mongodb-watchdog__severity--info {
   background: #A0E0A0;
 }
 
-.mongodb_watchdog__severity_debug {
+.mongodb-watchdog__severity--debug {
   background: #B0E0FF;
 }

@@ -30,7 +30,7 @@ class OverviewController extends ControllerBase {
       'root' => 'Drupal\mongodb_watchdog\Event',
     ],
   ];
-  const SEVERITY_PREFIX = 'mongodb_watchdog__severity_';
+  const SEVERITY_PREFIX = 'mongodb-watchdog__severity--';
   const SEVERITY_CLASSES = [
     RfcLogLevel::DEBUG => self::SEVERITY_PREFIX . LogLevel::DEBUG,
     RfcLogLevel::INFO => self::SEVERITY_PREFIX . LogLevel::INFO,
@@ -294,7 +294,7 @@ class OverviewController extends ControllerBase {
 
     if ($hover) {
       $cell['#attributes'] = [
-        'class' => 'mongodb_watchdog__code_path',
+        'class' => 'mongodb-watchdog__code-path',
         'title' => $hover,
       ];
     }
