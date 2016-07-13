@@ -32,8 +32,6 @@ before_install:
 
   # MongoDB extension is preinstalled but not enabled by default.
   - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-  - echo "END OF BEFORE INSTALL, Logger:\n"
-  - cat FGM/mongodb/modules/mongodb_watchdog/src/Logger.php
 
 install:
   # install php packages required for running a web server from drush on php 7
