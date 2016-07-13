@@ -1,37 +1,39 @@
 {
-    "authors": [
-        {
-            "homepage": "https://www.drupal.org/u/chx",
-            "name": "chx"
-        },
-        {
-            "email": "fgm@osinet.fr",
-            "homepage": "http://blog.riff.org",
-            "name": "Frederic G. MARAND"
-        },
-        {
-            "name": "See other contributors",
-            "homepage":"https://www.drupal.org/node/646198/committers"
-        }
-    ],
-    "description": "Drupal 8.2 driver for MongoDB",
-    "homepage": "https://www.drupal.org/project/mongodb",
-    "keywords": ["drupal", "mongodb"],
-    "license": "GPL-2.0+",
-    "minimum-stability": "dev",
-    "name": "drupal/mongodb",
-    "require": {
-        "php": "^7.0",
-        "ext-mongodb": "^1.1.7",
-        "mongodb/mongodb": "^1.0.0"
+  "authors": [
+    {
+      "homepage": "https://www.drupal.org/u/chx",
+      "name": "chx"
     },
-    "support": {
-        "docs": "https://github.com/FGM/mongodb/blob/8.x-2.x/README.md",
-        "email": "support@osinet.fr",
-        "irc": "irc://chat.freenode.net:6697/drupal-mongodb",
-        "issues": "https://www.drupal.org/project/issues/mongodb",
-        "rss": "https://github.com/FGM/mongodb/commits/8.x-2.x.atom",
-        "source": "https://github.com/FGM/mongodb/tree/8.x-2.x"
+    {
+      "email": "fgm@osinet.fr",
+      "homepage": "http://blog.riff.org",
+      "name": "Frederic G. MARAND"
     },
-    "type": "drupal-module"
+    {
+      "name": "See other contributors",
+      "homepage":"https://www.drupal.org/node/646198/committers"
+    }
+  ],
+  "description": "Drupal 8.2 driver for MongoDB",
+  "homepage": "https://www.drupal.org/project/mongodb",
+  "keywords": ["drupal", "mongodb"],
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "name": "drupal/mongodb",
+  "prefer-stable": false,
+  "require": {
+    "php": "^7.0",
+    "ext-mongodb": "^1.1.7",
+    "mongodb/mongodb": "^1.0.0",
+    "drush/drush": "^8.1"
+  },
+  "support": {
+    "docs": "https://github.com/FGM/mongodb/blob/8.x-2.x/README.md",
+    "email": "support@osinet.fr",
+    "irc": "irc://chat.freenode.net:6697/drupal-mongodb",
+    "issues": "https://www.drupal.org/project/issues/mongodb",
+    "rss": "https://github.com/FGM/mongodb/commits/8.x-2.x.atom",
+    "source": "https://github.com/FGM/mongodb/tree/8.x-2.x"
+  },
+  "type": "drupal-module"
 }

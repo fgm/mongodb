@@ -1,0 +1,91 @@
+language: php
+
+php:
+  - '7.0'
+  #- hhvm
+
+services:
+  - mongodb
+  - mysql
+
+matrix:
+  fast_finish: true
+#  allow_failures:
+#    - php:
+#      - hhvm
+sudo: true
+
+addons:
+  apt:
+    sources:
+    - mongodb-3.2-precise
+    packages:
+    - mongodb-org-server
+
+mysql:
+  database: travis_ci_mongodb
+  username: root
+  encoding: utf8
+
+before_install:
+  - sudo apt-get update > /dev/null
+
+  # MongoDB extension is preinstalled but not enabled by default.
+  - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+
+install:
+  # install php packages required for running a web server from drush on php 7
+  # - sudo apt-get install -y --force-yes php-cgi php-mysql
+
+  # Disable XDebug for speed.
+  # https://github.com/travis-ci/travis-ci/issues/1697
+  #- phpenv config-rm xdebug.ini
+
+  # add composer's global bin directory to the path
+  # see: https://github.com/drush-ops/drush#install---composer
+  - export PATH="$HOME/.composer/vendor/bin:$PATH"
+
+  # Configure PHP (mongodb is included by default).
+  - echo 'date.timezone = "Europe/Paris"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
+
+  # Restore XDebug for coverage: need to back it up during removal else it won't be there to readd.
+  #- phpenv config-add xdebug.ini
+
+before_script:
+  # Code runs in /home/travis/build, which is the checkout root.
+
+  # remove Xdebug as we don't need it, is slows everything, and it causes
+  # PHP Fatal error:  Maximum function nesting level of '256' reached
+  #- phpenv config-rm xdebug.ini
+  # navigate out of module directory to prevent blown stack by recursive module lookup
+  - cd ../..
+
+  # download Drupal 8.2 core.
+  - wget -q -O - http://ftp.drupal.org/files/projects/drupal-8.2.x-dev.tar.gz | tar xz
+  - cd drupal-8.2.x-dev
+  - mkdir -p modules/contrib
+  - mv ../FGM/mongodb modules/contrib
+
+  # install Drush and the PHP MongoDB library in the project
+  - composer require -v "drush/drush" "mongodb/mongodb:^1.0.0"
+
+  # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
+  - mysql -e 'create database travis_ci_mongodb'
+  - php -d sendmail_path=`which true` vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_mongodb
+  - chmod 755 sites/default
+  - chmod 644 sites/default/settings.php
+
+  # Define "logger" alias for mongodb_watchdog.
+  - tail --lines=+8 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
+  #- echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
+
+  # reference and enable mongodb modules in build site
+  #- ln -s $(readlink -e $(cd -)) drupal-8.2.x-dev/modules/custom/mongodb
+  - vendor/bin/drush -y en mongodb_watchdog
+
+  # Not needed: we don't have any web tests at this point.
+  # start a web server on port 8080, run in the background; wait for initialization.
+  # - drush runserver 127.0.0.1:8080 &
+  #- until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
+
+script: SIMPLETEST_DB=mysql://root:@127.0.0.1/travis_ci_mongodb vendor/bin/phpunit -c core/phpunit.xml.dist modules/contrib/mongodb

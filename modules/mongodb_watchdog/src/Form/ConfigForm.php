@@ -81,8 +81,8 @@ class ConfigForm extends ConfigFormBase {
       }
     }
 
-    $form = parent::buildForm($form, $form_state);
-    return $form;
+    $parentedForm = parent::buildForm($form, $form_state);
+    return $parentedForm;
   }
 
   /**

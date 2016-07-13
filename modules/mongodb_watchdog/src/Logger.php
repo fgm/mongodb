@@ -73,6 +73,13 @@ class Logger extends AbstractLogger {
   protected $requests;
 
   /**
+   * The request_stack service.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * An array of templates already used in this request.
    *
    * Used only with request tracking enabled.
@@ -284,7 +291,7 @@ class Logger extends AbstractLogger {
    *
    * @param string $name
    *   The collection name.
-   * @param int $size
+   * @param int $inboundSize
    *   The collection size cap.
    *
    * @return \MongoDB\Collection
@@ -294,16 +301,25 @@ class Logger extends AbstractLogger {
    *
    * @see https://docs.mongodb.com/manual/reference/command/convertToCapped
    *
-   * Note that MongoDB 3.2 still misses a propert exists() command, which is the
+   * Note that MongoDB 3.2 still misses a proper exists() command, which is the
    * reason for the weird try/catch logic.
    *
    * @see https://jira.mongodb.org/browse/SERVER-1938
    */
-  public function ensureCappedCollection($name, $size) {
+  public function ensureCappedCollection($name, $inboundSize) {
+    if ($inboundSize == 0) {
+      drupal_set_message(t('Abnormal size 0 ensuring capped collection, defaulting.'), 'error');
+      $size = 100000;
+    }
+    else {
+      $size = $inboundSize;
+    }
+
     try {
-      $stats = $this->database->command([
+      $command = [
         'collStats' => $name,
-      ], static::LEGACY_TYPE_MAP)->toArray()[0];
+      ];
+      $stats = $this->database->command($command, static::LEGACY_TYPE_MAP)->toArray()[0];
     }
     catch (RuntimeException $e) {
       // 59 is expected if the collection was not found. Other values are not.
@@ -322,10 +338,11 @@ class Logger extends AbstractLogger {
       return $collection;
     }
 
-    $this->database->command([
+    $command = [
       'convertToCapped' => $name,
       'size' => $size,
-    ]);
+    ];
+    $this->database->command($command);
     return $collection;
   }
 
@@ -379,7 +396,6 @@ class Logger extends AbstractLogger {
     ];
 
     $this->templateCollection()->createIndexes($indexes);
-
   }
 
   /**
@@ -409,7 +425,6 @@ class Logger extends AbstractLogger {
    *   The collections with a name matching the event pattern.
    */
   public function eventCollections() {
-    echo static::EVENT_COLLECTIONS_PATTERN;
     $options = [
       'filter' => [
         'name' => ['$regex' => static::EVENT_COLLECTIONS_PATTERN],
