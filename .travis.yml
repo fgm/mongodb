@@ -32,6 +32,8 @@ before_install:
 
   # MongoDB extension is preinstalled but not enabled by default.
   - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - echo "END OF BEFORE INSTALL, Logger:\n"
+  - cat FGM/mongodb/modules/mongodb_watchdog/src/Logger.php
 
 install:
   # install php packages required for running a web server from drush on php 7
@@ -53,6 +55,8 @@ install:
 
 before_script:
   # Code runs in /home/travis/build, which is the checkout root.
+  - echo "START OF BEFORE SCRIPT, Logger:\n"
+  - cat FGM/mongodb/modules/mongodb_watchdog/src/Logger.php
 
   # remove Xdebug as we don't need it, is slows everything, and it causes
   # PHP Fatal error:  Maximum function nesting level of '256' reached
@@ -76,8 +80,8 @@ before_script:
   - chmod 644 sites/default/settings.php
 
   # Define "logger" alias for mongodb_watchdog.
-  - grep -vF php modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
-  - echo "Logger:\n"
+  - tail --lines=+8 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
+  - echo "RIGHT BEFORE ENABLING Logger:\n"
   - cat modules/contrib/mongodb/modules/mongodb_watchdog/src/Logger.php
   #- echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
 
