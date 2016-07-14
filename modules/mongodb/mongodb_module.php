@@ -13,36 +13,15 @@ use Drupal\Core\Routing\RouteMatchInterface;
 function mongodb_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.mongodb':
-      return '<p>' . t('The Drupal <a href=":project">MongoDB</a> project implements a generic interface to the <a href=":mongo">MongoDB</a> database server.', [
-        ':project' => 'http://drupal.org/project/mongodb',
-        ':mongo' => 'http://www.mongodb.org/',
+      return '<p>' . t('The Drupal <a href=":project">MongoDB</a> project implements a generic interface to the <a href=":mongo">MongoDB</a> database server. Read its <a href=":docs">online documentation</a>.', [
+        ':project' => 'https://www.drupal.org/project/mongodb',
+        ':mongo' => 'https://www.mongodb.com/',
+        ':docs' => 'https://fgm.github.io/mongodb',
       ]);
   }
 }
 
 /* ==== Highly suspicious below this line =================================== */
-
-/**
- * Implements hook_test_group_finished().
- *
- * @throws \InvalidArgumentException
- *   If the database cannot be selected.
- *
- * @throws \MongoDB\Driver\Exception\ConnectionException
- *   If the connection cannot be established.
- */
-function mongodb_test_group_finished() {
-  $aliases = variable_get('mongodb_connections', array());
-  $aliases['default'] = TRUE;
-  foreach (array_keys($aliases) as $alias) {
-    $db = mongodb($alias);
-    foreach ($db->listCollections() as $collection) {
-      if (preg_match('/\.simpletest\d+/', $collection)) {
-        $db->dropCollection($collection);
-      }
-    }
-  }
-}
 
 /**
  * Return the next id in a sequence.

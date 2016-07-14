@@ -1,4 +1,5 @@
 /.idea/
+/site/
 /vendor/
 
 composer.lock

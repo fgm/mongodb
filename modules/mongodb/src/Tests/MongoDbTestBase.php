@@ -34,13 +34,26 @@ abstract class MongoDbTestBase extends KernelTestBase {
   protected $uri;
 
   /**
+   * Obtain the name of a per-test database.
+   *
+   * @param string $postfix
+   *   The way for the caller to differentiate this database from others.
+   *
+   * @return string
+   *   The name of the per-test database, like 'simpletest1234_foo'.
+   */
+  public function getTestDatabaseName($postfix) {
+    return $this->getDatabasePrefix() . '_' . $postfix;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function setUp() {
     parent::setUp();
     // $_ENV if it comes from phpunit.xml <env>
     // $_SERVER if it comes from the phpunit command line environment.
-    $this->uri = $_ENV['MONGODB_URL'] ?? $_SERVER['MONGODB_URI'] ?? static::DEFAULT_URI;
+    $this->uri = $_ENV['MONGODB_URI'] ?? $_SERVER['MONGODB_URI'] ?? static::DEFAULT_URI;
 
     $this->settings = new Settings([
       'mongodb' => [
