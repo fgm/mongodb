@@ -2,6 +2,7 @@
 
 namespace Drupal\mongodb_storage\Model;
 
+use Doctrine\Common\Util\Debug;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityStorageBase as CoreContentEntityStorageBase;
@@ -9,14 +10,23 @@ use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\mongodb\DatabaseFactory;
+use MongoDB\BSON\ObjectID;
 
 class ContentEntityStorageBase extends CoreContentEntityStorageBase {
 
+  /**
+   * @var \Drupal\mongodb\DatabaseFactory
+   */
+  protected $databaseFactory;
+
   public function __construct(ContentEntityTypeInterface $entityType,
     EntityManagerInterface $entityManager,
-    CacheBackendInterface $cacheBackend) {
+    CacheBackendInterface $cacheBackend,
+    DatabaseFactory $databaseFactory) {
     echo __METHOD__ . "\n";
     parent::__construct($entityType, $entityManager, $cacheBackend);
+    $this->databaseFactory = $databaseFactory;
   }
 
   /**
@@ -34,7 +44,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    *   An array of field item lists, keyed by entity revision id.
    */
   protected function readFieldItemsToPurge(FieldDefinitionInterface $field_definition, $batch_size) {
-    // TODO: Implement readFieldItemsToPurge() method.
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -46,7 +56,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    *   The field whose values are bing purged.
    */
   protected function purgeFieldItems(ContentEntityInterface $entity, FieldDefinitionInterface $field_definition) {
-    // TODO: Implement purgeFieldItems() method.
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -59,7 +69,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    *   The specified entity revision or NULL if not found.
    */
   protected function doLoadRevisionFieldItems($revision_id) {
-    // TODO: Implement doLoadRevisionFieldItems() method.
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -75,7 +85,24 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    *   empty value is passed all field values are saved.
    */
   protected function doSaveFieldItems(ContentEntityInterface $entity, array $names = []) {
-    // TODO: Implement doSaveFieldItems() method.
+    ksm(__METHOD__, $entity, $names);
+    $id = $entity->id();
+    $full_save = empty($names);
+    $update = !$full_save || !$entity->isNew();
+    $serializer = \Drupal::service('serializer');
+    $doc = $serializer->normalize($entity, 'json');
+    $doc['_id'] = $id ?: new ObjectID();
+    ksm(__METHOD__, $names, $doc, (string) $doc['_id']);
+    $database = $this->databaseFactory->get('default');
+    $collection = $database->selectCollection($entity->bundle());
+    $result = $collection->replaceOne(['_id' => $id], $doc, ['upsert' => TRUE]);
+    ksm($doc, $collection,
+      "matched " . $result->getMatchedCount(),
+      "modified " . $result->getModifiedCount(),
+      "upserted " . $result->getUpsertedCount(),
+      "new id " . $result->getUpsertedId(),
+      "ack" . ($result->isAcknowledged() ? "Y" : "N")
+    );
   }
 
   /**
@@ -85,7 +112,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    *   An array of entity objects to be deleted.
    */
   protected function doDeleteFieldItems($entities) {
-    // TODO: Implement doDeleteFieldItems() method.
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -95,7 +122,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    *   An entity revision object to be deleted.
    */
   protected function doDeleteRevisionFieldItems(ContentEntityInterface $revision) {
-    // TODO: Implement doDeleteRevisionFieldItems() method.
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -112,7 +139,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    *   Associative array of entities, keyed on the entity ID.
    */
   protected function doLoadMultiple(array $ids = NULL) {
-    // TODO: Implement doLoadMultiple() method.
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -126,7 +153,21 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    * @return bool
    */
   protected function has($id, EntityInterface $entity) {
-    // TODO: Implement has() method.
+    if (!isset($id)) {
+      drupal_set_message(__METHOD__ . "(no id)");
+      return FALSE;
+    }
+
+    $bundle = $entity->bundle();
+    $db = $this->databaseFactory->get('default');
+    $collection = $db->selectCollection($bundle);
+    $selector = [
+      '_id' => "$id",
+    ];
+    $doc = $collection->findOne($selector);
+    $has = isset($doc);
+    ksm(__METHOD__, "($id, " . $entity->label() . ")", $doc ?? FALSE);
+    return $has;
   }
 
   /**
@@ -137,7 +178,6 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    */
   protected function getQueryServiceName() {
     return 'entity.query.null';
-    // TODO: Implement getQueryServiceName() method.
   }
 
   /**
@@ -156,6 +196,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    * @see \Drupal\Core\Entity\FieldableEntityStorageInterface::purgeFieldData()
    */
   public function countFieldData($storage_definition, $as_bool = FALSE) {
-    // TODO: Implement countFieldData() method.
+    ksm(__METHOD__, func_get_args());
   }
+
 }

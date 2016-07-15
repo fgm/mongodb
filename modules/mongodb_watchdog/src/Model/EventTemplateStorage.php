@@ -2,6 +2,7 @@
 
 namespace Drupal\mongodb_watchdog\Model;
 
+use Doctrine\Common\Util\Debug;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -12,7 +13,12 @@ class EventTemplateStorage extends ContentEntityStorageBase {
     EntityManagerInterface $entityManager,
     CacheBackendInterface $cacheBackend) {
     echo __METHOD__ . "\n";
-    parent::__construct($entityType, $entityManager, $cacheBackend);
+    $databaseFactory = \Drupal::service('mongodb.database_factory');
+    parent::__construct($entityType, $entityManager, $cacheBackend, $databaseFactory);
   }
 
+  public function __call($name, array $args) {
+    Debug::dump($name, $args);
+    return call_user_func_array(parent::$name, $args);
+  }
 }
