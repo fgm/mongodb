@@ -19,3 +19,16 @@ mongodb_watchdog.config:
   parent: "system.admin_config_system"
   route_name: 'mongodb_watchdog.config'
   title: "MongoDB watchdog"
+# Event template menu items definition
+entity.mongodb_watchdog_event_template.collection:
+  title: 'Event template list'
+  route_name: entity.mongodb_watchdog_event_template.collection
+  description: 'List Event template entities'
+  parent: system.admin_structure
+  weight: 100
+
+mongodb_watchdog_event_template.admin.structure.settings:
+  title: Event template settings
+  description: 'Configure Event template entities'
+  route_name: mongodb_watchdog_event_template.settings
+  parent: system.admin_structure

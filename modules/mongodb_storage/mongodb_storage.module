@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Contains mongodb_storage.module..
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function mongodb_storage_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the mongodb_storage module.
+    case 'help.page.mongodb_storage':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('MongoDB Storage') . '</p>';
+      return $output;
+
+    default:
+  }
+}

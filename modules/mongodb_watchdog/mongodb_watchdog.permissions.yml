@@ -1,0 +1,22 @@
+add event template entities:
+  title: 'Create new Event template entities'
+
+administer event template entities:
+  title: 'Administer Event template entities'
+  description: 'Allow to access the administration form to configure Event template entities.'
+  restrict access: true
+
+delete event template entities:
+  title: 'Delete Event template entities'
+
+edit event template entities:
+  title: 'Edit Event template entities'
+
+access event template overview:
+  title: 'Access the Event template overview page'
+
+view published event template entities:
+  title: 'View published Event template entities'
+
+view unpublished event template entities:
+  title: 'View unpublished Event template entities'
