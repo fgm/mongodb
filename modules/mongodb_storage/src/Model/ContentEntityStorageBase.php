@@ -95,7 +95,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
     ksm(__METHOD__, $names, $doc, (string) $doc['_id']);
     $database = $this->databaseFactory->get('default');
     $collection = $database->selectCollection($entity->bundle());
-    $result = $collection->replaceOne(['_id' => $id], $doc, ['upsert' => TRUE]);
+    $result = $collection->replaceOne(['_id' => $doc['_id']], $doc, ['upsert' => TRUE]);
     ksm($doc, $collection,
       "matched " . $result->getMatchedCount(),
       "modified " . $result->getModifiedCount(),
@@ -197,6 +197,9 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    */
   public function countFieldData($storage_definition, $as_bool = FALSE) {
     ksm(__METHOD__, func_get_args());
+    if ($as_bool) {
+      return FALSE;
+    }
   }
 
 }

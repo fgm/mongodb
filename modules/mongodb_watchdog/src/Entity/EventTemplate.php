@@ -19,7 +19,7 @@ use Drupal\user\UserInterface;
  *   label = @Translation("Event template"),
  *   handlers = {
  *     "storage" = "Drupal\mongodb_watchdog\Model\EventTemplateStorage",
- *     "Zstorage_schema" = "Drupal\mongodb_watchdog\Model\EventTemplateStorageSchema",
+ *     "storage_schema" = "Drupal\mongodb_watchdog\Model\EventTemplateStorageSchema",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\mongodb_watchdog\EventTemplateListBuilder",
  *     "Zviews_data" = "Drupal\mongodb_watchdog\Entity\EventTemplateViewsData",

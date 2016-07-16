@@ -2,15 +2,13 @@
 
 namespace Drupal\mongodb_storage\Model;
 
-use Doctrine\Common\Util\Debug;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Schema\DynamicallyFieldableEntityStorageSchemaInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 
 class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSchemaInterface {
   public function __construct() {
-    echo __METHOD__ . "\n";
-    Debug::dump(func_get_args());
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -25,7 +23,9 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   TRUE if storage schema changes are required, FALSE otherwise.
    */
   public function requiresFieldStorageSchemaChanges(FieldStorageDefinitionInterface $storage_definition, FieldStorageDefinitionInterface $original) {
-    // TODO: Implement requiresFieldStorageSchemaChanges() method.
+
+    ksm(__METHOD__, func_get_args());
+    return FALSE;
   }
 
   /**
@@ -66,7 +66,9 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    * @see self::requiresFieldStorageSchemaChanges()
    */
   public function requiresFieldDataMigration(FieldStorageDefinitionInterface $storage_definition, FieldStorageDefinitionInterface $original) {
-    // TODO: Implement requiresFieldDataMigration() method.
+
+    ksm(__METHOD__, func_get_args());
+    return FALSE;
   }
 
   /**
@@ -76,7 +78,8 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   The field being purged.
    */
   public function finalizePurge(FieldStorageDefinitionInterface $storage_definition) {
-    // TODO: Implement finalizePurge() method.
+
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -91,7 +94,9 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   TRUE if storage schema changes are required, FALSE otherwise.
    */
   public function requiresEntityStorageSchemaChanges(EntityTypeInterface $entity_type, EntityTypeInterface $original) {
-    // TODO: Implement requiresEntityStorageSchemaChanges() method.
+
+    ksm(__METHOD__, func_get_args());
+    return FALSE;
   }
 
   /**
@@ -129,7 +134,9 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    * @see self::requiresEntityStorageSchemaChanges()
    */
   public function requiresEntityDataMigration(EntityTypeInterface $entity_type, EntityTypeInterface $original) {
-    // TODO: Implement requiresEntityDataMigration() method.
+
+    ksm(__METHOD__, func_get_args());
+    return FALSE;
   }
 
   /**
@@ -139,7 +146,8 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   The entity type being created.
    */
   public function onEntityTypeCreate(EntityTypeInterface $entity_type) {
-    // TODO: Implement onEntityTypeCreate() method.
+
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -151,7 +159,8 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   The original entity type definition.
    */
   public function onEntityTypeUpdate(EntityTypeInterface $entity_type, EntityTypeInterface $original) {
-    // TODO: Implement onEntityTypeUpdate() method.
+
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -161,7 +170,8 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   The entity type being deleted.
    */
   public function onEntityTypeDelete(EntityTypeInterface $entity_type) {
-    // TODO: Implement onEntityTypeDelete() method.
+
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -171,7 +181,8 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   The definition being created.
    */
   public function onFieldStorageDefinitionCreate(FieldStorageDefinitionInterface $storage_definition) {
-    // TODO: Implement onFieldStorageDefinitionCreate() method.
+
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -186,7 +197,8 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   Thrown when the update to the field is forbidden.
    */
   public function onFieldStorageDefinitionUpdate(FieldStorageDefinitionInterface $storage_definition, FieldStorageDefinitionInterface $original) {
-    // TODO: Implement onFieldStorageDefinitionUpdate() method.
+
+    ksm(__METHOD__, func_get_args());
   }
 
   /**
@@ -196,6 +208,7 @@ class ContentEntityStorageSchema implements DynamicallyFieldableEntityStorageSch
    *   The field being deleted.
    */
   public function onFieldStorageDefinitionDelete(FieldStorageDefinitionInterface $storage_definition) {
-    // TODO: Implement onFieldStorageDefinitionDelete() method.
+
+    ksm(__METHOD__, func_get_args());
   }
 }
