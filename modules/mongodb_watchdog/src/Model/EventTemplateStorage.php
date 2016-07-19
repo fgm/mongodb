@@ -12,7 +12,6 @@ class EventTemplateStorage extends ContentEntityStorageBase {
   public function __construct(ContentEntityTypeInterface $entityType,
     EntityManagerInterface $entityManager,
     CacheBackendInterface $cacheBackend) {
-    echo __METHOD__ . "\n";
     $databaseFactory = \Drupal::service('mongodb.database_factory');
     parent::__construct($entityType, $entityManager, $cacheBackend, $databaseFactory);
   }

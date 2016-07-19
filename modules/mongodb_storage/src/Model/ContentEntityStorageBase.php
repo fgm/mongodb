@@ -11,7 +11,11 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\mongodb\DatabaseFactory;
+use Drupal\mongodb_watchdog\Logger;
 use MongoDB\BSON\ObjectID;
+use MongoDB\Operation\FindOneAndUpdate;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class ContentEntityStorageBase extends CoreContentEntityStorageBase {
 
@@ -24,7 +28,6 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
     EntityManagerInterface $entityManager,
     CacheBackendInterface $cacheBackend,
     DatabaseFactory $databaseFactory) {
-    echo __METHOD__ . "\n";
     parent::__construct($entityType, $entityManager, $cacheBackend);
     $this->databaseFactory = $databaseFactory;
   }
@@ -86,12 +89,21 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    */
   protected function doSaveFieldItems(ContentEntityInterface $entity, array $names = []) {
     ksm(__METHOD__, $entity, $names);
-    $id = $entity->id();
+    // Content entity IDs are always integers.
+    $id = intval($entity->id());
     $full_save = empty($names);
     $update = !$full_save || !$entity->isNew();
     $serializer = \Drupal::service('serializer');
     $doc = $serializer->normalize($entity, 'json');
-    $doc['_id'] = $id ?: new ObjectID();
+    $idKey = $entity->getEntityType()->getKey('id');
+    if ($id === 0) {
+      $newId = $this->nextId($entity->getEntityTypeId());
+      $doc['_id'] = $newId;
+      $doc[$idKey] = $newId;
+    }
+    else {
+      $doc['_id'] = intval($id);
+    }
     ksm(__METHOD__, $names, $doc, (string) $doc['_id']);
     $database = $this->databaseFactory->get('default');
     $collection = $database->selectCollection($entity->bundle());
@@ -101,7 +113,7 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
       "modified " . $result->getModifiedCount(),
       "upserted " . $result->getUpsertedCount(),
       "new id " . $result->getUpsertedId(),
-      "ack" . ($result->isAcknowledged() ? "Y" : "N")
+      "ack " . ($result->isAcknowledged() ? "Y" : "N")
     );
   }
 
@@ -140,6 +152,23 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
    */
   protected function doLoadMultiple(array $ids = NULL) {
     ksm(__METHOD__, func_get_args());
+    $selector = [
+      '_id' => ['$in' => $ids],
+    ];
+    $docs = $this->databaseFactory
+      ->get('default')
+      ->selectCollection($this->entityTypeId)
+      ->find($selector, Logger::LEGACY_TYPE_MAP)
+      ->toArray();
+    /** @var DenormalizerInterface $serializer */
+    $serializer = \Drupal::service('serializer');
+    $entities = [];
+    foreach ($docs as $doc) {
+      $data = $serializer->denormalize($doc, $this->entityType->getClass());
+      $entities[$doc['_id']] = $data; //new $this->entityClass($doc, $this->entityTypeId);
+    }
+    ksm($entities);
+    return $entities;
   }
 
   /**
@@ -168,6 +197,62 @@ class ContentEntityStorageBase extends CoreContentEntityStorageBase {
     $has = isset($doc);
     ksm(__METHOD__, "($id, " . $entity->label() . ")", $doc ?? FALSE);
     return $has;
+  }
+
+  public function nextId81($sequence_id = 'generic', $existing_id = 0) {
+    if ($existing_id) {
+      $this->get('sequences')->update(
+        array('_id' => $sequence_id, 'seq' => array('$lt' => $existing_id)),
+        array('$set' => array('seq' => $existing_id)));
+    }
+    $result = $this->get('sequences')->findAndModify(
+      array('_id' => $sequence_id),
+      array('$inc' => array('seq' => 1)),
+      NULL,
+      array('upsert' => TRUE));
+    $seq = $result ? $result['seq'] : 0;
+    return $seq + 1;
+  }
+
+  /**
+   * Return the next integer ID in a sequence.
+   *
+   * @param string $sequenceId
+   *   The name of the sequence.
+   * @param int $value
+   *   Optional. If given, the result will be at least 1 more that this.
+   *
+   * @return int
+   *   The next id. It will be greater than $value, possibly by more than 1.
+   */
+  public function nextId($sequenceId = 'sequences', $value = 0) {
+    $collection = $this->databaseFactory
+      ->get('default')
+      ->selectCollection('sequences');
+    $sequenceSelector = ['_id' => $sequenceId];
+
+    // Force the minimum if given.
+    if ($value) {
+      $selector = $sequenceSelector + [
+        'value' => ['$lt' => $value],
+      ];
+      $update = [
+        '$set' => ['value' => $value],
+      ];
+      $collection->updateOne($selector, $update);
+    }
+
+    // Then increment it.
+    $update = [
+      '$inc' => ['value' => 1],
+    ];
+    $options = [
+      'upsert' => TRUE,
+      'returnDocument' => FindOneAndUpdate::RETURN_DOCUMENT_AFTER,
+    ];
+    $document = $collection->findOneAndUpdate($sequenceSelector, $update, $options);
+    $result = $document->value ?? 1;
+    return $result;
   }
 
   /**
