@@ -1,0 +1,6 @@
+parameters:
+
+services:
+  keyvalue.mongodb:
+    arguments: ['@mongodb.database_factory']
+    class: 'Drupal\mongodb_storage\KeyValueFactory'
