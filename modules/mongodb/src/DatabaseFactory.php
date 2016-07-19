@@ -64,4 +64,45 @@ class DatabaseFactory {
     return $result;
   }
 
+  /**
+   * Return the next integer ID in a sequence. For numeric ids in collections.
+   *
+   * @param string $sequenceId
+   *   The name of the sequence, typically a collection name in the current
+   *   database.
+   * @param int $value
+   *   Optional. If given, the result will be at least 1 more that this.
+   *
+   * @return int
+   *   The next id. It will be greater than $value, possibly by more than 1.
+   */
+  public function nextId($sequenceId = 'sequences', $value = 0) {
+    $collection = $this->get('default')
+      ->selectCollection('sequences');
+    $sequenceSelector = ['_id' => $sequenceId];
+
+    // Force the minimum if given.
+    if ($value) {
+      $selector = $sequenceSelector + [
+          'value' => ['$lt' => $value],
+        ];
+      $update = [
+        '$set' => ['value' => $value],
+      ];
+      $collection->updateOne($selector, $update);
+    }
+
+    // Then increment it.
+    $update = [
+      '$inc' => ['value' => 1],
+    ];
+    $options = [
+      'upsert' => TRUE,
+      'returnDocument' => FindOneAndUpdate::RETURN_DOCUMENT_AFTER,
+    ];
+    $document = $collection->findOneAndUpdate($sequenceSelector, $update, $options);
+    $result = $document->value ?? 1;
+    return $result;
+  }
+
 }
