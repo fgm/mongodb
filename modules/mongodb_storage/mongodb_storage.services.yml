@@ -1,6 +1,9 @@
 parameters:
 
 services:
+  keyvalue.expirable.mongodb:
+    arguments: ['@mongodb.database_factory']
+    class: 'Drupal\mongodb_storage\KeyValueExpirableFactory'
   keyvalue.mongodb:
     arguments: ['@mongodb.database_factory']
     class: 'Drupal\mongodb_storage\KeyValueFactory'

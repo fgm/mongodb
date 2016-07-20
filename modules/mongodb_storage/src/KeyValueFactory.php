@@ -10,7 +10,7 @@ use Drupal\mongodb\DatabaseFactory;
  */
 class KeyValueFactory implements KeyValueFactoryInterface {
   const DATABASE_ALIAS = 'default';
-  const COLLECTION_PREFIX = 'keyvalue_';
+  const COLLECTION_PREFIX = 'keyvalue_persistent_';
 
   /**
    * The database in which the stores are created.

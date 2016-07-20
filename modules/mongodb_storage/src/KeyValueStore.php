@@ -58,7 +58,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
     $cursor = $this->collection->find([], static::LEGACY_TYPE_MAP);
     $result = [];
     foreach ($cursor as $doc) {
-      $result[$doc['_id']] = $doc['value'];
+      $result[$doc['_id']] = unserialize($doc['value']);
     }
     return $result;
   }
@@ -85,7 +85,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
     $docs = [];
     foreach ($cursor as $doc) {
       $id = $doc['_id'];
-      $docs[$id] = $doc['value'];
+      $docs[$id] = unserialize($doc['value']);
     }
     return $docs;
   }
@@ -144,7 +144,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
       '_id' => $this->stringifyKey($key),
     ];
     $replacement = $selector + [
-      'value' => $value,
+      'value' => serialize($value),
     ];
     $options = [
       'upsert' => TRUE,
@@ -169,7 +169,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
       '_id' => $this->stringifyKey($key),
     ];
     $replacement = $selector + [
-      'value' => $value,
+      'value' => serialize($value),
     ];
     $options = [
       'upsert' => FALSE,
