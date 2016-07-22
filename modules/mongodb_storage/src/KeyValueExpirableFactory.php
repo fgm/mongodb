@@ -21,7 +21,7 @@ class KeyValueExpirableFactory extends KeyValueFactory implements KeyValueExpira
    */
   public function get($collection) {
     $store_collection = $this->database->selectCollection(static::COLLECTION_PREFIX . $collection);
-    $store = new KeyValueStoreExpirable($store_collection);
+    $store = new KeyValueStoreExpirable($collection, $store_collection);
     return $store;
   }
 

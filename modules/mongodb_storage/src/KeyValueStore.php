@@ -4,6 +4,7 @@ namespace Drupal\mongodb_storage;
 
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\Core\KeyValueStore\StorageBase;
+use MongoDB\Collection;
 
 /**
  * Class KeyValueStore provides a KeyValueStore as a MongoDB collection.
@@ -21,15 +22,30 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
   /**
    * The collection making up the store.
    *
+   * The parent class already defines $collection as the KV collection name.
+   *
    * @var \MongoDb\Collection
    */
-  protected $collection;
+  protected $mongoDbCollection;
+
+  /**
+   * KeyValueStore constructor.
+   *
+   * @param string $collection
+   *   The KV collection name.
+   * @param \MongoDB\Collection|NULL $storeCollection
+   *   The eponymous MongoDB collection.
+   */
+  public function __construct($collection, Collection $storeCollection = NULL) {
+    parent::__construct($collection);
+    $this->mongoDbCollection = $storeCollection;
+  }
 
   /**
    * Deletes all items from the key/value store.
    */
   public function deleteAll() {
-    $this->collection->drop();
+    $this->mongoDbCollection->drop();
   }
 
   /**
@@ -45,7 +61,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
         '$in' => $string_keys,
       ],
     ];
-    $this->collection->deleteMany($selector);
+    $this->mongoDbCollection->deleteMany($selector);
   }
 
   /**
@@ -55,7 +71,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    *   An associative array containing all stored items in the collection.
    */
   public function getAll() {
-    $cursor = $this->collection->find([], static::LEGACY_TYPE_MAP);
+    $cursor = $this->mongoDbCollection->find([], static::LEGACY_TYPE_MAP);
     $result = [];
     foreach ($cursor as $doc) {
       $result[$doc['_id']] = unserialize($doc['value']);
@@ -81,7 +97,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
         '$in' => $string_keys,
       ],
     ];
-    $cursor = $this->collection->find($selector, static::LEGACY_TYPE_MAP);
+    $cursor = $this->mongoDbCollection->find($selector, static::LEGACY_TYPE_MAP);
     $docs = [];
     foreach ($cursor as $doc) {
       $id = $doc['_id'];
@@ -103,7 +119,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];
-    $doc = $this->collection->findOne($selector, static::PROJECTION_ID);
+    $doc = $this->mongoDbCollection->findOne($selector, static::PROJECTION_ID);
     $res = isset($doc);
     return $res;
   }
@@ -150,7 +166,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
       'upsert' => TRUE,
     ];
 
-    $this->collection->replaceOne($selector, $replacement, $options);
+    $this->mongoDbCollection->replaceOne($selector, $replacement, $options);
   }
 
   /**
@@ -175,7 +191,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
       'upsert' => FALSE,
     ];
 
-    $updateResult = $this->collection->replaceOne($selector, $replacement, $options);
+    $updateResult = $this->mongoDbCollection->replaceOne($selector, $replacement, $options);
     $result = $updateResult->getModifiedCount() ? TRUE : FALSE;
     return $result;
   }
