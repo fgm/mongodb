@@ -33,7 +33,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    *
    * @param string $collection
    *   The KV collection name.
-   * @param \MongoDB\Collection|NULL $storeCollection
+   * @param \MongoDB\Collection|null $storeCollection
    *   The eponymous MongoDB collection.
    */
   public function __construct($collection, Collection $storeCollection = NULL) {

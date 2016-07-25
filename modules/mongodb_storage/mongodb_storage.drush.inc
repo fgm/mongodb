@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Drush 8 plugin for mongodb_storage.
+ */
+
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -12,7 +17,9 @@ function mongodb_storage_drush_command() {
   return $items;
 }
 
-
+/**
+ * Command callback for most-ikv.
+ */
 function drush_mongodb_storage_import_keyvalue() {
   $dic = \Drupal::getContainer();
   /** @var \Drupal\Core\Database\Connection $db */
@@ -53,7 +60,7 @@ function drush_mongodb_storage_import_keyvalue() {
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface $dbStore */
       $dbStore = $factories['db']->get($collection);
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
-      $mgStore = $factories['mg']->get($collection);
+      $mgStore = $factories['mg']->get($collection, FALSE);
 
       $mgStore->deleteAll();
       foreach ($dbStore->getAll() as $key => $value) {
