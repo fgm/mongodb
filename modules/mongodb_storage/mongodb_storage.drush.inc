@@ -53,7 +53,7 @@ function drush_mongodb_storage_import_keyvalue() {
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface $dbStore */
       $dbStore = $factories['db']->get($collection);
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
-      $mgStore = $factories['mg']->get($collection);
+      $mgStore = $factories['mg']->get($collection, FALSE);
 
       $mgStore->deleteAll();
       foreach ($dbStore->getAll() as $key => $value) {

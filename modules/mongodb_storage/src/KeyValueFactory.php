@@ -9,8 +9,8 @@ use Drupal\mongodb\DatabaseFactory;
  * Class KeyValueFactory builds KeyValue stores as MongoDB collections.
  */
 class KeyValueFactory implements KeyValueFactoryInterface {
-  const DATABASE_ALIAS = 'default';
-  const COLLECTION_PREFIX = 'keyvalue_persistent_';
+  const DATABASE_ALIAS = 'keyvalue';
+  const COLLECTION_PREFIX = 'kvp_';
 
   /**
    * The database in which the stores are created.

@@ -8,6 +8,50 @@ use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
  * Class KeyValueStore provides a KeyValueStoreExpirable as a MongoDB collection.
  */
 class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpirableInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($collection, $storeCollection, $index = TRUE) {
+    parent::__construct($collection, $storeCollection);
+    if ($index) {
+      $this->ensureIndexes();
+    }
+  }
+
+  /**
+   * Deletes all items from the key/value store.
+   */
+  public function deleteAll() {
+    $this->mongoDbCollection->drop();
+    $this->ensureIndexes();
+  }
+
+  /**
+   * Ensure a TTL index for server-side expirations.
+   */
+  public function ensureIndexes() {
+    $name = $this->mongoDbCollection->getCollectionName();
+    $indexMissing = TRUE;
+    foreach ($this->mongoDbCollection->listIndexes() as $index) {
+      if ($index->isTtl()) {
+        $indexMissing = FALSE;
+        break;
+      }
+    }
+
+    if ($indexMissing) {
+      $indexes = [
+        [
+          'expireAfterSeconds' => 0,
+          'key' => ['expire' => 1],
+          'name' => "ttl_${name}",
+        ],
+      ];
+      $this->mongoDbCollection->createIndexes($indexes);
+    }
+  }
+
   /**
    * Saves an array of values with a time to live.
    *

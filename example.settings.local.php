@@ -18,6 +18,7 @@ $settings['mongodb'] = [
   'databases' => [
     // Collection alias => [ client_alias, collection_name ]
     'default' => ['default', 'drupal'],
-    'logger' => ['default', 'logger'],
+    'keyvalue' => ['default', 'drupal-keyvalue'],
+    'logger' => ['default', 'drupal-logger'],
   ],
 ];
