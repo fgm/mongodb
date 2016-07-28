@@ -30,6 +30,7 @@ will properly work. This guide assumes that :
 * a [MongoDB][download] 3.0 or later instance is already installed, configured, and available to connect to from the Drupal instance.
 * the site will be running [Drupal][drupal] 8.1.x or 8.2.x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or later is installed and configured.
+* PHP is version 7.0 or later
 
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/project/drupal
@@ -45,10 +46,13 @@ If MongoDB is installed on localhost, you may view the web admin interface:
 * Copy the relevant section from the `example.settings.local.php` to your
 `settings.local.php` file if you use one, or `settings.php` otherwise, and
 adapt it to match your MongoDB settings.
-* At the root of your site, add a composer requiment:
+* At the root of your site, add a composer requirement by typing:
 
         composer require mongodb/mongodb "^1.0.0"
-
+* If this is the first Composer dependency on the project, from the site root,
+  run:
+  
+        composer install
 * Enable the `mongodb` module. You now have access to the MongoDB services and Drush commands.
 
 [install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
