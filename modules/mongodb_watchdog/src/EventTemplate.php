@@ -14,12 +14,17 @@ use MongoDB\BSON\Unserializable;
 class EventTemplate implements Unserializable {
   use StringTranslationTrait;
 
+  // @codingStandardsIgnoreStart
   /**
    * The event identifier.
+   *
+   * Coding standards are suspended to avoid a warning on _id, which is not
+   * standards-compliant, but required by MongoDB.
    *
    * @var string
    */
   public $_id;
+  // @codingStandardsIgnoreEnd
 
   /**
    * Latest event insertion for the template.
@@ -69,7 +74,7 @@ class EventTemplate implements Unserializable {
   /**
    * List the template keys and their behaviours.
    *
-   * @return array<string,array>
+   * @return array[string]
    *   A properties by key array.
    */
   public static function keys() {
@@ -124,6 +129,10 @@ class EventTemplate implements Unserializable {
    *
    * XXX babysit broken modules using messages containing user input.
    *
+   * This code disables coding standards because the module relies on translated
+   * event templates, which are known to be variable but - assuming no coding
+   * errors - will always match a constant event template string found in code.
+   *
    * @param array $variables
    *   The event variables.
    *
@@ -131,7 +140,10 @@ class EventTemplate implements Unserializable {
    *   The template message with its variables substituted.
    */
   public function asString(array $variables) {
+    // @codingStandardsIgnoreStart
     return $this->t($this->message, $variables);
+    // @codingStandardsIgnoreEnd
+
   }
 
 }

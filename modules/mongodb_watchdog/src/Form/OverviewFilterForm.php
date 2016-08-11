@@ -102,22 +102,24 @@ class OverviewFilterForm extends FormBase {
     $filters = [];
 
     foreach ($this->watchdog->templateTypes() as $type) {
-      $types[$type] = t($type);
+      // @codingStandardsIgnoreStart
+      $types[$type] = $this->t($type);
+      // @codingStandardsIgnoreEnd
     }
 
     if (!empty($types)) {
-      $filters['type'] = array(
-        'title' => t('Type'),
+      $filters['type'] = [
+        'title' => $this->t('Type'),
         'where' => "w.type = ?",
         'options' => $types,
-      );
+      ];
     }
 
-    $filters['severity'] = array(
-      'title' => t('Severity'),
+    $filters['severity'] = [
+      'title' => $this->t('Severity'),
       'where' => 'w.severity = ?',
       'options' => RfcLogLevel::getLevels(),
-    );
+    ];
 
     return $filters;
   }

@@ -53,7 +53,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The event template.
    *
-   * @return array<string,string|array>
+   * @return string[string|array]
    *   A render array.
    */
   public function build(Request $request, EventTemplate $eventTemplate) {
@@ -61,7 +61,7 @@ class DetailController extends ControllerBase {
 
     $rows = $this->getRowData($request, $eventTemplate);
     $main = empty($rows)
-      ? $this->buildEmpty(t('No occurrence of this event found in logger.'))
+      ? $this->buildEmpty($this->t('No occurrence of this event found in logger.'))
       : $this->buildMainTable($rows, $eventTemplate);
 
     $ret = $this->buildDefaults($main, $top);
@@ -76,13 +76,13 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The template for which to built the detail lines.
    *
-   * @return array<string,string|array>
+   * @return string[string|array]
    *   A render array for the main table.
    */
   protected function buildMainTable(array $events, EventTemplate $eventTemplate) {
     $ret = [
       '#attributes' => new Attribute(['class' => 'mongodb_watchdog__detail']),
-      '#caption' => t('Event occurrences'),
+      '#caption' => $this->t('Event occurrences'),
       '#header' => $this->buildMainTableHeader(),
       '#rows' => $this->buildMainTableRows($events, $eventTemplate),
       '#type' => 'table',
@@ -99,13 +99,13 @@ class DetailController extends ControllerBase {
    */
   protected function buildMainTableHeader() {
     $header = [
-      t('Date'),
-      t('User'),
-      t('Message'),
-      t('Location'),
-      t('Referrer'),
-      t('Hostname'),
-      t('Operations'),
+      $this->t('Date'),
+      $this->t('User'),
+      $this->t('Message'),
+      $this->t('Location'),
+      $this->t('Referrer'),
+      $this->t('Hostname'),
+      $this->t('Operations'),
     ];
 
     return $header;
@@ -119,7 +119,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The template for these events.
    *
-   * @return array<string,array|string>
+   * @return string[array|string]
    *   A render array for a table.
    */
   protected function buildMainTableRows(array $events, EventTemplate $eventTemplate) {
@@ -143,7 +143,7 @@ class DetailController extends ControllerBase {
    *   The page title.
    */
   public function buildTitle(EventTemplate $eventTemplate) {
-    return t('MongoDB events: "@template"', ['@template' => $eventTemplate->message]);
+    return $this->t('MongoDB events: "@template"', ['@template' => $eventTemplate->message]);
   }
 
   /**
@@ -213,7 +213,7 @@ class DetailController extends ControllerBase {
     }
 
     $ret = [
-      '#caption' => t('Event template'),
+      '#caption' => $this->t('Event template'),
       '#rows' => $rows,
       '#type' => 'table',
     ];

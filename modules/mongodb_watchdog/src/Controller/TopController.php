@@ -67,7 +67,7 @@ class TopController extends ControllerBase {
 
     $rows = $this->getRowData($request, $type);
     $main = empty($rows)
-      ? $this->buildEmpty(t('No "%type" message found', ['%type' => $type]))
+      ? $this->buildEmpty($this->t('No "%type" message found', ['%type' => $type]))
       : $this->buildMainTable($rows);
 
     $ret = $this->buildDefaults($main, $top);
@@ -80,7 +80,7 @@ class TopController extends ControllerBase {
    * @param array $rows
    *   The event data.
    *
-   * @return array<string,string|array>
+   * @return string[string|array]
    *   A render array for the main table.
    */
   protected function buildMainTable(array $rows) {
@@ -100,8 +100,8 @@ class TopController extends ControllerBase {
    */
   protected function buildMainTableHeader() {
     $header = [
-      t('#'),
-      t('Paths'),
+      $this->t('#'),
+      $this->t('Paths'),
     ];
 
     return $header;
@@ -113,10 +113,10 @@ class TopController extends ControllerBase {
    * @param array[] $counts
    *   The array of counts per 403/404 page.
    *
-   * @return array<string,array|string>
+   * @return string[array|string]
    *   A render array for a table.
    */
-  protected function buildMainTableRows($counts) {
+  protected function buildMainTableRows(array $counts) {
     $rows = [];
     foreach ($counts as $count) {
       $row = [

@@ -88,19 +88,19 @@ class RequestController extends ControllerBase {
    * @param string $uniqueId
    *   The unique request id from mod_unique_id. Unsafe.
    *
-   * @return array<string,string|array>
+   * @return string[string|array]
    *   A render array.
    */
   public function build(Request $request, $uniqueId) {
     if (!preg_match('/^[\w-@]+$/', $uniqueId)) {
-      throw new NotFoundHttpException(t('Request ID is not well-formed.'));
+      throw new NotFoundHttpException($this->t('Request ID is not well-formed.'));
     }
 
     $events = $this->getRowData($request, $uniqueId);
 
     if (empty($events)) {
       $top = NULL;
-      $main = $this->buildEmpty(t('No events found for this request.'));
+      $main = $this->buildEmpty($this->t('No events found for this request.'));
     }
     else {
       list(, $first) = reset($events);
@@ -118,7 +118,7 @@ class RequestController extends ControllerBase {
    * @param array $rows
    *   The event data.
    *
-   * @return array<string,string|array>
+   * @return string[tring|array]
    *   A render array for the main table.
    */
   protected function buildMainTable(array $rows) {
@@ -138,12 +138,12 @@ class RequestController extends ControllerBase {
    */
   protected function buildMainTableHeader() {
     $header = [
-      t('Sequence'),
-      t('Type'),
-      t('Severity'),
-      t('Event'),
-      t('File'),
-      t('Line'),
+      $this->t('Sequence'),
+      $this->t('Type'),
+      $this->t('Severity'),
+      $this->t('Event'),
+      $this->t('File'),
+      $this->t('Line'),
     ];
 
     return $header;
@@ -152,15 +152,17 @@ class RequestController extends ControllerBase {
   /**
    * Build the main table rows.
    *
-   * @param array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]> $events
+   * @param \Drupal\mongodb_watchdog\EventTemplate[]\Drupal\mongodb_watchdog\Event[] $events
    *   A fully loaded array of events and their templates.
    *
-   * @return array<string,array|string>
+   * @return string[array|string]
    *   A render array for a table.
    */
   protected function buildMainTableRows(array $events) {
     $rows = [];
     $levels = $this->rfcLogLevel->getLevels();
+    $event = NULL;
+    $template = NULL;
 
     /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
     /** @var \Drupal\mongodb_watchdog\Event $event */
@@ -243,12 +245,12 @@ class RequestController extends ControllerBase {
     $location = $first->location;
     $timestamp = isset($first->timestamp)
       ? $this->dateFormatter->format($first->timestamp, 'long')
-      : t('No information');
+      : $this->t('No information');
 
     $rows = [
-      [t('Request ID'), $uniqueId],
-      [t('Location'), $location],
-      [t('Date/time'), $timestamp],
+      [$this->t('Request ID'), $uniqueId],
+      [$this->t('Location'), $location],
+      [$this->t('Date/time'), $timestamp],
     ];
 
     foreach ($rows as &$row) {
@@ -259,7 +261,7 @@ class RequestController extends ControllerBase {
     }
 
     $ret = [
-      '#caption' => t('Request'),
+      '#caption' => $this->t('Request'),
       '#rows' => $rows,
       '#type' => 'table',
     ];

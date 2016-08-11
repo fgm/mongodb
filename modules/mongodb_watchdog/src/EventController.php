@@ -103,13 +103,13 @@ class EventController {
       // site home URL, and will not therefore not necessarily be reachable, so
       // we only generate a link if the location is "within" the site.
       (Unicode::strpos($event->location, $this->front) === 0)
-        ? Link::fromTextAndUrl(Unicode::substr($event->location, $this->baseLength), Url::fromUri($event->location))
-        : $event->location,
+      ? Link::fromTextAndUrl(Unicode::substr($event->location, $this->baseLength), Url::fromUri($event->location))
+      : $event->location,
       empty($event->referrer) ? '' : Link::fromTextAndUrl($event->referrer, Url::fromUri($event->referrer)),
       $event->hostname,
       isset($event->requestTracking_id)
-        ? Link::createFromRoute(t('Request'), 'mongodb_watchdog.reports.request', ['uniqueId' => $event->requestTracking_id])
-        : '',
+      ? Link::createFromRoute(t('Request'), 'mongodb_watchdog.reports.request', ['uniqueId' => $event->requestTracking_id])
+      : '',
     ];
     return $ret;
   }

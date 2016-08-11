@@ -457,7 +457,7 @@ class Logger extends AbstractLogger {
    * @param int $limit
    *   The maximum number of events to return.
    *
-   * @return array<\Drupal\mongodb_watchdog\EventTemplate\Drupal\mongodb_watchdog\Event[]>
+   * @return \Drupal\mongodb_watchdog\EventTemplate|\Drupal\mongodb_watchdog\Event[]
    *   An array of [template, event] arrays, ordered by occurrence order.
    */
   public function requestEvents($requestId, $skip = 0, $limit = 0) {
@@ -478,10 +478,8 @@ class Logger extends AbstractLogger {
       ],
     ];
 
-    /**
-     * @var string $template_id
-     * @var \Drupal\mongodb_watchdog\EventTemplate $template
-     */
+    // @var string $template_id
+    // @var \Drupal\mongodb_watchdog\EventTemplate $template
     foreach ($templates as $template_id => $template) {
       $event_collection = $this->eventCollection($template_id);
       $cursor = $event_collection->find($selector, $options);
