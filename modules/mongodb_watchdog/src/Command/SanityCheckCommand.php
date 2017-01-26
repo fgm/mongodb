@@ -55,10 +55,10 @@ HELP
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
 
-    $this->io = $io = new DrupalStyle($input, $output);
+    $this->io = new DrupalStyle($input, $output);
 
     $this->buildCollectionstats();
-    $io->info(print_r($this->buckets, TRUE));
+    $this->io->info(print_r($this->buckets, TRUE));
   }
 
   /**
@@ -112,15 +112,15 @@ HELP
    * Build a list of the number of entries per collection in the default DB.
    */
   public function buildCollectionstats() {
-    /** @var \Drupal\mongodb\DatabaseFactory $df */
-    $df = $this->getService('mongodb.database_factory');
-    $db = $df->get('default');
+    /** @var \Drupal\mongodb\DatabaseFactory $databaseFactory */
+    $databaseFactory = $this->getService('mongodb.database_factory');
+    $database = $databaseFactory->get('default');
     $this->initBucketsList();
 
-    $collections = $db->listCollections();
+    $collections = $database->listCollections();
     foreach ($collections as $collectionInfo) {
       $name = $collectionInfo->getName();
-      $collection = $db->selectCollection($name);
+      $collection = $database->selectCollection($name);
       $count = $collection->count();
       if (preg_match('/' . Logger::EVENT_COLLECTIONS_PATTERN . '/', $name)) {
         $this->store($count);
