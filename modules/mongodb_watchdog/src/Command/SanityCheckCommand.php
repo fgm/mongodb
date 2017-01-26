@@ -79,7 +79,7 @@ HELP
       $items => 0,
     ];
 
-    // 0, 1 and $items are reserved.
+    //  Values 0, 1 and the value of $items are reserved.
     for ($i = 1; $i < $barCount; $i++) {
       $buckets[$i * $barWidth] = 0;
     }
