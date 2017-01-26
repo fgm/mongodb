@@ -57,19 +57,29 @@ class Event implements Unserializable {
    */
   public $message;
 
+  // @codingStandardsIgnoreStart
   /**
    * The identifier of the request during which this event occurred.
+   *
+   * Coding standards are suspended for requestTracking_id which is required by
+   * the MongoDB property.
    *
    * @var string
    */
   public $requestTracking_id;
+  // @codingStandardsIgnoreEnd
 
+  // @codingStandardsIgnoreStart
   /**
    * The sequence number of the event during the request when it happened.
+   *
+   * Coding standards are suspended for requestTracking_sequence which is
+   * required by the MongoDB property.
    *
    * @var int
    */
   public $requestTracking_sequence = 0;
+  // @codingStandardsIgnoreEnd
 
   /**
    * The template parameters.

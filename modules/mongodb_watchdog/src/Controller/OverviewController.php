@@ -120,7 +120,7 @@ class OverviewController extends ControllerBase {
 
     $rows = $this->getRowData($request);
     $main = empty($rows)
-      ? $this->buildEmpty(t('No event found in logger.'))
+      ? $this->buildEmpty($this->t('No event found in logger.'))
       : $this->buildMainTable($rows);
 
     $ret = $this->buildDefaults($main, $top);
@@ -133,7 +133,7 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate[] $rows
    *   The template data.
    *
-   * @return array<string,string|array>
+   * @return string[string|array]
    *   A render array for the main table.
    */
   protected function buildMainTable(array $rows) {
@@ -154,12 +154,12 @@ class OverviewController extends ControllerBase {
    */
   protected function buildMainTableHeader() {
     $header = [
-      t('#'),
-      t('Latest'),
-      t('Severity'),
-      t('Type'),
-      t('Message'),
-      t('Source'),
+      $this->t('#'),
+      $this->t('Latest'),
+      $this->t('Severity'),
+      $this->t('Type'),
+      $this->t('Message'),
+      $this->t('Source'),
     ];
 
     return $header;
@@ -171,7 +171,7 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate[] $templates
    *   The event template data.
    *
-   * @return array<string,array|string>
+   * @return string[array|string]
    *   A render array for a table.
    */
   protected function buildMainTableRows(array $templates) {
@@ -235,11 +235,11 @@ class OverviewController extends ControllerBase {
   protected function getEventLink(EventTemplate $template) {
     switch ($template->type) {
       case 'page not found':
-        $cell = Link::createFromRoute(t('( Top 404 )'), 'mongodb_watchdog.reports.top404');
+        $cell = Link::createFromRoute($this->t('( Top 404 )'), 'mongodb_watchdog.reports.top404');
         break;
 
       case 'access denied':
-        $cell = Link::createFromRoute(t('( Top 403 )'), 'mongodb_watchdog.reports.top403');
+        $cell = Link::createFromRoute($this->t('( Top 403 )'), 'mongodb_watchdog.reports.top403');
         break;
 
       // Limited-length message.

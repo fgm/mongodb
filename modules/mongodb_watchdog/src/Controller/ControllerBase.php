@@ -55,7 +55,7 @@ abstract class ControllerBase extends CoreControllerBase {
    * @param array|null $top
    *   A render array for the top element present on some controllers results.
    *
-   * @return array<string,string|array>
+   * @return string[string|array]
    *   A render array for the whole controller.
    */
   protected function buildDefaults(array $main, array $top = NULL) {
@@ -78,7 +78,7 @@ abstract class ControllerBase extends CoreControllerBase {
    * @param \Drupal\Core\StringTranslation\TranslatableMarkup $markup
    *   The message proper.
    *
-   * @return array<string,string|\Drupal\Core\StringTranslation\TranslatableMarkup>
+   * @return string[string|\Drupal\Core\StringTranslation\TranslatableMarkup]
    *   A render array for a message.
    */
   protected function buildEmpty(TranslatableMarkup $markup) {
