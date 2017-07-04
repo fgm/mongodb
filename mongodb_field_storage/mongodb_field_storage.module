@@ -76,6 +76,9 @@ function mongodb_field_storage_field_storage_load($entity_type, $entities, $age,
     if ($entity_type == 'node' && isset($row['nid'])) {
       $entity_id = $row['nid'];
     }
+    elseif ($entity_type == 'field_collection_item' && isset($row['item_id'])) {
+      $entity_id = $row['item_id'];
+    }
     else {
       $entity_id = $row['_id'];
     }
