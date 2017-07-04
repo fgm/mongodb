@@ -279,7 +279,9 @@ class MongodbStorageException extends Exception {}
  * Alter the entity info.
  */
 function mongodb_field_storage_entity_query_alter($query) {
-  $query->executeCallback = 'mongodb_field_storage_query';
+  if (isset($query->fields[0]) && $query->fields[0]['storage']['type'] == 'mongodb_field_storage') {
+    $query->executeCallback = 'mongodb_field_storage_query';
+  }
 }
 
 /**
