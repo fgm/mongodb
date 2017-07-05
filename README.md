@@ -28,9 +28,9 @@ The MongoDB module and sub-modules need some amount of configuration before they
 will properly work. This guide assumes that :
 
 * a [MongoDB][download] 3.0 or later instance is already installed, configured, and available to connect to from the Drupal instance.
-* the site will be running [Drupal][drupal] 8.1.x or 8.2.x.
+* the site will be running [Drupal][drupal] 8.[123].x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or later is installed and configured.
-* PHP is version 7.0 or later
+* PHP is version 7.0.x. PHP 7.1.x _may_ work but is not currently supported: please report on your experience with it.
 
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/project/drupal
