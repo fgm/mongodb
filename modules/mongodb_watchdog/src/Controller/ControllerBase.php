@@ -117,17 +117,37 @@ abstract class ControllerBase extends CoreControllerBase {
     $height = $this->itemsPerPage;
     pager_default_initialize($count, $height);
 
-    $page = intval($request->query->get('page'));
-    if ($page < 0) {
-      $page = 0;
-    }
-    else {
-      $page_max = intval(min(ceil($count / $height), PHP_INT_MAX) - 1);
-      if ($page > $page_max) {
-        $page = $page_max;
-      }
+    $requestedPage = intval($request->query->get('page', 0));
+    $page = $this->getPage($count, $requestedPage, $height);
+
+    return $page;
+  }
+
+  /**
+   * Return a reliable page number based on available data.
+   *
+   * @param int $count
+   *   The number of events templates in the collection.
+   * @param int $requestedPage
+   *   The page number requested by the user, starting at 0.
+   * @param int $height
+   *   The pager height.
+   *
+   * @return int
+   *   The actual index of the page to display.
+   */
+  public static function getPage(int $count, int $requestedPage, int $height): int {
+    if ($requestedPage <= 0) {
+      return 0;
     }
 
+    // There is always at least one page, even with $count === 0.
+    $pageCount = max(1, intval(ceil($count / $height)));
+    if ($requestedPage < $pageCount) {
+      return $requestedPage;
+    }
+
+    $page = $pageCount - 1;
     return $page;
   }
 
