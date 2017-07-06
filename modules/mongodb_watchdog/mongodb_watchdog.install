@@ -28,6 +28,8 @@ function mongodb_watchdog_install() {
  *
  * - Ensure a logger alias
  * - Ensure the logger alias does not point to the same DB as another alias.
+ *
+ * @see http://blog.riff.org/2015_08_27_drupal_8_tip_of_the_day_autoloaded_code_in_a_module_install_file
  */
 function mongodb_watchdog_requirements($phase) {
   $settings = Settings::get('mongodb');
@@ -70,6 +72,9 @@ function mongodb_watchdog_requirements($phase) {
   }
 
   if (PHP_SAPI !== 'cli') {
+    if ($phase === 'install') {
+      drupal_classloader_register($module, drupal_get_path('module', 'mongodb_watchdog'));
+    }
     $request_tracking = \Drupal::config(Logger::CONFIG_NAME)->get('request_tracking');
     $server = \Drupal::request()->server;
     if (!function_exists('apache_get_modules')
