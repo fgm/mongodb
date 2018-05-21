@@ -101,9 +101,9 @@ class Cache implements \DrupalCacheInterface {
   /**
    * Display an exception error message only once.
    *
-   * @param \MongoConnectionException $e
+   * @param \MongoException $e
    */
-  protected static function notifyException(\MongoConnectionException $e) {
+  protected static function notifyException(\MongoException $e) {
     if (!self::$isExceptionNotified) {
       drupal_set_message(t('MongoDB cache problem %exception.', [
         '%exception' => $e->getMessage(),
