@@ -1,12 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_cache\Tests\CacheIsEmptyTest.
- */
-
 namespace Drupal\mongodb_cache\Tests;
-
 
 /**
  * Test cache_is_empty() function.

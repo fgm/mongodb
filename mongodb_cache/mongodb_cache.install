@@ -9,13 +9,12 @@
  * Implements hook_requirements().
  */
 function mongodb_cache_requirements($phase) {
-  $requirements = array();
   $t = get_t();
 
   $requirements = [
     'mongodb_cache_plugin' => [
       'title' => $t('MongoDB cache plugin'),
-    ]
+    ],
   ];
   $section = &$requirements['mongodb_cache_plugin'];
 

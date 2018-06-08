@@ -1,15 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_cache\Cache.
- *
+namespace Drupal\mongodb_cache;
+
+/*
  * This is the actual MongoDB cache backend. It replaces the core cache backend
  * file. See README.md for details.
  */
-
-namespace Drupal\mongodb_cache;
-
 
 include_once __DIR__ . '/../mongodb.module';
 
@@ -84,6 +80,8 @@ class Cache implements \DrupalCacheInterface {
    *
    * @param string $bin
    *   The name of the cache bin for which to build a backend.
+   *
+   * @throws \MongoConnectionException
    */
   public function __construct($bin) {
     $this->bin = $bin;
@@ -102,8 +100,9 @@ class Cache implements \DrupalCacheInterface {
    * Display an exception error message only once.
    *
    * @param \MongoConnectionException $e
+   *   The exception to notify to the user.
    */
-  protected static function notifyException(\MongoConnectionException $e) {
+  protected static function notifyException(\MongoException $e) {
     if (!self::$isExceptionNotified) {
       drupal_set_message(t('MongoDB cache problem %exception.', [
         '%exception' => $e->getMessage(),
@@ -146,7 +145,7 @@ class Cache implements \DrupalCacheInterface {
       $type = version_compare('mongo', '1.5.0') < 0
         ? \MongoBinData::BYTE_ARRAY
         : \MongoBinData::GENERIC;
-      $result = function ($data) use($type) {
+      $result = function ($data) use ($type) {
         return new \MongoBinData($data, $type);
       };
     }
@@ -208,7 +207,7 @@ class Cache implements \DrupalCacheInterface {
       $criteria = [
         '_id' => [
           '$in' => array_map('strval', $cids),
-        ]
+        ],
       ];
       $result = $this->collection->find($criteria);
 
@@ -405,7 +404,7 @@ class Cache implements \DrupalCacheInterface {
           $criteria = [
             'cid' => [
               '$in' => array_map('strval', array_splice($cid, 0, 1000)),
-            ]
+            ],
           ];
           $this->attemptRemove($criteria);
         } while (count($cid));

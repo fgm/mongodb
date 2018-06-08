@@ -3,6 +3,7 @@ description = 'A watchdog implementation using MongoDB'
 package = MongoDB
 
 core = 7.x
+php = 5.4
 dependencies[] = mongodb
 
 files[] = mongodb_watchdog.test

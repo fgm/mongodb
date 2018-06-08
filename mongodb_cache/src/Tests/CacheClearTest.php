@@ -1,18 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_cache\Tests\CacheClearTest.
- *
- * This test just wraps the core \CacheClearCase with a setUp()/tearDown()
- * sequence making it compatible with the MongoDB cache plugin.
- */
-
 namespace Drupal\mongodb_cache\Tests;
-
 
 /**
  * Cache clear test: check our clearing is done the proper way.
+ *
+ * This test just wraps the core \CacheClearCase with a setUp()/tearDown()
+ * sequence making it compatible with the MongoDB cache plugin.
  *
  * @package Drupal\mongodb_cache
  *

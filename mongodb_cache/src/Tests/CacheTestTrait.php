@@ -1,12 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_cache\Tests\CacheTestTrait.
- */
-
 namespace Drupal\mongodb_cache\Tests;
-
 
 /**
  * Class CacheTest provides getInfo() replacement.
@@ -14,11 +8,14 @@ namespace Drupal\mongodb_cache\Tests;
  * @package Drupal\mongodb_cache
  */
 trait CacheTestTrait {
+
   /**
    * Declare the test to Simpletest.
    *
    * @return string[]
    *   The test information as expected by Simpletest for Drupal 7.
+   *
+   * @throws \ReflectionException
    */
   public static function getInfo() {
     $class = get_called_class();

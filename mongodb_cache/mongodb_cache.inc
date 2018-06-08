@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * The previous name for the MongoDB cache plugin.

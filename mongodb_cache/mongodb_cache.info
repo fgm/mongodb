@@ -3,6 +3,6 @@ description = Integration between Drupal and MongoDB as Cache.
 package = MongoDB
 
 core = 7.x
-php = 5.3
+php = 5.4
 
 dependencies[] = mongodb

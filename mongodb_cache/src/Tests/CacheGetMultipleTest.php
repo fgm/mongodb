@@ -1,12 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_cache\Tests\CacheGetMultipleTest.
- */
-
 namespace Drupal\mongodb_cache\Tests;
-
 
 /**
  * Test cache_get_multiple().

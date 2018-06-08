@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_cache\Tests\CacheSavingTest.
- */
-
 namespace Drupal\mongodb_cache\Tests;
 
 /**

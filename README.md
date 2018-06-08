@@ -63,7 +63,7 @@ MongoDB module only supports:
 * MongoDB server versions 1.3 or higher.
 * `mongo` (not `mongodb`) extension
 * PHP 5.1 or higher.
-    * PHP 5.3 or higher is required for the cache plugin.
+  * PHP 5.4 or higher is required for the cache plugin and watchdog module.
 
 
 CONFIGURATION VARIABLES
