@@ -34,7 +34,7 @@ function mongodb_cache_requirements($phase) {
     $section += [
       'severity' => REQUIREMENT_ERROR,
       'value' => $t('Disabled'),
-      'description' => $t('The module cannot work without the MongoDB path plugin being installed. Check <a href="!readme">README.md</a> and ensure that <code>mongodb_cache_plugin.php</code> is configured correctly in <code>settings.php</code>.', [
+      'description' => $t('The module cannot work without the MongoDB cache plugin being installed. Check <a href="!readme">README.md</a> and ensure that <code>mongodb_cache_plugin.php</code> is configured correctly in <code>settings.php</code>.', [
         '!readme' => url($path),
       ]),
     ];

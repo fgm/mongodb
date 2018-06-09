@@ -16,13 +16,13 @@ allowing to store different Drupal data in MongoDB.
 
 Module                | Information
 ----------------------|---------------------------------------------------------
-mongodb               | Support library for the other modules.
-mongodb_block         | Store block information in MongoDB. Very close to the core block API.
-mongodb_cache         | Store cache in MongoDB.
-mongodb_field_storage | Store fields in MongoDB.
-mongodb_queue         | DrupalQueueInterface implementation using MongoDB.
-mongodb_session       | Store sessions in MongoDB.
-mongodb_watchdog      | Store watchdog messages in MongoDB.
+mongodb               | Support library for the other modules
+mongodb_block         | Store block info in MongoDB much like the core block API
+mongodb_cache         | Store cache in MongoDB
+mongodb_field_storage | Store fields in MongoDB
+mongodb_queue         | DrupalQueueInterface implementation using MongoDB
+mongodb_session       | Store sessions in MongoDB
+mongodb_watchdog      | Store watchdog messages in MongoDB
 
 The module is a "development" version, and as such its configuration, as well of
 some of its APIs may change with each -dev release: please read this README with
@@ -40,7 +40,8 @@ The level of stability of the various components is variable :
 INSTALLATION
 ------------
 
-Install as usual, see [http://drupal.org/node/895232][install] for further information.
+Install as usual, see [http://drupal.org/node/895232][install] for further 
+information.
 
 [install]: http://drupal.org/node/895232
 
@@ -101,14 +102,15 @@ the following settings:
     )
 
 Also, `connection_options` might be specified to allow for connecting to
-replica sets (and any other options listed on [http://php.net/manual/mongoclient.construct.php][construct]
+replica sets (and any other options listed on 
+[http://php.net/manual/mongoclient.construct.php][construct]
 
 [construct]: (http://php.net/manual/mongoclient.construct.php)
 
     $conf['mongodb_connections'] = array(
       // Connection name/alias
       'default' => array(
-        'host' => 'mongodb://[username:password@]host1[:port1][,host2[:port2:],...]',
+        'host' => 'mongodb://[user:pass@]host1[:port1][,host2[:port2:],...]',
         // Database name
         'db' => 'drupal_default',
         'connection_options' => array('replicaSet' => 'replicasetname'),
@@ -170,11 +172,11 @@ write operations in "safe" or "non-safe" mode, depending on the array.
 * `mongodb_write_safe_options` defaults to `['w' => 1]`
 * `mongodb_write_nonsafe_options` defaults to `['w' => 0]`
 
-Driver version          |  safe == TRUE                | safe == FALSE
-------------------------|------------------------------|--------------
-before 1.3.0            | `['safe' => TRUE]`           | `[]`
-1.3.0 to 1.5.0 excluded | `['safe' => TRUE]`           | `mongodb_write_nonsafe_options`
-1.5.0 and later         | `mongodb_write_safe_options` | `mongodb_write_nonsafe_options`
+Driver version  |  safe == TRUE                | safe == FALSE
+----------------|------------------------------|--------------
+before  1.3.0   | `['safe' => TRUE]`           | `[]`
+1.3.\*, 1.4.\*  | `['safe' => TRUE]`           | `mongodb_write_nonsafe_options`
+1.5.0 and later | `mongodb_write_safe_options` | `mongodb_write_nonsafe_options`
 
 These variables are used as defaults, so can be overridden per alias in the
 `mongodb_connections`, or per-query.
@@ -260,7 +262,8 @@ EXAMPLE:
 
     $conf['watchdog_limit'] = WATCHDOG_CRITICAL;
 
-See [watchdog_severity_levels()][levels] for further information about Watchdog severity levels.
+See [watchdog_severity_levels()][levels] for further information about Watchdog 
+severity levels.
 
 [levels]: http://api.drupal.org/api/drupal/includes--common.inc/function/watchdog_severity_levels/7
 
@@ -339,7 +342,9 @@ by the the following sub-modules.
 EXAMPLE:
 
     # -- Configure Cache.
-    $conf['cache_backends'][]            = 'sites/all/modules/mongodb/mongodb_cache/mongodb_cache_plugin.php';
+    $mongoDir = __DIR__ . '/../../all/modules/mongodb';
+    $cacheDir = "$mongoDir/mongodb_cache";
+    $conf['cache_backends'][]            = "$cachedir/mongodb_cache_plugin.php";
     $conf['cache_default_class']         = '\Drupal\mongodb_cache\Cache';
 
     # -- Don't touch SQL if in Cache.
@@ -361,7 +366,8 @@ there is no need to enable the mongodb_cache module.
 EXAMPLE:
 
     # Session Caching
-    $conf['session_inc']                 = 'sites/all/modules/mongodb/mongodb_session/mongodb_session.inc';
+    $sessionDir = "$mongoDir/mongodb_session"; 
+    $conf['session_inc']                 = "$sessionDir/mongodb_session.inc";
     $conf['cache_session']               = '\Drupal\mongodb_cache\Cache';
 
 ### mongodb_field_storage
@@ -392,7 +398,8 @@ Run helper from the package directory:
 * To run tests from the command line via run-tests.sh
     * use concurrency = 1. The current core test wrapping does not support
       concurrent tests.
-    * check permissions, and run as the web user, like `sudo -u www-data run-tests.sh`
+    * check permissions, and run as the web user, like 
+      `sudo -u www-data run-tests.sh`
 
 
 TROUBLESHOOTING
@@ -401,7 +408,8 @@ TROUBLESHOOTING
 If installing mongodb_field_storage from an Install Profile:
 
 * Do not enable the module in the profile `.info` file.
-* Do not include the module specific `$conf` variable in `settings.php` during install.
+* Do not include the module specific `$conf` variable in `settings.php` during 
+  install.
 * In the profiles `hook_install()` function, include:
 
         module_enable(array('mongodb_field_storage'));

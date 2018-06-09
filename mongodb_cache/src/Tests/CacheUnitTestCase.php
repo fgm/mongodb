@@ -17,8 +17,19 @@ use Drupal\mongodb_cache\Cache;
 class MockCollection {
 // @codingStandardsIgnoreEnd
 
+  /**
+   * The exception message to be thrown.
+   *
+   * @var string
+   */
   protected $message;
 
+  /**
+   * MockCollection constructor.
+   *
+   * @param string $message
+   *   The exception message to be thrown.
+   */
   public function __construct($message) {
     $this->message = $message;
   }
@@ -41,6 +52,11 @@ class MockCollection {
 class MockBin extends Cache {
 // @codingStandardsIgnoreEnd
 
+  /**
+   * Needs to be repeated although it exists on parent class, to avoid warnings.
+   *
+   * @var bool
+   */
   protected static $isExceptionNotified = FALSE;
 
   /**

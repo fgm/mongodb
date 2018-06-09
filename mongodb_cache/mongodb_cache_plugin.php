@@ -99,7 +99,7 @@ class Cache implements \DrupalCacheInterface {
   /**
    * Display an exception error message only once.
    *
-   * @param \MongoConnectionException $e
+   * @param \MongoException $e
    *   The exception to notify to the user.
    */
   protected static function notifyException(\MongoException $e) {
