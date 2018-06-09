@@ -3,8 +3,11 @@
 namespace Drupal\mongodb_cache;
 
 /*
- * This is the actual MongoDB cache backend. It replaces the core cache backend
- * file. See README.md for details.
+ * This is the actual MongoDB cache backend.
+ *
+ * - It replaces the core cache backend file. See README.md for details.
+ * - It cannot abide by PSR-1 "side-effects or symbols" rule because of the low
+ *   level at which it operates, where the autoloader is not available.
  */
 
 include_once __DIR__ . '/../mongodb.module';
@@ -33,7 +36,7 @@ class Cache implements \DrupalCacheInterface {
   /**
    * The collection holding the cache data.
    *
-   * @var \MongoCollection|\MongoDebugCollection|\MongoDummy
+   * @var \MongoCollection|\MongoDebugCollection|\MongodbDummy
    */
   protected $collection;
 
@@ -43,6 +46,7 @@ class Cache implements \DrupalCacheInterface {
    * @var bool
    *
    * @see \Drupal\mongodb_cache\Cache::notifyException()
+   * @see \Drupal\mongodb_cache\Cache::hasException()
    *
    * This is a static, because the plugin assumes that connection errors will be
    * share between all bins, under the hypothesis that all bins will be using
@@ -85,7 +89,13 @@ class Cache implements \DrupalCacheInterface {
    */
   public function __construct($bin) {
     $this->bin = $bin;
-    $this->collection = mongodb_collection($bin);
+    try {
+      $this->collection = mongodb_collection($bin);
+    }
+    catch (\MongoConnectionException $e) {
+      static::notifyException($e);
+      $this->collection = new \MongodbDummy();
+    }
 
     // Default is FALSE: this is a cache, so a missed write is not an issue.
     $this->unsafe = mongodb_default_write_options(FALSE);
@@ -428,6 +438,18 @@ class Cache implements \DrupalCacheInterface {
         $this->attemptRemove($criteria);
       }
     }
+  }
+
+  /**
+   * Has the plugin thrown an exception at any point ?
+   *
+   * @retun bool
+   *   Has it ?
+   *
+   * @see mongodb_cache_exit()
+   */
+  public static function hasException() {
+    return static::$isExceptionNotified;
   }
 
   /**

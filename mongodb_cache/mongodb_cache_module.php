@@ -4,9 +4,22 @@
  * @file
  * The MongoDB cache module.
  *
- * This module is only needed to ensure system_cron triggers expires on cache
- * bins not declared by their owner modules in hook_flush_caches().
+ * This module only needed:
+ * - to ensure system_cron triggers expires on cache bins not declared by their
+ *   owner modules in hook_flush_caches().
+ * - to ensure a 503 status on exceptions.
  */
+
+use Drupal\mongodb_cache\Cache;
+
+/**
+ * Implements hook_exit().
+ */
+function mongodb_cache_exit() {
+  if (Cache::hasException()) {
+    drupal_add_http_header('Status', '503 Service Unavailable');
+  }
+}
 
 /**
  * Implements hook_flush_caches().

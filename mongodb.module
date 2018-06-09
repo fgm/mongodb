@@ -28,8 +28,8 @@ function mongodb_help($path, $arg) {
  * @param int $retry
  *   The number of retry attemps when a connection fails.
  *
- * @return \MongoDB|\MongoDummy
- *   A MongoDummy is returned in case a MongoConnectionException is thrown.
+ * @return \MongoDB|\MongodbDummy
+ *   A MongodbDummy is returned in case a MongoConnectionException is thrown.
  *
  * @throws \MongoConnectionException
  *   If the connection cannot be estaslished even after retries.
@@ -38,7 +38,7 @@ function mongodb_help($path, $arg) {
  * @throws \MongoConnectionException
  *   If the connection cannot be established.
  *
- * @see mongoDummy
+ * @see MongodbDummy
  */
 function mongodb($alias = 'default', $retry = 3) {
   static $mongo_objects;
@@ -81,7 +81,7 @@ function mongodb($alias = 'default', $retry = 3) {
       if ($retry > 0) {
         return mongodb($alias, --$retry);
       }
-      $mongo_objects[$host][$db] = new MongoDummy();
+      $mongo_objects[$host][$db] = new MongodbDummy();
       throw $e;
     }
   }
@@ -95,9 +95,9 @@ function mongodb($alias = 'default', $retry = 3) {
  *   Can be either a plain collection name or 0-based array containing a
  *   collection name and a prefix.
  *
- * @return \MongoCollection|\MongoDebugCollection|\MongoDummy
+ * @return \MongoCollection|\MongoDebugCollection|\MongodbDummy
  *   Return a MongoCollection in normal situations, a MongoDebugCollection if
- *   mongodb_debug is enabled, or a MongoDummy if the MongoDB connection could
+ *   mongodb_debug is enabled, or a MongodbDummy if the MongoDB connection could
  *   not be established.
  *
  * @throws \InvalidArgumentException
@@ -146,6 +146,7 @@ function mongodb_collection() {
  * Class MongoDebugCollection is a debug decorator for MongoCollection.
  */
 class MongoDebugCollection {
+
   /**
    * Constructor.
    *
@@ -159,9 +160,9 @@ class MongoDebugCollection {
   /**
    * A decorator for the MongoCollection::find() method adding debug info.
    *
-   * @param array $query
+   * @param array|null $query
    *   A MongoCollection;:find()-compatible query array.
-   * @param array $fields
+   * @param array|null $fields
    *   A MongoCollection;:find()-compatible fields array.
    *
    * @return \MongoDebugCursor
@@ -197,6 +198,7 @@ class MongoDebugCollection {
  * Class MongoDebugCursor is a debug decorator for MongoCollection::find().
  */
 class MongoDebugCursor {
+
   /**
    * Constructor.
    *
@@ -229,20 +231,20 @@ class MongoDebugCursor {
 }
 
 /**
- * Class MongoDummy is a fake object accepting any method and doing nothing.
+ * Class MongodbDummy is a fake object accepting any method and doing nothing.
  */
-class MongoDummy {
+class MongodbDummy {
 
   public $connection;
 
   /**
    * Pretend to return a collection.
    *
-   * @return \MongoDummy
-   *   The returned value is actually a new MongoDummy instance.
+   * @return \MongodbDummy
+   *   The returned value is actually a new MongodbDummy instance.
    */
   public function selectCollection() {
-    return new MongoDummy();
+    return new MongodbDummy();
   }
 
   /**
@@ -264,13 +266,12 @@ class MongoDummy {
  * Also works with prefixes and simpletest.
  *
  * @param string $name
- *   The base name for the collection
+ *   The base name for the collection.
  *
  * @return string
  *   Unlike the base name, the returned name works with prefixes and simpletest.
  */
 function mongodb_collection_name($name) {
-  global $db_prefix;
   static $simpletest_prefix;
   // We call this function earlier than the database is initialized so we would
   // read the parent collection without this.
@@ -336,11 +337,14 @@ function mongodb_set_active_connection($alias, $connection_name = 'default') {
  * Return the next id in a sequence.
  *
  * @param string $name
- *   The name of the sequence
+ *   The name of the sequence.
  * @param int $existing_id
- *   The minimal value to be generated
+ *   The minimal value to be generated.
  *
  * @return int
+ *   The id.
+ *
+ * @throws \MongoConnectionException
  */
 function mongodb_next_id($name, $existing_id = 0) {
   // Atomically get the next id in the sequence.
