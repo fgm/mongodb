@@ -228,6 +228,9 @@ class Cache implements \DrupalCacheInterface {
 
   /**
    * Garbage collection for get() and getMultiple().
+   *
+   * @throws \MongoCursorException
+   * @throws \MongoCursorTimeoutException
    */
   protected function garbageCollection() {
     // Garbage collection only required when enforcing a minimum cache lifetime.
@@ -332,10 +335,18 @@ class Cache implements \DrupalCacheInterface {
    *
    * @param array|null $criteria
    *   NULL means to remove all documents from the collection.
+   *
+   * @throws \MongoCursorException
+   * @throws \MongoCursorTimeoutException
    */
   protected function attemptRemove($criteria = NULL) {
     try {
-      $this->collection->remove($criteria, $this->unsafe);
+      if ($criteria === []) {
+        $this->collection->drop();
+      }
+      else {
+        $this->collection->remove($criteria, $this->unsafe);
+      }
     }
     catch (\MongoConnectionException $e) {
       self::notifyException($e);
