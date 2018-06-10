@@ -1,21 +1,17 @@
 <?php
 
-/**
- * @file
- * Contains the MongoDB path alias storage.
- */
-
 namespace Drupal\mongodb_path\Storage;
 
-
 /**
- * Class MongoDb
+ * Class MongoDb contains the MongoDB path alias storage.
  *
  * @package Drupal\mongodb_path
  */
 class MongoDb implements StorageInterface {
   /**
    * Pseudo-typing: defined recognized keys for aliases.
+   *
+   * @var array
    */
   protected $aliasKeys = [
     '_id' => 1,
@@ -85,6 +81,7 @@ class MongoDb implements StorageInterface {
    * - alias: the alias for a source/langcode
    *
    * @return \MongoCollection
+   *   The collection.
    */
   public function ensureSchema() {
     _mongodb_path_trace();
@@ -134,7 +131,7 @@ class MongoDb implements StorageInterface {
     $criteria = [
       'pid' => [
         '$gt' => $minId,
-      ]
+      ],
     ];
 
     $sort = [
@@ -195,7 +192,13 @@ class MongoDb implements StorageInterface {
         : ['language' => 1, 'pid' => -1];
     }
 
-    $fields = ['source' => 1, 'alias' => 1, 'language' => 1, 'pid' => 1, '_id' => 0];
+    $fields = [
+      'source' => 1,
+      'alias' => 1,
+      'language' => 1,
+      'pid' => 1,
+      '_id' => 0,
+    ];
     $cursor = $this->collection->find($criteria, $fields)->sort($sort);
     $result = [];
 

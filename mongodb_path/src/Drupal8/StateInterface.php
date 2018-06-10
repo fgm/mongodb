@@ -1,17 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\State\StateInterface.
- *
- * This is a backport of Drupal 8 Drupal\Core\State\StateInterface;
- */
-
 namespace Drupal\mongodb_path\Drupal8;
-
 
 /**
  * Defines the interface for the state system.
+ *
+ * This is a backport of Drupal 8 Drupal\Core\State\StateInterface;
  *
  * @ingroup state_api
  *

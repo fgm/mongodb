@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains the MongoDB path resolver.
- */
-
 namespace Drupal\mongodb_path;
 
 use Drupal\mongodb_path\Drupal8\CacheBackendInterface;
@@ -78,7 +73,7 @@ class Resolver implements ResolverInterface {
    * @param \Drupal\mongodb_path\Drupal8\SafeMarkup $safe_markup
    *   A safe markup service.
    * @param \Drupal\mongodb_path\Drupal8\ModuleHandlerInterface $module_handler
-   *   A module handler service
+   *   A module handler service.
    * @param \Drupal\mongodb_path\Drupal8\StateInterface $state
    *   A State service.
    * @param \Drupal\mongodb_path\Storage\StorageInterface $mongodb_storage

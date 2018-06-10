@@ -1,15 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains MongoDbPathTestBase.
- *
- * This is a set of MongoDB testing setup and teardown helpers for tests
- * running with MongoDB.
- */
-
 namespace Drupal\mongodb_path\Tests;
-
 
 use Drupal\mongodb_path\Drupal8\DefaultBackendFactory;
 use Drupal\mongodb_path\Drupal8\ModuleHandler;
@@ -19,6 +10,11 @@ use Drupal\mongodb_path\Drupal8\State;
 use Drupal\mongodb_path\Storage\Dbtng as DbtngStorage;
 use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
 
+/**
+ * Testing setup and teardown helpers for tests running with MongoDB.
+ *
+ * @package Drupal\mongodb_path\Tests
+ */
 trait MongoDbPathTestTrait {
 
   /**
@@ -104,11 +100,9 @@ trait MongoDbPathTestTrait {
    * @param string|null $group
    *   The type of assertion - examples are "Browser", "PHP".
    *
-   * @return bool
-   *
    * @see \DrupalTestCase::pass()
    */
-  protected abstract function fail($message = NULL, $group = 'Other');
+  abstract protected function fail($message = NULL, $group = 'Other');
 
   /**
    * Fire an assertion that is always positive.
@@ -118,16 +112,17 @@ trait MongoDbPathTestTrait {
    * @param string $group
    *   The type of assertion - examples are "Browser", "PHP".
    *
-   * @return bool
-   *
    * @see \DrupalTestCase::pass()
    */
-  protected abstract function pass($message = NULL, $group = 'Other');
+  abstract protected function pass($message = NULL, $group = 'Other');
 
   /**
    * Declare the test to Simpletest.
    *
    * @return string[]
+   *   The test description as expected by Simpletest.
+   *
+   * @throws \ReflectionException
    */
   public static function getInfo() {
     $class = get_called_class();

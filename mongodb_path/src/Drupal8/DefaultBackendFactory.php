@@ -1,16 +1,12 @@
 <?php
-/**
- * @file
- * Contains DefaultBackendFactory.php.
- *
- * This returns an unused Backend object wrapping the Drupal 7 cache API, which
- * has its own backend system.
- */
 
 namespace Drupal\mongodb_path\Drupal8;
 
 /**
  * Class DefaultBackendFactory.
+ *
+ * This returns an unused Backend object wrapping the Drupal 7 cache API, which
+ * has its own backend system.
  *
  * Being built for the "cache_path" bin, it only creates a single instance.
  *
@@ -35,4 +31,5 @@ class DefaultBackendFactory implements CacheFactoryInterface {
 
     return static::$instance;
   }
+
 }

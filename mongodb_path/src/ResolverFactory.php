@@ -1,17 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains the MongoDB Path Resolver Factory.
- */
-
 namespace Drupal\mongodb_path;
 
 use Drupal\mongodb_path\Drupal8\DefaultBackendFactory;
 use Drupal\mongodb_path\Drupal8\ModuleHandler;
 use Drupal\mongodb_path\Drupal8\SafeMarkup;
 use Drupal\mongodb_path\Drupal8\State;
-
 use Drupal\mongodb_path\Storage\Dbtng as DbtngStorage;
 use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
 
@@ -29,6 +23,8 @@ class ResolverFactory {
    *
    * @return \Drupal\mongodb_path\Resolver
    *   A resolver instance.
+   *
+   * @throws \MongoConnectionException
    */
   public static function create() {
     module_load_include('module', 'mongodb');

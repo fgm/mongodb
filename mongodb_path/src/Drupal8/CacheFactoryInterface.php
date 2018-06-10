@@ -1,18 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Cache\CacheFactoryInterface.
- *
- * This is a Drupal 7 version of the Drupal 8 CacheFactoryInterface: the only
- * difference is the namespace.
- */
-
 namespace Drupal\mongodb_path\Drupal8;
-
 
 /**
  * An interface defining cache factory classes.
+ *
+ * This is a Drupal 7 version of the Drupal 8 CacheFactoryInterface: the only
+ * difference is the namespace.
  *
  * @package Drupal\mongodb_path
  */

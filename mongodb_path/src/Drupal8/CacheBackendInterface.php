@@ -1,18 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Cache\CacheBackendInterface.
- *
- * This is a Drupal 7 subset of the Drupal 8 CacheBackendInterface, trimmed for
- * the needs of the MongoDB Path plugin.
- */
-
 namespace Drupal\mongodb_path\Drupal8;
-
 
 /**
  * Defines an interface for cache implementations.
+ *
+ * This is a Drupal 7 subset of the Drupal 8 CacheBackendInterface, trimmed for
+ * the needs of the MongoDB Path plugin.
  *
  * All cache implementations have to implement this interface.
  * Drupal\Core\Cache\DatabaseBackend provides the default implementation, which
@@ -113,19 +107,20 @@ interface CacheBackendInterface {
    * Store multiple items in the persistent cache.
    *
    * @param array $items
-   *   An array of cache items, keyed by cid. In the form:
-   *   @code
-   *   $items = array(
-   *     $cid => array(
-   *       // Required, will be automatically serialized if not a string.
-   *       'data' => $data,
-   *       // Optional, defaults to CacheBackendInterface::CACHE_PERMANENT.
-   *       'expire' => CacheBackendInterface::CACHE_PERMANENT,
-   *       // (optional) The cache tags for this item, see CacheBackendInterface::set().
-   *       'tags' => array(),
-   *     ),
-   *   );
-   *   @endcode
+   *   An array of cache items, keyed by cid, as below.
+   *
+   * @code
+   * $items = array(
+   *   $cid => array(
+   *     // Required, will be automatically serialized if not a string.
+   *     'data' => $data,
+   *     // Optional, defaults to CacheBackendInterface::CACHE_PERMANENT.
+   *     'expire' => CacheBackendInterface::CACHE_PERMANENT,
+   *     // (optional) The cache tags for this item, see CacheBackendInterface::set().
+   *     'tags' => array(),
+   *   ),
+   * );
+   * @endcode
    */
   public function setMultiple(array $items);
 

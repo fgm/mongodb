@@ -1,12 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains State.php
- *
- * A D7 implementation of the D8 StateInterface.
- */
-
 namespace Drupal\mongodb_path\Drupal8;
 
 /**
@@ -104,4 +97,5 @@ class State implements StateInterface {
   public function resetCache() {
     // This does not do anything with the D7 variable system.
   }
+
 }

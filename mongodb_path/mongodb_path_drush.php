@@ -1,12 +1,11 @@
 <?php
-use Drupal\mongodb_path\ResolverFactory;
-use Drupal\mongodb_path\Storage\Dbtng;
-use Drupal\mongodb_path\Storage\MongoDb as MongoDbStorage;
 
 /**
  * @file
  * Drush plugin for MongoDB Path plugin.
  */
+
+use Drupal\mongodb_path\ResolverFactory;
 
 /**
  * Implements hook_drush_command().
@@ -36,7 +35,7 @@ function mongodb_path_drush_command() {
  * @throws \InvalidArgumentException
  *   If the database cannot be selected.
  * @throws \MongoConnectionException
- *  If the connection cannot be established.
+ *   If the connection cannot be established.
  */
 function drush_mongodb_path_import() {
   $drop = (bool) (drush_get_option('drop', 1));

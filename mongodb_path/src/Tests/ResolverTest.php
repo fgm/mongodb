@@ -1,12 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains tests for the MongoDB path Resolver.
- */
-
 namespace Drupal\mongodb_path\Tests;
-
 
 use Drupal\mongodb_path\Resolver;
 

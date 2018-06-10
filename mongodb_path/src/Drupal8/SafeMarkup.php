@@ -1,13 +1,6 @@
 <?php
-/**
- * @file
- * Contains SafeMarkup.php
- *
- * A Drupal 7 subset of Drupal 8 SafeMarkup
- */
 
 namespace Drupal\mongodb_path\Drupal8;
-
 
 /**
  * Class SafeMarkup.
@@ -17,6 +10,7 @@ namespace Drupal\mongodb_path\Drupal8;
  * @package Drupal\mongodb_path
  */
 class SafeMarkup {
+
   /**
    * Encodes special characters in a plain-text string for display as HTML.
    *

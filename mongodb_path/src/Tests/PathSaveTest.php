@@ -1,16 +1,12 @@
 <?php
-/**
- * @file
- * Contains PathSaveTest.
- *
- * This is a replica of the core test with the same name, wrapped with MongoDB
- * setup and teardown.
- */
 
 namespace Drupal\mongodb_path\Tests;
 
 /**
  * Tests the path_save() function.
+ *
+ * This is a replica of the core test with the same name, wrapped with MongoDB
+ * setup and teardown.
  *
  * @group MongoDB: PathAPI
  */
@@ -72,4 +68,5 @@ class PathSaveTest extends \DrupalWebTestCase {
     $this->assertIdentical($results['hook_path_update']['original']['alias'], $path_original['alias'], 'Old path alias available to modules during hook_path_update.');
     $this->assertIdentical($results['hook_path_update']['original']['source'], $path_original['source'], 'Old path alias available to modules during hook_path_update.');
   }
+
 }

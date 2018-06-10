@@ -1,17 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains DrupalMathPathTestCase.
- *
- * This is a replica of the core test with the same name, wrapped with MongoDB
- * setup and teardown.
- */
-
 namespace Drupal\mongodb_path\Tests;
 
 /**
  * Unit tests for the drupal_match_path() function in path.inc.
+ *
+ * This is a replica of the core test with the same name, wrapped with MongoDB
+ * setup and teardown.
  *
  * @see drupal_match_path().
  *
@@ -67,13 +62,12 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
     foreach ($tests as $patterns => $cases) {
       foreach ($cases as $path => $expected_result) {
         $actual_result = drupal_match_path($path, $patterns);
-        $this->assertIdentical($actual_result, $expected_result, format_string('Tried matching the path <code>@path</code> to the pattern <pre>@patterns</pre> - expected @expected, got @actual.', array(
+        $this->assertIdentical($actual_result, $expected_result, format_string('Tried matching the path <code>@path</code> to the pattern <pre>@patterns</pre> - expected @expected, got @actual.', [
           '@path' => $path,
           '@patterns' => $patterns,
           '@expected' => var_export($expected_result, TRUE),
           '@actual' => var_export($actual_result, TRUE),
-          )
-        ));
+        ]));
       }
     }
   }
@@ -156,4 +150,5 @@ class DrupalMatchPathTest extends \DrupalWebTestCase {
       ),
     );
   }
+
 }

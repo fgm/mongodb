@@ -1,21 +1,17 @@
 <?php
 
-/**
- * @file
- * Contains the DBTNG path alias storage.
- */
-
 namespace Drupal\mongodb_path\Storage;
 
-
 /**
- * Class Dbtng
+ * Class Dbtng contains the DBTNG path alias storage.
  *
  * @package Drupal\mongodb_path
  */
 class Dbtng implements StorageInterface {
   /**
    * Pseudo-typing: defined recognized keys for aliases.
+   *
+   * @var array
    */
   protected $aliasKeys = [
     'alias' => 1,

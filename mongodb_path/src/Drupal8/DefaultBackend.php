@@ -1,16 +1,12 @@
 <?php
-/**
- * @file
- * Contains DefaultBackend.php.
- *
- * This is a Drupal 7 wrapper exposing the Drupal 7 cache system to a Drupal 8
- * caching API.
- */
 
 namespace Drupal\mongodb_path\Drupal8;
 
 /**
  * Provides CacheBackendInterface on top of the Drupal 7 Cache API.
+ *
+ * This is a Drupal 7 wrapper exposing the Drupal 7 cache system to a Drupal 8
+ * caching API.
  *
  * @package Drupal\mongodb_path\Drupal8
  */

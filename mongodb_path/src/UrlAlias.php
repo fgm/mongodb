@@ -1,15 +1,11 @@
 <?php
-/**
- * @file
- * Contains UrlAlias.
- *
- * A simple typed object mapping to the {url_alias} table columns.
- */
 
 namespace Drupal\mongodb_path;
 
 /**
  * Class UrlAlias.
+ *
+ * A simple typed object mapping to the {url_alias} table columns.
  *
  * @package Drupal\mongodb_path
  */
@@ -42,10 +38,19 @@ class UrlAlias {
    */
   public $alias;
 
+  /**
+   * {@inheritdoc}
+   */
   public function __toString() {
     return implode(' / ', $this->asArray()) . "\n";
   }
 
+  /**
+   * Return a plain array representation of an URL alias.
+   *
+   * @return array
+   *   The exported alias.
+   */
   public function asArray() {
     $ret = [
       'pid' => $this->pid,
@@ -56,4 +61,5 @@ class UrlAlias {
 
     return $ret;
   }
+
 }

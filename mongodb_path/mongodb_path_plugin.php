@@ -190,7 +190,7 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
   // language. If we used a language different from the one conveyed by the
   // requested URL, we might end up being unable to check if there is a path
   // alias matching the URL path.
-  if (empty ($path_language)) {
+  if (empty($path_language)) {
     $path_language = $GLOBALS['language_url']->language;
   }
 
@@ -337,7 +337,7 @@ function drupal_match_path($path, $patterns) {
       // Asterisks.
       '/\\\\\*/',
 
-      // <front>
+      // <front>.
       '/(^|\|)\\\\<front\\\\>($|\|)/',
     );
     $replacements = array(
@@ -380,7 +380,7 @@ function current_path() {
 /**
  * Rebuild the path alias white list.
  *
- * @param string|NULL $source
+ * @param string|null $source
  *   An optional system path for which an alias is being inserted.
  *
  * @return string[]
@@ -541,7 +541,7 @@ function drupal_valid_path($path, $dynamic_allowed = FALSE) {
       $item['link_path']  = $item['path'];
       $item['link_title'] = $item['title'];
       $item['external']   = FALSE;
-      $item['options'] = '';
+      $item['options']    = '';
       _menu_link_translate($item);
     }
   }

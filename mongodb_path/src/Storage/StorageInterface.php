@@ -1,15 +1,9 @@
 <?php
 
-/**
- * @file
- * Contains the MongoDB path alias storage.
- */
-
 namespace Drupal\mongodb_path\Storage;
 
-
 /**
- * Class MongoDb
+ * StorageInterface describes the MongoDB path alias storage.
  *
  * @package Drupal\mongodb_path
  */
@@ -63,7 +57,7 @@ interface StorageInterface {
    * @param array $conditions
    *   Unlike path_load(), this method required a criteria array.
    *
-   * @return string[]|NULL
+   * @return string[]|null
    *   NULL if no alias was found or an associative array containing the
    *   following keys:
    *   - source: The internal system path.

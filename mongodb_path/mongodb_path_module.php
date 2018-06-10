@@ -24,7 +24,7 @@ function mongodb_path_exit() {
   global $_mongodb_path_tracer;
   if (!empty($_mongodb_path_tracer['enabled']) && function_exists('kprint_r')) {
     // Do not use() tracer, as it will still be modified before shutdown.
-    drupal_register_shutdown_function(function() use($path) {
+    drupal_register_shutdown_function(function () use ($path) {
       echo kprint_r($GLOBALS['_mongodb_path_tracer']['data'], TRUE, $path);
     });
   }

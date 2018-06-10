@@ -1,17 +1,12 @@
 <?php
-/**
- * @file
- * Contains UrlAlterFunctionalTest
- *
- * This is a replica of the core test with the same name, wrapped with MongoDB
- * setup and teardown.
- */
 
 namespace Drupal\mongodb_path\Tests;
 
-
 /**
  * Tests hook_url_(in|out)bound_alter functions.
+ *
+ * This is a replica of the core test with the same name, wrapped with MongoDB
+ * setup and teardown.
  *
  * @group MongoDB: PathAPI
  */
@@ -105,7 +100,7 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
   /**
    * Tests that $_GET['q'] is initialized when the request path is empty.
    */
-  public function testGetQInitialized() {
+  public function testGetqInitialized() {
     $this->drupalGet('');
     $this->assertText("\$_GET['q'] is non-empty with an empty request path.", "\$_GET['q'] is initialized with an empty request path.");
   }
@@ -113,37 +108,40 @@ class UrlAlterFunctionalTest extends \DrupalWebTestCase {
   /**
    * Assert that an outbound path is altered to an expected value.
    *
-   * @param $original
-   *   A string with the original path that is run through url().
-   * @param $final
-   *   A string with the expected result after url().
-   * @return
-   *   TRUE if $original was correctly altered to $final, FALSE otherwise.
+   * @param string $original
+   *   The original path that is run through url().
+   * @param string $final
+   *   The expected result after url().
    */
   protected function assertUrlOutboundAlter($original, $final) {
     // Test outbound altering.
     $result = url($original);
     $base_path = base_path() . (variable_get('clean_url', '0') ? '' : '?q=');
     $result = substr($result, strlen($base_path));
-    $this->assertIdentical($result, $final, format_string('Altered outbound URL %original, expected %final, and got %result.', array('%original' => $original, '%final' => $final, '%result' => $result)));
+    $this->assertIdentical($result, $final, format_string('Altered outbound URL %original, expected %final, and got %result.', [
+      '%original' => $original,
+      '%final' => $final,
+      '%result' => $result,
+    ]));
   }
 
   /**
    * Assert that a inbound path is altered to an expected value.
    *
-   * @param $original
-   *   A string with the aliased or un-normal path that is run through
+   * @param string $original
+   *   The aliased or un-normal path that is run through
    *   drupal_get_normal_path().
-   * @param $final
+   * @param string $final
    *   A string with the expected result after url().
-   * @return
-   *   TRUE if $original was correctly altered to $final, FALSE otherwise.
    */
   protected function assertUrlInboundAlter($original, $final) {
     // Test inbound altering.
     $result = drupal_get_normal_path($original);
-    $this->assertIdentical($result, $final, format_string('Altered inbound URL %original, expected %final, and got %result.', array('%original' => $original, '%final' => $final, '%result' => $result)));
+    $this->assertIdentical($result, $final, format_string('Altered inbound URL %original, expected %final, and got %result.', [
+      '%original' => $original,
+      '%final' => $final,
+      '%result' => $result,
+    ]));
   }
 
 }
-

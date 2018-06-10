@@ -1,16 +1,12 @@
 <?php
-/**
- * @file
- * Contains PathLookupTest.
- *
- * This is a replica of the core test with the same name, wrapped with MongoDB
- * setup and teardown.
- */
 
 namespace Drupal\mongodb_path\Tests;
 
 /**
  * Unit test for drupal_lookup_path().
+ *
+ * This is a replica of the core test with the same name, wrapped with MongoDB
+ * setup and teardown.
  *
  * @group MongoDB: PathAPI
  */

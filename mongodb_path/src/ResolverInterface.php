@@ -1,17 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains MongoDB_Path_ResolverInterface.
- */
-
 namespace Drupal\mongodb_path;
-
 
 /**
  * Interface for MongoDB path resolver implementations.
  */
 interface ResolverInterface {
+
   /**
    * Cache system paths used on the current page if necessary.
    *
@@ -49,7 +44,7 @@ interface ResolverInterface {
    * If no path is provided, the function will return the alias of the current
    * page.
    *
-   * @param string|NULL $path
+   * @param string|null $path
    *   An internal Drupal path.
    * @param string|null $path_language
    *   An optional language code to look up the path in.
@@ -153,7 +148,7 @@ interface ResolverInterface {
    * @param array|int $criteria
    *   A number representing the pid or an array of criteria.
    */
-  function pathDelete($criteria);
+  public function pathDelete($criteria);
 
   /**
    * Fetches a specific URL alias from the database.
@@ -182,12 +177,12 @@ interface ResolverInterface {
    *   - pid: (optional) Unique path alias identifier.
    *   - language: (optional) The language of the alias.
    */
-  function pathSave(array &$path);
+  public function pathSave(array &$path);
 
   /**
    * Rebuild the path alias white list.
    *
-   * @param string|NULL $source
+   * @param string|null $source
    *   An optional system path for which an alias is being inserted.
    *
    * @return string[]
@@ -195,6 +190,6 @@ interface ResolverInterface {
    *
    * @see system_update_7042()
    */
-  function whitelistRebuild($source = NULL);
+  public function whitelistRebuild($source = NULL);
 
 }
