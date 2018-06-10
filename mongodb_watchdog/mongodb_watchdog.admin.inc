@@ -57,13 +57,17 @@ function mongodb_watchdog_overview() {
     WATCHDOG_EMERGENCY => 'mongodb_watchdog-emergency',
   );
 
+  global $pager_page_array, $pager_total, $pager_total_items, $pager_limits;
   $per_page = 50;
+  $page = isset($_GET['page']) ? $_GET['page'] : '';
+  $pager_page_array = explode(',', $page);
+  $on_page = $pager_page_array[0];
 
-  $cursor = mongodb_pager_query(
-    variable_get('mongodb_watchdog', 'watchdog'),
-    mongodb_watchdog_build_filter_query(),
-    array('timestamp' => -1),
-    $per_page);
+  $cursor = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
+    ->find(mongodb_watchdog_build_filter_query())
+    ->limit($per_page)
+    ->skip($on_page * $per_page)
+    ->sort(array('timestamp' => -1));
 
   $build['mongodb_watchdog_filter_form'] = drupal_get_form('mongodb_watchdog_filter_form');
   $build['mongodb_watchdog_clear_log_form'] = drupal_get_form('mongodb_watchdog_clear_log_form');
@@ -74,17 +78,16 @@ function mongodb_watchdog_overview() {
     t('#'),
     array('data' => t('Type')),
     array('data' => t('Date')),
+    t('Source'),
     t('Message'),
-    t('User'),
-    t('Operations'),
   );
 
   $rows = array();
   foreach ($cursor as $id => $value) {
     if ($value['type'] == 'php' && $value['message'] == '%type: %message in %function (line %line of %file).') {
-      $collection = mongodb_collection(variable_get('mongodb_watchdog_watchdog', 'watchdog'));
+      $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
       $collection = $collection->db->selectCollection('watchdog_event_' . $value['_id']);
-      if ($result = $collection->find()->sort(array('timestamp' => -1))->limit(1)->getNext()) {
+      if ($result = $collection->find()->sort(array('$natural' => -1))->limit(1)->getNext()) {
         $value['file'] = basename($result['variables']['%file']);
         $value['line'] = $result['variables']['%line'];
         $value['message'] = '%type in %function';
@@ -96,9 +99,9 @@ function mongodb_watchdog_overview() {
       $icons[$value['severity']],
       isset($value['count']) && $value['count'] > 1 ? $value['count'] : '',
       t($value['type']),
-      l($message, "admin/reports/mongodb-event/$id"),
-      theme('username', array('account' => (object) $value['user'])),
-      $value['link'],
+      empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
+      empty($value['file']) ? '' : truncate_utf8(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
+      l($message, "admin/reports/mongodb/$id"),
     );
   }
 
@@ -110,9 +113,17 @@ function mongodb_watchdog_overview() {
   );
 
   // Add the pager.
-  $build['pager'] = array(
-    '#theme' => 'pager',
-  );
+  if ($on_page > 0 || count($rows) >= $per_page) {
+    $pager_total_items[0] = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'))
+      ->find(mongodb_watchdog_build_filter_query())
+      ->count();
+    $pager_total[0] = ceil($pager_total_items[0] / $per_page);
+    $pager_page_array[0] = max(0, min((int) $pager_page_array[0], ((int) $pager_total[0]) - 1));
+    $pager_limits[0] = $per_page;
+    $build['pager'] = array(
+      '#theme' => 'pager',
+    );
+  }
 
   return $build;
 }
@@ -131,28 +142,8 @@ function mongodb_watchdog_event(array $dblog) {
       t($dblog['type']),
     ),
     array(
-      array('data' => t('User'), 'header' => TRUE),
-      $dblog['user']
-    ),
-    array(
-      array('data' => t('Location'), 'header' => TRUE),
-      l($dblog['request_uri'], $dblog['request_uri']),
-    ),
-    array(
-      array('data' => t('Referrer'), 'header' => TRUE),
-      l($dblog['referer'], $dblog['referer']),
-    ),
-    array(
       array('data' => t('Severity'), 'header' => TRUE),
       $severity[$dblog['severity']],
-    ),
-    array(
-      array('data' => t('Hostname'), 'header' => TRUE),
-      check_plain($dblog['ip']),
-    ),
-    array(
-      array('data' => t('Operations'), 'header' => TRUE),
-      $dblog['link'],
     ),
     array(
       array('data' => t('Function'), 'header' => TRUE),
@@ -171,25 +162,65 @@ function mongodb_watchdog_event(array $dblog) {
       isset($dblog['count']) ? $dblog['count'] : '',
     ),
   );
+  $build['reports'] = array(
+    '#type' => 'markup',
+    '#markup' => l(t('Return to log report'), 'admin/reports/mongodb'),
+  );
   $build['mongodb_watchdog_event_table']['header'] = array(
     '#theme' => 'table',
     '#rows' => $rows,
     '#attributes' => array('class' => array('dblog-event')),
   );
+  // @todo: the count is unreliable, so just get the actual number of entries.
+  // $items_limit = variable_get('mongodb_watchdog_items', 10000);
+  // $total = min($dblog['count'], $items_limit);
+  $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
+  $collection = $collection->db->selectCollection('watchdog_event_' . $dblog['_id']);
+  $total = $collection->count();
   $limit = 20;
-
-  $result = mongodb_pager_query($dblog['_id'], array(), array(), $limit);
+  $pagenumber = mongodb_watchdog_pager_init(0, $limit, $total);
+  $result = $collection
+    ->find()
+    ->skip($pagenumber * $limit)
+    ->limit($limit)
+    ->sort(array('$natural' => -1));
   $severity = watchdog_severity_levels();
   $rows = array();
   $header = array(
     array('data' => t('Date'), 'header' => TRUE),
-    array('data' => t('message'), 'header' => TRUE),
+    array('data' => t('User'), 'header' => TRUE),
+    array('data' => t('Location'), 'header' => TRUE),
+    array('data' => t('Referrer'), 'header' => TRUE),
+    array('data' => t('Hostname'), 'header' => TRUE),
+    array('data' => t('Message'), 'header' => TRUE),
+    array('data' => t('Operations'), 'header' => TRUE),
   );
-  foreach ($result as $variables) {
-    $dblog['variables'] = $variables;
+  foreach ($result as $event) {
+    if (isset($event['wd-user'])) {
+      $account = $event['wd-user'];
+      unset($event['wd-user']);
+      $ip = $dblog['ip'];
+      $request_uri = $dblog['request_uri'];
+      $referer = $dblog['referer'];
+      $link = $dblog['link'];
+      $dblog['variables'] = $event;
+    }
+    else {
+      $account = $event['user'];
+      $ip = $event['ip'];
+      $request_uri = $event['request_uri'];
+      $referer = $event['referer'];
+      $link = $event['link'];
+      $dblog['variables'] = $event['variables'];
+    }
     $rows[] = array(
-        format_date($variables['timestamp'], 'short'),
-        _mongodb_watchdog_format_message($dblog),
+      format_date($event['timestamp'], 'short'),
+      l($account['name'], 'user/' . $account['uid']),
+      $request_uri ? l(truncate_utf8(basename(($request_uri)), 20), $request_uri) : '',
+      $referer ? l(truncate_utf8(basename(($referer)), 20), $referer) : '',
+      check_plain($ip),
+      _mongodb_watchdog_format_message($dblog),
+      $link,
     );
   }
   $build['mongodb_watchdog_event_table']['messages'] = array(
@@ -197,15 +228,16 @@ function mongodb_watchdog_event(array $dblog) {
     '#header' => $header,
     '#rows' => $rows,
   );
-  $build['pager'] = array(
-    '#theme' => 'pager',
-  );
-
+  if ($total > $limit) {
+    $build['mongodb_watchdog_event_table']['pager'] = array(
+      '#theme' => 'pager',
+    );
+  }
   return $build;
 }
 
 /**
- * Initialize the global pager variables for use in a mongodb_watchdog list.
+ * Initialize the pager variables for use in a mongodb_watchdog event list.
  */
 function mongodb_watchdog_pager_init($element, $limit, $total) {
   global $pager_page_array, $pager_total, $pager_total_items;
@@ -218,7 +250,7 @@ function mongodb_watchdog_pager_init($element, $limit, $total) {
   }
   $pager_total_items[$element] = $total;
   $pager_total[$element] = ceil($pager_total_items[$element] / $limit);
-  $pager_page_array[$element] = max(0, min((int)$pager_page_array[$element], ((int)$pager_total[$element]) - 1));
+  $pager_page_array[$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
   return isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
 }
 

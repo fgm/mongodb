@@ -409,21 +409,3 @@ function mongodb_default_write_options($safe = TRUE) {
   }
 }
 
-/**
- * MongoDB version of pager_query().
- */
-function mongodb_pager_query($collection_name, $conditions, $sort = array(), $limit = 10, $element = 0) {
-  global $pager_page_array, $pager_total, $pager_total_items;
-  $page_string = isset($_GET['page']) ? intval($_GET['page']) : 0;
-
-  // Convert comma-separated $page to an array, used by other functions.
-  $pager_page_array = explode(',', $page_string);
-
-  // We calculate the total of pages as ceil(items / limit).
-  $cursor = mongodb_collection($collection_name)->find($conditions);
-  $pager_total_items[$element] = $cursor->count();
-  $pager_total[$element] = ceil($pager_total_items[$element] / $limit);
-  $pager_page_array[$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
-  $cursor->skip($pager_page_array[$element] * $limit)->limit($limit);
-  return $cursor;
-}
