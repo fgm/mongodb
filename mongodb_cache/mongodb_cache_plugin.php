@@ -84,8 +84,6 @@ class Cache implements \DrupalCacheInterface {
    *
    * @param string $bin
    *   The name of the cache bin for which to build a backend.
-   *
-   * @throws \MongoConnectionException
    */
   public function __construct($bin) {
     $this->bin = $bin;
@@ -239,9 +237,6 @@ class Cache implements \DrupalCacheInterface {
 
   /**
    * Garbage collection for get() and getMultiple().
-   *
-   * @throws \MongoCursorException
-   * @throws \MongoCursorTimeoutException
    */
   protected function garbageCollection() {
     // Garbage collection only required when enforcing a minimum cache lifetime.
@@ -260,7 +255,7 @@ class Cache implements \DrupalCacheInterface {
       try {
         $this->collection->remove($criteria, $this->unsafe);
       }
-      catch (\MongoConnectionException $e) {
+      catch (\MongoException $e) {
         self::notifyException($e);
       }
 
@@ -346,9 +341,6 @@ class Cache implements \DrupalCacheInterface {
    *
    * @param array|null $criteria
    *   NULL means to remove all documents from the collection.
-   *
-   * @throws \MongoCursorException
-   * @throws \MongoCursorTimeoutException
    */
   protected function attemptRemove($criteria = NULL) {
     try {
@@ -359,7 +351,7 @@ class Cache implements \DrupalCacheInterface {
         $this->collection->remove($criteria, $this->unsafe);
       }
     }
-    catch (\MongoConnectionException $e) {
+    catch (\MongoException $e) {
       self::notifyException($e);
     }
   }

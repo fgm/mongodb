@@ -16,6 +16,7 @@ trait CacheTestTrait {
    *   The test information as expected by Simpletest for Drupal 7.
    *
    * @throws \ReflectionException
+   *   Unlikely.
    */
   public static function getInfo() {
     $class = get_called_class();

@@ -1,9 +1,11 @@
 <?php
 
-/* This file disables PHPCS 1 class per file rule because
-
-- these mock classes a private to this test class
-- the tests needs to support PHP 5.x, which does not include anonymous classes.
+/**
+ * This is a unit test case for bug 2974216.
+ *
+ * This file violates PSR-1 single class per file rule because:
+ * - these mock classes are private to this test class
+ * - the tests needs to support PHP 5.x, which does not have anonymous classes.
  */
 
 namespace Drupal\mongodb_cache\Tests;
