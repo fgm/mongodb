@@ -136,13 +136,14 @@ class Cache implements \DrupalCacheInterface {
    *   A closure wrapping the constructor with its expected $type.
    */
   protected function getBinDataCreator() {
-    if (version_compare('mongo', '1.2.11') < 0) {
+    $mongoVersion = phpversion('mongo');
+    if (version_compare($mongoVersion, '1.2.11') < 0) {
       $result = function ($data) {
         return new \MongoBinData($data);
       };
     }
     else {
-      $type = version_compare('mongo', '1.5.0') < 0
+      $type = version_compare($mongoVersion, '1.5.0') < 0
         ? \MongoBinData::BYTE_ARRAY
         : \MongoBinData::GENERIC;
       $result = function ($data) use ($type) {
