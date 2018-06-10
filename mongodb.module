@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * A library of common mechanisms for modules using MongoDB.
- */
 
 /**
  * @file
@@ -29,10 +25,14 @@ function mongodb_help($path, $arg) {
  *   The name of a MongoDB connection alias. If it is not passed, or if the
  *   alias does not match a connection definition, the function will fall back
  *   to the 'default' alias.
+ * @param int $retry
+ *   The number of retry attemps when a connection fails.
  *
  * @return \MongoDB|\MongoDummy
  *   A MongoDummy is returned in case a MongoConnectionException is thrown.
  *
+ * @throws \MongoConnectionException
+ *   If the connection cannot be estaslished even after retries.
  * @throws \InvalidArgumentException
  *   If the database cannot be selected.
  * @throws \MongoConnectionException
@@ -40,7 +40,7 @@ function mongodb_help($path, $arg) {
  *
  * @see mongoDummy
  */
-function mongodb($alias = 'default') {
+function mongodb($alias = 'default', $retry = 3) {
   static $mongo_objects;
   $connections = variable_get('mongodb_connections', array());
   if (!isset($connections[$alias])) {
@@ -78,6 +78,9 @@ function mongodb($alias = 'default') {
       $mongo_objects[$host][$db]->connection = $mongo;
     }
     catch (MongoConnectionException $e) {
+      if ($retry > 0) {
+        return mongodb($alias, --$retry);
+      }
       $mongo_objects[$host][$db] = new MongoDummy();
       throw $e;
     }
