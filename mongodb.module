@@ -199,6 +199,8 @@ class MongoDebugCollection {
 
 /**
  * Class MongoDebugCursor is a debug decorator for MongoCollection::find().
+ *
+ * @see \MongoCollection::find()
  */
 class MongoDebugCursor {
 
@@ -334,6 +336,30 @@ function mongodb_set_active_connection($alias, $connection_name = 'default') {
   else {
     $GLOBALS['conf']['mongodb_collections'][$alias] = $connection_name;
   }
+}
+
+/**
+ * Helper function to set a pager based on a MongoDB query cursor.
+ *
+ * @param \MongoCursor $cursor
+ *   The cursor on which to base paging.
+ * @param int $element
+ *   The pager element index, as in PagerDefault::element()
+ *
+ * @see \PagerDefault::element()
+ */
+function mongodb_set_pager($cursor, $element = 0) {
+  global $pager_page_array, $pager_total, $pager_total_items;
+  $page = isset($_GET['page']) ? $_GET['page'] : '';
+
+  $pager_page_array = explode(',', $page);
+  $pager_element = 0;
+  // Total without limit.
+  $pager_total_items[$pager_element] = $cursor->count(FALSE);
+  // Total with limit.
+  $per_page = $cursor->count(TRUE);
+  $pager_total[$pager_element] = ceil($pager_total_items[$pager_element] / $per_page);
+  $pager_page_array[$pager_element] = max(0, min((int) $pager_page_array[$pager_element], ((int) $pager_total[$pager_element]) - 1));
 }
 
 /**
