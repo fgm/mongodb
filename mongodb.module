@@ -150,6 +150,184 @@ function mongodb_collection() {
 }
 
 /**
+ * A wrapper class to a collection to make it pageable, like PagerDefault.
+ *
+ * Use like:
+ *   $collection = new MongodbPagerCollection($collection, 50);
+ */
+class MongodbPagerCollection {
+
+  /**
+   * The underlying collection.
+   *
+   * @var \MongoCollection
+   */
+  protected $collection;
+
+  /**
+   * The page size.
+   *
+   * @var int
+   */
+  protected $element;
+
+  /**
+   * The index of the pager element.
+   *
+   * @var int
+   */
+  protected $limit;
+
+  /**
+   * The current page index in the paged set.
+   *
+   * @var int
+   */
+  protected $current_page;
+
+  /**
+   * MongodbPagerCollection constructor.
+   *
+   * @param \MongoCollection|\MongoDebugCollection $collection
+   *   The collection to decorate.
+   * @param int $limit
+   *   The page size.
+   * @param int $element
+   *   The index of the pager element.
+   */
+  public function __construct($collection, $limit = 50, $element = 0) {
+    $this->collection = $collection;
+    $this->limit = $limit;
+    $this->element = $element;
+  }
+
+  /**
+   * Just like MongoCollection::find().
+   *
+   * @param array|null $query
+   *   The query selector.
+   * @param array|null $fields
+   *   The query projection.
+   *
+   * @return \MongoCursor|\MongoDebugCursor
+   *   The query result.
+   *
+   * @see \MongoCollection::find()
+   */
+  public function find($query = array(), $fields = array()) {
+    $total_items = $this->collection->count($query);
+    $this->current_page = pager_default_initialize($total_items, $this->limit, $this->element);
+
+    $cursor = $this->collection->find($query, $fields);
+    $cursor->skip($this->current_page * $this->limit);
+    $cursor->limit($this->limit);
+
+    return $cursor;
+  }
+
+  /**
+   * Get the current page index in the paged set.
+   *
+   * @return int
+   *   The current page index.
+   */
+  public function getCurrentPage() {
+    return $this->current_page;
+  }
+
+  /**
+   * Get the page size.
+   *
+   * @return int
+   *   The page size, as the maximum number of rows.
+   */
+  public function getLimit() {
+    return $this->limit;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __call($name, $arguments) {
+    return call_user_func_array(array($this->collection, $name), $arguments);
+  }
+
+}
+
+/**
+ * A wrapper class to a sorted collection, like TableSort.
+ *
+ * Use like:
+ *   $collection = new mongoTableSortCollection($collection, $header);
+ *
+ * To have both pager and sorting together, you will need to wrap with
+ * MongoTableSortCollection first, then MongoPagerCollection. Otherwise, the
+ * speed will be a bit slow. It goes like:
+ *   $sorted = new MongodbTableSortCollection($collection, $header);
+ *   $pagedSorted = new MongodbPagerCollection($sorted, 50);
+ */
+class MongodbTableSortCollection {
+
+  protected $header;
+
+  protected $collection;
+
+  /**
+   * MongodbTableSortCollection constructor.
+   *
+   * @param \MongoCollection|\MongoDebugCollection $collection
+   *   The collection to decorate.
+   * @param array $header
+   *   The clickable sort header.
+   */
+  public function __construct($collection, array $header) {
+    $this->collection = $collection;
+    $this->header = $header;
+  }
+
+  /**
+   * Just like MongoCollection::find().
+   *
+   * @param array|null $query
+   *   The query selector.
+   * @param array|null $fields
+   *   The query projection.
+   *
+   * @return \MongoCursor|\MongoDebugCursor
+   *   The query result.
+   *
+   * @see \MongoCollection::find()
+   */
+  public function find($query = array(), $fields = array()) {
+    $cursor = $this->collection->find($query, $fields);
+
+    $ts = tablesort_get_order($this->header);
+    $ts['sort'] = tablesort_get_sort($this->header);
+    $ts['query'] = tablesort_get_query_parameters();
+
+    if (!empty($ts['sql'])) {
+      // Based on code from db_escape_table(), but this can also contain a dot.
+      $field = preg_replace('/[^A-Za-z0-9_.]+/', '', $ts['sql']);
+
+      // Sort order can only be ASC or DESC.
+      $sort = drupal_strtoupper($ts['sort']);
+      $sort = in_array($sort, array('ASC', 'DESC')) ? $sort : '';
+      $cursor->sort(array($field => (empty($sort) || $sort == 'ASC' ? 1 : -1)));
+    }
+
+    return $cursor;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __call($name, $arguments) {
+    return call_user_func_array(array($this->collection, $name), $arguments);
+  }
+
+}
+
+/**
  * Class MongoDebugCollection is a debug decorator for MongoCollection.
  */
 class MongoDebugCollection {
