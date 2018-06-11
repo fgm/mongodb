@@ -1,7 +1,7 @@
 name = MongoDB Cache
-description = Integration between MongoDB as Cache.
+description = Integration between Drupal and MongoDB as Cache.
 package = MongoDB
-version = VERSION
+
 core = 7.x
-files[] = mongodb_cache.module
-files[] = mongodb_cache.inc
+
+dependencies[] = mongodb

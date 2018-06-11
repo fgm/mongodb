@@ -5,7 +5,6 @@
  * Admin page callbacks for the mongodb_block_ui module.
  */
 
-
 /**
  * Menu callback for admin/structure/mongodb_block_ui/demo.
  */
@@ -17,7 +16,7 @@ function mongodb_block_ui_admin_demo($theme = NULL) {
 /**
  * Menu callback for admin/structure/mongodb_block_ui.
  *
- * @param $theme
+ * @param $theme
  *   The theme to display the administration page for. If not provided, defaults
  *   to the currently used theme.
  */
@@ -226,6 +225,13 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $theme, $module, 
   $info = module_invoke($module, 'block_info');
   if (isset($info[$delta])) {
     drupal_set_title(t("'%name' block", array('%name' => $info[$delta]['info'])), PASS_THROUGH);
+  }
+
+  // Module-specific block configuration.
+  if ($settings = module_invoke($module, 'block_configure', $delta)) {
+    foreach ($settings as $k => $v) {
+      $form['settings'][$k] = $v;
+    }
   }
 
   $title = t('Pages');

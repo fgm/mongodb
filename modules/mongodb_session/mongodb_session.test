@@ -1,7 +1,10 @@
 <?php
+
 /**
  * @file
- *   Test mongodb session implementation.
+ * Contains \MongoDBSessionTestCase and \MongoDBSessionHttpsTestCase.
+ *
+ * These tests cases cover the MongoDB session implementation.
  */
 
 /**

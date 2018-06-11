@@ -2,7 +2,7 @@
 
 /**
  * @file
- * MonngoDB Queue.
+ * MongoDB Queue.
  */
 
 /**
@@ -18,7 +18,7 @@ function mongodb_queue_cron() {
   );
   foreach (array_keys($aliases) as $alias) {
     // Call mongodb()->selectConnection() directly to avoid prefixing and DB
-    // mapping tricks mongodb_collection() plays,
+    // mapping tricks mongodb_collection() plays.
     $db = mongodb($alias);
     $collection = $db->selectCollection('system.namespaces');
     $n = strlen($db) + 1;

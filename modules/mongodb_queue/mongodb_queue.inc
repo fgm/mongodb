@@ -2,9 +2,12 @@
 
 /**
  * @file
- * Queue functionality.
+ * Contains \MongoDBQueue.
  */
 
+/**
+ * Class MongoDBQueue is the MongoDB Queue API plugin.
+ */
 class MongoDBQueue implements DrupalQueueInterface {
   protected $collection;
 
@@ -12,7 +15,7 @@ class MongoDBQueue implements DrupalQueueInterface {
    * Start working with a queue.
    *
    * @param string $name
-   *   The name of the queue
+   *   The name of the queue.
    */
   public function __construct($name) {
     // @todo: make sure that $name is a valid collection name?
@@ -23,10 +26,15 @@ class MongoDBQueue implements DrupalQueueInterface {
    * Add a queue item and store it directly to the queue.
    *
    * @param object $data
-   *   Arbitrary data to be associated with the new task in the queue
+   *   Arbitrary data to be associated with the new task in the queue.
    *
-   * @return boolean
+   * @return array|bool
    *   If the item was successfully created and added to the queue.
+   *
+   * @throws \MongoConnectionException
+   * @throws \MongoCursorException
+   * @throws \MongoCursorTimeoutException
+   * @throws \MongoException
    */
   public function createItem($data) {
     $item = array(
@@ -41,8 +49,10 @@ class MongoDBQueue implements DrupalQueueInterface {
   /**
    * Retrieve the number of items in the queue.
    *
-   * @return integer
+   * @return int
    *   An integer estimate of the number of items in the queue.
+   *
+   * @throws \MongoConnectionException
    */
   public function numberOfItems() {
     return mongodb_collection($this->collection)
@@ -52,12 +62,14 @@ class MongoDBQueue implements DrupalQueueInterface {
   /**
    * Claim an item in the queue for processing.
    *
-   * @param string $lease_time
-   *   How long the processing is expected to take in seconds,
+   * @param int $lease_time
+   *   How long the processing is expected to take in seconds.
    *
-   * @return object/boolean
+   * @return object|bool
    *   On success we return an item object. If the queue is unable to claim
    *   an item it returns false.
+   *
+   * @throws \MongoConnectionException
    */
   public function claimItem($lease_time = 30) {
     $query = array(
@@ -78,21 +90,34 @@ class MongoDBQueue implements DrupalQueueInterface {
   }
 
   /**
-   * Release an item that the worker could not process
+   * Release an item that the worker could not process.
    *
    * @param object $item
    *   The item to release.
+   *
+   * @return bool
+   *   Did the update succeed?
+   *
+   * @throws \MongoConnectionException
+   * @throws \MongoCursorException
    */
   public function releaseItem($item) {
     return mongodb_collection($this->collection)
-      ->update(array('_id' => $item->_id), array('$set' => array('expire' => 0)), mongodb_default_write_options());
+      ->update(array('_id' => $item->_id),
+        array('$set' => array('expire' => 0)),
+        mongodb_default_write_options()
+      );
   }
 
   /**
-   *  Delete a finished item from the queue.
+   * Delete a finished item from the queue.
    *
    * @param object $item
    *   The item to delete.
+   *
+   * @throws \MongoConnectionException
+   * @throws \MongoCursorException
+   * @throws \MongoCursorTimeoutException
    */
   public function deleteItem($item) {
     mongodb_collection($this->collection)
@@ -100,7 +125,7 @@ class MongoDBQueue implements DrupalQueueInterface {
   }
 
   /**
-   *  Create a queue.
+   * Create a queue.
    */
   public function createQueue() {
     // Create the index.
@@ -109,9 +134,10 @@ class MongoDBQueue implements DrupalQueueInterface {
   }
 
   /**
-   *  Delete a queue and every item in the queue.
+   * Delete a queue and every item in the queue.
    */
   public function deleteQueue() {
     mongodb_collection($this->collection)->drop();
   }
+
 }
