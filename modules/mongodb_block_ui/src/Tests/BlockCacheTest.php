@@ -7,11 +7,13 @@
 
 namespace Drupal\mongodb_block_ui\Tests;
 
+use Drupal\simpletest\WebTestBase;
+
 
 /**
  * Test block caching.
  */
-class BlockCacheTest extends \DrupalWebTestCase {
+class BlockCacheTest extends WebTestBase {
 
   protected $adminuser;
   protected $normaluser;

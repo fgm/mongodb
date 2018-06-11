@@ -2,7 +2,8 @@ language: php
 
 php:
   - '7.0'
-  #- hhvm
+  - '7.1'
+  - '7.2'
 
 services:
   - mongodb
@@ -10,15 +11,15 @@ services:
 
 matrix:
   fast_finish: true
-#  allow_failures:
-#    - php:
-#      - hhvm
+  allow_failures:
+    - php:
+      - 7.2
 sudo: true
 
 addons:
   apt:
     sources:
-    - mongodb-3.2-precise
+    - mongodb-3.6-trusty
     packages:
     - mongodb-org-server
 
@@ -60,14 +61,14 @@ before_script:
   # navigate out of module directory to prevent blown stack by recursive module lookup
   - cd ../..
 
-  # download Drupal 8.2 core.
-  - wget -q -O - http://ftp.drupal.org/files/projects/drupal-8.2.x-dev.tar.gz | tar xz
-  - cd drupal-8.2.x-dev
+  # download Drupal 8.5 core.
+  - wget -q -O - http://ftp.drupal.org/files/projects/drupal-8.5.x-dev.tar.gz | tar xz
+  - cd drupal-8.5.x-dev
   - mkdir -p modules/contrib
-  - mv ../FGM/mongodb modules/contrib
+  - mv ../fgm/mongodb modules/contrib
 
   # install Drush and the PHP MongoDB library in the project
-  - composer require -v "drush/drush" "mongodb/mongodb:^1.0.0"
+  - composer require -v "drush/drush:^8" "mongodb/mongodb:^1.2.0"
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database travis_ci_mongodb'
@@ -80,7 +81,7 @@ before_script:
   #- echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
 
   # reference and enable mongodb modules in build site
-  #- ln -s $(readlink -e $(cd -)) drupal-8.2.x-dev/modules/custom/mongodb
+  #- ln -s $(readlink -e $(cd -)) drupal-8.5.x-dev/modules/custom/mongodb
   - vendor/bin/drush -y en mongodb_watchdog
 
   # Not needed: we don't have any web tests at this point.

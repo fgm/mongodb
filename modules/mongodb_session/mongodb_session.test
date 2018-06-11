@@ -7,6 +7,8 @@
  * These tests cases cover the MongoDB session implementation.
  */
 
+use Drupal\simpletest\WebTestBase;
+
 /**
  * Override for SessionTestCase.
  *
@@ -23,9 +25,9 @@ class MongoDBSessionTestCase extends SessionTestCase {
   }
 
   function setUp() {
-    // Skip SessionTestCase::setUp() and call the DrupalWebTestCase directly.
-    // Yes, this is valid. Ugly, but valid.
-    DrupalWebTestCase::setUp('mongodb_session', 'mongodb', 'session_test');
+    // Skip SessionTestCase::setUp() and call the test base directly.
+    // @FIXME Yes, this is valid. Ugly, but was valid for DWTC. Not so with WTB.
+    WebTestBase::setUp('mongodb_session', 'mongodb', 'session_test');
   }
 }
 

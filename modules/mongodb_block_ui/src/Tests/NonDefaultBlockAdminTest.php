@@ -7,11 +7,13 @@
 
 namespace Drupal\mongodb_block_ui\Tests;
 
+use Drupal\simpletest\WebTestBase;
+
 
 /**
  * Check for non-default theme admin.
  */
-class NonDefaultBlockAdminTest extends \DrupalWebTestCase {
+class NonDefaultBlockAdminTest extends WebTestBase {
 
   /**
    * Name the test

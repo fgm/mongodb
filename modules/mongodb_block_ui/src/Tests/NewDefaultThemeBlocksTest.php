@@ -7,11 +7,13 @@
 
 namespace Drupal\mongodb_block_ui\Tests;
 
+use Drupal\simpletest\WebTestBase;
+
 
 /**
  * Test blocks correctly initialized when picking a new default theme.
  */
-class NewDefaultThemeBlocksTest extends \DrupalWebTestCase {
+class NewDefaultThemeBlocksTest extends WebTestBase {
 
   /**
    * Name the test

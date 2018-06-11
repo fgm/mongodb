@@ -4,10 +4,12 @@
  * Test class for MongoDB_watchdog.
  */
 
+use Drupal\simpletest\WebTestBase;
+
 /**
  * Test the behaviour of watchdog() mongodb_watchdog, not dblog
  */
-class MongoDBLogTestCase extends DrupalWebTestCase {
+class MongoDBLogTestCase extends WebTestBase {
   /**
    * Name of the test helper module invoking watchdog for test.
    */
@@ -93,7 +95,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
    * Clear the MongoDB data: simpletest only clears the main SQL database.
    *
    * (non-PHPdoc)
-   * @see DrupalWebTestCase::tearDown()
+   * @see WebTestBase::tearDown()
    */
   function tearDown() {
     $this->group = t('Teardown');

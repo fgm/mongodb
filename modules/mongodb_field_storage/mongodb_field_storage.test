@@ -5,6 +5,8 @@
  * Contains \MongoDBFieldAttachStorageTestCase and \MongoDbEntityFieldQueryTestCase.
  */
 
+use Drupal\simpletest\WebTestBase;
+
 /**
  * Execute all the Field storage unit test with MongoDB-based field storage.
  */
@@ -26,7 +28,7 @@ class MongoDBFieldAttachStorageTestCase extends FieldAttachStorageTestCase {
 /**
  * Tests EntityFieldQuery.
  */
-class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
+class MongoDbEntityFieldQueryTestCase extends WebTestBase {
 
   public static function getInfo() {
     return array(

@@ -8,7 +8,9 @@
 namespace Drupal\mongodb_block_ui\Tests;
 
 
-class BlockTest extends \DrupalWebTestCase {
+use Drupal\simpletest\WebTestBase;
+
+class BlockTest extends WebTestBase {
 
   protected $regions;
 

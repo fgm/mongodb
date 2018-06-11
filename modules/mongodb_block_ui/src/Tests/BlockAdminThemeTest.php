@@ -1,17 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\mongodb_block_ui\Tests\BlockAdminThemeTest.
- */
-
 namespace Drupal\mongodb_block_ui\Tests;
 
+use Drupal\simpletest\WebTestBase;
 
 /**
  * Test the MongoDB block UI with admin themes.
  */
-class BlockAdminThemeTest extends \DrupalWebTestCase {
+class BlockAdminThemeTest extends WebTestBase {
   /**
    * Name the test
    */
