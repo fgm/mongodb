@@ -24,6 +24,10 @@ Cache, Queue, and Session storage. However, they were not maintained and have
 since been removed from the release. See the section about "hidden features" 
 about them.
 
+This is version 6.x-1.0, expected to remain the final version for Drupal 6 and
+Pressflow. It is tagged to mark that final status, but does not differ from
+earlier RC
+
 
 INSTALLATION & CONFIGURATION
 ============================
