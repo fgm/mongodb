@@ -1,7 +1,0 @@
-name = MongoDB Field Storage
-description = Store Field content on MongoDB.
-package = MongoDB
-core = 7.x
-dependencies[] = mongodb
-files[] = mongodb_field_storage.module
-files[] = mongodb_field_storage.test
