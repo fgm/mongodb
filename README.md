@@ -38,14 +38,26 @@ will properly work. This guide assumes that :
 [mongo]: http://php.net/mongo
 [mongodb]: http://php.net/mongodb
 
-If MongoDB is installed on localhost, you may view the web admin interface:
+If MongoDB is installed on localhost and the service started with –httpinterface option, you may view the web admin interface:
 
     http://localhost:28017/
 
 * Download the module package, as per [Installing contributed modules (Drupal 8)][install]
+
 * Copy the relevant section from the `example.settings.local.php` to your
 `settings.local.php` file if you use one, or `settings.php` otherwise, and
 adapt it to match your MongoDB settings.
+* These settings are used by this module to connect to your local mongodb server started in previous steps
+* The `clients` key contain the default connection parameters under `default` key
+* The `databases` key contain the collection names in mongodb being used by this module for different purposes
+
+
+COMPOSER REQUIREMENTS
+---------------------
+* Below commands are for those who are using composer already in your site to manage module dependencies. To know more about composer [here][composer]
+
+[composer]: https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies
+
 * At the root of your site, add a composer requirement by typing:
 
         composer require mongodb/mongodb "^1.0.0"
@@ -53,6 +65,7 @@ adapt it to match your MongoDB settings.
   run:
   
         composer install
+
 * Enable the `mongodb` module. You now have access to the MongoDB services and Drush commands.
 
 [install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
