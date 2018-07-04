@@ -4,12 +4,14 @@ namespace Drupal\mongodb_storage;
 
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\Core\KeyValueStore\StorageBase;
+use Drupal\mongodb\MongoDb;
 use MongoDB\Collection;
 
 /**
  * Class KeyValueStore provides a KeyValueStore as a MongoDB collection.
  */
 class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
+
   const LEGACY_TYPE_MAP = [
     'typeMap' => [
       'array' => 'array',
@@ -18,6 +20,13 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
     ],
   ];
   const PROJECTION_ID = ['projection' => ['_id' => 1]];
+
+  /**
+   * The MongoDB collection name, like "kv[ep]_foo" for KV collection "foo".
+   *
+   * @var string
+   */
+  protected $collectionName;
 
   /**
    * The collection making up the store.
@@ -38,7 +47,32 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    */
   public function __construct($collection, Collection $storeCollection = NULL) {
     parent::__construct($collection);
+    $this->collectionName = $storeCollection->getCollectionName();
     $this->mongoDbCollection = $storeCollection;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __sleep() {
+    return [
+      'collectionName',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * The __wakeup() method cannot use the container, because its constructor is
+   * never invoked, and the container itself should not be serialized.
+   */
+  public function __wakeup() {
+    /** @var \Drupal\mongodb\DatabaseFactory $databaseFactory */
+    $dbFactory = \Drupal::service(MongoDb::SERVICE_DB_FACTORY);
+
+    /** @var \MongoDB\Database $database */
+    $database = $dbFactory->get(KeyValueFactory::DB_KEYVALUE);
+    $this->collection = $database->selectCollection($this->collectionName);
   }
 
   /**
