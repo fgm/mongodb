@@ -1,9 +1,11 @@
 <?php
 
-namespace Drupal\mongodb\Tests;
+namespace Drupal\mongodb\Tests\Kernel;
 
 use Drupal\mongodb\ClientFactory;
 use Drupal\mongodb\DatabaseFactory;
+use Drupal\mongodb\MongoDb;
+use MongoDB\Database;
 
 /**
  * Class DatabaseFactoryTest.
@@ -12,7 +14,7 @@ use Drupal\mongodb\DatabaseFactory;
  */
 class DatabaseFactoryTest extends MongoDbTestBase {
 
-  public static $modules = ['mongodb'];
+  public static $modules = [MongoDb::MODULE];
 
   /**
    * The mongodb.client_factory service.
@@ -42,7 +44,7 @@ class DatabaseFactoryTest extends MongoDbTestBase {
    */
   public function testGetHappy() {
     $drupal = $this->databaseFactory->get(static::DB_DEFAULT_ALIAS);
-    $this->assertInstanceOf('MongoDB\Database', $drupal, 'get() returns a valid database instance.');
+    $this->assertInstanceOf(Database::class, $drupal, 'get() returns a valid database instance.');
   }
 
   /**

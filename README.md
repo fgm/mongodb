@@ -6,17 +6,14 @@ MongoDB integration for Drupal, version 8.x-2.0-dev.
 [![Build Status](https://travis-ci.org/fgm/mongodb.svg?branch=8.x-2.x)](https://travis-ci.org/fgm/mongodb) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/fgm/mongodb/badges/quality-score.png?b=8.x-2.x)](https://scrutinizer-ci.com/g/fgm/mongodb/?branch=8.x-2.x)
 
 This package is a collection of several modules, allowing Drupal sites to store
-various data in MongoDB. Its __only__ currently working sub-modules are the ones
-in this table: the other ones are only meant for contributors to work on.
+various data in MongoDB, either using the provided modules, or writing their own
+on top of the main `mongodb` module.
 
 Module                | Information
 ----------------------|---------------------------------------------------------
 mongodb               | Drupal/Drush wrapper around mongodb-php-library.
 mongodb_storage       | Key-value storage in MongoDB
 mongodb_watchdog      | Store logger (watchdog) messages in MongoDB.
-
-As its name implies, this release is currently alpha-level only. Use at your own
-risk.
 
 Full documentation is available on [Github pages]
 
@@ -43,7 +40,7 @@ guide assumes that :
 
 * a [MongoDB][download] 3.0 or later instance is already installed, configured,
   and available to connect to from the Drupal instance.
-* the site will be running [Drupal][drupal] 8.[56].x.
+* the site will be running [Drupal][drupal] 8.[56].x, with [Drush][drush] 8.x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or
   later is installed and configured.
 * PHP is version 7.[01].x. At this point, [PHP 7.2.x][php72] might not pass the
@@ -51,6 +48,7 @@ guide assumes that :
 
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/project/drupal
+[drush]: https://www.drupal.org/project/drush
 [php]: http://php.net/downloads.php
 [mongo]: http://php.net/mongo
 [mongodb]: http://php.net/mongodb
@@ -77,30 +75,33 @@ with the `–httpinterface` option, you may view the web admin interface:
     `default` key, and additional keys allowing modules to use their own
     database to avoid stepping on each other's toes. This is especially useful
     for bespoke modules created for the needs of a specific site, which can thus
-    use their own databases, possibly on other MongoDB clusters. For example,
-    with the following settings:
+    use their own databases, possibly located on other MongoDB clusters.
+    For example, with the following settings:
 
-        ```php
-        $settings['mongodb'] = [
-          'clients' => [
-            // Client alias => connection constructor parameters.
-            'default' => [
-              'uri' => 'mongodb://localhost:27017',
-              'uriOptions' => [],
-              'driverOptions' => [],
-            ],
-          ],
-          'databases' => [
-            // Database alias => [ client_alias, database_name ]
-            'default' => ['default', 'drupal'],
-            'keyvalue' => ['default', 'keyvalue'],
-            'logger' => ['default', 'logger'],
-          ],
-        ];
-        ```
+```php
+$settings['mongodb'] = [
+  'clients' => [
+    // Client alias => connection constructor parameters.
+    'default' => [
+      'uri' => 'mongodb://localhost:27017',
+      'uriOptions' => [],
+      'driverOptions' => [],
+    ],
+  ],
+  'databases' => [
+    // Database alias => [ client_alias, database_name ]
+    'default' => ['default', 'drupal'],
+    'keyvalue' => ['default', 'keyvalue'],
+    'logger' => ['default', 'logger'],
+  ],
+];
+```
+  * With these settings:
     * the `default` database alias will handle collections in the `drupal`
       database on the `default` MongoDB server installed in earlier steps
-    * the `logger` database alias will create its collections on the same
+    * the `keyvalue` database alias will store key-value collections on the
+      same `default` MongoDB server, but in a separate `keyvalue` database.
+    * the `logger` database alias will store logger collections on the same
       `default` MongoDB server, but in a separate `logger` database.
 * To use the MongoDB Key-Value (Expirable) storage:
   * ensure there is a `keyvalue` database alias in `settings.local.php`, like
@@ -108,26 +109,29 @@ with the `–httpinterface` option, you may view the web admin interface:
   * declare MongoDB as the default keyvalue storage implementation by editing
     the existing declarations in the `sites/default/services.yml` file:
 
-        ```yaml
-        factory.keyvalue:
-          default: keyvalue.mongodb
-        factory.keyvalue.expirable:
-          default: keyvalue.expirable.mongodb
-        ```
+```yaml
+factory.keyvalue:
+  default: keyvalue.mongodb
+factory.keyvalue.expirable:
+  keyvalue_expirable_default: keyvalue.expirable.mongodb
+```
+
   * enable the `mongodb_storage` module, e.g. using `drush en mongodb_storage`.
   * import the existing Key-Value contents from the database, using the Drush
     `mongodb_storage-import-keyvalue` command: `drush most-ikv`. It will output
     the list of imported keys, for your information, like:
 
-        ```yaml
-        key_value
-          config.entity.key_store.action
-            uuid:054e62b3-1c40-4f22-aa17-c092bd796ee8
-            uuid:0cfd15f5-c01a-4912-991c-ad10e934f86e
-        (...lots of line, then...)
-        key_value_expire
-          update_available_releases
-            drupal
+```yaml
+key_value
+  config.entity.key_store.action
+    uuid:054e62b3-1c40-4f22-aa17-c092bd796ee8
+    uuid:0cfd15f5-c01a-4912-991c-ad10e934f86e
+(...lots of line, then...)
+key_value_expire
+  update_available_releases
+    drupal
+```
+
   * rebuild the container to take these changes into account using `drush cr`.
 
 Once the module is installed and enabled, you can check its requirements on
@@ -144,9 +148,15 @@ COMPOSER REQUIREMENTS
 
 [composer]: https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies
 
-* At the root of your site, add a composer requirement by typing:
+* At the root of your site
+  * If you are using the `drupal-composer/drupal-project` skeleton, just add
+    this package:
 
-        composer require mongodb/mongodb "^1.0.0"
+        composer require drupal/mongodb "^2.0.0"
+  * Otherwise also add a composer requirement by typing:
+
+        composer require drupal/mongodb "^2.0.0"
+        composer require mongodb/mongodb "^1.2.0"
 * If this is the first Composer dependency on the project, from the site root,
   run:
 
@@ -160,7 +170,8 @@ COMPOSER REQUIREMENTS
 EXPORTABLE CONFIGURATION
 ========================
 
-The base `mongodb` and the `mongodb_storage` use no exportable configuration.
+The base `mongodb` and the `mongodb_storage` modules use no exportable
+configuration, only settings and service parameters.
 
 
 mongodb_watchdog
@@ -211,12 +222,14 @@ in an entirely separate database.
 DATABASES AND COLLECTIONS REFERENCE
 ===================================
 
-Module              | DB alias  | Collection(s)      | Information
---------------------|-----------|--------------------|--------------------------
-`mongodb`           | `default` | (none)             | Alias/client consistency
-`mongodb_watchdog`  | `logger`  | `watchdog`         | Event types
-&uarr;              | &uarr;    | `watchdog_tracker` | Requests (capped)
-&uarr;              | &uarr;    | `watchdog_*`       | Events (capped)
+Module              | DB alias   | Collection(s)      | Information
+--------------------|------------|--------------------|--------------------------
+`mongodb`           | `default`  | (none)             | Alias/client consistency
+`mongodb_watchdog`  | `logger`   | `watchdog`         | Event types
+&uarr;              | &uarr;     | `watchdog_tracker` | Requests (capped)
+&uarr;              | &uarr;     | `watchdog_*`       | Events (capped)
+`mongodb_storage`   | `keyvalue` | `kve_*`            | Expirable collections
+&uarr;              | &uarr;     | `kvp_*`            | Persistent collections
 
 Earlier versions used to support a collection aliasing mechanism. With this
 version generalizing dedicated databases per module, this is no longer needed
@@ -230,6 +243,9 @@ Starting with 8.x-2.0-alpha1, use the drupal.org issue queue for issue
 discussion, but send pull requests on [Github] rather than drupal.org patches.
 
 [Github]: https://github.com/fgm/mongodb
+
+Since the project also tracks obsolete module versions like 6.x-1.x and 8.x-1.x,
+use this URL to issues for supported branches and components: https://goo.gl/5KrYkG
 
 
 LEGAL

@@ -5,6 +5,7 @@
  * Drush 8 plugin for mongodb_storage.
  */
 
+use Drupal\mongodb_storage\Storage;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -30,9 +31,9 @@ function drush_mongodb_storage_import_keyvalue() {
   /** @var \Drupal\Core\KeyValueStore\KeyValueDatabaseFactory $expirableDbFactory */
   $expirableDbFactory = $dic->get('keyvalue.expirable.database');
   /** @var \Drupal\mongodb_storage\KeyValueFactory $persistentMongoDbFactory */
-  $persistentMongoDbFactory = $dic->get('keyvalue.mongodb');
+  $persistentMongoDbFactory = $dic->get(Storage::SERVICE_KV);
   /** @var \Drupal\mongodb_storage\KeyValueExpirableFactory $expirableMongoDbFactory */
-  $expirableMongoDbFactory = $dic->get('keyvalue.expirable.mongodb');
+  $expirableMongoDbFactory = $dic->get(Storage::SERVICE_KVE);
 
   $stores = [
     'key_value' => [

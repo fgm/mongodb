@@ -24,7 +24,7 @@
   "require": {
     "php": "^7.0",
     "ext-mongodb": "^1.1.7",
-    "mongodb/mongodb": "^1.0.0",
+    "mongodb/mongodb": "^1.2.0",
     "drush/drush": "^8.1"
   },
   "support": {
