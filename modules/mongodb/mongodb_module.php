@@ -40,12 +40,12 @@ function mongodb_help($route_name, RouteMatchInterface $route_match) {
 function mongodb_next_id($name, $existing_id = 0) {
   // Atomically get the next id in the sequence.
   $mongo = mongodb();
-  $cmd = array(
+  $cmd = [
     'findandmodify' => mongodb_collection_name('sequence'),
-    'query' => array('_id' => $name),
-    'update' => array('$inc' => array('value' => 1)),
+    'query' => ['_id' => $name],
+    'update' => ['$inc' => ['value' => 1]],
     'new' => TRUE,
-  );
+  ];
   // It's very likely that this is not necessary as command returns an array
   // not an exception. The increment will, however, will fix the problem of
   // the sequence not existing. Still, better safe than sorry.
@@ -56,13 +56,13 @@ function mongodb_next_id($name, $existing_id = 0) {
   catch (Exception $e) {
   }
   if (0 < $existing_id - $value + 1) {
-    $cmd = array(
+    $cmd = [
       'findandmodify' => mongodb_collection_name('sequence'),
-      'query' => array('_id' => $name),
-      'update' => array('$inc' => array('value' => $existing_id - $value + 1)),
+      'query' => ['_id' => $name],
+      'update' => ['$inc' => ['value' => $existing_id - $value + 1]],
       'upsert' => TRUE,
       'new' => TRUE,
-    );
+    ];
     $sequence = $mongo->command($cmd);
     $value = isset($sequence['value']['value']) ? $sequence['value']['value'] : 0;
   }
@@ -81,18 +81,18 @@ function mongodb_next_id($name, $existing_id = 0) {
 function mongodb_default_write_options($safe = TRUE) {
   if ($safe) {
     if (version_compare(phpversion('mongo'), '1.5.0') == -1) {
-      return array('safe' => TRUE);
+      return ['safe' => TRUE];
     }
     else {
-      return variable_get('mongodb_write_safe_options', array('w' => 1));
+      return variable_get('mongodb_write_safe_options', ['w' => 1]);
     }
   }
   else {
     if (version_compare(phpversion('mongo'), '1.3.0') == -1) {
-      return array();
+      return [];
     }
     else {
-      return variable_get('mongodb_write_nonsafe_options', array('w' => 0));
+      return variable_get('mongodb_write_nonsafe_options', ['w' => 0]);
     }
   }
 }

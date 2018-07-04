@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\mongodb;
 
 use Drupal\Core\Site\Settings;
@@ -6,8 +7,6 @@ use MongoDB\Client;
 
 /**
  * Class ClientFactory.
- *
- * @package Drupal\mongodb
  */
 class ClientFactory {
 

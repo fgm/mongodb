@@ -14,9 +14,10 @@ Module                | Information
 mongodb               | Drupal/Drush wrapper around mongodb-php-library.
 mongodb_watchdog      | Store logger (watchdog) messages in MongoDB.
 
-As its name implies, this release is currently alpha-level only. Use at your own risk.
+As its name implies, this release is currently alpha-level only. Use at your own
+risk.
 
-Documentation is available on [Github pages]
+Full documentation is available on [Github pages]
 
 [Github pages]: https://fgm.github.io/mongodb/
 
@@ -36,12 +37,14 @@ Table of contents
 INSTALLATION AND SETTINGS
 =========================
 
-The MongoDB module and sub-modules need some configuration to be useful. This guide assumes that :
+The MongoDB module and sub-modules need some configuration to be useful. This 
+guide assumes that :
 
 * a [MongoDB][download] 3.0 or later instance is already installed, configured,
   and available to connect to from the Drupal instance.
 * the site will be running [Drupal][drupal] 8.[56].x.
-* the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or later is installed and configured.
+* the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or 
+  later is installed and configured.
 * PHP is version 7.[01].x. At this point, [PHP 7.2.x][php72] might not pass the
   test suite. It should be compatible by the time Drupal 8.6.0 is released.
 
@@ -57,7 +60,8 @@ with the `–httpinterface` option, you may view the web admin interface:
 
     http://localhost:28017/
 
-* Download the module package, as per [Installing contributed modules (Drupal 8)][install]
+* Download the module package, as per 
+  [Installing contributed modules (Drupal 8)][install]
 * Copy the relevant section from the `mongodb/example.settings.local.php` to
   your `settings.local.php` file if you use one, or `settings.php` otherwise,
   and adapt it to match your MongoDB settings. These settings are used by the
@@ -65,14 +69,15 @@ with the `–httpinterface` option, you may view the web admin interface:
    being the one started in previous steps.
   * The `clients` key contains an associative array of connection by
     connection alias, with the default connection parameters being under the
-    `default` key, and additional keys allowing the use of other servers/clusters.
-  * The `databases` key contains an associative array of server/database pairs by
-    database alias, with the default Drupal database being under the `default`
-    key, and additional keys allowing modules to use their own database to avoid
-    stepping on each other's toes. This is especially useful for bespoke modules
-    created for the needs of a specific site, which can thus use their own
-    databases, possibly on other MongoDB clusters. For example, with the following
-    settings:
+    `default` key, and additional keys allowing the use of other 
+    servers/clusters.
+  * The `databases` key contains an associative array of server/database pairs 
+    by database alias, with the default Drupal database being under the 
+    `default` key, and additional keys allowing modules to use their own 
+    database to avoid stepping on each other's toes. This is especially useful
+    for bespoke modules created for the needs of a specific site, which can thus
+    use their own databases, possibly on other MongoDB clusters. For example,
+    with the following settings:
 
         ```php
         $settings['mongodb'] = [
@@ -91,21 +96,22 @@ with the `–httpinterface` option, you may view the web admin interface:
           ],
         ];
         ```
-    * the `default` database alias will handle collections in the `drupal` database
-      on the `default` MongoDB server installed in earlier steps
+    * the `default` database alias will handle collections in the `drupal`
+      database on the `default` MongoDB server installed in earlier steps
     * the `logger` database alias will create its collections on the same
       `default` MongoDB server, but in a separate `logger` database.
 
 Once the module is installed and enabled, you can check its requirements on
 `/admin/reports/status`:
 
-![MongoDB requirements on status page](modules/mongodb/images/mongodb-requirements.png)
+![MongoDB on tatus page](modules/mongodb/images/mongodb-requirements.png)
 
 
 COMPOSER REQUIREMENTS
 ---------------------
 
-* Commands below are for those who are using composer already in your site to manage module dependencies. To know more about composer [here][composer]
+* Commands below are for those who are using composer already in your site to 
+  manage module dependencies. To know more about composer [here][composer].
 
 [composer]: https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies
 
@@ -127,10 +133,10 @@ EXPORTABLE CONFIGURATION
 mongodb_watchdog
 ----------------
 
-The module uses a separate database, using the `logger` database alias in settings.
-Do NOT point that alias to the same database as `default`, because the module
-drops the logger database when uninstalling, which would drop all your other data
-with it.
+The module uses a separate database, using the `logger` database alias in 
+settings. Do NOT point that alias to the same database as `default`, because the
+module drops the logger database when uninstalling, which would drop all your
+other data with it.
 
 * `mongodb.watchdog.items`: the maximum item limit on the capped collection used
   by the module. If not defined, it defaults to 10000. The actual (size-based)
@@ -172,12 +178,12 @@ in an entirely separate database.
 DATABASES AND COLLECTIONS REFERENCE
 ===================================
 
-Module                | Database alias | Collection(s)      | Information
-----------------------|----------------|--------------------|-------------------------------
-`mongodb`             | `default`      | (none)             | Checks alias/client consistency
-`mongodb_watchdog`    | `logger`       | `watchdog`         | Event types
-&uarr;                | &uarr;         | `watchdog_tracker` | Capped collection for requests
-&uarr;                | &uarr;         | `watchdog_*`       | Capped collections for events
+Module              | DB alias  | Collection(s)      | Information
+--------------------|-----------|--------------------|--------------------------
+`mongodb`           | `default` | (none)             | Alias/client consistency
+`mongodb_watchdog`  | `logger`  | `watchdog`         | Event types
+&uarr;              | &uarr;    | `watchdog_tracker` | Requests (capped) 
+&uarr;              | &uarr;    | `watchdog_*`       | Events (capped)
 
 Earlier versions used to support a collection aliasing mechanism. With this
 version generalizing dedicated databases per module, this is no longer needed

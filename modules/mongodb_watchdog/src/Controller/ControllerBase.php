@@ -34,8 +34,12 @@ abstract class ControllerBase extends CoreControllerBase {
   /**
    * ControllerBase constructor.
    *
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger.channel.mongodb_watchdog service.
+   * @param \Drupal\mongodb_watchdog\Logger $watchdog
+   *   The mongodb.logger service, to load stored events.
    * @param \Drupal\Core\Config\ImmutableConfig $config
-   *   The module configuration.
+   *   The mongodb_watchdog configuration.
    */
   public function __construct(LoggerInterface $logger, Logger $watchdog, ImmutableConfig $config) {
     $this->setLogger($logger);

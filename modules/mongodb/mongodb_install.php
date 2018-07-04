@@ -21,13 +21,13 @@ use Drupal\Core\Site\Settings;
 function _mongodb_requirements_extension(array &$ret, $extension_name) {
   $success = extension_loaded($extension_name);
   if (!$success) {
-    $ret['mongodb'] += array(
+    $ret['mongodb'] += [
       'value' => t('Extension not loaded'),
       'description' => t('Mongodb requires the non-legacy PHP MongoDB extension (@name) to be installed.', [
         '@name' => $extension_name,
       ]),
       'severity' => REQUIREMENT_ERROR,
-    );
+    ];
   }
   return $success;
 }
@@ -113,7 +113,8 @@ function _mongodb_requirements_databases(array $settings, array $databases, arra
   $client_aliases = $settings['clients'] ?? [];
   $warnings = [];
   $success = TRUE;
-  foreach ($databases as $database => list($client, $name)) {
+  foreach ($databases as $database => $list) {
+    list($client,) = $list;
     if (empty($client_aliases[$client])) {
       $success = FALSE;
       $warnings[] = t('Database "@db" references undefined client "@client".', [

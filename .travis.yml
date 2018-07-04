@@ -74,7 +74,7 @@ before_script:
   - chmod 644 sites/default/settings.php
 
   # Define "logger" alias for mongodb_watchdog.
-  - tail --lines=+11 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
+  - tail --lines=+12 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
   #- echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
 
   # reference and enable mongodb modules in build site

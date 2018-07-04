@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Provides drush integration for MongoDB.
@@ -8,25 +9,25 @@
  * Implements hook_drush_command().
  */
 function mongodb_drush_command() {
-  $items['mongodb-find'] = array(
+  $items['mongodb-find'] = [
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_DATABASE,
     'description' => 'Execute a query against a collection.',
-    'examples' => array(
+    'examples' => [
       'drush mongodb-find "{}" logger' => 'Get the logger/watchdog entries.',
-    ),
-    'arguments' => array(
+    ],
+    'arguments' => [
       'collection' => 'The collection name in the database',
       'alias' => 'The database alias',
       'selector' => 'A MongoDB find() selector in JSON format. Defaults to {}',
-    ),
+    ],
     'aliases' => ['mdbf', 'mdbq'],
-  );
+  ];
 
-  $items['mongodb-settings'] = array(
+  $items['mongodb-settings'] = [
     'description' => 'Print MongoDB settings using print_r().',
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_CONFIGURATION,
     'aliases' => ['mdbs'],
-  );
+  ];
 
   return $items;
 }

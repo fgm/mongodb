@@ -21,4 +21,3 @@ mongodb_watchdog.settings:
     request_tracking:
       label: 'Request tracking: Enable the per-request event page. Requires mod_unique_id.'
       type: boolean
-

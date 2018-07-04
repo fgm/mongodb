@@ -37,42 +37,42 @@ class OverviewFilterForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $filters = $this->getFilters();
 
-    $form['filters'] = array(
+    $form['filters'] = [
       '#type' => 'details',
       '#title' => $this->t('Filter log messages'),
       '#open' => TRUE,
-    );
+    ];
 
     $session_filter = $_SESSION[static::SESSION_KEY] ?? [];
     foreach ($filters as $key => $filter) {
-      $form['filters']['status'][$key] = array(
+      $form['filters']['status'][$key] = [
         '#title' => $filter['title'],
         '#type' => 'select',
         '#multiple' => TRUE,
         '#size' => 8,
         '#options' => $filter['options'],
-      );
+      ];
 
       if (!empty($session_filter[$key])) {
         $form['filters']['status'][$key]['#default_value'] = $session_filter[$key];
       }
     }
 
-    $form['filters']['actions'] = array(
+    $form['filters']['actions'] = [
       '#type' => 'actions',
-      '#attributes' => array('class' => array('container-inline')),
-    );
-    $form['filters']['actions']['submit'] = array(
+      '#attributes' => ['class' => ['container-inline']],
+    ];
+    $form['filters']['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Filter'),
-    );
+    ];
     if (!empty($session_filter)) {
-      $form['filters']['actions']['reset'] = array(
+      $form['filters']['actions']['reset'] = [
         '#type' => 'submit',
         '#value' => $this->t('Reset'),
-        '#limit_validation_errors' => array(),
-        '#submit' => array('::resetForm'),
-      );
+        '#limit_validation_errors' => [],
+        '#submit' => ['::resetForm'],
+      ];
     }
     return $form;
   }

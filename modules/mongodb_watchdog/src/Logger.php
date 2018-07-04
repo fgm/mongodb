@@ -20,7 +20,18 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @package Drupal\mongodb_watchdog
  */
 class Logger extends AbstractLogger {
+  // Configuration-related constants.
+  // The configuration item.
   const CONFIG_NAME = 'mongodb_watchdog.settings';
+  // The individual configuration keys.
+  const CONFIG_ITEMS = 'items';
+  const CONFIG_REQUESTS = 'requests';
+  const CONFIG_LIMIT = 'limit';
+  const CONFIG_ITEMS_PER_PAGE = 'items_per_page';
+  const CONFIG_REQUEST_TRACKING = 'request_tracking';
+
+  // The logger database alias.
+  const DB_LOGGER = 'logger';
 
   const TRACKER_COLLECTION = 'watchdog_tracker';
   const TEMPLATE_COLLECTION = 'watchdog';
@@ -126,10 +137,12 @@ class Logger extends AbstractLogger {
    *   An event information to be logger.
    * @param array $backtrace
    *   A call stack.
+   *
+   * @throws \ReflectionException
    */
   protected function enhanceLogEntry(array &$log_entry, array $backtrace) {
     // Create list of functions to ignore in backtrace.
-    static $ignored = array(
+    static $ignored = [
       'call_user_func_array' => 1,
       '_drupal_log_error' => 1,
       '_drupal_error_handler' => 1,
@@ -144,7 +157,7 @@ class Logger extends AbstractLogger {
       'Drupal\Core\Logger\LoggerChannel::info' => 1,
       'Drupal\Core\Logger\LoggerChannel::notice' => 1,
       'Drupal\Core\Logger\LoggerChannel::warning' => 1,
-    );
+    ];
 
     foreach ($backtrace as $bt) {
       if (isset($bt['function'])) {

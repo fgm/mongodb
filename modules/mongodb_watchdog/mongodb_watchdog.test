@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Test class for MongoDB_watchdog.
@@ -7,7 +8,7 @@
 use Drupal\simpletest\WebTestBase;
 
 /**
- * Test the behaviour of watchdog() mongodb_watchdog, not dblog
+ * Test the behaviour of watchdog() mongodb_watchdog, not dblog.
  */
 class MongoDBLogTestCase extends WebTestBase {
   /**
@@ -31,16 +32,16 @@ class MongoDBLogTestCase extends WebTestBase {
   protected $profile = 'testing';
 
   /**
-   * An administrator-type user account
+   * An administrator-type user account.
    *
-   * @var stdClass
+   * @var object
    */
   protected $big_user;
 
   /**
-   * A basic authenticated user account
+   * A basic authenticated user account.
    *
-   * @var stdClass
+   * @var object
    */
   protected $any_user;
 
@@ -58,27 +59,32 @@ class MongoDBLogTestCase extends WebTestBase {
    */
   protected $group = 'Before setUp()';
 
-  // Drupal 6 does not have REQUEST_TIME, use a custom value to minimize D6/D7 differences
+  /**
+   * Drupal 6 does not have REQUEST_TIME, use a custom value to minimize D6/D7 differences.
+   */
   protected $request_time;
 
+  /**
+   *
+   */
   public static function getInfo() {
-    return array(
+    return [
       'name' => 'MongoDB log functionality',
       'description' => 'Generate events and verify watchdog entries; verify user access to log reports based on persmissions.',
       'group' => 'MongoDB',
-    );
+    ];
   }
 
   /**
    * Enable modules and create users with specific permissions.
    */
-  function setUp() {
+  public function setUp() {
     $this->group = t('Setup');
     parent::setUp('mongodb', 'mongodb_watchdog', 'blog', 'poll');
 
     // Create users.
-    $this->big_user = $this->drupalCreateUser(array('administer site configuration', 'access administration pages', 'access site reports', 'administer users'));
-    $this->any_user = $this->drupalCreateUser(array('access content'));
+    $this->big_user = $this->drupalCreateUser(['administer site configuration', 'access administration pages', 'access site reports', 'administer users']);
+    $this->any_user = $this->drupalCreateUser(['access content']);
 
     $this->request_time = REQUEST_TIME;
 
@@ -95,9 +101,10 @@ class MongoDBLogTestCase extends WebTestBase {
    * Clear the MongoDB data: simpletest only clears the main SQL database.
    *
    * (non-PHPdoc)
+   *
    * @see WebTestBase::tearDown()
    */
-  function tearDown() {
+  public function tearDown() {
     $this->group = t('Teardown');
     $this->pass('Clear watchdog collections', $this->group);
     module_load_include('inc', 'mongodb_watchdog', 'mongodb_watchdog.admin');
@@ -111,10 +118,10 @@ class MongoDBLogTestCase extends WebTestBase {
    *
    * @param string $message
    *
-   * @return string|NULL
+   * @return string|null
    */
   protected function find($message) {
-    $ret = $this->collection->findOne(array('message' => $message));
+    $ret = $this->collection->findOne(['message' => $message]);
     return $ret;
   }
 
@@ -125,9 +132,9 @@ class MongoDBLogTestCase extends WebTestBase {
    *
    * @return void
    */
-  function assertEntry($message) {
+  public function assertEntry($message) {
     $logged = $this->find($message);
-    $this->assertNotNull($logged, t('Event %message is logged', array('%message' => $message)), $this->group);
+    $this->assertNotNull($logged, t('Event %message is logged', ['%message' => $message]), $this->group);
     $this->assertTrue(isset($logged['message']) && $logged['message'] == $message, t('Logged message is unchanged'), $this->group);
   }
 
@@ -138,15 +145,15 @@ class MongoDBLogTestCase extends WebTestBase {
    *
    * @return void
    */
-  function assertNoEntry($message) {
+  public function assertNoEntry($message) {
     $logged = $this->find($message);
-    $this->assertNull($logged, t('Event %message is not logged', array('%message' => $message)), $this->group);
+    $this->assertNull($logged, t('Event %message is not logged', ['%message' => $message]), $this->group);
   }
 
   /**
    * Ensure collection availability and inform on behalf of caller if if does not.
    *
-  * @return boolean
+   * @return bool
    */
   protected function checkCollection() {
     if (!empty($this->collection)) {
@@ -155,9 +162,9 @@ class MongoDBLogTestCase extends WebTestBase {
     $stack = debug_backtrace();
     $method = $stack[1]['function'];
     if (strtolower(substr($method, 0, 4)) == 'test') {
-      $this->pass(t('%test test skipped: no collection.', array(
+      $this->pass(t('%test test skipped: no collection.', [
         '%test' => substr($method, 4),
-      )), $this->group);
+      ]), $this->group);
     }
     return FALSE;
   }
@@ -167,43 +174,43 @@ class MongoDBLogTestCase extends WebTestBase {
    *
    * Make sure the module applies the watchdog_limit variable,
    */
-  function testWatchdogLimit() {
+  public function testWatchdogLimit() {
 
-    // Bypass test if testing system does not have a MongoDB connection
+    // Bypass test if testing system does not have a MongoDB connection.
     if (!$this->checkCollection()) {
       return;
     };
 
-    // Default limit should be WATCHDOG_DEBUG
+    // Default limit should be WATCHDOG_DEBUG.
     $this->group = t('Defaults');
     $this->assertEqual(variable_get(self::LIMIT_VARIABLE, WATCHDOG_DEBUG), WATCHDOG_DEBUG,
-      t('%name defaults to WATCHDOG_DEBUG', array('%name' => self::LIMIT_VARIABLE)),
+      t('%name defaults to WATCHDOG_DEBUG', ['%name' => self::LIMIT_VARIABLE]),
       $this->group);
 
-    // Test at this default level
+    // Test at this default level.
     $message = $this->randomString(32);
-    $this->pass(t('Logging %message', array('%message' => $message)), $this->group);
-    watchdog(self::MODULE, $message, array(), WATCHDOG_DEBUG);
+    $this->pass(t('Logging %message', ['%message' => $message]), $this->group);
+    watchdog(self::MODULE, $message, [], WATCHDOG_DEBUG);
     $this->assertEntry($message);
 
     // Now request a higher level: unimportant events should be ignored...
     $this->group = t('Ignoring');
     variable_set(self::LIMIT_VARIABLE, WATCHDOG_NOTICE);
     $message = $this->randomString(32);
-    $this->pass(t('Logging %message', array('%message' => $message)), $this->group);
-    watchdog(self::MODULE, $message, array(), WATCHDOG_DEBUG);
+    $this->pass(t('Logging %message', ['%message' => $message]), $this->group);
+    watchdog(self::MODULE, $message, [], WATCHDOG_DEBUG);
     $this->assertNoEntry($message);
 
-    // ... but events at the limit or more important should be logged
+    // ... but events at the limit or more important should be logged.
     $this->group = t('Logging');
     $message = $this->randomString(32);
-    $this->pass(t('Logging %message', array('%message' => $message)), $this->group);
-    watchdog(self::MODULE, $message, array(), WATCHDOG_NOTICE);
+    $this->pass(t('Logging %message', ['%message' => $message]), $this->group);
+    watchdog(self::MODULE, $message, [], WATCHDOG_NOTICE);
     $this->assertEntry($message);
 
     $message = $this->randomString(32);
-    $this->pass(t('Logging %message', array('%message' => $message)), $this->group);
-    watchdog(self::MODULE, $message, array(), WATCHDOG_ERROR);
+    $this->pass(t('Logging %message', ['%message' => $message]), $this->group);
+    watchdog(self::MODULE, $message, [], WATCHDOG_ERROR);
     $this->assertEntry($message);
   }
 
@@ -212,17 +219,15 @@ class MongoDBLogTestCase extends WebTestBase {
   /**
    * Login users, create dblog events, and test dblog functionality through the admin and user interfaces.
    */
-  function ZtestDBLog() {
+  public function ZtestDBLog() {
     // Login the admin user.
     $this->drupalLogin($this->big_user);
 
     // No implementation
     // $row_limit = 100;
     // $this->verifyRowLimit($row_limit);
-
     // No implementation
     // $this->verifyCron($row_limit);
-
     $this->verifyEvents();
     $this->verifyReports();
 
@@ -234,7 +239,7 @@ class MongoDBLogTestCase extends WebTestBase {
   /**
    * Generate dblog entries.
    *
-   * @param integer $count
+   * @param int $count
    *   Number of log entries to generate.
    * @param $type
    *   The type of watchdog entry.
@@ -244,11 +249,11 @@ class MongoDBLogTestCase extends WebTestBase {
   private function generateLogEntries($count, $type = 'custom', $severity = WATCHDOG_NOTICE) {
     global $base_root;
 
-    // Prepare the fields to be logged
-    $log = array(
+    // Prepare the fields to be logged.
+    $log = [
       'type'        => $type,
       'message'     => 'Log entry added to test the dblog row limit.',
-      'variables'   => array(),
+      'variables'   => [],
       'severity'    => $severity,
       'link'        => NULL,
       'user'        => $this->big_user,
@@ -256,7 +261,7 @@ class MongoDBLogTestCase extends WebTestBase {
       'referer'     => $_SERVER['HTTP_REFERER'],
       'ip'          => ip_address(),
       'timestamp'   => $this->request_time,
-      );
+    ];
     $message = 'Log entry added to test the dblog row limit.';
     for ($i = 0; $i < $count; $i++) {
       $log['message'] = $this->randomString();
@@ -267,7 +272,8 @@ class MongoDBLogTestCase extends WebTestBase {
   /**
    * Verify the logged in user has the desired access to the various dblog nodes.
    *
-   * @param integer $response HTTP response code.
+   * @param int $response
+   *   HTTP response code.
    */
   private function verifyReports($response = 200) {
     $quote = '&#039;';
@@ -326,14 +332,13 @@ class MongoDBLogTestCase extends WebTestBase {
 
   /**
    * Generate and verify user events.
-   *
    */
   private function doUser() {
     // Set user variables.
     $name = $this->randomName();
     $pass = user_password();
     // Add user using form to generate add user event (which is not triggered by drupalCreateUser).
-    $edit = array();
+    $edit = [];
     $edit['name'] = $name;
     $edit['mail'] = $name . '@example.com';
     $edit['pass[pass1]'] = $pass;
@@ -343,46 +348,47 @@ class MongoDBLogTestCase extends WebTestBase {
     $this->assertResponse(200);
     // Retrieve user object.
     $user = user_load_by_name($name);
-    $this->assertTrue($user != NULL, t('User @name was loaded', array('@name' => $name)));
-    $user->pass_raw = $pass; // Needed by drupalLogin.
+    $this->assertTrue($user != NULL, t('User @name was loaded', ['@name' => $name]));
+    // Needed by drupalLogin.
+    $user->pass_raw = $pass;
     // Login user.
     $this->drupalLogin($user);
     // Logout user.
     $this->drupalLogout();
     // Fetch row ids in watchdog that relate to the user.
     $collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
-    $query = array('uid' => $user->uid);
-    $result = $collection->find($query, array('_id' => 1));
+    $query = ['uid' => $user->uid];
+    $result = $collection->find($query, ['_id' => 1]);
     foreach ($result as $row) {
       $ids[] = $row['_id'];
     }
     $count_before = (isset($ids)) ? count($ids) : 0;
-    $this->assertTrue($count_before > 0, t('DBLog contains @count records for @name', array('@count' => $count_before, '@name' => $user->name)));
+    $this->assertTrue($count_before > 0, t('DBLog contains @count records for @name', ['@count' => $count_before, '@name' => $user->name]));
 
     // Login the admin user.
     $this->drupalLogin($this->big_user);
 
     // On D6, delete user. On D7, cancel it.
     // We need to POST here to invoke batch_process() in the internal browser.
-    $this->drupalPost('user/' . $user->uid . '/cancel', array('user_cancel_method' => 'user_cancel_reassign'), t('Cancel account'));
+    $this->drupalPost('user/' . $user->uid . '/cancel', ['user_cancel_method' => 'user_cancel_reassign'], t('Cancel account'));
 
     // Count rows that have uids for the user.
     $count = $collection->find($query)->count();
-    $this->assertTrue($count == 0, t('DBLog contains @count records for @name', array('@count' => $count, '@name' => $user->name)));
+    $this->assertTrue($count == 0, t('DBLog contains @count records for @name', ['@count' => $count, '@name' => $user->name]));
 
     // Count rows in watchdog that previously related to the deleted user.
     if (!empty($ids)) {
       $query['_id']['$in'] = $ids;
     }
     $count_after = $collection->find($query)->count();
-    $this->assertTrue($count_after == $count_before, t('DBLog contains @count records for @name that now have uid = 0', array('@count' => $count_before, '@name' => $user->name)));
+    $this->assertTrue($count_after == $count_before, t('DBLog contains @count records for @name that now have uid = 0', ['@count' => $count_before, '@name' => $user->name]));
     unset($ids);
     // Fetch row ids in watchdog that relate to the user.
-    $result = $collection->find($query, array('_id' => 1));
+    $result = $collection->find($query, ['_id' => 1]);
     foreach ($result as $row) {
       $ids[] = $row->wid;
     }
-    $this->assertTrue(!isset($ids), t('DBLog contains no records for @name', array('@name' => $user->name)));
+    $this->assertTrue(!isset($ids), t('DBLog contains no records for @name', ['@name' => $user->name]));
 
     // View the dblog report.
     $this->drupalGet('admin/reports/dblog');
@@ -391,24 +397,25 @@ class MongoDBLogTestCase extends WebTestBase {
     // Verify events were recorded.
     // Add user.
     // Default display includes name and email address; if too long then email is replaced by three periods.
-    // $this->assertRaw(t('New user: %name (%mail)', array('%name' => $edit['name'], '%mail' => $edit['mail'])), t('DBLog event was recorded: [add user]'));
-    $this->assertRaw(t('New user: %name', array('%name' => $name)), t('DBLog event was recorded: [add user]'));
+    // $this->assertRaw(t('New user: %name (%mail)', array('%name' => $edit['name'], '%mail' => $edit['mail'])), t('DBLog event was recorded: [add user]'));.
+    $this->assertRaw(t('New user: %name', ['%name' => $name]), t('DBLog event was recorded: [add user]'));
     // Login user.
-    $this->assertRaw(t('Session opened for %name', array('%name' => $name)), t('DBLog event was recorded: [login user]'));
+    $this->assertRaw(t('Session opened for %name', ['%name' => $name]), t('DBLog event was recorded: [login user]'));
     // Logout user.
-    $this->assertRaw(t('Session closed for %name', array('%name' => $name)), t('DBLog event was recorded: [logout user]'));
+    $this->assertRaw(t('Session closed for %name', ['%name' => $name]), t('DBLog event was recorded: [logout user]'));
     // Delete user.
-    $this->assertRaw(t('Deleted user: %name', array('%name' => $name)), t('DBLog event was recorded: [delete user]'));
+    $this->assertRaw(t('Deleted user: %name', ['%name' => $name]), t('DBLog event was recorded: [delete user]'));
   }
 
   /**
    * Generate and verify node events.
    *
-   * @param string $type Content type.
+   * @param string $type
+   *   Content type.
    */
   private function doNode($type) {
     // Create user.
-    $perm = array('create ' . $type . ' content', 'edit own ' . $type . ' content', 'delete own ' . $type . ' content');
+    $perm = ['create ' . $type . ' content', 'edit own ' . $type . ' content', 'delete own ' . $type . ' content'];
     $user = $this->drupalCreateUser($perm);
     // Login user.
     $this->drupalLogin($user);
@@ -423,13 +430,13 @@ class MongoDBLogTestCase extends WebTestBase {
     $this->assertResponse(200);
     // Retrieve node object.
     $node = $this->drupalGetNodeByTitle($title);
-    $this->assertTrue($node != NULL, t('Node @title was loaded', array('@title' => $title)));
+    $this->assertTrue($node != NULL, t('Node @title was loaded', ['@title' => $title]));
     // Edit node.
     $edit = $this->getContentUpdate($type);
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
     $this->assertResponse(200);
     // Delete node.
-    $this->drupalPost('node/' . $node->nid . '/delete', array(), t('Delete'));
+    $this->drupalPost('node/' . $node->nid . '/delete', [], t('Delete'));
     $this->assertResponse(200);
     // View node (to generate page not found event).
     $this->drupalGet('node/' . $node->nid);
@@ -446,11 +453,11 @@ class MongoDBLogTestCase extends WebTestBase {
 
     // Verify events were recorded.
     // Content added.
-    $this->assertRaw(t('@type: added %title', array('@type' => $type, '%title' => $title)), t('DBLog event was recorded: [content added]'));
+    $this->assertRaw(t('@type: added %title', ['@type' => $type, '%title' => $title]), t('DBLog event was recorded: [content added]'));
     // Content updated.
-    $this->assertRaw(t('@type: updated %title', array('@type' => $type, '%title' => $title)), t('DBLog event was recorded: [content updated]'));
+    $this->assertRaw(t('@type: updated %title', ['@type' => $type, '%title' => $title]), t('DBLog event was recorded: [content updated]'));
     // Content deleted.
-    $this->assertRaw(t('@type: deleted %title', array('@type' => $type, '%title' => $title)), t('DBLog event was recorded: [content deleted]'));
+    $this->assertRaw(t('@type: deleted %title', ['@type' => $type, '%title' => $title]), t('DBLog event was recorded: [content deleted]'));
 
     // View dblog access-denied report node.
     $this->drupalGet('admin/reports/access-denied');
@@ -462,32 +469,34 @@ class MongoDBLogTestCase extends WebTestBase {
     $this->drupalGet('admin/reports/page-not-found');
     $this->assertResponse(200);
     // Page not found.
-    $this->assertText(t('node/@nid', array('@nid' => $node->nid)), t('DBLog event was recorded: [page not found]'));
+    $this->assertText(t('node/@nid', ['@nid' => $node->nid]), t('DBLog event was recorded: [page not found]'));
   }
 
   /**
    * Create content based on content type.
    *
-   * @param string $type Content type.
+   * @param string $type
+   *   Content type.
+   *
    * @return array Content.
    */
   private function getContent($type) {
     $langcode = LANGUAGE_NONE;
     switch ($type) {
       case 'poll':
-        $content = array(
+        $content = [
           "title[$langcode][0][value]" => $this->randomName(8),
           'choice[new:0][chtext]' => $this->randomName(32),
           'choice[new:1][chtext]' => $this->randomName(32),
-        );
-      break;
+        ];
+        break;
 
       default:
-        $content = array(
+        $content = [
           "title[$langcode][0][value]" => $this->randomName(8),
           "body[$langcode][0][value]" => $this->randomName(32),
-        );
-      break;
+        ];
+        break;
     }
     return $content;
   }
@@ -495,24 +504,26 @@ class MongoDBLogTestCase extends WebTestBase {
   /**
    * Create content update based on content type.
    *
-   * @param string $type Content type.
+   * @param string $type
+   *   Content type.
+   *
    * @return array Content.
    */
   private function getContentUpdate($type) {
     switch ($type) {
       case 'poll':
-        $content = array(
+        $content = [
           'choice[chid:1][chtext]' => $this->randomName(32),
           'choice[chid:2][chtext]' => $this->randomName(32),
-        );
-      break;
+        ];
+        break;
 
       default:
         $langcode = LANGUAGE_NONE;
-        $content = array(
+        $content = [
           "body[$langcode][0][value]" => $this->randomName(32),
-        );
-      break;
+        ];
+        break;
     }
     return $content;
   }
@@ -524,10 +535,10 @@ class MongoDBLogTestCase extends WebTestBase {
     global $base_root;
     // Get a count of how many watchdog entries there are.
     $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
-    $log = array(
+    $log = [
       'type'        => 'custom',
       'message'     => 'Log entry added to test the doClearTest clear down.',
-      'variables'   => array(),
+      'variables'   => [],
       'severity'    => WATCHDOG_NOTICE,
       'link'        => NULL,
       'user'        => $this->big_user,
@@ -535,18 +546,18 @@ class MongoDBLogTestCase extends WebTestBase {
       'referer'     => $_SERVER['HTTP_REFERER'],
       'ip'          => ip_address(),
       'timestamp'   => $this->request_time,
-    );
+    ];
     // Add a watchdog entry.
     dblog_watchdog($log);
     // Make sure the table count has actually incremented.
-    $this->assertEqual($count + 1, db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField(), t('dblog_watchdog() added an entry to the dblog :count', array(':count' => $count)));
+    $this->assertEqual($count + 1, db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField(), t('dblog_watchdog() added an entry to the dblog :count', [':count' => $count]));
     // Login the admin user.
     $this->drupalLogin($this->big_user);
     // Now post to clear the db table.
-    $this->drupalPost('admin/reports/dblog', array(), t('Clear log messages'));
+    $this->drupalPost('admin/reports/dblog', [], t('Clear log messages'));
     // Count rows in watchdog that previously related to the deleted user.
     $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
-    $this->assertEqual($count, 0, t('DBLog contains :count records after a clear.', array(':count' => $count)));
+    $this->assertEqual($count, 0, t('DBLog contains :count records after a clear.', [':count' => $count]));
   }
 
   /**
@@ -559,17 +570,17 @@ class MongoDBLogTestCase extends WebTestBase {
     db_delete('watchdog')->execute();
 
     // Generate watchdog entries.
-    $type_names = array();
-    $types = array();
+    $type_names = [];
+    $types = [];
     for ($i = 0; $i < 3; $i++) {
       $type_names[] = $type_name = $this->randomName();
       $severity = WATCHDOG_EMERGENCY;
       for ($j = 0; $j < 3; $j++) {
-        $types[] = $type = array(
+        $types[] = $type = [
           'count' => mt_rand(1, 5),
           'type' => $type_name,
           'severity' => $severity++,
-        );
+        ];
         $this->generateLogEntries($type['count'], $type['type'], $type['severity']);
       }
     }
@@ -586,9 +597,9 @@ class MongoDBLogTestCase extends WebTestBase {
     // Filter by each type and confirm that entries with various severities are
     // displayed.
     foreach ($type_names as $type_name) {
-      $edit = array(
-        'type[]' => array($type_name),
-      );
+      $edit = [
+        'type[]' => [$type_name],
+      ];
       $this->drupalPost(NULL, $edit, t('Filter'));
 
       // Count the number of entries of this type.
@@ -606,10 +617,10 @@ class MongoDBLogTestCase extends WebTestBase {
     // Set filter to match each of the three type attributes and confirm the
     // number of entries displayed.
     foreach ($types as $key => $type) {
-      $edit = array(
-        'type[]' => array($type['type']),
-        'severity[]' => array($type['severity']),
-      );
+      $edit = [
+        'type[]' => [$type['type']],
+        'severity[]' => [$type['severity']],
+      ];
       $this->drupalPost(NULL, $edit, t('Filter'));
 
       $count = $this->getTypeCount($types);
@@ -624,16 +635,16 @@ class MongoDBLogTestCase extends WebTestBase {
    *   List of entries and their information.
    */
   protected function getLogEntries() {
-    $entries = array();
+    $entries = [];
     if ($table = $this->xpath('.//table[@id="admin-dblog"]')) {
       $table = array_shift($table);
       foreach ($table->tbody->tr as $row) {
-        $entries[] = array(
+        $entries[] = [
           'severity' => $this->getSeverityConstant($row['class']),
           'type' => $this->asText($row->td[1]),
           'message' => $this->asText($row->td[3]),
           'user' => $this->asText($row->td[4]),
-        );
+        ];
       }
     }
     return $entries;
@@ -644,6 +655,7 @@ class MongoDBLogTestCase extends WebTestBase {
    *
    * @param $types
    *   The type information to compare against.
+   *
    * @return
    *   The count of each type keyed by the key of the $types array.
    */
@@ -666,12 +678,13 @@ class MongoDBLogTestCase extends WebTestBase {
    *
    * @param $class
    *   CSS class attribute.
+   *
    * @return
    *   The watchdog severity constant or NULL if not found.
    */
   protected function getSeverityConstant($class) {
     // Reversed array from dblog_overview().
-    $map = array(
+    $map = [
       'dblog-debug' => WATCHDOG_DEBUG,
       'dblog-info' => WATCHDOG_INFO,
       'dblog-notice' => WATCHDOG_NOTICE,
@@ -680,7 +693,7 @@ class MongoDBLogTestCase extends WebTestBase {
       'dblog-critical' => WATCHDOG_CRITICAL,
       'dblog-alert' => WATCHDOG_ALERT,
       'dblog-emerg' => WATCHDOG_EMERGENCY,
-    );
+    ];
 
     // Find the class that contains the severity.
     $classes = explode(' ', $class);
@@ -697,6 +710,7 @@ class MongoDBLogTestCase extends WebTestBase {
    *
    * @param $element
    *   Element to extract text from.
+   *
    * @return
    *   Extracted text.
    */
@@ -706,4 +720,5 @@ class MongoDBLogTestCase extends WebTestBase {
     }
     return trim(html_entity_decode(strip_tags($element->asXML())));
   }
+
 }

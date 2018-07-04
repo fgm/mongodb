@@ -2,16 +2,21 @@
 
 namespace Drupal\mongodb_watchdog\Command;
 
-use Drupal\Console\Command\ContainerAwareCommand;
+// @codingStandardsIgnoreLine
+use Drupal\Console\Annotations\DrupalCommand;
+use Drupal\Console\Core\Command\ContainerAwareCommand;
+use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Drupal\Console\Style\DrupalStyle;
 
 /**
  * Class SanityCheckCommand.
  *
- * @package Drupal\mongodb_watchdog
+ * @DrupalCommand (
+ *     extension="mongodb_watchdog",
+ *     extensionType="module"
+ * )
  */
 class SanityCheckCommand extends ContainerAwareCommand {
 
@@ -35,39 +40,27 @@ class SanityCheckCommand extends ContainerAwareCommand {
   protected function configure() {
     $this
       ->setName('mongodb:watchdog:sanitycheck')
-      ->setDescription($this->trans('Check the sizes of the watchdog collections'))
-      ->setHelp($this->trans(<<<HELP
-This command produces a list of the sizes of the watchdog capped collections,
-grouped by "bucket". The bucket sizes are 0 (empty collection), 1 (single document), one bucket for each fraction of the size of the capping limit
-(which should be the typical case), one for capping limit - 1, and one for the
-capping limit itself, showing events occurring too often for the configured
-limit.
-
-For example: with a typical capping limit of 10000, the list will be made of
-the following buckers: 0, 1, 2-1000, 1001-2000, 2001-3000, ... 9000-9998,
-9999, and 10000.
-HELP
-      ));
+      ->setDescription($this->trans('commands.mongodb.watchdog.sanitycheck.description'))
+      ->setHelp($this->trans('commands.mongodb.watchdog.sanitycheck.help'));
   }
 
   /**
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
-
-    $this->io = new DrupalStyle($input, $output);
-
     $this->buildCollectionstats();
-    $this->io->info(print_r($this->buckets, TRUE));
+    /** @var \Drupal\Core\Serialization\Yaml $serializer */
+    $serializer = $this->get('serialization.yaml');
+    $this->getIo()->writeln($serializer->encode($this->buckets));
   }
 
   /**
    * Prepare a table of bucket to hold the statistics.
    */
   protected function initBucketsList() {
-
-    $config = $this->getConfigFactory()->get(Logger::CONFIG_NAME);
-    $this->items = $items = $config->get('items');
+    /** @var \Drupal\Core\Config\ImmutableConfig $config */
+    $config = $this->get('config.factory')->get(Logger::CONFIG_NAME);
+    $this->items = $items = $config->get(Logger::CONFIG_ITEMS);
     unset($config);
 
     $barCount = 10;
@@ -79,7 +72,7 @@ HELP
       $items => 0,
     ];
 
-    //  Values 0, 1 and the value of $items are reserved.
+    // Values 0, 1 and the value of $items are reserved.
     for ($i = 1; $i < $barCount; $i++) {
       $buckets[$i * $barWidth] = 0;
     }
@@ -113,8 +106,8 @@ HELP
    */
   public function buildCollectionstats() {
     /** @var \Drupal\mongodb\DatabaseFactory $databaseFactory */
-    $databaseFactory = $this->getService('mongodb.database_factory');
-    $database = $databaseFactory->get('default');
+    $databaseFactory = $this->get(MongoDb::SERVICE_DB_FACTORY);
+    $database = $databaseFactory->get(Logger::DB_LOGGER);
     $this->initBucketsList();
 
     $collections = $database->listCollections();

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Example settings to connect to MongoDB.
@@ -20,7 +21,7 @@ $configureMongoDb = function (array $settings): array {
       ],
     ],
     'databases' => [
-      // Database alias => [ client_alias, database_name ]
+      // Database alias => [ client_alias, database_name ].
       'default' => ['default', 'drupal'],
       'logger' => ['default', 'logger'],
     ],
@@ -29,4 +30,5 @@ $configureMongoDb = function (array $settings): array {
   return $settings;
 };
 
+// @codingStandardsIgnoreLine
 $settings = $configureMongoDb($settings);

@@ -54,7 +54,8 @@ function mongodb_watchdog_requirements($phase) {
   list($logger_client, $logger_db) = $databases[$logger_alias];
   unset($databases[$logger_alias]);
   $duplicates = [];
-  foreach ($databases as $alias => list($client, $db)) {
+  foreach ($databases as $alias => $list) {
+    list($client, $db) = $list;
     if ($logger_client == $client && $logger_db == $db) {
       $duplicates[] = "`$alias`";
     }

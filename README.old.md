@@ -1,5 +1,7 @@
 
-*This document relates to previous versions, and is likely entirely wrong now. It is maintained only for developers working on the package itself. Please refer to README.md for current documentation*.
+*This document relates to previous versions, and is likely entirely wrong now. 
+It is maintained only for developers working on the package itself. Please refer
+to README.md for current documentation*.
 
 
 CONTENTS OF THIS FILE
@@ -15,7 +17,7 @@ INTRODUCTION
 
 Module                | Description
 ----------------------|---------------------------------------------------------
-mongodb_block         | Store block information in MongoDB. Very close to the core block API.
+mongodb_block         | Store block information in MongoDB. Close to core API.
 mongodb_cache         | Store cache in MongoDB.
 mongodb_field_storage | Store fields in MongoDB.
 mongodb_queue         | DrupalQueueInterface implementation using MongoDB.
@@ -71,7 +73,7 @@ replica sets (and any other options listed on [http://php.net/manual/mongoclient
     $conf['mongodb_connections'] = array(
       // Connection name/alias
       'default' => array(
-        'host' => 'mongodb://[username:password@]host1[:port1][,host2[:port2:],...]',
+        'host' => 'mongodb://[user:pass@]host1[:port1][,host2[:port2:],...]',
         // Database name
         'db' => 'drupal_default',
         'connection_options' => array('replicaSet' => 'replicasetname'),
@@ -208,13 +210,17 @@ MODULE-SPECIFIC CONFIGURATION
 The following configuration variables are needed to use the features provided
 by the the following sub-modules.
 
+EXAMPLE:
+
+    $mongoDir = 'modules/contrib/mongodb';
+    
 ### mongodb_cache
 
 EXAMPLE:
 
     # -- Configure Cache.
-    $conf['cache_backends'][]            = 'sites/all/modules/mongodb/mongodb_cache/mongodb_cache.inc';
-    $conf['cache_default_class']         = 'DrupalMongoDBCache';
+    $conf['cache_backends'][]    = "$mongoDir/mongodb_cache/mongodb_cache.inc";
+    $conf['cache_default_class'] = 'DrupalMongoDBCache';
 
     # -- Don't touch SQL if in Cache.
     $conf['page_cache_without_database'] = TRUE;
@@ -225,15 +231,15 @@ EXAMPLE:
 EXAMPLE:
 
     # Session Caching
-    $conf['session_inc']                 = 'sites/all/modules/mongodb/mongodb_session/mongodb_session.inc';
-    $conf['cache_session']               = 'DrupalMongoDBCache';
+    $conf['session_inc']   = "$mongoDir/mongodb_session/mongodb_session.inc";
+    $conf['cache_session'] = 'DrupalMongoDBCache';
 
 ### mongodb_field_storage
 
 EXAMPLE:
 
     # Field Storage
-    $conf['field_storage_default']       = 'mongodb_field_storage';
+    $conf['field_storage_default'] = 'mongodb_field_storage';
 
 
 TROUBLESHOOTING
@@ -242,7 +248,8 @@ TROUBLESHOOTING
 If installing mongodb_field_storage from an Install Profile:
 
 * Do not enable the module in the profile `.info` file.
-* Do not include the module specific `$conf` variable in `settings.php` during install.
+* Do not include the module specific `$conf` variable in `settings.php` during
+  install.
 * In the profiles `hook_install()` function, include:
 
         module_enable(array('mongodb_field_storage'));

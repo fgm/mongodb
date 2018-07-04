@@ -16,32 +16,32 @@
 }
 
 .mongodb-watchdog__severity--emergency {
-  background: #FF2020;
+  background: #ff2020;
 }
 
 .mongodb-watchdog__severity--alert {
-  background: #FF80FF;
+  background: #ff80ff;
 }
 .mongodb-watchdog__severity--critical {
-  background: #C0A0FF;
+  background: #c0a0ff;
 }
 
 .mongodb-watchdog__severity--error {
-  background: #FFB00D;
+  background: #ffb00d;
 }
 
 .mongodb-watchdog__severity--warning {
-  background: #FFE080;
+  background: #ffe080;
 }
 
 .mongodb-watchdog__severity--notice {
-  background: #40A000;
+  background: #40a000;
 }
 
 .mongodb-watchdog__severity--info {
-  background: #A0E0A0;
+  background: #a0e0a0;
 }
 
 .mongodb-watchdog__severity--debug {
-  background: #B0E0FF;
+  background: #b0e0ff;
 }
