@@ -42,7 +42,7 @@ The MongoDB module and sub-modules need some configuration to be useful. This gu
   and available to connect to from the Drupal instance.
 * the site will be running [Drupal][drupal] 8.[56].x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or later is installed and configured.
-* PHP is version 7.[01].x. At this point, [PHP 7.2.x](php72) might not pass the
+* PHP is version 7.[01].x. At this point, [PHP 7.2.x][php72] might not pass the
   test suite. It should be compatible by the time Drupal 8.6.0 is released.
 
 [download]: https://www.mongodb.org/downloads
