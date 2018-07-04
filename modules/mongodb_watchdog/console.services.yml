@@ -1,0 +1,6 @@
+services:
+  mongodb_watchdog.command.sanitycheck:
+    class: Drupal\mongodb_watchdog\Command\SanityCheckCommand
+    arguments: []
+    tags:
+      - { name: drupal.command }

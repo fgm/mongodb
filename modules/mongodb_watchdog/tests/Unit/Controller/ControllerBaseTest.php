@@ -16,6 +16,8 @@ class ControllerBaseTest extends UnitTestCase {
   const ITEMS_PER_PAGE = 50;
 
   /**
+   * Test page generation for various data set shapes.
+   *
    * @dataProvider pageGenerationData
    */
   public function testPageGeneration(int $requestedPage, int $count, int $expected) {
@@ -24,20 +26,25 @@ class ControllerBaseTest extends UnitTestCase {
   }
 
   /**
+   * Data provider for testPageGeneration().
+   *
    * @see \Drupal\mongodb_watchdog\Unit\ControllerBaseTest::testPageGeneration()
+   *
+   * Coding standards are ignored for the data list for the sake of readability.
    */
   public function pageGenerationData() {
     // One partial available page.
     $one = static::ITEMS_PER_PAGE;
     // Part of one page.
     $partial = floor($one * 0.6);
-    // More than one available page
+    // More than one available page.
     $oneplus = $one + $partial;
     // Exactly two pages.
     $two = $one * 2;
     $twoplus = $two + $partial;
 
     $expectations = [
+      // @codingStandardsIgnoreStart
       // page, count, result
       [-1,    0,          0],
       [-1,    $partial,   0],
@@ -63,7 +70,9 @@ class ControllerBaseTest extends UnitTestCase {
       [ 2,    $oneplus,   1],
       [ 2,    $two,       1],
       [ 2,    $twoplus,   2],
+      // @codingStandardsIgnoreEnd
     ];
     return $expectations;
   }
+
 }

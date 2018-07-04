@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\mongodb;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -30,6 +31,8 @@ class DatabaseFactory {
    *
    * @param \Drupal\mongodb\ClientFactory $client_factory
    *   The Client factory service.
+   * @param \Drupal\Core\Site\Settings $settings
+   *   The settings service.
    */
   public function __construct(ClientFactory $client_factory, Settings $settings) {
     $this->clientFactory = $client_factory;

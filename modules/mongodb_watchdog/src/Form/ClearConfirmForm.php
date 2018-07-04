@@ -33,6 +33,8 @@ class ClearConfirmForm extends ConfirmFormBase {
    *
    * @param \MongoDB\Database $database
    *   The MongoDB logger database.
+   * @param \Drupal\mongodb_watchdog\Logger $logger
+   *   The mongodb.logger service.
    */
   public function __construct(Database $database, Logger $logger) {
     $this->database = $database;
