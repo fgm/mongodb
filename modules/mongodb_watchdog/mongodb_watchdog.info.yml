@@ -1,8 +1,8 @@
-name: 'MongoDB watchdog'
-description: 'A logger (watchdog) implementation using MongoDB'
-package: 'MongoDB'
-type: 'module'
 core: '8.x'
-php: '7.x'
 dependencies:
   - mongodb:mongodb
+description: 'A logger (watchdog) implementation using MongoDB'
+name: 'MongoDB watchdog'
+package: 'MongoDB'
+php: '7.x'
+type: 'module'

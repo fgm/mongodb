@@ -87,8 +87,8 @@ class DatabaseFactory {
     // Force the minimum if given.
     if ($value) {
       $selector = $sequenceSelector + [
-          'value' => ['$lt' => $value],
-        ];
+        'value' => ['$lt' => $value],
+      ];
       $update = [
         '$set' => ['value' => $value],
       ];

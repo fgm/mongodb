@@ -1,5 +1,5 @@
 
-*This document relates to previous versions, and is likely entirely wrong now. 
+*This document relates to previous versions, and is likely entirely wrong now.
 It is maintained only for developers working on the package itself. Please refer
 to README.md for current documentation*.
 
@@ -213,7 +213,7 @@ by the the following sub-modules.
 EXAMPLE:
 
     $mongoDir = 'modules/contrib/mongodb';
-    
+
 ### mongodb_cache
 
 EXAMPLE:

@@ -23,6 +23,7 @@ $configureMongoDb = function (array $settings): array {
     'databases' => [
       // Database alias => [ client_alias, database_name ].
       'default' => ['default', 'drupal'],
+      'keyvalue' => ['default', 'keyvalue'],
       'logger' => ['default', 'logger'],
     ],
   ];

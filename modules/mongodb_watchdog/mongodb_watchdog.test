@@ -219,7 +219,7 @@ class MongoDBLogTestCase extends WebTestBase {
   /**
    * Login users, create dblog events, and test dblog functionality through the admin and user interfaces.
    */
-  public function ZtestDBLog() {
+  public function zTestDbLog() {
     // Login the admin user.
     $this->drupalLogin($this->big_user);
 
@@ -531,7 +531,7 @@ class MongoDBLogTestCase extends WebTestBase {
   /**
    * Login an admin user, create dblog event, and test clearing dblog functionality through the admin interface.
    */
-  protected function ZtestDBLogAddAndClear() {
+  protected function zTestDbLogAddAndClear() {
     global $base_root;
     // Get a count of how many watchdog entries there are.
     $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
@@ -563,7 +563,7 @@ class MongoDBLogTestCase extends WebTestBase {
   /**
    * Test the dblog filter on admin/reports/dblog.
    */
-  protected function ZtestFilter() {
+  protected function zTestFilter() {
     $this->drupalLogin($this->big_user);
 
     // Clear log to ensure that only generated entries are found.

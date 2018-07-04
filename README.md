@@ -93,6 +93,7 @@ with the `–httpinterface` option, you may view the web admin interface:
           'databases' => [
             // Database alias => [ client_alias, database_name ]
             'default' => ['default', 'drupal'],
+            'keyvalue' => ['default', 'keyvalue'],
             'logger' => ['default', 'logger'],
           ],
         ];
@@ -101,6 +102,33 @@ with the `–httpinterface` option, you may view the web admin interface:
       database on the `default` MongoDB server installed in earlier steps
     * the `logger` database alias will create its collections on the same
       `default` MongoDB server, but in a separate `logger` database.
+* To use the MongoDB Key-Value (Expirable) storage:
+  * ensure there is a `keyvalue` database alias in `settings.local.php`, like
+    in the previous lines.
+  * declare MongoDB as the default keyvalue storage implementation by editing
+    the existing declarations in the `sites/default/services.yml` file:
+
+        ```yaml
+        factory.keyvalue:
+          default: keyvalue.mongodb
+        factory.keyvalue.expirable:
+          default: keyvalue.expirable.mongodb
+        ```
+  * enable the `mongodb_storage` module, e.g. using `drush en mongodb_storage`.
+  * import the existing Key-Value contents from the database, using the Drush
+    `mongodb_storage-import-keyvalue` command: `drush most-ikv`. It will output
+    the list of imported keys, for your information, like:
+
+        ```yaml
+        key_value
+          config.entity.key_store.action
+            uuid:054e62b3-1c40-4f22-aa17-c092bd796ee8
+            uuid:0cfd15f5-c01a-4912-991c-ad10e934f86e
+        (...lots of line, then...)
+        key_value_expire
+          update_available_releases
+            drupal
+  * rebuild the container to take these changes into account using `drush cr`.
 
 Once the module is installed and enabled, you can check its requirements on
 `/admin/reports/status`:
