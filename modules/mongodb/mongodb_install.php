@@ -140,6 +140,7 @@ function _mongodb_requirements_databases(array $settings, array $databases, arra
  * Implements hook_requirements().
  */
 function mongodb_requirements() {
+  // Autoloaded may not be available during install.
   $extension_name = 'mongodb';
 
   $ret = [];

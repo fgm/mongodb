@@ -9,6 +9,8 @@ class MongoDb {
   const CLIENT_DEFAULT = 'default';
   const DB_DEFAULT = 'default';
 
+  const MODULE = 'mongodb';
+
   const SERVICE_DB_FACTORY = 'mongodb.database_factory';
 
 }
