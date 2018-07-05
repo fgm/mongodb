@@ -120,9 +120,12 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    *   A list of keys to retrieve.
    *
    * @return array
-   *   An associative array of items successfully returned, indexed by key.
+   *   An associative array of items successfully returned, indexed by key. Core
+   *   until 8.5 does not specify what to return for non-existing keys, so this
+   *   implementation chooses not to include the non-existing keys in the result
+   *   set.
    *
-   * @todo What's returned for non-existing keys? --> absent from result.
+   * @see KeyValueStoreInterface::getMultiple()
    */
   public function getMultiple(array $keys) {
     $string_keys = array_map([$this, 'stringifyKey'], $keys);

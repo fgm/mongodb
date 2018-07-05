@@ -8,6 +8,7 @@ namespace Drupal\mongodb_storage;
 class Storage {
   const MODULE = 'mongodb_storage';
 
+  const SERVICE_COMMANDS = 'drupal.mongodb_storage.commands';
   const SERVICE_KV = 'keyvalue.mongodb';
   const SERVICE_KVE = 'keyvalue.expirable.mongodb';
 
