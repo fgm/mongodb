@@ -1,6 +1,14 @@
 parameters:
 
 services:
+  drupal.mongodb_storage.commands:
+    class: Drupal\mongodb_storage\Commands\MongoDbStorageCommands
+    arguments:
+      - '@database'
+      - '@keyvalue.database'
+      - '@keyvalue.expirable.database'
+      - '@keyvalue.mongodb'
+      - '@keyvalue.expirable.mongodb'
   keyvalue.expirable.mongodb:
     arguments: ['@mongodb.database_factory']
     class: 'Drupal\mongodb_storage\KeyValueExpirableFactory'

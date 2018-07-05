@@ -47,7 +47,7 @@ class MongoDb {
   /**
    * Guess an approximation of the library version, to handle API changes.
    *
-   * - 1.2.0 is the minimum version requires from our composer.json.
+   * - 1.2.0 is the minimum version required from composer.json.
    * - 1.3.0 adds Collection::watch().
    * - 1.4.0 deprecates Collection::count().
    *
