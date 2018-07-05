@@ -1,11 +1,12 @@
 <?php
 
-namespace Drupal\mongodb\Tests;
+namespace Drupal\mongodb\Tests\Kernel;
 
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\mongodb\ClientFactory;
 use Drupal\mongodb\DatabaseFactory;
+use Drupal\mongodb\MongoDb;
 
 /**
  * Class MongoDbTestBase provides basic setUp()/tearDown() for MongoDB.
@@ -22,7 +23,7 @@ abstract class MongoDbTestBase extends KernelTestBase {
   const DB_DEFAULT_ALIAS = 'default';
   const DB_UNSET_ALIAS = 'unset';
 
-  public static $modules = ['mongodb'];
+  public static $modules = [MongoDb::MODULE];
 
   /**
    * A test-specific instance of Settings.
@@ -47,16 +48,14 @@ abstract class MongoDbTestBase extends KernelTestBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Prepare the Settings from a base set of MongoDB settings.
+   *
+   * @return array
+   *   A settings array only containing MongoDB-related settings.
    */
-  public function setUp() {
-    parent::setUp();
-    // $_ENV if it comes from phpunit.xml <env>
-    // $_SERVER if it comes from the phpunit command line environment.
-    $this->uri = $_ENV['MONGODB_URI'] ?? $_SERVER['MONGODB_URI'] ?? static::DEFAULT_URI;
-
-    $this->settings = new Settings([
-      'mongodb' => [
+  protected function getSettingsArray() : array {
+    return [
+      MongoDb::MODULE => [
         'clients' => [
           static::CLIENT_BAD_ALIAS => [
             'uri' => 'mongodb://localhost:80',
@@ -75,7 +74,19 @@ abstract class MongoDbTestBase extends KernelTestBase {
           static::DB_BAD_CLIENT_ALIAS => [static::CLIENT_BAD_ALIAS, $this->getDatabasePrefix()],
         ],
       ],
-    ]);
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp();
+    // $_ENV if it comes from phpunit.xml <env>
+    // $_SERVER if it comes from the phpunit command line environment.
+    $this->uri = $_ENV['MONGODB_URI'] ?? $_SERVER['MONGODB_URI'] ?? static::DEFAULT_URI;
+
+    $this->settings = new Settings($this->getSettingsArray());
   }
 
   /**

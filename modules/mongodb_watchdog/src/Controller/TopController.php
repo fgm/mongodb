@@ -174,8 +174,8 @@ class TopController extends ControllerBase {
     $key = ['variables.@uri' => 1];
     $cond = [];
     $reducer = <<<JAVASCRIPT
-function reducer(doc, accumulator) { 
-  accumulator.count++; 
+function reducer(doc, accumulator) {
+  accumulator.count++;
 }
 JAVASCRIPT;
 

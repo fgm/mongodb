@@ -1,0 +1,20 @@
+parameters:
+
+services:
+  drupal.mongodb_storage.commands:
+    arguments:
+      - '@database'
+      - '@keyvalue.database'
+      - '@keyvalue.expirable.database'
+      - '@keyvalue.mongodb'
+      - '@keyvalue.expirable.mongodb'
+      - '@datetime.time'
+    class: Drupal\mongodb_storage\Commands\MongoDbStorageCommands
+  keyvalue.expirable.mongodb:
+    arguments:
+      - '@mongodb.database_factory'
+      - '@datetime.time'
+    class: 'Drupal\mongodb_storage\KeyValueExpirableFactory'
+  keyvalue.mongodb:
+    arguments: ['@mongodb.database_factory']
+    class: 'Drupal\mongodb_storage\KeyValueFactory'

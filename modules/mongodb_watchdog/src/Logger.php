@@ -8,6 +8,8 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\mongodb\MongoDb;
+use MongoDB\Collection;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
@@ -128,6 +130,29 @@ class Logger extends AbstractLogger {
     $this->items = $config->get('items');
     $this->requests = $config->get('requests');
     $this->requestTracking = $config->get('request_tracking');
+  }
+
+  /**
+   * Count items matching a selector in a collection.
+   *
+   * Do not use Collection::count() after extension 1.4.0, so rely on a strategy
+   * choice.
+   *
+   * @param \MongoDB\Collection $collection
+   *   The collection for which to count items.
+   * @param array $selector
+   *   The collection selector.
+   *
+   * @return int
+   *   The number of elements matching the selector in the collection.
+   */
+  protected function countCollection(Collection $collection, array $selector = []): int {
+    if (version_compare(MongoDb::libraryVersion(), '1.4.0') >= 0) {
+      return $collection->countDocuments($selector);
+    }
+    else {
+      return $collection->count($selector);
+    }
   }
 
   /**
@@ -456,8 +481,8 @@ class Logger extends AbstractLogger {
    * @return int
    *   The number of matching events.
    */
-  public function eventCount(EventTemplate $template) {
-    return $this->eventCollection($template->_id)->count();
+  public function eventCount(EventTemplate $template) : int {
+    return $this->countCollection($this->eventCollection($template->_id));
   }
 
   /**
@@ -533,7 +558,7 @@ class Logger extends AbstractLogger {
       $selector = [
         'requestTracking_id' => $requestId,
       ];
-      $count += $eventCollection->count($selector);
+      $count += $this->countCollection($eventCollection, $selector);
     }
 
     return $count;
@@ -541,9 +566,11 @@ class Logger extends AbstractLogger {
 
   /**
    * Return the number of event templates.
+   *
+   * @throws \ReflectionException
    */
-  public function templatesCount() {
-    return $this->templateCollection()->count([]);
+  public function templatesCount(): int {
+    return $this->countCollection($this->templateCollection());
   }
 
   /**
