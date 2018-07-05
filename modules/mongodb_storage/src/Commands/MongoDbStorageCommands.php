@@ -2,6 +2,8 @@
 
 namespace Drupal\mongodb_storage\Commands;
 
+use Drupal\Component\Datetime\Time;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory;
@@ -50,6 +52,13 @@ class MongoDbStorageCommands {
   protected $persistentMongoDbFactory;
 
   /**
+   * The datetime.time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * MongoDbStorageCommands constructor.
    *
    * Note that this constructor type-hints on classes instead of interfaces,
@@ -66,19 +75,23 @@ class MongoDbStorageCommands {
    *   The MongoDB KV factory.
    * @param \Drupal\mongodb_storage\KeyValueExpirableFactory $expirableMongoDbFactory
    *   The expirable MongoDB KV factory.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The datetime.time service.
    */
   public function __construct(
     Connection $database,
     KeyValueDatabaseFactory $persistentDbFactory,
     KeyValueDatabaseExpirableFactory $expirableDbFactory,
     KeyValueFactory $persistentMongoDbFactory,
-    KeyValueExpirableFactory $expirableMongoDbFactory
+    KeyValueExpirableFactory $expirableMongoDbFactory,
+    TimeInterface $time
   ) {
     $this->database = $database;
     $this->persistentDbFactory = $persistentDbFactory;
     $this->expirableDbFactory = $expirableDbFactory;
     $this->persistentMongoDbFactory = $persistentMongoDbFactory;
     $this->expirableMongoDbFactory = $expirableMongoDbFactory;
+    $this->time = $time;
   }
 
   /**
@@ -143,6 +156,7 @@ class MongoDbStorageCommands {
       $valueCursor = $this->database
         ->select($tableName, 'kve')
         ->fields('kve', $columns)
+        ->condition('kve.collection', $collection)
         ->execute();
 
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
@@ -152,8 +166,9 @@ class MongoDbStorageCommands {
       foreach ($valueCursor as $valueRow) {
         $key = $valueRow->name;
         $value = $valueRow->value;
+        $now = $this->time->getCurrentTime();
         $expire = $valueRow->expire;
-        $mgStore->setWithExpire($key, $value, $expire);
+        $mgStore->setWithExpire($key, $value, $expire - $now);
       }
     }
   }
