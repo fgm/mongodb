@@ -2,7 +2,9 @@
 
 namespace Drupal\mongodb_storage;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
+use MongoDB\BSON\UTCDateTime;
 
 /**
  * KeyValueStore provides a KeyValueStoreExpirable as a MongoDB collection.
@@ -10,7 +12,16 @@ use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpirableInterface {
 
   /**
+   * The datetime.time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * {@inheritdoc}
+   *
+   * @see \Drupal\mongodb_storage\KeyValueStoreExpirable::setTimeService()
    */
   public function __construct($collection, $storeCollection, $index = TRUE) {
     parent::__construct($collection, $storeCollection);
@@ -53,6 +64,19 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
   }
 
   /**
+   * Convert a UNIX timestamp to a BSON one for document insertion.
+   *
+   * @param int $expire
+   *   The source timestamp.
+   *
+   * @return \MongoDB\BSON\UTCDateTime
+   *   Its ready-to-insert counterpart.
+   */
+  protected function getBsonExpire(int $expire) : UTCDateTime {
+    return new UTCDateTime(1000 * ($this->time->getCurrentTime() + $expire));
+  }
+
+  /**
    * Saves an array of values with a time to live.
    *
    * @param array $data
@@ -61,12 +85,26 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    *   The time to live for items, in seconds.
    */
   public function setMultipleWithExpire(array $data, $expire) {
-    $this->setMultiple($data);
-    // FIXME: Implement expiration.
+    foreach ($data as $key => $value) {
+      $this->setWithExpire($key, $value, $expire);
+    }
+  }
+
+  /**
+   * Inject the time service. Cannot do it in the constructor for compatibility.
+   *
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The datetime.time service.
+   */
+  public function setTimeService(TimeInterface $time) {
+    $this->time = $time;
   }
 
   /**
    * Saves a value for a given key with a time to live.
+   *
+   * This does not need microsecond precision, since expires happen with only a
+   * multi-second accuracy at best.
    *
    * @param string $key
    *   The key of the data to store.
@@ -76,8 +114,18 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    *   The time to live for items, in seconds.
    */
   public function setWithExpire($key, $value, $expire) {
-    $this->set($key, $value);
-    // FIXME: Implement expiration.
+    $selector = [
+      '_id' => $this->stringifyKey($key),
+    ];
+    $replacement = $selector + [
+      'expire' => $this->getBsonExpire($expire),
+      'value' => serialize($value),
+    ];
+    $options = [
+      'upsert' => TRUE,
+    ];
+
+    $this->mongoDbCollection->replaceOne($selector, $replacement, $options);
   }
 
   /**
@@ -94,9 +142,20 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    *   TRUE if the data was set, or FALSE if it already existed.
    */
   public function setWithExpireIfNotExists($key, $value, $expire) {
-    $this->setIfNotExists($key, $value);
-    // FIXME: Implement expiration.
-    return TRUE;
+    $selector = [
+      '_id' => $this->stringifyKey($key),
+    ];
+    $replacement = $selector + [
+      'expire' => $this->getBsonExpire($expire),
+      'value' => serialize($value),
+    ];
+    $options = [
+      'upsert' => FALSE,
+    ];
+
+    $updateResult = $this->mongoDbCollection->replaceOne($selector, $replacement, $options);
+    $result = $updateResult->getModifiedCount() ? TRUE : FALSE;
+    return $result;
   }
 
 }
