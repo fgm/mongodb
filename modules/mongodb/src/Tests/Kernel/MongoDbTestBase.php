@@ -53,7 +53,7 @@ abstract class MongoDbTestBase extends KernelTestBase {
    * @return array
    *   A settings array only containing MongoDB-related settings.
    */
-  protected function getSettingsArray(): array {
+  protected function getSettingsArray() : array {
     return [
       MongoDb::MODULE => [
         'clients' => [
