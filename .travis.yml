@@ -39,6 +39,10 @@ mysql:
   username: $DB_USER
   encoding: utf8
 
+cache:
+  directories:
+    - vendor
+
 before_install:
   # Ensure we have the latest packages.
   - sudo apt-get -y update > /dev/null
@@ -46,7 +50,7 @@ before_install:
   # Composer: update and add to PATH.
   - sed -i '1i export PATH="$HOME/.composer/vendor/bin:$PATH"' $HOME/.bashrc
   - source $HOME/.bashrc
-  - composer self-update
+  # - composer self-update
 
   # Drush: 8.x prefers using a local version, so don't require it globally.
 
