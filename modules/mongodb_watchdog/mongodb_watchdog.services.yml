@@ -33,3 +33,12 @@ services:
       - '@config.factory'
       - '@date.formatter'
       - '@mongodb.logger'
+
+  mongodb.watchdog_requirements:
+    class: '\Drupal\mongodb_watchdog\Install\Requirements'
+    arguments:
+      - '@settings'
+      - '@config.factory'
+      - '@request_stack'
+      - '@serialization.yaml'
+      - '@messenger'

@@ -35,6 +35,10 @@ class Logger extends AbstractLogger {
   // The logger database alias.
   const DB_LOGGER = 'logger';
 
+  const MODULE = 'mongodb_watchdog';
+
+  const SERVICE_REQUIREMENTS = 'mongodb.watchdog_requirements';
+
   const TRACKER_COLLECTION = 'watchdog_tracker';
   const TEMPLATE_COLLECTION = 'watchdog';
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
@@ -217,6 +221,7 @@ class Logger extends AbstractLogger {
    * {@inheritdoc}
    *
    * @see https://drupal.org/node/1355808
+   * @see https://httpd.apache.org/docs/2.4/en/mod/mod_unique_id.html
    */
   public function log($level, $template, array $context = []) {
     if ($level > $this->limit) {
@@ -275,6 +280,10 @@ class Logger extends AbstractLogger {
         'template_id' => $template_id,
       ];
       $this->trackerCollection()->insertOne($track);
+    }
+    else {
+      // 24-byte format like mod_unique_id values.
+      $request_id = '@@Not-a-valid-request@@';
     }
 
     $event_collection = $this->eventCollection($template_id);

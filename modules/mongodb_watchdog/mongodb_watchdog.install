@@ -5,8 +5,7 @@
  * MongoDB watchdog install file.
  */
 
-use Drupal\Core\Site\Settings;
-use Drupal\Core\Url;
+use Drupal\mongodb_watchdog\Install\Requirements;
 use Drupal\mongodb_watchdog\Logger;
 
 /**
@@ -32,75 +31,22 @@ function mongodb_watchdog_install() {
  * @see http://blog.riff.org/2015_08_27_drupal_8_tip_of_the_day_autoloaded_code_in_a_module_install_file
  */
 function mongodb_watchdog_requirements($phase) {
-  $settings = Settings::get('mongodb');
+  $driver = 'mongodb';
   $module = 'mongodb_watchdog';
-
-  $ret = [
-    $module => [
-      'title' => 'MongoDB watchdog',
-    ],
-  ];
-
-  $logger_alias = 'logger';
-  $databases = $settings['databases'];
-  if (!isset($databases[$logger_alias])) {
-    $ret[$module] += [
-      'severity' => REQUIREMENT_ERROR,
-      'value' => t('Missing `@alias` database alias in settings.', ['@alias' => $logger_alias]),
-    ];
-    return $ret;
+  if ($phase === 'install') {
+    // Dependencies may not be installed yet, and module isn't.
+    drupal_classloader_register($driver, drupal_get_path('module', $driver));
+    drupal_classloader_register($module, drupal_get_path('module', $module));
+    // Module is not yet available so its services aren't either.
+    $requirements = \Drupal::classResolver()
+      ->getInstanceFromDefinition(Requirements::class);
+  }
+  else {
+    /** @var \Drupal\mongodb_watchdog\Install\Requirements $requirements */
+    $requirements = \Drupal::service(Logger::SERVICE_REQUIREMENTS);
   }
 
-  list($logger_client, $logger_db) = $databases[$logger_alias];
-  unset($databases[$logger_alias]);
-  $duplicates = [];
-  foreach ($databases as $alias => $list) {
-    list($client, $db) = $list;
-    if ($logger_client == $client && $logger_db == $db) {
-      $duplicates[] = "`$alias`";
-    }
-  }
-  if (!empty($duplicates)) {
-    $ret[$module] += [
-      'severity' => REQUIREMENT_ERROR,
-      'value' => t('The `@alias` alias points to the same database as @others.', [
-        '@alias' => $logger_alias,
-        '@others' => implode(', ', $duplicates),
-      ]),
-      'description' => t('Those databases would also be dropped when uninstalling the watchdog module.'),
-    ];
-    return $ret;
-  }
-
-  if (PHP_SAPI !== 'cli') {
-    if ($phase === 'install') {
-      drupal_classloader_register($module, drupal_get_path('module', 'mongodb_watchdog'));
-    }
-    $request_tracking = \Drupal::config(Logger::CONFIG_NAME)->get('request_tracking');
-    $server = \Drupal::request()->server;
-    if (!function_exists('apache_get_modules')
-    || (!in_array('mod_unique_id', apache_get_modules()))
-    || (!$server->has('UNIQUE_ID'))
-    || (!$server->has('REDIRECT_UNIQUE_ID'))) {
-      $ret[$module] += [
-        'severity' => REQUIREMENT_INFO,
-        'value' => t('No mod_unique_id'),
-        'description' => t('The site is not served by Apache with a working mod_unique_id: request tracking is not available.'),
-      ];
-      return $ret;
-    }
-
-    if (!$request_tracking) {
-      $ret[$module] += [
-        'severity' => REQUIREMENT_INFO,
-        'value' => t('Unused mod_unique_id'),
-        'description' => t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or <a href=":config">enable request tracking</a> for a better logging experience.', [
-          ':config' => Url::fromRoute('mongodb_watchdog.config')->toString(),
-        ]),
-      ];
-      return $ret;
-    }
-  }
+  return $requirements->check($phase);
 }
 
 /**

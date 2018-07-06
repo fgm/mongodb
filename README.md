@@ -40,8 +40,8 @@ INSTALLATION AND SETTINGS
 The MongoDB module and sub-modules need some configuration to be useful. This
 guide assumes that :
 
-* a [MongoDB][download] 3.0 or later instance is already installed, configured,
-  and available to connect to from the Drupal instance.
+* a [MongoDB][download] 3.0 to 3.6 instance is already installed, configured, and
+  available to connect to from the Drupal instance.
 * the site will be running [Drupal][drupal] 8.[56].x, with [Drush][drush] 8.x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or
   later is installed and configured.
@@ -81,6 +81,7 @@ with the `–httpinterface` option, you may view the web admin interface:
     For example, with the following settings:
 
 ```php
+// In sites/default/settings.local.php.
 $settings['mongodb'] = [
   'clients' => [
     // Client alias => connection constructor parameters.
@@ -112,6 +113,7 @@ $settings['mongodb'] = [
     the existing declarations in the `sites/default/services.yml` file:
 
 ```yaml
+# In sites/default/services.yml.
 factory.keyvalue:
   default: keyvalue.mongodb
 factory.keyvalue.expirable:
@@ -227,11 +229,11 @@ DATABASES AND COLLECTIONS REFERENCE
 Module              | DB alias   | Collection(s)      | Information
 --------------------|------------|--------------------|--------------------------
 `mongodb`           | `default`  | (none)             | Alias/client consistency
+`mongodb_storage`   | `keyvalue` | `kve_*`            | Expirable collections
+&uarr;              | &uarr;     | `kvp_*`            | Persistent collections
 `mongodb_watchdog`  | `logger`   | `watchdog`         | Event types
 &uarr;              | &uarr;     | `watchdog_tracker` | Requests (capped)
 &uarr;              | &uarr;     | `watchdog_*`       | Events (capped)
-`mongodb_storage`   | `keyvalue` | `kve_*`            | Expirable collections
-&uarr;              | &uarr;     | `kvp_*`            | Persistent collections
 
 Earlier versions used to support a collection aliasing mechanism. With this
 version generalizing dedicated databases per module, this is no longer needed
