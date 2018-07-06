@@ -1,7 +1,9 @@
 language: php
 
+sudo: true
+
 php:
-  - 7.0
+  #- 7.0
   - 7.1
 
 services:
@@ -9,24 +11,47 @@ services:
   - mysql
 
 matrix:
+  allow_failures: []
   fast_finish: true
 
-sudo: true
+#addons:
+#  apt:
+#    sources:
+#    - mongodb-3.6-trusty
+#    packages:
+#    - mongodb-org-server
 
-addons:
-  apt:
-    sources:
-    - mongodb-3.6-trusty
-    packages:
-    - mongodb-org-server
+env:
+  global:
+    - MODULE_NAME='mongodb'
+    - DB_NAME='travis_ci_mongodb'
+    - DB_USER=root
+    - DB_URL="mysql://$DB_USER@127.0.0.1/$DB_NAME"
+    - COVERAGE_FILE=coverage.clover
+    - PHPUNIT_OPTS="-c core/phpunit.xml -v --coverage-clover=modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
+
+    # Code coverage via coveralls.io
+    - COVERALLS="php-coveralls/php-coveralls:2.1.*"
 
 mysql:
-  database: travis_ci_mongodb
-  username: root
+  database: $DB_NAME
+  username: $DB_USER
   encoding: utf8
 
+cache:
+  directories:
+    - vendor
+
 before_install:
-  - sudo apt-get update > /dev/null
+  # Ensure we have the latest packages.
+  - sudo apt-get -y update > /dev/null
+
+  # Composer: update and add to PATH.
+  - sed -i '1i export PATH="$HOME/.composer/vendor/bin:$PATH"' $HOME/.bashrc
+  - source $HOME/.bashrc
+  # - composer self-update
+
+  # Drush: 8.x prefers using a local version, so don't require it globally.
 
   # MongoDB extension is preinstalled but not enabled by default.
   - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
@@ -34,14 +59,11 @@ before_install:
 install:
   # install php packages required for running a web server from drush on php 7
   # - sudo apt-get install -y --force-yes php-cgi php-mysql
+  - sudo apt-get install -y --force-yes libxml2-utils tidy
 
   # Disable XDebug for speed.
   # https://github.com/travis-ci/travis-ci/issues/1697
   #- phpenv config-rm xdebug.ini
-
-  # add composer's global bin directory to the path
-  # see: https://github.com/drush-ops/drush#install---composer
-  - export PATH="$HOME/.composer/vendor/bin:$PATH"
 
   # Configure PHP (mongodb is included by default).
   - echo 'date.timezone = "Europe/Paris"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
@@ -64,26 +86,42 @@ before_script:
   - mkdir -p modules/contrib
   - mv ../fgm/mongodb modules/contrib
 
-  # install Drush and the PHP MongoDB library in the project
-  - composer require -v "drush/drush:^8" "mongodb/mongodb:^1.2.0"
+  # install dependencies (for the module) and Coveralls (for coverage) as part of the root vendors.
+  - composer require -v "drush/drush:^8.1" "mongodb/mongodb:^1.2.0" $COVERALLS
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
-  - mysql -e 'create database travis_ci_mongodb'
-  - php -d sendmail_path=`which true` vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/travis_ci_mongodb
+  - mysql -e "create database $DB_NAME"
+  - php -d sendmail_path=`which true` vendor/bin/drush.php -y qd --profile=testing --no-server --db-url=$DB_URL
   - chmod 755 sites/default
   - chmod 644 sites/default/settings.php
 
-  # Define "logger" alias for mongodb_watchdog.
+  # Define MongoDB aliases for mongodb_* submodules.
   - tail --lines=+12 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
-  #- echo -e '\n$settings["mongodb"]["databases"]["logger"] = ["default", "logger"];\n' >> sites/default/settings.php
 
   # reference and enable mongodb modules in build site
   #- ln -s $(readlink -e $(cd -)) drupal-8.5.x-dev/modules/custom/mongodb
-  - vendor/bin/drush -y en mongodb_watchdog
+  - vendor/bin/drush -y en mongodb_storage mongodb_watchdog
 
   # Not needed: we don't have any web tests at this point.
   # start a web server on port 8080, run in the background; wait for initialization.
   # - drush runserver 127.0.0.1:8080 &
   #- until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
 
-script: SIMPLETEST_DB=mysql://root:@127.0.0.1/travis_ci_mongodb vendor/bin/phpunit -c core/phpunit.xml.dist modules/contrib/mongodb
+script:
+  # Configure and run the tests
+  # Use explicit config filtering Drupal core from coverage report.
+  - cp modules/contrib/$MODULE_NAME/core.phpunit.xml core/phpunit.xml
+  - SIMPLETEST_DB="$DB_URL" vendor/bin/phpunit $PHPUNIT_OPTS modules/contrib/$MODULE_NAME
+
+after_script:
+  - cd modules/contrib/$MODULE_NAME
+
+  # Show the basic coverage info in log.
+  - xmllint --xpath "/coverage/project/metrics" $COVERAGE_FILE  | tidy -xml -q --indent-attributes 1
+
+  # Report coverage to Scrutinizer, which runs from checkout directory.
+  - wget https://scrutinizer-ci.com/ocular.phar
+  - php ocular.phar code-coverage:upload -vvv --format=php-clover $COVERAGE_FILE
+
+  # Report coverage to Coveralls.io, which runs from project root.
+  - php ../../../vendor/bin/php-coveralls --exclude-no-stmt -c .coveralls.yml -r . -x coverage.clover -o coverage.json -vvv

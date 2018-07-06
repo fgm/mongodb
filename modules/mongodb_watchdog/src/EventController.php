@@ -88,6 +88,8 @@ class EventController {
    *
    * @return array
    *   A render array.
+   *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function asTableRow(EventTemplate $template, Event $event) {
     $uid = intval($event->uid);
