@@ -221,6 +221,7 @@ class Logger extends AbstractLogger {
    * {@inheritdoc}
    *
    * @see https://drupal.org/node/1355808
+   * @see https://httpd.apache.org/docs/2.4/en/mod/mod_unique_id.html
    */
   public function log($level, $template, array $context = []) {
     if ($level > $this->limit) {
@@ -279,6 +280,10 @@ class Logger extends AbstractLogger {
         'template_id' => $template_id,
       ];
       $this->trackerCollection()->insertOne($track);
+    }
+    else {
+      // 24-byte format like mod_unique_id values.
+      $request_id = '@@Not-a-valid-request@@';
     }
 
     $event_collection = $this->eventCollection($template_id);
