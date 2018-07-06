@@ -3,4 +3,5 @@
 /vendor/
 
 composer.lock
+coverage.clover
 .DS_Store

@@ -28,8 +28,8 @@ env:
     - DB_NAME='travis_ci_mongodb'
     - DB_USER=root
     - DB_URL="mysql://$DB_USER@127.0.0.1/$DB_NAME"
-    - COVERAGE_FILE=coverage.clover
-    - PHPUNIT_OPTS="-c core -v --coverage-clover=$COVERAGE_FILE"
+    - COVERAGE_FILE=modules/contrib/mongodb/coverage.clover
+    - PHPUNIT_OPTS="-c core/phpunit.xml -v --coverage-clover=$COVERAGE_FILE"
 
     # Code coverage via coveralls.io
     - COVERALLS="php-coveralls/php-coveralls:2.1.*"
