@@ -3,7 +3,7 @@ language: php
 sudo: true
 
 php:
-  - 7.0
+  #- 7.0
   - 7.1
 
 services:
@@ -28,7 +28,6 @@ env:
     - DB_NAME='travis_ci_mongodb'
     - DB_USER=root
     - DB_URL="mysql://$DB_USER@127.0.0.1/$DB_NAME"
-    - PHPCS_VERSION='2.9.*@dev'
     - COVERAGE_FILE=coverage.clover
     - PHPUNIT_OPTS="-c core -v --coverage-clover=$COVERAGE_FILE"
 
@@ -50,9 +49,6 @@ before_install:
   - composer self-update
 
   # Drush: 8.x prefers using a local version, so don't require it globally.
-
-  # Codesniffer.
-  - composer global require -n squizlabs/php_codesniffer:$PHPCS_VERSION
 
   # MongoDB extension is preinstalled but not enabled by default.
   - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
@@ -110,7 +106,9 @@ before_script:
 
 script:
   # Configure and run the tests
-  - cd $TRAVIS_BUILD_DIR/drupal
+  - pwd
+  - ls -l
+  #- cd $TRAVIS_BUILD_DIR/drupal
   # Use explicit config filtering Drupal core from coverage report.
   - cp $TRAVIS_BUILD_DIR/drupal/modules/contrib/$MODULE_NAME/core.phpunit.xml core/phpunit.xml
   - SIMPLETEST_DB="$DB_URL" vendor/bin/phpunit $PHPUNIT_OPTS modules/contrib/$MODULE_NAME
