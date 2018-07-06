@@ -123,4 +123,4 @@ after_script:
   # Report coverage to Coveralls.io, which runs from project root.
   - cp .coveralls.yml ../../..
   - cd ../../..
-  - php vendor/bin/coveralls --exclude-no-stmt
+  - php vendor/bin/php-coveralls --exclude-no-stmt
