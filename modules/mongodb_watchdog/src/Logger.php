@@ -35,6 +35,10 @@ class Logger extends AbstractLogger {
   // The logger database alias.
   const DB_LOGGER = 'logger';
 
+  const MODULE = 'mongodb_watchdog';
+
+  const SERVICE_REQUIREMENTS = 'mongodb.watchdog_requirements';
+
   const TRACKER_COLLECTION = 'watchdog_tracker';
   const TEMPLATE_COLLECTION = 'watchdog';
   const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
