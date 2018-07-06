@@ -3,11 +3,13 @@ INTRODUCTION
 
 MongoDB integration for Drupal, version 8.x-2.0-dev.
 
-[![Build Status](https://travis-ci.org/fgm/mongodb.svg?branch=8.x-2.x)](https://travis-ci.org/fgm/mongodb) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/fgm/mongodb/badges/quality-score.png?b=8.x-2.x)](https://scrutinizer-ci.com/g/fgm/mongodb/?branch=8.x-2.x)
+[![Build Status](https://travis-ci.org/fgm/mongodb.svg?branch=8.x-2.x)](https://travis-ci.org/fgm/mongodb)
+[![Coverage Status](https://coveralls.io/repos/github/fgm/mongodb/badge.svg?branch=8.x-2.x)](https://coveralls.io/github/fgm/mongodb?branch=8.x-2.x)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/fgm/mongodb/badges/quality-score.png?b=8.x-2.x)](https://scrutinizer-ci.com/g/fgm/mongodb/?branch=8.x-2.x)
 
 This package is a collection of several modules, allowing Drupal sites to store
 various data in MongoDB, either using the provided modules, or writing their own
-on top of the main `mongodb` module.
+on top of the main `mongodb` module to take .
 
 Module                | Information
 ----------------------|---------------------------------------------------------
