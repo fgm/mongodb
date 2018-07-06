@@ -125,6 +125,5 @@ after_script:
   - php ocular.phar code-coverage:upload -vvv --format=php-clover $COVERAGE_FILE
 
   # Report coverage to Coveralls.io, which runs from project root.
-  - cp .coveralls.yml ../../..
   - cd ../../..
-  - php vendor/bin/php-coveralls --exclude-no-stmt
+  - php vendor/bin/php-coveralls --exclude-no-stmt -c modules/contrib/$MODULE_NAME/.coveralls.yml -r modules/contrib/$MODULE_NAME -x coverage.clover -o coverage.json -vvv
