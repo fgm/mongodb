@@ -60,7 +60,7 @@ before_install:
 install:
   # install php packages required for running a web server from drush on php 7
   # - sudo apt-get install -y --force-yes php-cgi php-mysql
-  - sudo apt-get install -y --force-yes tidy
+  - sudo apt-get install -y --force-yes libxml2-utils tidy
 
   # Disable XDebug for speed.
   # https://github.com/travis-ci/travis-ci/issues/1697
@@ -117,7 +117,7 @@ script:
 after_script:
   # Prepare coverage reporting.
   - cd modules/contrib/$MODULE_NAME
-  - mv ../../../$COVERAGE_FILE .
+
   # Show the basic coverage info in log.
   - xmllint --xpath "/coverage/project/metrics" $COVERAGE_FILE  | tidy -xml -q --indent-attributes 1
   # Report coverage to Scrutinizer, which runs from checkout directory.
