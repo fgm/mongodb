@@ -2,6 +2,6 @@
 /site/
 /vendor/
 
-composer.lock
+#composer.lock
 coverage.clover
 .DS_Store
