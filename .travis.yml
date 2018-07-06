@@ -24,12 +24,11 @@ matrix:
 env:
   global:
     - MODULE_NAME='mongodb'
-    - MODULE_DEPS=''
     - DB_NAME='travis_ci_mongodb'
     - DB_USER=root
     - DB_URL="mysql://$DB_USER@127.0.0.1/$DB_NAME"
-    - COVERAGE_FILE=modules/contrib/mongodb/coverage.clover
-    - PHPUNIT_OPTS="-c core/phpunit.xml -v --coverage-clover=$COVERAGE_FILE"
+    - COVERAGE_FILE=coverage.clover
+    - PHPUNIT_OPTS="-c core/phpunit.xml -v --coverage-clover=modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
 
     # Code coverage via coveralls.io
     - COVERALLS="php-coveralls/php-coveralls:2.1.*"
@@ -115,16 +114,14 @@ script:
   - SIMPLETEST_DB="$DB_URL" vendor/bin/phpunit $PHPUNIT_OPTS modules/contrib/$MODULE_NAME
 
 after_script:
-  # Prepare coverage reporting.
   - cd modules/contrib/$MODULE_NAME
 
   # Show the basic coverage info in log.
   - xmllint --xpath "/coverage/project/metrics" $COVERAGE_FILE  | tidy -xml -q --indent-attributes 1
+
   # Report coverage to Scrutinizer, which runs from checkout directory.
   - wget https://scrutinizer-ci.com/ocular.phar
   - php ocular.phar code-coverage:upload -vvv --format=php-clover $COVERAGE_FILE
 
   # Report coverage to Coveralls.io, which runs from project root.
-  - cd ../../..
-  - mv .git ../../..
-  - php vendor/bin/php-coveralls --exclude-no-stmt -c modules/contrib/$MODULE_NAME/.coveralls.yml -r modules/contrib/$MODULE_NAME -x coverage.clover -o coverage.json -vvv
+  - php ../../../vendor/bin/php-coveralls --exclude-no-stmt -c .coveralls.yml -r . -x coverage.clover -o coverage.json -vvv
