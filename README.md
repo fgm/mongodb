@@ -62,7 +62,8 @@ REQUIREMENTS
 MongoDB module only supports:
 
 * MongoDB server versions 1.3 or higher.
-* `mongo` (not `mongodb`) extension
+* `mongo` (not `mongodb`) extension, or the `mongo-php-adapter` library
+  together with the `mongodb` extension.
 * PHP 5.4 or higher.
 
 
