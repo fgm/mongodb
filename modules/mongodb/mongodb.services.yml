@@ -1,4 +1,10 @@
 services:
+  drupal.mongodb.commands:
+    arguments:
+      - '@mongodb.database_factory'
+      - '@settings'
+      - '@serialization.yaml'
+    class: Drupal\mongodb\Commands\MongoDbCommands
   mongodb.client_factory:
     class: Drupal\mongodb\ClientFactory
     arguments: ['@settings']

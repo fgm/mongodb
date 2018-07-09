@@ -15,6 +15,7 @@ class MongoDb {
 
   const MODULE = 'mongodb';
 
+  const SERVICE_COMMANDS = 'drupal.mongodb.commands';
   const SERVICE_DB_FACTORY = 'mongodb.database_factory';
 
   protected static $libraryVersion;
