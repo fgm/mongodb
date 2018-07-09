@@ -381,6 +381,8 @@ function _drupal_session_destroy($sid) {
   elseif (variable_get('https', FALSE)) {
     _drupal_session_delete_cookie('S' . session_name(), TRUE);
   }
+
+  return TRUE;
 }
 
 /**
