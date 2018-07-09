@@ -52,7 +52,7 @@ class CommandsTest extends MongoDbTestBase {
   public function testFind() {
     /** @var \Drupal\Component\Serialization\SerializationInterface $yaml */
     $yaml = $this->container->get("serialization.yaml");
-    /** @var \Drupal\mongodb\DatabaseFactory $database */
+    /** @var \Drupal\mongodb\DatabaseFactory $dbFactory */
     $dbFactory = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
     $database = $dbFactory->get(MongoDb::DB_DEFAULT);
 
