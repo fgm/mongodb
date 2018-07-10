@@ -2,6 +2,7 @@ name = MongoDB Field Storage
 description = Store Field content on MongoDB.
 package = MongoDB
 core = 7.x
+php = 5.4
 dependencies[] = mongodb
 files[] = mongodb_field_storage.module
 files[] = mongodb_field_storage.test

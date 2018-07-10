@@ -2,6 +2,7 @@ name = MongoDB Session
 description = Store session information in MongoDB
 package = MongoDB
 core = 7.x
+php = 5.4
 dependencies[] = mongodb
 files[] = mongodb_session.module
 files[] = mongodb_session.inc
