@@ -51,20 +51,42 @@ installed and configured on localhost or remote server. This module additionally
 provides Drush integration to make queries against the MongoDB databases used by
 Drupal.
 
-If MongoDB is installed on localhost, you may view the web admin interface:
+If MongoDB 3.1 to 3.5 is installed on localhost, you may view the web admin 
+interface on:
 
     http://localhost:28017/
+
+When using PHP 7.x, install the `mongo-php-adapter` library using Composer, and
+enable the composer autoloader. One simple way to do this is to use the 
+`composer_manager` module ; a more efficient one is to have the Drupal project
+be one level below the project root, say in `public/`, and use this:
+
+```bash
+cd $project_dir
+composer require alcaeus/mongo-php-adapter
+# This will also install the mongodb/mongodb library.
+# - Drupal is in public/
+# - vendored dependencies are in vendor/ 
+```
+
+Then edit your `settings.local.php` file to enable the Composer autoloader for
+all the Composer dependencies in the site:
+
+```php
+// In (project_dir)/public/sites/default/settings.local.php
+require_once "../vendor/autoload.php";
+```
 
 
 REQUIREMENTS
 ------------
 
-MongoDB module only supports:
+The MongoDB module suite only supports:
 
 * MongoDB server versions 1.3 or higher.
 * `mongo` (not `mongodb`) extension, or the `mongo-php-adapter` library
   together with the `mongodb` extension.
-* PHP 5.4 or higher.
+* PHP 5.4 to 7.1
 
 
 CONFIGURATION VARIABLES
