@@ -3,7 +3,7 @@ pages:
   - Home: 'index.md'
   - Modules:
     - 'Driver: `mongodb`': 'modules/mongodb.md'
-    - 'Key-value: `mongodb_storage`: 'modules/mongodb_storage.md'
+    - 'Key-value: `mongodb_storage`': 'modules/mongodb_storage.md'
     - 'Logger: `mongodb_watchdog`': 'modules/mongodb_watchdog.md'
   - Development:
     - 'Bespoke code': 'bespoke.md'
