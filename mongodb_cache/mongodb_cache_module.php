@@ -57,7 +57,7 @@ function mongodb_cache_flush_caches() {
   // As with databases, NULL means unknown, so perform a discovery.
   if (!isset($detected_bins)) {
     $detected_bins = [];
-    $names = mongodb()->getCollectionNames(FALSE);
+    $names = mongodb()->getCollectionNames();
     foreach ($names as $name) {
       if (strpos($name, 'cache_') === 0) {
         $detected_bins[] = $name;
