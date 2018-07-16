@@ -4,5 +4,3 @@ package = MongoDB
 dependencies[] = mongodb
 core = 7.x
 php = 5.4
-files[] = mongodb_block.module
-files[] = mongodb_block.install
