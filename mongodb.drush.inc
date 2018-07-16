@@ -11,26 +11,26 @@
  * Implementation of hook_drush_command().
  */
 function mongodb_drush_command() {
-//   $options['--alias'] = 'The alias defined in the variable mongodb_collections.';
+  $options['--select'] = 'When connecting to replica set select which server to connect to.';
 
   $items['mongodb-connect'] = array(
     'description' => 'A string for connecting to the mongodb.',
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_CONFIGURATION,
-//     'options' => $options,
+    'options' => $options,
     'arguments' => array(
-       'alias' => 'The connection',
+      'alias' => 'The connection',
     ),
   );
 
   $items['mongodb-cli'] = array(
     'description' => "Open a mongodb command-line interface using Drupal's credentials.",
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_CONFIGURATION,
-//     'options' => $options,
+    'options' => $options,
     'examples' => array(
       '`drush mongodb-connect`' => 'Connect to the mongodb.',
     ),
     'arguments' => array(
-       'alias' => 'The connection',
+      'alias' => 'The connection',
     ),
     'aliases' => array('mdbc'),
   );
@@ -41,10 +41,9 @@ function mongodb_drush_command() {
       'all' => 'Show all mongodb connections, instead of just one.',
     ),
     'arguments' => array(
-       'alias' => 'The connection',
+      'alias' => 'The connection',
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_CONFIGURATION,
-//     'options' => $options,
   );
 
   $items['mongodb-query'] = array(
@@ -54,12 +53,10 @@ function mongodb_drush_command() {
       'drush mongodb-query default "db.watchdog.find().forEach(function(x){print(tojson(x))});"' => 'Get the watchdog message templates.',
     ),
     'arguments' => array(
-       'alias' => 'The connection',
-       'query' => 'A mongodb query. Mandatory.',
+      'alias' => 'The connection',
+      'query' => 'A mongodb query. Mandatory.',
     ),
-//     'options' => array(
-//       '--extra' => 'Add custom options to the mongodb command.',
-//     ) + $options,
+    'options' => $options,
     'aliases' => array('mdbq'),
   );
 
@@ -86,7 +83,6 @@ function mongodb_drush_help($section) {
       return dt('Prints the whole database to STDOUT or save to a file.');
     case 'drush:mongodb-query':
       return dt("Usage: drush [options] mongodb-query <query>...\n<query> is a single js command. It does not print the result by default, see the example");
-
   }
 }
 
@@ -111,7 +107,7 @@ function drush_mongodb_connect($alias = 'default') {
  */
 function drush_mongodb_query($alias = 'default', $query = '') {
   $command = _drush_mongodb_connect($alias);
-  $command .= " --eval $query";
+  $command .= " --eval '$query'";
   $escaped_command = escapeshellcmd($command);
   $pipes = array();
   drush_print($escaped_command);
@@ -132,12 +128,84 @@ function _drush_mongodb_connect($alias) {
     $alias = 'default';
   }
   $connection = $connections[$alias];
-  $host = $connection['host'];
-  $host = preg_replace('@^mongodb://@', '', $host);
+  // If we are dealing with connection to replica set by default connect
+  // to primary server which might not always be in connections configuration.
+  // With --select option you can specify exactly which server in replica set
+  // to connect to.
+  // Use the 1.3 client if available.
+  if (class_exists('MongoClient')) {
+    $mongo_class = 'MongoClient';
+    $read_from_slave = array(
+      MongoClient::RP_PRIMARY_PREFERRED,
+      MongoClient::RP_SECONDARY,
+      MongoClient::RP_SECONDARY_PREFERRED,
+      MongoClient::RP_NEAREST
+    );
+  }
+  else {
+    $mongo_class = 'Mongo';
+    $read_from_slave = array();
+  }
+  if (isset($connection['connection_options']['replicaSet'])) {
+    $select = drush_get_option(array('select'), FALSE);
+    $mongo_connection = new $mongo_class('mongodb://' . $connection['host'], $connection['connection_options']);
+    $members = $mongo_connection->getHosts();
+    $options = array();
+    foreach ($members as $member) {
+      $key = $member['host'];
+      $option['port'] = $member['port'];
+      if ($member['state'] == 1) {
+        $option['state'] = "PRIMARY";
+        $primary_member = $key;
+      }
+      else if ($member['state'] == 2) {
+        $option['state'] = 'SECONDARY';
+      }
+      else {
+        $option['state'] = 'INVALID';
+      }
+      $options[$key] = $option;
+    }
+    if ($select) {
+      $member = drush_choice($options);
+      if (array_key_exists($member, $options)){
+        if ($options[$member]['state'] != 'INVALID') {
+          $host = $member . ':' . $options[$member]['port'];
+        }
+        else {
+          $host = NULL;
+          drush_print_r("${member} is in replicaSet but in a bad state");
+        }
+      }
+      else {
+        $host = NULL;
+        drush_print_r("${member} is not a member of replicaSet");
+      }
+    }
+    else {
+      $host = $primary_member . ':' . $options[$primary_member]['port'];
+    }
+    if ($options[$primary_member]['state'] == MONGODB_SLAVE_CONNECTED) {
+      $slave_connection = TRUE;
+    }
+    else if ($options[$primary_member]['state'] == MONGODB_SLAVE_NOT_CONNECTED) {
+      $slave_connection = FALSE;
+    }
+  }
+  else {
+    $host = $connection['host'];
+  }
   $db = $connection['db'];
 
   $query = $host;
   $query .= '/' . $db;
+  $readpreference = !empty($connection['read_preference']['preference']) && in_array($connection['read_preference']['preference'], $read_from_slave);
+  // If we have slave ok or a read preference configured in settings, or user
+  // selected secondary member, then let us notify users how to send queries
+  // against secondary member.
+  if (!empty($connection['slave_ok']) || $readpreference || $slave_connection) {
+    drush_print_r('It looks like you are connecting to secondary member don\'t forget to run rs.slaveOk() to be able to query it.');
+  }
 
   $command = 'mongo ' . $query;
   return $command;
