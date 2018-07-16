@@ -24,3 +24,31 @@ function mongodb_block_requirements($phase) {
   }
   return $requirements;
 }
+
+/**
+ * Ensure indexes to block collections for enabled themes.
+ */
+function _mongodb_block_ensure_all_indexes() {
+  $themes = list_themes();
+  $enabled_theme_list = array();
+  foreach ($themes as $theme) {
+    if ($theme->status == 1) {
+      $enabled_theme_list[] = $theme->name;
+    }
+  }
+  _mongodb_block_ensure_indexes($enabled_theme_list);
+}
+
+/**
+ * Implements hook_enable().
+ */
+function mongodb_block_enable() {
+  _mongodb_block_ensure_all_indexes();
+}
+
+/**
+ * Add indexes to block collections for enabled themes.
+ */
+function mongodb_block_update_7100() {
+  _mongodb_block_ensure_all_indexes();
+}

@@ -12,6 +12,22 @@
 define('MONGODB_BLOCK_REGION_NONE', -1);
 
 /**
+ * Create indexes for mongo blocks.
+ *
+ * @param array $theme_list
+ *   Array of themes to create indexes for.
+ *
+ * @throws \MongoConnectionException
+ */
+function _mongodb_block_ensure_indexes(array $theme_list) {
+  foreach ($theme_list as $theme) {
+    $index = ['_id.module' => 1, '_id.delta' => 1];
+    mongodb_collection('block', $theme)->ensureIndex($index);
+    mongodb_collection('block_customized', $theme)->ensureIndex($index);
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function mongodb_block_menu() {
@@ -117,14 +133,14 @@ function mongodb_block_page_build(&$page) {
 /**
  * Render the content and subject for a set of blocks.
  *
- * @param \MongoCursor $blocks_result
+ * @param array $blocks_result
  *   An array of block objects such as returned for one region by
  *   _block_load_blocks()
  *
  * @return array
  *   A render array for the blocks.
  */
-function mongodb_block_render_blocks(MongoCursor $blocks_result) {
+function mongodb_block_render_blocks(array $blocks_result) {
   $return = [];
   foreach ($blocks_result as $block) {
     // Copy module and delta out of the _id.
@@ -418,4 +434,11 @@ function mongodb_block_preprocess_block(&$variables) {
 
   // Create a valid HTML ID and make sure it is unique.
   $variables['block_html_id'] = drupal_html_id('block-' . $variables['block']->module . '-' . $variables['block']->delta);
+}
+
+/**
+ * Implements hook_themes_enabled().
+ */
+function mongodb_block_themes_enabled($theme_list) {
+  _mongodb_block_ensure_indexes($theme_list);
 }
