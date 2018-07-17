@@ -388,7 +388,7 @@ function mongodb_block_save_block($collection, array $block) {
  *
  * @see block.tpl.php
  */
-function template_preprocess_block(&$variables) {
+function mongodb_block_preprocess_block(&$variables) {
   $block_counter = &drupal_static(__FUNCTION__, []);
   $variables['block'] = $variables['elements']['#block'];
   // All blocks get an independent counter for each region.
