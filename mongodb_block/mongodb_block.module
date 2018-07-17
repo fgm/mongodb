@@ -4,7 +4,8 @@
  * @file
  * Controls the visual building blocks a page is constructed with.
  *
- * Resembles very closely the core block module but without an UI.
+ * Resembles very closely the core block module but without an UI. The best way
+ * to read this code is to compare it with block.module.
  */
 
 // Denotes that a block is not enabled in any region and should not be shown.
@@ -33,6 +34,8 @@ function mongodb_block_flush_caches() {
 
 /**
  * Implements hook_theme().
+ *
+ * @see \block_theme()
  */
 function mongodb_block_theme() {
   return [
@@ -47,7 +50,7 @@ function mongodb_block_theme() {
 /**
  * Implements hook_form_system_modules_alter().
  *
- * Hide block, dashboard module.
+ * Hides block, dashboard module.
  */
 function mongodb_block_form_system_modules_alter(&$form) {
   unset($form['modules']['Core']['block']);
@@ -57,7 +60,9 @@ function mongodb_block_form_system_modules_alter(&$form) {
 /**
  * Implements hook_page_build().
  *
- * Render blocks into their regions.
+ * Renders blocks into their regions.
+ *
+ * @see \block_page_build()
  */
 function mongodb_block_page_build(&$page) {
   global $theme;
@@ -65,7 +70,7 @@ function mongodb_block_page_build(&$page) {
   // The theme system might not yet be initialized. We need $theme.
   drupal_theme_initialize();
 
-  // Grab only the current regions.
+  // Fetch a list of regions for the current theme.
   $all_regions = system_region_list($theme);
 
   $collection = mongodb_collection('block', $theme);
@@ -213,20 +218,20 @@ function mongodb_block_get_cache_id($block) {
 /**
  * Gets an array of blocks suitable for drupal_render().
  *
- * @param array $region_blocks
- *   A list of blocks.
+ * @param array $list
+ *   A list of blocks such as that returned by block_list().
  *
  * @return array
- *   A render array for the blocks.
+ *   A renderable array.
  *
  * @see _block_get_renderable_array()
  */
-function mongodb_block_get_renderable_array(array $region_blocks) {
+function mongodb_block_get_renderable_array(array $list = []) {
   global $theme;
 
   $weight = 0;
   $build = [];
-  foreach ($region_blocks as $key => $block) {
+  foreach ($list as $key => $block) {
     $build[$key] = $block->content;
     unset($block->content);
 
@@ -280,13 +285,15 @@ function mongodb_block_rehash() {
  * Updates the block collection with the blocks currently exported by modules.
  *
  * @param string $theme
- *   The theme to rehash blocks for. If not provided, defaults to the
- *   currently used theme.
+ *   The theme to rehash blocks for. If not provided, defaults to the currently
+ *   used theme.
  *
  * @return mixed
  *   Blocks currently exported by modules.
  *
  * @throws \MongoConnectionException
+ * @throws \MongoCursorException
+ * @throws \MongoCursorTimeoutException
  */
 function _mongodb_block_rehash($theme) {
   $collection = mongodb_collection('block', $theme);
@@ -355,9 +362,9 @@ function mongodb_block_save_block($collection, array $block) {
 }
 
 /**
- * Process variables for block.tpl.php.
+ * Processes variables for block.tpl.php.
  *
- * Prepare the values passed to the theme_block function to be passed
+ * Prepares the values passed to the theme_block function to be passed
  * into a pluggable template engine. Uses block properties to generate a
  * series of template file suggestions. If none are found, the default
  * block.tpl.php is used.
@@ -389,7 +396,15 @@ function template_preprocess_block(&$variables) {
 
   $variables['theme_hook_suggestions'][] = 'block__' . $variables['block']->region;
   $variables['theme_hook_suggestions'][] = 'block__' . $variables['block']->module;
-  $variables['theme_hook_suggestions'][] = 'block__' . $variables['block']->module . '__' . $variables['block']->delta;
+  // Hyphens (-) and underscores (_) play a special role in theme suggestions.
+  // Theme suggestions should only contain underscores, because within
+  // drupal_find_theme_templates(), underscores are converted to hyphens to
+  // match template file names, and then converted back to underscores to match
+  // pre-processing and other function names. So if your theme suggestion
+  // contains a hyphen, it will end up as an underscore after this conversion,
+  // and your function names won't be recognized. So, we need to convert
+  // hyphens to underscores in block deltas for the theme suggestions.
+  $variables['theme_hook_suggestions'][] = 'block__' . $variables['block']->module . '__' . strtr($variables['block']->delta, '-', '_');
 
   // Create a valid HTML ID and make sure it is unique.
   $variables['block_html_id'] = drupal_html_id('block-' . $variables['block']->module . '-' . $variables['block']->delta);
