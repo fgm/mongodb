@@ -95,8 +95,17 @@ function mongodb_block_page_build(&$page) {
   $query['pages']['$in'] = $ancestors;
   $query['pages_exclude']['$nin'] = $ancestors;
   $query['region']['$in'] = array_keys($all_regions);
-  $blocks = mongodb_block_render_blocks($collection->find($query)->sort(['weight' => 1]));
-  foreach ($blocks as $region => $region_blocks) {
+  $blocks_result = $collection->find($query)->sort(['weight' => 1]);
+  $regions_blocks = array();
+  foreach ($blocks_result as $block) {
+    if (!isset($regions_blocks[$block['region']])) {
+      $regions_blocks[$block['region']] = [];
+    }
+    $regions_blocks[$block['region']][] = $block;
+  }
+  foreach ($regions_blocks as $region => $region_blocks) {
+    $region_blocks = mongodb_block_render_blocks($region_blocks);
+    $page[$region] = mongodb_block_get_renderable_array($region_blocks);
     if (isset($page[$region])) {
       $page[$region] = array_merge($page[$region], mongodb_block_get_renderable_array($region_blocks));
     }
@@ -120,7 +129,9 @@ function mongodb_block_render_blocks(MongoCursor $blocks_result) {
   $return = [];
   foreach ($blocks_result as $block) {
     // Copy module and delta out of the _id.
-    $block += $block['_id'];
+    if (is_array($block) && isset($block['_id'])) {
+      $block += $block['_id'];
+    }
     $block = (object) $block;
     // Render the block content if it has not been created already.
     if (!isset($block->content)) {
@@ -167,7 +178,7 @@ function mongodb_block_render_blocks(MongoCursor $blocks_result) {
       if (!isset($block->subject)) {
         $block->subject = '';
       }
-      $return[$block->region]["{$block->module}_{$block->delta}"] = $block;
+      $return["{$block->module}_{$block->delta}"] = $block;
     }
   }
   return $return;
