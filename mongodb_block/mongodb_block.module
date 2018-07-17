@@ -109,14 +109,14 @@ function mongodb_block_page_build(&$page) {
 /**
  * Render the content and subject for a set of blocks.
  *
- * @param array $blocks_result
+ * @param \MongoCursor $blocks_result
  *   An array of block objects such as returned for one region by
  *   _block_load_blocks()
  *
  * @return array
  *   A render array for the blocks.
  */
-function mongodb_block_render_blocks(array $blocks_result) {
+function mongodb_block_render_blocks(MongoCursor $blocks_result) {
   $return = [];
   foreach ($blocks_result as $block) {
     // Copy module and delta out of the _id.
