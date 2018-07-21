@@ -3,7 +3,7 @@
 The MongoDB module and sub-modules need some configuration to be useful. This
 guide assumes that :
 
-* a [MongoDB][download] 3.0 to 4.0 instance is already installed, configured, and
+* a [MongoDB][download] 3.0 to 4.0 server instance is already installed, configured, and
   available to connect to from the Drupal instance.
 * the site will be running [Drupal][drupal] 8.[56].x, with [Drush][drush] 8.x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or
@@ -13,6 +13,16 @@ guide assumes that :
 
 **NOTE** : There is a plan to support Drush 9.x and it can be tracked [here][drush9]
 
+In a nutshell, any MongoDB server >=3.6, PHP extension >= 1.3.4, MongoDB PHP library >= 1.2.0 and PHP version >= 7.1. We recommend using composer for installing this module. For details refer [below](#composer-requirements).
+
+For more details about MongoDB extension and library for PHP check [here][PHPMongoDBext]
+
+ Some more links for you:
+
+   * [MongoDB Mac installation][MongoDBMac]
+   * [MongoDB LINUX installation][MongoDBLinux]
+   * [MongoDB Windows installation][MongoDBWindows]
+
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/project/drupal
 [drush]: https://www.drupal.org/project/drush
@@ -21,6 +31,10 @@ guide assumes that :
 [mongodb]: http://php.net/mongodb
 [php72]: https://www.drupal.org/node/2936045
 [drush9]: https://www.drupal.org/project/mongodb/issues/2986785
+[PHPMongoDBext]: http://php.net/mongodb
+[MongoDBMac]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/
+[MongoDBLinux]: https://docs.mongodb.com/manual/administration/install-on-linux/
+[MongoDBWindows]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
 
 If MongoDB 3.0 to 4.0 is installed on `localhost:27017` and `mongod` was started
 with the `–httpinterface` option, you may view the web admin interface:
