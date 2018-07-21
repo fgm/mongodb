@@ -8,7 +8,9 @@ use Drupal\Tests\UnitTestCase;
 /**
  * Test the ControllerBase mechanisms.
  *
+ * @covers \Drupal\mongodb_watchdog\Controller\ControllerBase
  * @coversDefaultClass \Drupal\mongodb_watchdog\Controller\ControllerBase
+ *
  * @group mongodb
  */
 class ControllerBaseTest extends UnitTestCase {

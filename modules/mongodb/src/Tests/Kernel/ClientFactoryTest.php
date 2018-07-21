@@ -9,6 +9,9 @@ use MongoDB\Driver\Exception\ConnectionTimeoutException;
 /**
  * Class ClientFactoryTest.
  *
+ * @covers \Drupal\mongodb\ClientFactory
+ * @coversDefaultClass \Drupal\mongodb\ClientFactory
+ *
  * @group MongoDB
  */
 class ClientFactoryTest extends MongoDbTestBase {

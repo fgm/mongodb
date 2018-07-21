@@ -12,6 +12,9 @@ use Drupal\mongodb_storage\Storage;
 /**
  * Class KeyValueFactoryTest.
  *
+ * @covers \Drupal\mongodb_storage\KeyValueFactory
+ * @coversDefaultClass \Drupal\mongodb_storage\KeyValueFactory
+ *
  * @group MongoDB
  */
 class KeyValueFactoryTest extends MongoDbTestBase {
@@ -28,7 +31,7 @@ class KeyValueFactoryTest extends MongoDbTestBase {
    */
   protected function getSettingsArray(): array {
     $settings = parent::getSettingsArray();
-    $settings[MongoDb::MODULE]['databases'][KeyValueFactory::DB_KEYVALUE] = [
+    $settings['databases'][KeyValueFactory::DB_KEYVALUE] = [
       static::CLIENT_TEST_ALIAS,
       $this->getDatabasePrefix(),
     ];
