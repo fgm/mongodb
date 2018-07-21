@@ -1,14 +1,17 @@
 #Installation and Settings
+##Prerequisites
 The MongoDB module and sub-modules need some configuration to be useful. This
 guide assumes that :
 
-* a [MongoDB][download] 3.0 to 3.6 instance is already installed, configured, and
+* a [MongoDB][download] 3.0 to 4.0 instance is already installed, configured, and
   available to connect to from the Drupal instance.
 * the site will be running [Drupal][drupal] 8.[56].x, with [Drush][drush] 8.x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or
   later is installed and configured.
 * PHP is version 7.[01].x. At this point, [PHP 7.2.x][php72] might not pass the
   test suite. It should be compatible by the time Drupal 8.6.0 is released.
+
+**NOTE** : There is a plan to support Drush 9.x and it can be tracked [here][drush9]
 
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/project/drupal
@@ -17,12 +20,14 @@ guide assumes that :
 [mongo]: http://php.net/mongo
 [mongodb]: http://php.net/mongodb
 [php72]: https://www.drupal.org/node/2936045
+[drush9]: https://www.drupal.org/project/mongodb/issues/2986785
 
-If MongoDB 3.0 to 3.5 is installed on `localhost:27017` and `mongod` was started
+If MongoDB 3.0 to 4.0 is installed on `localhost:27017` and `mongod` was started
 with the `–httpinterface` option, you may view the web admin interface:
 
     http://localhost:28017/
 
+##Settings Configuration
 * Download the module package, as per
   [Installing contributed modules (Drupal 8)][install]
 * Copy the relevant section from the `mongodb/example.settings.local.php` to
@@ -68,10 +73,10 @@ $settings['mongodb'] = [
       same `default` MongoDB server, but in a separate `keyvalue` database.
     * the `logger` database alias will store logger collections on the same
       `default` MongoDB server, but in a separate `logger` database.
-* To use the MongoDB Key-Value (Expirable) storage:
-  * ensure there is a `keyvalue` database alias in `settings.local.php`, like
+  * To use the MongoDB Key-Value (Expirable) storage:
+    * ensure there is a `keyvalue` database alias in `settings.local.php`, like
     in the previous lines.
-  * declare MongoDB as the default keyvalue storage implementation by editing
+    * declare MongoDB as the default keyvalue storage implementation by editing
     the existing declarations in the `sites/default/services.yml` file:
 
 ```yaml
@@ -82,8 +87,9 @@ factory.keyvalue.expirable:
   keyvalue_expirable_default: keyvalue.expirable.mongodb
 ```
 
-  * enable the `mongodb_storage` module, e.g. using `drush en mongodb_storage`.
-  * import the existing Key-Value contents from the database, using the Drush
+## Installation
+  * Enable the `mongodb_storage` module, e.g. using `drush en mongodb_storage`.
+  * Import the existing Key-Value contents from the database, using the Drush
     `mongodb_storage-import-keyvalue` command: `drush most-ikv`. It will output
     the list of imported keys, for your information, like:
 
@@ -106,27 +112,38 @@ Once the module is installed and enabled, you can check its requirements on
 ![MongoDB on status page](images/mongodb-requirements.png)
 
 
-##Composer Requirements
+###Composer Requirements
 
-* Commands below are for those who are using composer already in your site to
-  manage module dependencies. To know more about composer [here][composer].
+* This section is applicable if you are using composer already in your site to
+  manage module dependencies. Know more about composer [here][composer].
 
 [composer]: https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies
 
-* At the root of your site
-  * If you are using the `drupal-composer/drupal-project` skeleton, just add
-    this package:
+  * At the root of your site
+    * If you are using the `drupal-composer/drupal-project` skeleton, just add
+      this package:
 
-        composer require drupal/mongodb "^2.0.0"
-  * Otherwise also add a composer requirement by typing:
+         `composer require drupal/mongodb "^2.0.0"`
 
-        composer require drupal/mongodb "^2.0.0"
-        composer require mongodb/mongodb "^1.2.0"
-* If this is the first Composer dependency on the project, from the site root,
-  run:
+    * Otherwise also add a composer requirement by typing:
 
-        composer install
-* Enable the `mongodb` module. You now have access to the MongoDB services and
-  Drush commands.
+        `composer require drupal/mongodb "^2.0.0"`
+        `composer require mongodb/mongodb "^1.2.0"`
+
+    * If this is the first Composer dependency on the project, run:
+
+        `composer install`
+
+  * Enable the `mongodb` module. You now have access to the MongoDB services and
+  Drush commands for the `mongodb` module.
 
 [install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
+
+Note that there is currently a bug with Composer-based deployment from packages.drupal.org/8 : [#2985860: packages.drupal.org/8 serves incorrect composer.json for module mongodb][composer issue]. The workaround is:
+
+* Either require mongodb/mongodb directly in the root composer.json of the project
+* Add a repositories entry with `"type": "vcs"` and `"url": "https://github.com/fgm/mongodb.git"` in the root `composer.json`, and require the `"drupal/mongodb":"dev-8.x-2.x"` instead of the d.o.-rewritten format for semantic versioning `"drupal/mongodb":"^2.0"`
+
+Once this issue is fixed, these workarounds will no longer be necessary.
+
+[composer issue]: https://www.drupal.org/project/project_composer/issues/2985860
