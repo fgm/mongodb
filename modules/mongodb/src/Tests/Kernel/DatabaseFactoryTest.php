@@ -10,7 +10,6 @@ use MongoDB\Database;
 /**
  * Class DatabaseFactoryTest.
  *
- * @covers \Drupal\mongodb\DatabaseFactory
  * @coversDefaultClass \Drupal\mongodb\DatabaseFactory
  *
  * @group MongoDB

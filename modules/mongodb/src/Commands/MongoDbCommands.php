@@ -85,16 +85,21 @@ class MongoDbCommands implements ContainerInjectionInterface {
     /** @var \MongoDB\Database $db */
     $db = $this->dbFactory->get($alias);
     $jsonSelector = json_decode($selector);
-    $docs = $db->selectCollection($collection)
+    $docs1 = $db->selectCollection($collection)
       ->find($jsonSelector, [
         'typeMap' => [
           'root' => 'array',
           'document' => 'array',
           'array' => 'array',
         ],
-      ])
-      ->toArray();
-    return $this->yaml->encode($docs);
+      ]);
+
+    $docs2 = [];
+    // Convert objects in result set to hashes.
+    foreach ($docs1 as $doc1) {
+      $docs2[] = json_decode(json_encode($doc1), TRUE);
+    }
+    return $this->yaml->encode($docs2);
   }
 
   /**

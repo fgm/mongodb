@@ -12,7 +12,6 @@ use Drupal\mongodb_storage\Storage;
 /**
  * Class KeyValueFactoryTest.
  *
- * @covers \Drupal\mongodb_storage\KeyValueFactory
  * @coversDefaultClass \Drupal\mongodb_storage\KeyValueFactory
  *
  * @group MongoDB
