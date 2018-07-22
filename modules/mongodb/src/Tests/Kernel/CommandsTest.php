@@ -66,7 +66,7 @@ class CommandsTest extends MongoDbTestBase {
     $docCount = count($documents);
     $collection->insertMany($documents);
     // Just a sanity check.
-    $this->assertEquals($docCount, $collection->countDocuments());
+    $this->assertEquals($docCount, MongoDb::countCollection($collection));
 
     $commands = $this->container->get(MongoDb::SERVICE_COMMANDS);
 

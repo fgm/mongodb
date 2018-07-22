@@ -137,29 +137,6 @@ class Logger extends AbstractLogger {
   }
 
   /**
-   * Count items matching a selector in a collection.
-   *
-   * Do not use Collection::count() after extension 1.4.0, so rely on a strategy
-   * choice.
-   *
-   * @param \MongoDB\Collection $collection
-   *   The collection for which to count items.
-   * @param array $selector
-   *   The collection selector.
-   *
-   * @return int
-   *   The number of elements matching the selector in the collection.
-   */
-  protected function countCollection(Collection $collection, array $selector = []): int {
-    if (version_compare(MongoDb::libraryVersion(), '1.4.0') >= 0) {
-      return $collection->countDocuments($selector);
-    }
-    else {
-      return $collection->count($selector);
-    }
-  }
-
-  /**
    * Fill in the log_entry function, file, and line.
    *
    * @param array $log_entry
@@ -491,7 +468,7 @@ class Logger extends AbstractLogger {
    *   The number of matching events.
    */
   public function eventCount(EventTemplate $template) : int {
-    return $this->countCollection($this->eventCollection($template->_id));
+    return MongoDb::countCollection($this->eventCollection($template->_id));
   }
 
   /**
@@ -567,7 +544,7 @@ class Logger extends AbstractLogger {
       $selector = [
         'requestTracking_id' => $requestId,
       ];
-      $count += $this->countCollection($eventCollection, $selector);
+      $count += MongoDb::countCollection($eventCollection, $selector);
     }
 
     return $count;
@@ -579,7 +556,7 @@ class Logger extends AbstractLogger {
    * @throws \ReflectionException
    */
   public function templatesCount(): int {
-    return $this->countCollection($this->templateCollection());
+    return MongoDb::countCollection($this->templateCollection());
   }
 
   /**
