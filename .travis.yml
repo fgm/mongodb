@@ -81,14 +81,16 @@ before_script:
   # navigate out of module directory to prevent blown stack by recursive module lookup
   - cd ../..
 
-  # download Drupal 8.5 core.
-  - wget -q -O - http://ftp.drupal.org/files/projects/drupal-8.5.x-dev.tar.gz | tar xz
-  - cd drupal-8.5.x-dev
+  # download Drupal 8.6 core.
+  - wget -q -O - http://ftp.drupal.org/files/projects/drupal-8.6.x-dev.tar.gz | tar xz
+  - cd drupal-8.6.x-dev
   - mkdir -p modules/contrib
   - mv ../fgm/mongodb modules/contrib
 
   # install dependencies (for the module) and Coveralls (for coverage) as part of the root vendors.
   - composer require -v "drush/drush:^8.1" "mongodb/mongodb:^1.2.0" $COVERALLS
+  - composer run-script drupal-phpunit-upgrade
+  - composer show mongodb/mongodb
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e "create database $DB_NAME"
@@ -100,7 +102,7 @@ before_script:
   - tail --lines=+12 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
 
   # reference and enable mongodb modules in build site
-  #- ln -s $(readlink -e $(cd -)) drupal-8.5.x-dev/modules/custom/mongodb
+  #- ln -s $(readlink -e $(cd -)) drupal-8.6.x-dev/modules/custom/mongodb
   - vendor/bin/drush -y en mongodb_storage mongodb_watchdog
 
   # Not needed: we don't have any web tests at this point.

@@ -184,11 +184,7 @@ class Requirements implements ContainerInjectionInterface {
         : [
           'value' => t('Unused mod_unique_id'),
           'severity' => REQUIREMENT_INFO,
-          'description' => t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or <a href=":config">enable request tracking</a> for a better logging experience.',
-            [
-              ':config' => Url::fromRoute('mongodb_watchdog.config')
-                ->toString(),
-            ]),
+          'description' => t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or enable request tracking</a> for a better logging experience.'),
         ];
 
       return [$state, FALSE];

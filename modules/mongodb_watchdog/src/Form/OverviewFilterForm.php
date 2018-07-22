@@ -82,7 +82,7 @@ class OverviewFilterForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
-    $watchdog = $container->get('mongodb.logger');
+    $watchdog = $container->get(Logger::SERVICE_LOGGER);
 
     return new static($watchdog);
   }

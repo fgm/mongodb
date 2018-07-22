@@ -14,7 +14,7 @@ on top of the main `mongodb` module to take .
 Module                | Information
 ----------------------|---------------------------------------------------------
 mongodb               | Drupal/Drush wrapper around mongodb-php-library.
-mongodb_storage       | Key-value storage in MongoDB
+mongodb_storage       | Key-value storage in MongoDB.
 mongodb_watchdog      | Store logger (watchdog) messages in MongoDB.
 
 Full documentation is available on [Github pages]

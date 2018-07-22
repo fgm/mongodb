@@ -154,7 +154,7 @@ class DetailController extends ControllerBase {
     $logger = $container->get('logger.channel.mongodb_watchdog');
 
     /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
-    $watchdog = $container->get('mongodb.logger');
+    $watchdog = $container->get(Logger::SERVICE_LOGGER);
 
     /** @var \Drupal\Core\Config\ImmutableConfig $config */
     $config = $container->get('config.factory')->get('mongodb_watchdog.settings');

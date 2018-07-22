@@ -47,7 +47,7 @@ class ClearConfirmForm extends ConfirmFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('mongodb.watchdog_storage'),
-      $container->get('mongodb.logger')
+      $container->get(Logger::SERVICE_LOGGER)
     );
   }
 

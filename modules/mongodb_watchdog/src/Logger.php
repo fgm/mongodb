@@ -37,6 +37,7 @@ class Logger extends AbstractLogger {
 
   const MODULE = 'mongodb_watchdog';
 
+  const SERVICE_LOGGER = 'mongodb.logger';
   const SERVICE_REQUIREMENTS = 'mongodb.watchdog_requirements';
 
   const TRACKER_COLLECTION = 'watchdog_tracker';
@@ -346,8 +347,10 @@ class Logger extends AbstractLogger {
       $stats = $this->database->command($command, static::LEGACY_TYPE_MAP)->toArray()[0];
     }
     catch (RuntimeException $e) {
-      // 59 is expected if the collection was not found. Other values are not.
-      if ($e->getCode() !== 59) {
+      // 59 (PHP < 7.2) or 17 (PHP 7.2) are expected if the collection was not
+      // found. Other values are not.
+
+      if (!in_array($e->getCode(), [17, 59])) {
         throw $e;
       }
 
