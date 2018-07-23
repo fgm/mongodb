@@ -9,7 +9,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\mongodb\MongoDb;
-use MongoDB\Collection;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
@@ -349,7 +348,6 @@ class Logger extends AbstractLogger {
     catch (RuntimeException $e) {
       // 59 (PHP < 7.2) or 17 (PHP 7.2) are expected if the collection was not
       // found. Other values are not.
-
       if (!in_array($e->getCode(), [17, 59])) {
         throw $e;
       }
