@@ -2,19 +2,21 @@
 
 namespace Drupal\mongodb_storage\Commands;
 
-use Drupal\Component\Datetime\Time;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\StatementInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseFactory;
 use Drupal\mongodb_storage\KeyValueExpirableFactory;
 use Drupal\mongodb_storage\KeyValueFactory;
+use Drupal\mongodb_storage\Storage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Drush command service for mongodb_storage.
  */
-class MongoDbStorageCommands {
+class MongoDbStorageCommands implements ContainerInjectionInterface {
 
   /**
    * The database service.
@@ -95,13 +97,32 @@ class MongoDbStorageCommands {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var \Drupal\Core\Database\Connection $db */
+    $db = $container->get('database');
+    /** @var \Drupal\Core\KeyValueStore\DatabaseStorage $kvDb */
+    $kvDb = $container->get('keyvalue.database');
+    /** @var \Drupal\Core\KeyValueStore\DatabaseStorageExpirable $kvExpirableDb */
+    $kvExpirableDb = $container->get('keyvalue.expirable.database');
+    /** @var \Drupal\mongodb_storage\KeyValueStore $kvMo */
+    $kvMo = $container->get(Storage::SERVICE_KV);
+    /** @var \Drupal\mongodb_storage\KeyValueStoreExpirable $kvExpirableMo */
+    $kvExpirableMo = $container->get(Storage::SERVICE_KVE);
+    /** @var \Drupal\Component\Datetime\TimeInterface $time */
+    $time = $container->get('datetime.time');
+    return new static($db, $kvDb, $kvExpirableDb, $kvMo, $kvExpirableMo, $time);
+  }
+
+  /**
    * List the collections in a database KV table.
    *
    * @param string $tableName
    *   The name of the KV table.
    *
    * @return \Drupal\Core\Database\StatementInterface
-   *   A cursor to the invididual collection names.
+   *   A cursor to the individual collection names.
    */
   protected function getCollections(string $tableName) : StatementInterface {
     $cursor = $this->database->select($tableName, 's')

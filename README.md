@@ -40,8 +40,8 @@ INSTALLATION AND SETTINGS
 The MongoDB module and sub-modules need some configuration to be useful. This
 guide assumes that :
 
-* a [MongoDB][download] 3.0 to 3.6 instance is already installed, configured, and
-  available to connect to from the Drupal instance.
+* a [MongoDB][download] 3.0 to 3.6 instance is already installed, configured, 
+  and available to connect to from the Drupal instance.
 * the site will be running [Drupal][drupal] 8.[56].x, with [Drush][drush] 8.x.
 * the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or
   later is installed and configured.
@@ -249,7 +249,8 @@ discussion, but send pull requests on [Github] rather than drupal.org patches.
 [Github]: https://github.com/fgm/mongodb
 
 Since the project also tracks obsolete module versions like 6.x-1.x and 8.x-1.x,
-use this URL to issues for supported branches and components: https://goo.gl/5KrYkG
+use this URL to issues for supported branches and components: 
+https://goo.gl/5KrYkG
 
 
 LEGAL
