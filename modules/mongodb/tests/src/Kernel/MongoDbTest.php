@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\mongodb\Tests\Kernel;
+namespace Drupal\Tests\mongodb\Kernel;
 
 use Drupal\mongodb\MongoDb;
 use MongoDB\Collection;

@@ -1,9 +1,9 @@
 <?php
 
-namespace Drupal\mongodb_storage\Test\Kernel;
+namespace Drupal\Tests\mongodb_storage\Kernel;
 
 use Drupal\mongodb\MongoDb;
-use Drupal\mongodb\Tests\Kernel\MongoDbTestBase;
+use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
 use Drupal\mongodb_storage\KeyValueFactory;
 use Drupal\mongodb_storage\KeyValueStore;
 use Drupal\mongodb_storage\KeyValueStoreExpirable;
