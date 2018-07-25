@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\mongodb_watchdog\Unit;
+namespace Drupal\Tests\mongodb_watchdog\Unit;
 
 use Drupal\mongodb_watchdog\Controller\ControllerBase;
 use Drupal\Tests\UnitTestCase;
@@ -19,6 +19,8 @@ class ControllerBaseTest extends UnitTestCase {
   /**
    * Test page generation for various data set shapes.
    *
+   * @covers ::getPage
+   *
    * @dataProvider pageGenerationData
    */
   public function testPageGeneration(int $requestedPage, int $count, int $expected) {
@@ -29,7 +31,7 @@ class ControllerBaseTest extends UnitTestCase {
   /**
    * Data provider for testPageGeneration().
    *
-   * @see \Drupal\mongodb_watchdog\Unit\ControllerBaseTest::testPageGeneration()
+   * @see \Drupal\Tests\mongodb_watchdog\Unit\ControllerBaseTest::testPageGeneration()
    *
    * Coding standards are ignored for the data list for the sake of readability.
    */

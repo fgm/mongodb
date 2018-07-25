@@ -17,16 +17,16 @@
   "description": "Drupal 8.2 driver for MongoDB",
   "homepage": "https://www.drupal.org/project/mongodb",
   "keywords": ["drupal", "mongodb"],
-  "license": "GPL-2.0+",
+  "license": "GPL-2.0-or-later",
   "minimum-stability": "dev",
   "name": "drupal/mongodb",
   "prefer-stable": false,
   "require": {
     "php": "^7.0",
     "ext-mongodb": "^1.1.7",
-    "mongodb/mongodb": "^1.2.0",
+    "drupal/console": "^1.8",
     "drush/drush": "^8.1",
-    "symfony/yaml": "~3.4"
+    "mongodb/mongodb": "^1.2.0"
   },
   "require-dev": {
       "squizlabs/php_codesniffer": "^2.8.1"

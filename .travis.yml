@@ -15,13 +15,6 @@ matrix:
     - php: 7.2
   fast_finish: true
 
-#addons:
-#  apt:
-#    sources:
-#    - mongodb-3.6-trusty
-#    packages:
-#    - mongodb-org-server
-
 env:
   global:
     - MODULE_NAME='mongodb'
@@ -29,7 +22,7 @@ env:
     - DB_USER=root
     - DB_URL="mysql://$DB_USER@127.0.0.1/$DB_NAME"
     - COVERAGE_FILE=coverage.clover
-    - PHPUNIT_OPTS="-c core/phpunit.xml -v --coverage-clover=modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
+    - PHPUNIT_OPTS="-c phpunit.xml -v --debug --coverage-clover=../modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
 
     # Code coverage via coveralls.io
     - COVERALLS="php-coveralls/php-coveralls:2.1.*"
@@ -88,7 +81,7 @@ before_script:
   - mv ../fgm/mongodb modules/contrib
 
   # install dependencies (for the module) and Coveralls (for coverage) as part of the root vendors.
-  - composer require -v "drush/drush:^8.1" "mongodb/mongodb:^1.2.0" $COVERALLS
+  - composer require -v "drush/drush:^8.1" "drupal/console:^1.8" "mongodb/mongodb:^1.2.0" $COVERALLS
   - composer run-script drupal-phpunit-upgrade
   - composer show mongodb/mongodb
 
@@ -114,7 +107,9 @@ script:
   # Configure and run the tests
   # Use explicit config filtering Drupal core from coverage report.
   - cp modules/contrib/$MODULE_NAME/core.phpunit.xml core/phpunit.xml
-  - SIMPLETEST_DB="$DB_URL" vendor/bin/phpunit $PHPUNIT_OPTS modules/contrib/$MODULE_NAME
+  - cd core
+  - SIMPLETEST_DB="$DB_URL" ../vendor/bin/phpunit $PHPUNIT_OPTS ../modules/contrib/$MODULE_NAME
+  - cd ..
 
 after_script:
   - cd modules/contrib/$MODULE_NAME
