@@ -22,7 +22,9 @@ env:
     - DB_USER=root
     - DB_URL="mysql://$DB_USER@127.0.0.1/$DB_NAME"
     - COVERAGE_FILE=coverage.clover
-    - PHPUNIT_OPTS="-c phpunit.xml -v --debug --coverage-clover=../modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
+    # Relative path for coverage is relative to current directory of running
+    # code, not current directory launching phpunit. This means D8 root.
+    - PHPUNIT_OPTS="-c phpunit.xml -v --debug --coverage-clover=modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
 
     # Code coverage via coveralls.io
     - COVERALLS="php-coveralls/php-coveralls:2.1.*"

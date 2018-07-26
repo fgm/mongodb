@@ -2,6 +2,7 @@
 
 namespace Drupal\mongodb;
 
+// @codingStandardsIgnoreLine
 use Drupal\mongodb\Commands\MongoDbCommands;
 use MongoDB\Collection;
 
@@ -28,7 +29,7 @@ class MongoDb {
    * @return \Drupal\mongodb\Commands\MongoDbCommands
    *   Return the commands service.
    */
-  public static function commands(): MongoDbCommands {
+  public static function commands() : MongoDbCommands {
     return \Drupal::service(static::SERVICE_COMMANDS);
   }
 
@@ -48,7 +49,7 @@ class MongoDb {
    *
    * @see https://github.com/mongodb/mongo-php-library/issues/558
    */
-  public static function libraryApiVersion(): string {
+  public static function libraryApiVersion() : string {
     if (!empty(static::$libraryVersion)) {
       return static::$libraryVersion;
     }
@@ -78,7 +79,7 @@ class MongoDb {
    * @return int
    *   The number of elements matching the selector in the collection.
    */
-  public static function countCollection(Collection $collection, array $selector = []): int {
+  public static function countCollection(Collection $collection, array $selector = []) : int {
     if (version_compare(static::libraryApiVersion(), '1.4.0') >= 0) {
       return $collection->countDocuments($selector);
     }

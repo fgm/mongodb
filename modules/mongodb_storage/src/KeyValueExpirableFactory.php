@@ -21,7 +21,7 @@ class KeyValueExpirableFactory extends KeyValueFactory implements KeyValueExpira
   protected $time;
 
   /**
-   * KeyValueExpira bleFactory constructor.
+   * KeyValueExpirableFactory constructor.
    *
    * @param \Drupal\mongodb\DatabaseFactory $databaseFactory
    *   The mongodb.database_factory service.

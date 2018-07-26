@@ -18,6 +18,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class MongoDbStorageCommands implements ContainerInjectionInterface {
 
+  const KVP_TABLE = 'key_value';
+  const KVE_TABLE = 'key_value_expire';
+
   /**
    * The database service.
    *
@@ -141,7 +144,6 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
   protected function importPersistent(StatementInterface $cursor) {
     foreach ($cursor as $row) {
       $collection = $row->collection;
-      echo "  $collection\n";
 
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface $dbStore */
       $dbStore = $this->persistentDbFactory->get($collection);
@@ -150,7 +152,6 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
 
       $mgStore->deleteAll();
       foreach ($dbStore->getAll() as $key => $value) {
-        echo "    $key\n";
         $mgStore->set($key, $value);
       }
     }
@@ -172,7 +173,6 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
     $columns = ['name', 'value', 'expire'];
     foreach ($cursor as $row) {
       $collection = $row->collection;
-      echo "  $collection\n";
 
       $valueCursor = $this->database
         ->select($tableName, 'kve')
@@ -186,7 +186,7 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
       $mgStore->deleteAll();
       foreach ($valueCursor as $valueRow) {
         $key = $valueRow->name;
-        $value = $valueRow->value;
+        $value = unserialize($valueRow->value);
         $now = $this->time->getCurrentTime();
         $expire = $valueRow->expire;
         $mgStore->setWithExpire($key, $value, $expire - $now);
@@ -198,15 +198,13 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
    * The command implementation for most-ikv: import the DB KV to MongoDB.
    */
   public function import() {
-    $tableName = 'key_value';
-    $cursor = $this->getCollections($tableName);
-    echo "$tableName\n";
+    $cursor = $this->getCollections(static::KVP_TABLE);
+    echo static::KVP_TABLE . PHP_EOL;
     $this->importPersistent($cursor);
 
-    $tableName = 'key_value_expire';
-    $cursor = $this->getCollections($tableName);
-    echo "$tableName\n";
-    $this->importExpirable($cursor, $tableName);
+    $cursor = $this->getCollections(static::KVE_TABLE);
+    echo static::KVE_TABLE . PHP_EOL;
+    $this->importExpirable($cursor, static::KVE_TABLE);
   }
 
 }
