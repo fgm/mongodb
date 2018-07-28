@@ -18,6 +18,7 @@ matrix:
 env:
   global:
     - MODULE_NAME='mongodb'
+    - BASE_URL=http://127.0.0.1:8080
     - DB_NAME='travis_ci_mongodb'
     - DB_USER=root
     - DB_URL="mysql://$DB_USER@127.0.0.1/$DB_NAME"
@@ -102,15 +103,15 @@ before_script:
 
   # Not needed: we don't have any web tests at this point.
   # start a web server on port 8080, run in the background; wait for initialization.
-  # - drush runserver 127.0.0.1:8080 &
-  #- until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
+  - vendor/bin/drush runserver 127.0.0.1:8080 &
+  - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
 
 script:
   # Configure and run the tests
   # Use explicit config filtering Drupal core from coverage report.
   - cp modules/contrib/$MODULE_NAME/core.phpunit.xml core/phpunit.xml
   - cd core
-  - SIMPLETEST_DB="$DB_URL" ../vendor/bin/phpunit $PHPUNIT_OPTS ../modules/contrib/$MODULE_NAME
+  - SIMPLETEST_BASE_URL="$BASE_URL" SIMPLETEST_DB="$DB_URL" ../vendor/bin/phpunit $PHPUNIT_OPTS ../modules/contrib/$MODULE_NAME
   - cd ..
 
 after_script:

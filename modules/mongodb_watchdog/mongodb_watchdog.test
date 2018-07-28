@@ -20,20 +20,6 @@ class MongoDBLogTestCase extends WebTestBase {
   protected $profile = 'testing';
 
   /**
-   * An administrator-type user account.
-   *
-   * @var object
-   */
-  protected $big_user;
-
-  /**
-   * A basic authenticated user account.
-   *
-   * @var object
-   */
-  protected $any_user;
-
-  /**
    * The current MongoDB collection.
    *
    * @var MongoCollection
@@ -64,28 +50,6 @@ class MongoDBLogTestCase extends WebTestBase {
   }
 
   /**
-   * Enable modules and create users with specific permissions.
-   */
-  public function setUp() {
-    $this->group = t('Setup');
-    parent::setUp('mongodb', 'mongodb_watchdog', 'blog', 'poll');
-
-    // Create users.
-    $this->big_user = $this->drupalCreateUser(['administer site configuration', 'access administration pages', 'access site reports', 'administer users']);
-    $this->any_user = $this->drupalCreateUser(['access content']);
-
-    $this->request_time = REQUEST_TIME;
-
-    try {
-      $this->collection = mongodb_collection(variable_get('mongodb_watchdog', 'watchdog'));
-    }
-    catch (Exception $e) {
-      $this->collection = NULL;
-    }
-    $this->assertNotNull($this->collection, t('Access MongoDB watchdog collection'), $this->group);
-  }
-
-  /**
    * Clear the MongoDB data: simpletest only clears the main SQL database.
    *
    * (non-PHPdoc)
@@ -102,26 +66,6 @@ class MongoDBLogTestCase extends WebTestBase {
   }
 
   // @FIXME Below this line is older broken code inherited from dblog tests
-
-  /**
-   * Login users, create dblog events, and test dblog functionality through the admin and user interfaces.
-   */
-  public function zTestDbLog() {
-    // Login the admin user.
-    $this->drupalLogin($this->big_user);
-
-    // No implementation
-    // $row_limit = 100;
-    // $this->verifyRowLimit($row_limit);
-    // No implementation
-    // $this->verifyCron($row_limit);
-    $this->verifyEvents();
-    $this->verifyReports();
-
-    // Login the regular user.
-    $this->drupalLogin($this->any_user);
-    $this->verifyReports(403);
-  }
 
   /**
    * Generate dblog entries.
@@ -413,106 +357,6 @@ class MongoDBLogTestCase extends WebTestBase {
         break;
     }
     return $content;
-  }
-
-  /**
-   * Login an admin user, create dblog event, and test clearing dblog functionality through the admin interface.
-   */
-  protected function zTestDbLogAddAndClear() {
-    global $base_root;
-    // Get a count of how many watchdog entries there are.
-    $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
-    $log = [
-      'type'        => 'custom',
-      'message'     => 'Log entry added to test the doClearTest clear down.',
-      'variables'   => [],
-      'severity'    => WATCHDOG_NOTICE,
-      'link'        => NULL,
-      'user'        => $this->big_user,
-      'request_uri' => $base_root . request_uri(),
-      'referer'     => $_SERVER['HTTP_REFERER'],
-      'ip'          => ip_address(),
-      'timestamp'   => $this->request_time,
-    ];
-    // Add a watchdog entry.
-    dblog_watchdog($log);
-    // Make sure the table count has actually incremented.
-    $this->assertEqual($count + 1, db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField(), t('dblog_watchdog() added an entry to the dblog :count', [':count' => $count]));
-    // Login the admin user.
-    $this->drupalLogin($this->big_user);
-    // Now post to clear the db table.
-    $this->drupalPost('admin/reports/dblog', [], t('Clear log messages'));
-    // Count rows in watchdog that previously related to the deleted user.
-    $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
-    $this->assertEqual($count, 0, t('DBLog contains :count records after a clear.', [':count' => $count]));
-  }
-
-  /**
-   * Test the dblog filter on admin/reports/dblog.
-   */
-  protected function zTestFilter() {
-    $this->drupalLogin($this->big_user);
-
-    // Clear log to ensure that only generated entries are found.
-    db_delete('watchdog')->execute();
-
-    // Generate watchdog entries.
-    $type_names = [];
-    $types = [];
-    for ($i = 0; $i < 3; $i++) {
-      $type_names[] = $type_name = $this->randomName();
-      $severity = WATCHDOG_EMERGENCY;
-      for ($j = 0; $j < 3; $j++) {
-        $types[] = $type = [
-          'count' => mt_rand(1, 5),
-          'type' => $type_name,
-          'severity' => $severity++,
-        ];
-        $this->generateLogEntries($type['count'], $type['type'], $type['severity']);
-      }
-    }
-
-    // View the dblog.
-    $this->drupalGet('admin/reports/dblog');
-
-    // Confirm all the entries are displayed.
-    $count = $this->getTypeCount($types);
-    foreach ($types as $key => $type) {
-      $this->assertEqual($count[$key], $type['count'], 'Count matched');
-    }
-
-    // Filter by each type and confirm that entries with various severities are
-    // displayed.
-    foreach ($type_names as $type_name) {
-      $edit = [
-        'type[]' => [$type_name],
-      ];
-      $this->drupalPost(NULL, $edit, t('Filter'));
-
-      // Count the number of entries of this type.
-      $type_count = 0;
-      foreach ($types as $type) {
-        if ($type['type'] == $type_name) {
-          $type_count += $type['count'];
-        }
-      }
-
-      $count = $this->getTypeCount($types);
-      $this->assertEqual(array_sum($count), $type_count, 'Count matched');
-    }
-
-    // Set filter to match each of the three type attributes and confirm the
-    // number of entries displayed.
-    foreach ($types as $key => $type) {
-      $edit = [
-        'type[]' => [$type['type']],
-        'severity[]' => [$type['severity']],
-      ];
-      $this->drupalPost(NULL, $edit, t('Filter'));
-
-      $count = $this->getTypeCount($types);
-      $this->assertEqual(array_sum($count), $type['count'], 'Count matched');
-    }
   }
 
   /**
