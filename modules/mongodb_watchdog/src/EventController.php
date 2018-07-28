@@ -2,7 +2,6 @@
 
 namespace Drupal\mongodb_watchdog;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Link;
@@ -104,8 +103,8 @@ class EventController {
       // Locations generated from Drush/Console will not necessarily match the
       // site home URL, and will not therefore not necessarily be reachable, so
       // we only generate a link if the location is "within" the site.
-      (Unicode::strpos($event->location, $this->front) === 0)
-      ? Link::fromTextAndUrl(Unicode::substr($event->location, $this->baseLength), Url::fromUri($event->location))
+      (mb_strpos($event->location, $this->front) === 0)
+      ? Link::fromTextAndUrl(mb_substr($event->location, $this->baseLength), Url::fromUri($event->location))
       : $event->location,
       empty($event->referrer) ? '' : Link::fromTextAndUrl($event->referrer, Url::fromUri($event->referrer)),
       $event->hostname,

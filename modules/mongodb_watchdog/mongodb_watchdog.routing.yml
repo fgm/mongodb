@@ -32,7 +32,7 @@ mongodb_watchdog.reports.request:
   options:
     _admin_route: TRUE
     parameters:
-      unique_id:
+      uniqueId:
         type: string
 
 mongodb_watchdog.reports.top403:

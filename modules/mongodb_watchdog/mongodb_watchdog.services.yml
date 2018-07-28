@@ -18,6 +18,7 @@ services:
       - '@config.factory'
       - '@request_stack'
       - '@messenger'
+      - '@datetime.time'
     tags:
       - { name: logger }
       - { name: backend_overridable }

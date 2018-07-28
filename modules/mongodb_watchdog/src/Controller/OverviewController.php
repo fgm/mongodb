@@ -106,7 +106,7 @@ class OverviewController extends ControllerBase {
     $this->moduleHandler = $moduleHandler;
 
     // Add terminal "/".
-    $this->rootLength = Unicode::strlen(DRUPAL_ROOT);
+    $this->rootLength = mb_strlen(DRUPAL_ROOT);
 
   }
 

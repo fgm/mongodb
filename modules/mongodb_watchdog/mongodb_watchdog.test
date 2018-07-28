@@ -12,18 +12,6 @@ use Drupal\simpletest\WebTestBase;
  */
 class MongoDBLogTestCase extends WebTestBase {
   /**
-   * Name of the test helper module invoking watchdog for test.
-   */
-  const MODULE = 'watchdog_test';
-
-  /**
-   * The name of the variable holding the system watchdog limit level.
-   *
-   * @var string
-   */
-  const LIMIT_VARIABLE = 'watchdog_limit';
-
-  /**
    * Override the default "standard" profile for this test, we need to include
    * a test-specific module, which should not be present on a standard install.
    *
@@ -111,107 +99,6 @@ class MongoDBLogTestCase extends WebTestBase {
     mongodb_watchdog_clear_log_submit();
 
     parent::tearDown();
-  }
-
-  /**
-   * Simplified query to look for a logged message.
-   *
-   * @param string $message
-   *
-   * @return string|null
-   */
-  protected function find($message) {
-    $ret = $this->collection->findOne(['message' => $message]);
-    return $ret;
-  }
-
-  /**
-   * Assert that a given entry is present in the watchdog.
-   *
-   * @param string $message
-   *
-   * @return void
-   */
-  public function assertEntry($message) {
-    $logged = $this->find($message);
-    $this->assertNotNull($logged, t('Event %message is logged', ['%message' => $message]), $this->group);
-    $this->assertTrue(isset($logged['message']) && $logged['message'] == $message, t('Logged message is unchanged'), $this->group);
-  }
-
-  /**
-   * Assert that a given entry is not present in the watchdog.
-   *
-   * @param string $message
-   *
-   * @return void
-   */
-  public function assertNoEntry($message) {
-    $logged = $this->find($message);
-    $this->assertNull($logged, t('Event %message is not logged', ['%message' => $message]), $this->group);
-  }
-
-  /**
-   * Ensure collection availability and inform on behalf of caller if if does not.
-   *
-   * @return bool
-   */
-  protected function checkCollection() {
-    if (!empty($this->collection)) {
-      return TRUE;
-    }
-    $stack = debug_backtrace();
-    $method = $stack[1]['function'];
-    if (strtolower(substr($method, 0, 4)) == 'test') {
-      $this->pass(t('%test test skipped: no collection.', [
-        '%test' => substr($method, 4),
-      ]), $this->group);
-    }
-    return FALSE;
-  }
-
-  /**
-   * Test the default and non-default mongodb_watchdog insertion behaviours.
-   *
-   * Make sure the module applies the watchdog_limit variable,
-   */
-  public function testWatchdogLimit() {
-
-    // Bypass test if testing system does not have a MongoDB connection.
-    if (!$this->checkCollection()) {
-      return;
-    };
-
-    // Default limit should be WATCHDOG_DEBUG.
-    $this->group = t('Defaults');
-    $this->assertEqual(variable_get(self::LIMIT_VARIABLE, WATCHDOG_DEBUG), WATCHDOG_DEBUG,
-      t('%name defaults to WATCHDOG_DEBUG', ['%name' => self::LIMIT_VARIABLE]),
-      $this->group);
-
-    // Test at this default level.
-    $message = $this->randomString(32);
-    $this->pass(t('Logging %message', ['%message' => $message]), $this->group);
-    watchdog(self::MODULE, $message, [], WATCHDOG_DEBUG);
-    $this->assertEntry($message);
-
-    // Now request a higher level: unimportant events should be ignored...
-    $this->group = t('Ignoring');
-    variable_set(self::LIMIT_VARIABLE, WATCHDOG_NOTICE);
-    $message = $this->randomString(32);
-    $this->pass(t('Logging %message', ['%message' => $message]), $this->group);
-    watchdog(self::MODULE, $message, [], WATCHDOG_DEBUG);
-    $this->assertNoEntry($message);
-
-    // ... but events at the limit or more important should be logged.
-    $this->group = t('Logging');
-    $message = $this->randomString(32);
-    $this->pass(t('Logging %message', ['%message' => $message]), $this->group);
-    watchdog(self::MODULE, $message, [], WATCHDOG_NOTICE);
-    $this->assertEntry($message);
-
-    $message = $this->randomString(32);
-    $this->pass(t('Logging %message', ['%message' => $message]), $this->group);
-    watchdog(self::MODULE, $message, [], WATCHDOG_ERROR);
-    $this->assertEntry($message);
   }
 
   // @FIXME Below this line is older broken code inherited from dblog tests

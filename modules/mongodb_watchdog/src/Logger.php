@@ -2,8 +2,8 @@
 
 namespace Drupal\mongodb_watchdog;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Render\MarkupInterface;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
@@ -14,6 +14,7 @@ use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
 use Psr\Log\AbstractLogger;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -35,6 +36,9 @@ class Logger extends AbstractLogger {
   // The logger database alias.
   const DB_LOGGER = 'logger';
 
+  // The default channel exposed when using the raw PSR-3 contract.
+  const DEFAULT_CHANNEL = 'psr-3';
+
   const MODULE = 'mongodb_watchdog';
 
   const SERVICE_LOGGER = 'mongodb.logger';
@@ -52,6 +56,25 @@ class Logger extends AbstractLogger {
       'document' => 'array',
       'root' => 'array',
     ],
+  ];
+
+  /**
+   * Map of PSR3 log constants to RFC 5424 log constants.
+   *
+   * @var array
+   *
+   * @see \Drupal\Core\Logger\LoggerChannel
+   * @see \Drupal\mongodb_watchdog\Logger::log()
+   */
+  protected $rfc5424levels = [
+    LogLevel::EMERGENCY => RfcLogLevel::EMERGENCY,
+    LogLevel::ALERT => RfcLogLevel::ALERT,
+    LogLevel::CRITICAL => RfcLogLevel::CRITICAL,
+    LogLevel::ERROR => RfcLogLevel::ERROR,
+    LogLevel::WARNING => RfcLogLevel::WARNING,
+    LogLevel::NOTICE => RfcLogLevel::NOTICE,
+    LogLevel::INFO => RfcLogLevel::INFO,
+    LogLevel::DEBUG => RfcLogLevel::DEBUG,
   ];
 
   /**
@@ -106,6 +129,13 @@ class Logger extends AbstractLogger {
   protected $requestStack;
 
   /**
+   * A sequence number for log events during a request.
+   *
+   * @var int
+   */
+  protected $sequence = 0;
+
+  /**
    * An array of templates already used in this request.
    *
    * Used only with request tracking enabled.
@@ -115,11 +145,11 @@ class Logger extends AbstractLogger {
   protected $templates = [];
 
   /**
-   * A sequence number for log events during a request.
+   * The datetime.time service.
    *
-   * @var int
+   * @var \Drupal\Component\Datetime\TimeInterface
    */
-  protected $sequence = 0;
+  protected $time;
 
   /**
    * Logger constructor.
@@ -134,23 +164,32 @@ class Logger extends AbstractLogger {
    *   The core request_stack service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The datetime.time service.
    */
   public function __construct(
     Database $database,
     LogMessageParserInterface $parser,
     ConfigFactoryInterface $configFactory,
     RequestStack $stack,
-    MessengerInterface $messenger) {
+    MessengerInterface $messenger,
+    TimeInterface $time
+  ) {
     $this->database = $database;
     $this->messenger = $messenger;
     $this->parser = $parser;
     $this->requestStack = $stack;
+    $this->time = $time;
 
     $config = $configFactory->get(static::CONFIG_NAME);
-    $this->limit = $config->get('limit');
-    $this->items = $config->get('items');
-    $this->requests = $config->get('requests');
-    $this->requestTracking = $config->get('request_tracking');
+    // During install, a logger will be invoked 3 times, the first 2 without any
+    // configuration information, so hard-coded defaults are needed on all
+    // config keys.
+    $this->setLimit($config->get(static::CONFIG_LIMIT) ?? RfcLogLevel::DEBUG);
+    // Do NOT use 1E4 / 1E5: these are doubles, but config is typed to integers.
+    $this->items = $config->get(static::CONFIG_ITEMS) ?? 10000;
+    $this->requests = $config->get(static::CONFIG_REQUESTS) ?? 100000;
+    $this->requestTracking = $config->get(static::CONFIG_REQUEST_TRACKING) ?? FALSE;
   }
 
   /**
@@ -214,10 +253,16 @@ class Logger extends AbstractLogger {
   /**
    * {@inheritdoc}
    *
-   * @see https://drupal.org/node/1355808
    * @see https://httpd.apache.org/docs/2.4/en/mod/mod_unique_id.html
    */
   public function log($level, $template, array $context = []) {
+    // PSR-3 LoggerInterface documents level as "mixed", while the RFC itself
+    // in §1.1 implies implementations may know about non-standard levels. In
+    // the case of Drupal implementations, this includes the 8 RFC5424 levels.
+    if (is_string($level)) {
+      $level = $this->rfc5424levels[$level];
+    }
+
     if ($level > $this->limit) {
       return;
     }
@@ -228,7 +273,7 @@ class Logger extends AbstractLogger {
 
     // If code location information is all present, as for errors/exceptions,
     // then use it to build the message template id.
-    $type = $context['channel'];
+    $type = $context['channel'] ?? static::DEFAULT_CHANNEL;
     $location = [
       '%type' => 1,
       '@message' => 1,
@@ -237,7 +282,8 @@ class Logger extends AbstractLogger {
       '%line' => 1,
     ];
     if (!empty(array_diff_key($location, $placeholders))) {
-      $this->enhanceLogEntry($placeholders, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
+      $this->enhanceLogEntry($placeholders,
+        debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
     }
     $file = $placeholders['%file'];
     $line = $placeholders['%line'];
@@ -252,8 +298,8 @@ class Logger extends AbstractLogger {
         '_id' => $templateId,
         'message' => $template,
         'severity' => $level,
-        'changed' => time(),
-        'type' => Unicode::substr($context['channel'], 0, 64),
+        'changed' => $this->time->getCurrentTime(),
+        'type' => mb_substr($type, 0, 64),
       ],
     ];
     $options = ['upsert' => TRUE];
@@ -310,12 +356,12 @@ class Logger extends AbstractLogger {
       }
     }
     $event = [
-      'hostname' => Unicode::substr($context['ip'], 0, 128),
-      'link' => $context['link'],
-      'location' => $context['request_uri'],
-      'referer' => $context['referer'],
-      'timestamp' => $context['timestamp'],
-      'user' => ['uid' => $context['uid']],
+      'hostname' => mb_substr($context['ip'] ?? NULL, 0, 128),
+      'link' => $context['link'] ?? NULL,
+      'location' => $context['request_uri'] ?? NULL,
+      'referer' => $context['referer'] ?? NULL,
+      'timestamp' => $context['timestamp'] ?? $this->time->getCurrentTime(),
+      'user' => ['uid' => $context['uid'] ?? 0],
       'variables' => $placeholders,
     ];
     if ($this->requestTracking) {
@@ -565,6 +611,16 @@ class Logger extends AbstractLogger {
     }
 
     return $count;
+  }
+
+  /**
+   * Setter for limit.
+   *
+   * @param int $limit
+   *   The limit value.
+   */
+  public function setLimit(int $limit) {
+    $this->limit = $limit;
   }
 
   /**
