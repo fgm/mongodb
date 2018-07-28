@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb\Commands;
 
 use Drupal\mongodb\Install\Tools;
@@ -49,7 +51,8 @@ class MongodbCommands extends DrushCommands {
    * @usage drush mo-find logger watchdog '{ "severity": 3 }'
    *   Get all the logger/watchdog entries tracking rows.
    * @usage drush mdbf keyvalue kvp_state '{ "_id": "system.theme_engine.files" }'
-   *   Get a specific State entry. Note how escaping needs to be performed in the shell.
+   *   Get a specific State entry. Note how escaping needs to be performed in
+   *   the shell.
    *
    * @command mongodb:find
    * @aliases mdbf,mo-find

@@ -5,6 +5,8 @@
  * Contains the main module connecting Drupal to MongoDB.
  */
 
+declare(strict_types = 1);
+
 /**
  * Implements hook_help().
  */
@@ -15,7 +17,7 @@ function mongodb_help($route) {
         ':project' => 'https://www.drupal.org/project/mongodb',
         ':mongo' => 'https://www.mongodb.com/',
         ':docs' => 'https://fgm.github.io/mongodb',
-      ]);
+      ]) . '</p>';
   }
 }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -36,7 +38,7 @@ class ConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     return new static(
       $container->get('config.factory'),
       $container->get('config.typed')->getDefinition('mongodb_watchdog.settings')
@@ -46,7 +48,7 @@ class ConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $formState) {
+  public function buildForm(array $form, FormStateInterface $formState): array {
     $config = $this->config(Logger::CONFIG_NAME);
     foreach ($config->getRawData() as $key => $default) {
       if (mb_substr($key, 0, 1) === '_') {
@@ -87,13 +89,13 @@ class ConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $formState) {
+  public function submitForm(array &$form, FormStateInterface $formState): void {
     $config = $this->config(Logger::CONFIG_NAME);
     foreach (array_keys($config->getRawData()) as $key) {
       $config->set($key, intval($formState->getValue($key)));
     }
     $config->save();
-    drupal_set_message($this->t('The configuration options have been saved.'));
+    $this->messenger()->addMessage($this->t('The configuration options have been saved.'));
   }
 
   /**
@@ -103,7 +105,7 @@ class ConfigForm extends ConfigFormBase {
    *   An array of configuration object names that are editable if called in
    *   conjunction with the trait's config() method.
    */
-  protected function getEditableConfigNames() {
+  protected function getEditableConfigNames(): array {
     return ['mongodb_watchdog.settings'];
   }
 
@@ -113,7 +115,7 @@ class ConfigForm extends ConfigFormBase {
    * @return string
    *   The unique string identifying the form.
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'mongodb_watchdog_config';
   }
 

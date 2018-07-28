@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use MongoDB\BSON\Unserializable;
 
 /**
@@ -82,7 +85,7 @@ class EventTemplate implements Unserializable {
    * @return array[string]
    *   A properties by key array.
    */
-  public static function keys() {
+  public static function keys(): array {
     $ret = [
       '_id' => [
         'label' => t('ID'),
@@ -109,13 +112,14 @@ class EventTemplate implements Unserializable {
         },
       ],
     ];
+
     return $ret;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function bsonUnserialize(array $data) {
+  public function bsonUnserialize(array $data): void {
     foreach (static::keys() as $key => $info) {
       $datum = $data[$key] ?? NULL;
       $this->{$key} = isset($info['creation_callback'])
@@ -144,11 +148,10 @@ class EventTemplate implements Unserializable {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The template message with its variables substituted.
    */
-  public function asString(array $variables) {
+  public function asString(array $variables): TranslatableMarkup {
     // @codingStandardsIgnoreStart
     return $this->t($this->message, $variables);
     // @codingStandardsIgnoreEnd
-
   }
 
 }

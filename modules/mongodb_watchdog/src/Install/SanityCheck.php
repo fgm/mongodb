@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Install;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -84,7 +86,7 @@ class SanityCheck {
   /**
    * Prepare a table of bucket to hold the statistics.
    */
-  protected function initBucketsList() {
+  protected function initBucketsList(): void {
     $barCount = 10;
     $barWidth = $this->items / $barCount;
     $buckets = [
@@ -108,7 +110,7 @@ class SanityCheck {
    * @param int $value
    *   The value to store.
    */
-  protected function store(int $value) {
+  protected function store(int $value): void {
     if ($value <= 1 || $value >= $this->items - 1) {
       $this->buckets[$value]++;
       return;

@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Controller;
 
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -10,6 +12,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Render\RenderableInterface;
 use Drupal\mongodb_watchdog\Event;
 use Drupal\mongodb_watchdog\EventTemplate;
 use Drupal\mongodb_watchdog\Form\OverviewFilterForm;
@@ -106,8 +109,7 @@ class OverviewController extends ControllerBase {
     $this->moduleHandler = $moduleHandler;
 
     // Add terminal "/".
-    $this->rootLength = Unicode::strlen(DRUPAL_ROOT);
-
+    $this->rootLength = mb_strlen(DRUPAL_ROOT);
   }
 
   /**
@@ -118,8 +120,10 @@ class OverviewController extends ControllerBase {
    *
    * @return array
    *   A render array.
+   *
+   * @throws \ReflectionException
    */
-  public function build(Request $request) {
+  public function build(Request $request): array {
     $top = $this->getTop();
 
     $rows = $this->getRowData($request);
@@ -137,10 +141,10 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate[] $rows
    *   The template data.
    *
-   * @return string[string|array]
+   * @return array
    *   A render array for the main table.
    */
-  protected function buildMainTable(array $rows) {
+  protected function buildMainTable(array $rows): array {
     $ret = [
       '#header' => $this->buildMainTableHeader(),
       '#rows' => $this->buildMainTableRows($rows),
@@ -156,7 +160,7 @@ class OverviewController extends ControllerBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
    *   A table header array.
    */
-  protected function buildMainTableHeader() {
+  protected function buildMainTableHeader(): array {
     $header = [
       $this->t('#'),
       $this->t('Latest'),
@@ -175,10 +179,10 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate[] $templates
    *   The event template data.
    *
-   * @return string[array|string]
+   * @return array
    *   A render array for a table.
    */
-  protected function buildMainTableRows(array $templates) {
+  protected function buildMainTableRows(array $templates): array {
     $rows = [];
     $levels = RfcLogLevel::getLevels();
 
@@ -193,7 +197,7 @@ class OverviewController extends ControllerBase {
       $row[] = $template->type;
       $row[] = $this->getEventLink($template);
       $row[] = [
-        'data' => $this->getEventSource($template, $row),
+        'data' => $this->getEventSource($template),
       ];
 
       $rows[] = $row;
@@ -205,7 +209,7 @@ class OverviewController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     /** @var \Psr\Log\LoggerInterface $logger */
     $logger = $container->get('logger.channel.mongodb_watchdog');
 
@@ -233,10 +237,10 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $template
    *   The event template for which to buildl the link.
    *
-   * @return string
-   *   An internal link in string form.
+   * @return \Drupal\Core\Render\RenderableInterface
+   *   An internal link in renderable form.
    */
-  protected function getEventLink(EventTemplate $template) {
+  protected function getEventLink(EventTemplate $template): RenderableInterface {
     switch ($template->type) {
       case 'page not found':
         $cell = Link::createFromRoute($this->t('( Top 404 )'), 'mongodb_watchdog.reports.top404');
@@ -248,7 +252,9 @@ class OverviewController extends ControllerBase {
 
       // Limited-length message.
       default:
-        $message = Unicode::truncate(strip_tags(SafeMarkup::format($template->message, [])), 56, TRUE, TRUE);
+        $markup = new FormattableMarkup($template->message, []);
+        $message = Unicode::truncate(strip_tags($markup->__toString()),
+          56, TRUE, TRUE);
         $cell = Link::createFromRoute($message, 'mongodb_watchdog.reports.detail', [
           'eventTemplate' => $template->_id,
         ]);
@@ -267,7 +273,7 @@ class OverviewController extends ControllerBase {
    * @return array
    *   A render array for the source location, possibly empty or wrong.
    */
-  protected function getEventSource(EventTemplate $template) {
+  protected function getEventSource(EventTemplate $template): array {
     $cell = ['#markup' => ''];
 
     if (in_array($template->type, TopController::TYPES)) {
@@ -312,12 +318,12 @@ class OverviewController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request. Needed for paging.
    *
-   * @return \Drupal\mongodb_watchdog\EventTemplate[]
+   * @return \Drupal\mongodb_watchdog\EventTemplate
    *   The data array.
    *
    * @throws \ReflectionException
    */
-  protected function getRowData(Request $request) {
+  protected function getRowData(Request $request): array {
     $count = $this->watchdog->templatesCount();
     $page = $this->setupPager($request, $count);
     $skip = $page * $this->itemsPerPage;
@@ -338,7 +344,7 @@ class OverviewController extends ControllerBase {
    * @return array
    *   A render array for the top filter form.
    */
-  protected function getTop() {
+  protected function getTop(): array {
     $top = $this->formBuilder->getForm('Drupal\mongodb_watchdog\Form\OverviewFilterForm');
     return $top;
   }

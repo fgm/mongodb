@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Command;
 
 use Drupal\Component\Serialization\Yaml;
@@ -51,7 +53,7 @@ class SanityCheckCommand extends ContainerAwareCommand {
   /**
    * {@inheritdoc}
    */
-  protected function configure() {
+  protected function configure(): void {
     $this
       ->setName('mongodb:watchdog:sanitycheck')
       ->setDescription($this->trans('commands.mongodb.watchdog.sanitycheck.description'))
@@ -62,7 +64,7 @@ class SanityCheckCommand extends ContainerAwareCommand {
   /**
    * {@inheritdoc}
    */
-  protected function execute(InputInterface $input, OutputInterface $output) {
+  protected function execute(InputInterface $input, OutputInterface $output): void {
     $buckets = $this->sanityCheck->buildCollectionstats();
     $this->getIo()->writeln($this->yaml->encode($buckets));
   }

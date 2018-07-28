@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Install;
 
 use Drupal\Component\Serialization\SerializationInterface;
@@ -91,7 +93,7 @@ class Requirements implements ContainerInjectionInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) : Requirements {
+  public static function create(ContainerInterface $container): self {
     return new static(
       $container->get('settings'),
       $container->get('config.factory'),
@@ -150,7 +152,7 @@ class Requirements implements ContainerInjectionInterface {
    * @param bool $useDefault
    *   Use default configuration ?
    */
-  protected function loadConfig(bool $useDefault) {
+  protected function loadConfig(bool $useDefault): void {
     if ($useDefault) {
       $rawDefaultConfig = file_get_contents(__DIR__ . '/../../config/install/mongodb_watchdog.settings.yml');
       $defaultConfigData = $this->serialization->decode($rawDefaultConfig);
@@ -223,7 +225,7 @@ class Requirements implements ContainerInjectionInterface {
   /**
    * Implements hook_requirements().
    */
-  public function check(string $phase) {
+  public function check(string $phase): array {
     $state = [
       Logger::MODULE => [
         'title' => 'MongoDB watchdog',

@@ -5,6 +5,8 @@
  * Install file for the MongoDB module.
  */
 
+declare(strict_types = 1);
+
 /**
  * Requirements check: MongoDB extension.
  *

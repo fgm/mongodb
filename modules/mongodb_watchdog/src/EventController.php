@@ -1,16 +1,21 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\user\Entity\User;
+use MongoDB\Driver\Cursor;
 
 /**
  * Class EventController provides query and render logic for Event occurrences.
+ *
+ * It is not a page/Response controller, hence its location outside the
+ * Controller namespace.
  */
 class EventController {
 
@@ -66,11 +71,13 @@ class EventController {
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
    *   The MongoDB logger service, to load events.
    */
-  public function __construct(ConfigFactoryInterface $config,
+  public function __construct(
+    ConfigFactoryInterface $config,
     DateFormatterInterface $dateFormatter,
     Logger $watchdog) {
     // Needed for other values so build it first.
-    $this->front = Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString();
+    $this->front = Url::fromRoute('<front>', [], ['absolute' => TRUE])
+      ->toString();
 
     $this->anonymous = $config->get('user.settings')->get('anonymous');
     $this->baseLength = mb_strlen($this->front) - 1;
@@ -91,12 +98,13 @@ class EventController {
    *
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  public function asTableRow(EventTemplate $template, Event $event) {
-    $uid = intval($event->uid);
+  public function asTableRow(EventTemplate $template, Event $event): array {
+    $uid = $event->uid();
     if (!isset($this->userCache[$uid])) {
       $this->userCache[$uid] = $uid ? User::load($uid)->toLink() : $this->anonymous;
     }
 
+    $location = $event->location();
     $ret = [
       $this->dateFormatter->format($event->timestamp, 'short'),
       $this->userCache[$uid],
@@ -104,15 +112,16 @@ class EventController {
       // Locations generated from Drush/Console will not necessarily match the
       // site home URL, and will not therefore not necessarily be reachable, so
       // we only generate a link if the location is "within" the site.
-      (Unicode::strpos($event->location, $this->front) === 0)
-      ? Link::fromTextAndUrl(Unicode::substr($event->location, $this->baseLength), Url::fromUri($event->location))
-      : $event->location,
+      (mb_strpos($location, $this->front) === 0)
+      ? Link::fromTextAndUrl(mb_substr($location, $this->baseLength), Url::fromUri($location))
+      : $location,
       empty($event->referrer) ? '' : Link::fromTextAndUrl($event->referrer, Url::fromUri($event->referrer)),
       $event->hostname,
       isset($event->requestTracking_id)
       ? Link::createFromRoute(t('Request'), 'mongodb_watchdog.reports.request', ['uniqueId' => $event->requestTracking_id])
       : '',
     ];
+
     return $ret;
   }
 
@@ -129,7 +138,7 @@ class EventController {
    * @return \MongoDB\Driver\Cursor
    *   A cursor to the event occurrences.
    */
-  public function find(EventTemplate $template, $skip, $limit) {
+  public function find(EventTemplate $template, $skip, $limit): Cursor {
     $collection = $this->watchdog->eventCollection($template->_id);
     $selector = [];
     $options = [

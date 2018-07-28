@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Core\Config\ImmutableConfig;
@@ -62,7 +64,7 @@ class TopController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  public function build(Request $request, $type) {
+  public function build(Request $request, $type): array {
     $top = $this->getTop();
 
     $rows = $this->getRowData($request, $type);
@@ -80,10 +82,10 @@ class TopController extends ControllerBase {
    * @param array $rows
    *   The event data.
    *
-   * @return string[string|array]
+   * @return array
    *   A render array for the main table.
    */
-  protected function buildMainTable(array $rows) {
+  protected function buildMainTable(array $rows): array {
     $ret = [
       '#header' => $this->buildMainTableHeader(),
       '#rows' => $this->buildMainTableRows($rows),
@@ -98,7 +100,7 @@ class TopController extends ControllerBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
    *   A table header array.
    */
-  protected function buildMainTableHeader() {
+  protected function buildMainTableHeader(): array {
     $header = [
       $this->t('#'),
       $this->t('Paths'),
@@ -113,10 +115,10 @@ class TopController extends ControllerBase {
    * @param array[] $counts
    *   The array of counts per 403/404 page.
    *
-   * @return string[array|string]
+   * @return array
    *   A render array for a table.
    */
-  protected function buildMainTableRows(array $counts) {
+  protected function buildMainTableRows(array $counts): array {
     $rows = [];
     foreach ($counts as $count) {
       $row = [
@@ -132,7 +134,7 @@ class TopController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     /** @var \Psr\Log\LoggerInterface $logger */
     $logger = $container->get('logger.channel.mongodb_watchdog');
 
@@ -159,7 +161,7 @@ class TopController extends ControllerBase {
    * @return array
    *   The data array.
    */
-  protected function getRowData(Request $request, $type) {
+  protected function getRowData(Request $request, $type): array {
     // Find _id for the error type.
     $templateCollection = $this->watchdog->templateCollection();
     $template = $templateCollection->findOne(['type' => $type], ['_id']);
@@ -200,16 +202,16 @@ JAVASCRIPT;
    *
    * @param \MongoDB\Collection $collection
    *   The collection on which to perform the command.
-   * @param object $key
+   * @param \stdClass $key
    *   The grouping key.
-   * @param object $cond
+   * @param \stdClass $cond
    *   The condition.
    * @param string $reduce
    *   The reducer function: must be valid JavaScript code.
-   * @param object $initial
+   * @param \stdClass $initial
    *   The initial document.
    *
-   * @return array|void
+   * @return array|null
    *   Void in case of error, otherwise an array with the following keys:
    *   - waitedMS: time spent waiting
    *   - retval: an array of command results, containing at least the key
@@ -217,7 +219,7 @@ JAVASCRIPT;
    *   - keys: the number of different keys, normally matching count(retval)
    *   - ok: 1.0 in case of success.
    */
-  public function group(Collection $collection, $key, $cond, $reduce, $initial) {
+  public function group(Collection $collection, \stdClass $key, \stdClass $cond, string $reduce, \stdClass $initial): ?array {
     $cursor = $this->database->command([
       'group' => [
         'ns' => $collection->getCollectionName(),
@@ -246,7 +248,7 @@ JAVASCRIPT;
    *
    * @see \Drupal\mongodb_watchdog\Controller\TopController::build()
    */
-  protected function topSort(array $first, array $second) {
+  protected function topSort(array $first, array $second): int {
     return $second['count'] <=> $first['count'];
   }
 
