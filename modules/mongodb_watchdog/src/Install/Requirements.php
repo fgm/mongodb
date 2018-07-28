@@ -120,12 +120,12 @@ class Requirements implements ContainerInjectionInterface {
       return [$state, TRUE];
     }
 
-    list($logger_client, $logger_db) = $databases[Logger::DB_LOGGER];
+    list($loggerClient, $loggerDb) = $databases[Logger::DB_LOGGER];
     unset($databases[Logger::DB_LOGGER]);
     $duplicates = [];
     foreach ($databases as $alias => $list) {
-      list($client, $db) = $list;
-      if ($logger_client == $client && $logger_db == $db) {
+      list($client, $database) = $list;
+      if ($loggerClient == $client && $loggerDb == $database) {
         $duplicates[] = "`$alias`";
       }
     }
@@ -156,10 +156,10 @@ class Requirements implements ContainerInjectionInterface {
       $defaultConfigData = $this->serialization->decode($rawDefaultConfig);
       $this->config = $this->configFactory->getEditable(Logger::MODULE);
       $this->config->initWithData($defaultConfigData);
+      return;
     }
-    else {
-      $this->config = $this->configFactory->get(Logger::CONFIG_NAME);
-    }
+
+    $this->config = $this->configFactory->get(Logger::CONFIG_NAME);
   }
 
   /**

@@ -52,12 +52,12 @@ class CommandsTest extends MongoDbTestBase {
   public function testFind() {
     /** @var \Drupal\Component\Serialization\SerializationInterface $yaml */
     $yaml = $this->container->get("serialization.yaml");
-    /** @var \Drupal\mongodb\DatabaseFactory $db */
+    /** @var \Drupal\mongodb\DatabaseFactory $database */
     $dbFactory = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
-    $db = $dbFactory->get(MongoDb::DB_DEFAULT);
+    $database = $dbFactory->get(MongoDb::DB_DEFAULT);
 
     $collectionName = $this->randomMachineName();
-    $collection = $db->selectCollection($collectionName);
+    $collection = $database->selectCollection($collectionName);
     $collection->drop();
     $documents = [
       ["foo" => "bar"],

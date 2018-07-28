@@ -5,13 +5,11 @@
  * Contains the main module connecting Drupal to MongoDB.
  */
 
-use Drupal\Core\Routing\RouteMatchInterface;
-
 /**
  * Implements hook_help().
  */
-function mongodb_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
+function mongodb_help($route) {
+  switch ($route) {
     case 'help.page.mongodb':
       return '<p>' . t('The Drupal <a href=":project">MongoDB</a> project implements a generic interface to the <a href=":mongo">MongoDB</a> database server. Read its <a href=":docs">online documentation</a>.', [
         ':project' => 'https://www.drupal.org/project/mongodb',
@@ -21,14 +19,14 @@ function mongodb_help($route_name, RouteMatchInterface $route_match) {
   }
 }
 
-/* ==== Highly suspicious below this line =================================== */
+/* ==== D7 code below: only kept for lore reference ========================= */
 
 /**
  * Return the next id in a sequence.
  *
  * @param string $name
  *   The name of the sequence.
- * @param int $existing_id
+ * @param int $existing
  *   An existing id.
  *
  * @return int
@@ -36,8 +34,11 @@ function mongodb_help($route_name, RouteMatchInterface $route_match) {
  *
  * @throws \MongoConnectionException
  *   If the connection cannot be established.
+ *
+ * @deprecated
+ * @internal
  */
-function mongodb_next_id($name, $existing_id = 0) {
+function mongodb_next_id($name, $existing = 0) {
   // Atomically get the next id in the sequence.
   $mongo = mongodb();
   $cmd = [
@@ -55,11 +56,11 @@ function mongodb_next_id($name, $existing_id = 0) {
   }
   catch (Exception $e) {
   }
-  if (0 < $existing_id - $value + 1) {
+  if (0 < $existing - $value + 1) {
     $cmd = [
       'findandmodify' => mongodb_collection_name('sequence'),
       'query' => ['_id' => $name],
-      'update' => ['$inc' => ['value' => $existing_id - $value + 1]],
+      'update' => ['$inc' => ['value' => $existing - $value + 1]],
       'upsert' => TRUE,
       'new' => TRUE,
     ];
@@ -77,22 +78,20 @@ function mongodb_next_id($name, $existing_id = 0) {
  *
  * @return array
  *   Default options for Mongo write operations.
+ *
+ * @deprecated
+ * @internal
  */
 function mongodb_default_write_options($safe = TRUE) {
   if ($safe) {
     if (version_compare(phpversion('mongo'), '1.5.0') == -1) {
       return ['safe' => TRUE];
     }
-    else {
-      return variable_get('mongodb_write_safe_options', ['w' => 1]);
-    }
+    return variable_get('mongodb_write_safe_options', ['w' => 1]);
   }
-  else {
-    if (version_compare(phpversion('mongo'), '1.3.0') == -1) {
-      return [];
-    }
-    else {
-      return variable_get('mongodb_write_nonsafe_options', ['w' => 0]);
-    }
+
+  if (version_compare(phpversion('mongo'), '1.3.0') == -1) {
+    return [];
   }
+  return variable_get('mongodb_write_nonsafe_options', ['w' => 0]);
 }

@@ -40,7 +40,7 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
    *
    * @var \Drupal\mongodb_storage\KeyValueExpirableFactory
    */
-  protected $expirableMongoDbFactory;
+  protected $expirableMoFactory;
 
   /**
    * The database KV factory.
@@ -54,7 +54,7 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
    *
    * @var \Drupal\mongodb_storage\KeyValueFactory
    */
-  protected $persistentMongoDbFactory;
+  protected $persistentMoFactory;
 
   /**
    * The datetime.time service.
@@ -76,9 +76,9 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
    *   The database KV factory.
    * @param \Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory $expirableDbFactory
    *   The expirable database KV factory.
-   * @param \Drupal\mongodb_storage\KeyValueFactory $persistentMongoDbFactory
+   * @param \Drupal\mongodb_storage\KeyValueFactory $persistentMoFactory
    *   The MongoDB KV factory.
-   * @param \Drupal\mongodb_storage\KeyValueExpirableFactory $expirableMongoDbFactory
+   * @param \Drupal\mongodb_storage\KeyValueExpirableFactory $expirableMoFactory
    *   The expirable MongoDB KV factory.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The datetime.time service.
@@ -87,15 +87,15 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
     Connection $database,
     KeyValueDatabaseFactory $persistentDbFactory,
     KeyValueDatabaseExpirableFactory $expirableDbFactory,
-    KeyValueFactory $persistentMongoDbFactory,
-    KeyValueExpirableFactory $expirableMongoDbFactory,
+    KeyValueFactory $persistentMoFactory,
+    KeyValueExpirableFactory $expirableMoFactory,
     TimeInterface $time
   ) {
     $this->database = $database;
     $this->persistentDbFactory = $persistentDbFactory;
     $this->expirableDbFactory = $expirableDbFactory;
-    $this->persistentMongoDbFactory = $persistentMongoDbFactory;
-    $this->expirableMongoDbFactory = $expirableMongoDbFactory;
+    $this->persistentMoFactory = $persistentMoFactory;
+    $this->expirableMoFactory = $expirableMoFactory;
     $this->time = $time;
   }
 
@@ -103,8 +103,8 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\Core\Database\Connection $db */
-    $db = $container->get('database');
+    /** @var \Drupal\Core\Database\Connection $database */
+    $database = $container->get('database');
     /** @var \Drupal\Core\KeyValueStore\DatabaseStorage $kvDb */
     $kvDb = $container->get('keyvalue.database');
     /** @var \Drupal\Core\KeyValueStore\DatabaseStorageExpirable $kvExpirableDb */
@@ -115,7 +115,7 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
     $kvExpirableMo = $container->get(Storage::SERVICE_KVE);
     /** @var \Drupal\Component\Datetime\TimeInterface $time */
     $time = $container->get('datetime.time');
-    return new static($db, $kvDb, $kvExpirableDb, $kvMo, $kvExpirableMo, $time);
+    return new static($database, $kvDb, $kvExpirableDb, $kvMo, $kvExpirableMo, $time);
   }
 
   /**
@@ -148,7 +148,7 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface $dbStore */
       $dbStore = $this->persistentDbFactory->get($collection);
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
-      $mgStore = $this->persistentMongoDbFactory->get($collection, FALSE);
+      $mgStore = $this->persistentMoFactory->get($collection);
 
       $mgStore->deleteAll();
       foreach ($dbStore->getAll() as $key => $value) {
@@ -181,7 +181,7 @@ class MongoDbStorageCommands implements ContainerInjectionInterface {
         ->execute();
 
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
-      $mgStore = $this->expirableMongoDbFactory->get($collection, FALSE);
+      $mgStore = $this->expirableMoFactory->get($collection, FALSE);
 
       $mgStore->deleteAll();
       foreach ($valueCursor as $valueRow) {

@@ -83,9 +83,8 @@ class MongoDb {
     if (version_compare(static::libraryApiVersion(), '1.4.0') >= 0) {
       return $collection->countDocuments($selector);
     }
-    else {
-      return $collection->count($selector);
-    }
+
+    return $collection->count($selector);
   }
 
 }

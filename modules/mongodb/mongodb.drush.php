@@ -6,7 +6,7 @@
  */
 
 use Drupal\mongodb\MongoDb;
-use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Yaml\Parser;
 
 /**
  * Helper for hook_drush_command() using a YAML file.
@@ -22,7 +22,7 @@ use Symfony\Component\Yaml\Yaml;
  */
 function _mongodb_drush_command($from): array {
   $file = preg_replace('/(inc|php)$/', 'yml', $from);
-  $config = Yaml::parse(file_get_contents($file));
+  $config = (new Parser())->parse(file_get_contents($file));
   $items = $config['commands'];
   return $items;
 }

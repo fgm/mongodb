@@ -49,11 +49,11 @@ class MongoDbTest extends MongoDbTestBase {
    * @covers ::countCollection
    */
   public function testCountCollection() {
-    /** @var \Drupal\mongodb\DatabaseFactory $db */
+    /** @var \Drupal\mongodb\DatabaseFactory $database */
     $dbFactory = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
-    $db = $dbFactory->get(MongoDb::DB_DEFAULT);
+    $database = $dbFactory->get(MongoDb::DB_DEFAULT);
     $collectionName = $this->getDatabasePrefix() . $this->randomMachineName();
-    $collection = $db->selectCollection($collectionName);
+    $collection = $database->selectCollection($collectionName);
     $collection->drop();
 
     $expected = mt_rand(0, 100);

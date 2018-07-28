@@ -17,6 +17,7 @@ services:
       - '@logger.log_message_parser'
       - '@config.factory'
       - '@request_stack'
+      - '@messenger'
     tags:
       - { name: logger }
       - { name: backend_overridable }

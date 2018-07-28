@@ -11,6 +11,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a confirmation form before clearing out the logs.
+ *
+ * D8 has no session API, so use of $_SESSION is required, so ignore warnings.
+ *
+ * @SuppressWarnings("PHPMD.Superglobals")
  */
 class ClearConfirmForm extends ConfirmFormBase {
 
@@ -75,12 +79,12 @@ class ClearConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $formState) {
     $_SESSION['mongodb_watchdog_overview_filter'] = [];
     $this->database->drop();
     $this->logger->ensureSchema();
-    drupal_set_message($this->t('Database log cleared.'));
-    $form_state->setRedirectUrl($this->getCancelUrl());
+    $this->messenger()->addMessage($this->t('Database log cleared.'));
+    $formState->setRedirectUrl($this->getCancelUrl());
   }
 
 }

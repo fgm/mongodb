@@ -8,6 +8,7 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\mongodb\MongoDb;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
@@ -76,6 +77,13 @@ class Logger extends AbstractLogger {
   protected $limit = RfcLogLevel::DEBUG;
 
   /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
    * The message's placeholders parser.
    *
    * @var \Drupal\Core\Logger\LogMessageParserInterface
@@ -119,17 +127,25 @@ class Logger extends AbstractLogger {
    *   The database object.
    * @param \Drupal\Core\Logger\LogMessageParserInterface $parser
    *   The parser to use when extracting message variables.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The core config_factory service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $stack
    *   The core request_stack service.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
    */
-  public function __construct(Database $database, LogMessageParserInterface $parser, ConfigFactoryInterface $config_factory, RequestStack $stack) {
+  public function __construct(
+    Database $database,
+    LogMessageParserInterface $parser,
+    ConfigFactoryInterface $configFactory,
+    RequestStack $stack,
+    MessengerInterface $messenger) {
     $this->database = $database;
+    $this->messenger = $messenger;
     $this->parser = $parser;
     $this->requestStack = $stack;
 
-    $config = $config_factory->get(static::CONFIG_NAME);
+    $config = $configFactory->get(static::CONFIG_NAME);
     $this->limit = $config->get('limit');
     $this->items = $config->get('items');
     $this->requests = $config->get('requests');
@@ -139,14 +155,14 @@ class Logger extends AbstractLogger {
   /**
    * Fill in the log_entry function, file, and line.
    *
-   * @param array $log_entry
+   * @param array $entry
    *   An event information to be logger.
    * @param array $backtrace
    *   A call stack.
    *
    * @throws \ReflectionException
    */
-  protected function enhanceLogEntry(array &$log_entry, array $backtrace) {
+  protected function enhanceLogEntry(array &$entry, array $backtrace) {
     // Create list of functions to ignore in backtrace.
     static $ignored = [
       'call_user_func_array' => 1,
@@ -169,7 +185,7 @@ class Logger extends AbstractLogger {
       if (isset($bt['function'])) {
         $function = empty($bt['class']) ? $bt['function'] : $bt['class'] . '::' . $bt['function'];
         if (empty($ignored[$function])) {
-          $log_entry['%function'] = $function;
+          $entry['%function'] = $function;
           /* Some part of the stack, like the line or file info, may be missing.
            *
            * @see http://goo.gl/8s75df
@@ -177,18 +193,18 @@ class Logger extends AbstractLogger {
            * No need to fetch the line using reflection: it would be redundant
            * with the name of the function.
            */
-          $log_entry['%line'] = isset($bt['line']) ? $bt['line'] : NULL;
+          $entry['%line'] = isset($bt['line']) ? $bt['line'] : NULL;
           if (empty($bt['file'])) {
-            $reflected_method = new \ReflectionMethod($function);
-            $bt['file'] = $reflected_method->getFileName();
+            $method = new \ReflectionMethod($function);
+            $bt['file'] = $method->getFileName();
           }
 
-          $log_entry['%file'] = $bt['file'];
+          $entry['%file'] = $bt['file'];
           break;
         }
         elseif ($bt['function'] == '_drupal_exception_handler') {
           $e = $bt['args'][0];
-          $this->enhanceLogEntry($log_entry, $e->getTrace());
+          $this->enhanceLogEntry($entry, $e->getTrace());
         }
       }
     }
@@ -207,32 +223,32 @@ class Logger extends AbstractLogger {
 
     // Convert PSR3-style messages to SafeMarkup::format() style, so they can be
     // translated too in runtime.
-    $message_placeholders = $this->parser->parseMessagePlaceholders($template, $context);
+    $placeholders = $this->parser->parseMessagePlaceholders($template, $context);
 
     // If code location information is all present, as for errors/exceptions,
     // then use it to build the message template id.
     $type = $context['channel'];
-    $location_info = [
+    $location = [
       '%type' => 1,
       '@message' => 1,
       '%function' => 1,
       '%file' => 1,
       '%line' => 1,
     ];
-    if (!empty(array_diff_key($location_info, $message_placeholders))) {
-      $this->enhanceLogEntry($message_placeholders, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
+    if (!empty(array_diff_key($location, $placeholders))) {
+      $this->enhanceLogEntry($placeholders, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
     }
-    $file = $message_placeholders['%file'];
-    $line = $message_placeholders['%line'];
-    $function = $message_placeholders['%function'];
-    $key = "${type}:${level}:${file}:${line}:${function}";
-    $template_id = md5($key);
+    $file = $placeholders['%file'];
+    $line = $placeholders['%line'];
+    $function = $placeholders['%function'];
+    $key = implode(":", [$type, $level, $file, $line, $function]);
+    $templateId = md5($key);
 
-    $selector = ['_id' => $template_id];
+    $selector = ['_id' => $templateId];
     $update = [
       '$inc' => ['count' => 1],
       '$set' => [
-        '_id' => $template_id,
+        '_id' => $templateId,
         'message' => $template,
         'severity' => $level,
         'changed' => time(),
@@ -240,31 +256,31 @@ class Logger extends AbstractLogger {
       ],
     ];
     $options = ['upsert' => TRUE];
-    $template_result = $this->database
+    $templateResult = $this->database
       ->selectCollection(static::TEMPLATE_COLLECTION)
       ->updateOne($selector, $update, $options);
 
     // Only insert each template once per request.
-    if ($this->requestTracking && !isset($this->templates[$template_id])) {
-      $request_id = $this->requestStack
+    if ($this->requestTracking && !isset($this->templates[$templateId])) {
+      $requestId = $this->requestStack
         ->getCurrentRequest()
         ->server
         ->get('UNIQUE_ID');
 
-      $this->templates[$template_id] = 1;
+      $this->templates[$templateId] = 1;
       $track = [
-        'request_id' => $request_id,
-        'template_id' => $template_id,
+        'requestId' => $requestId,
+        'templateId' => $templateId,
       ];
       $this->trackerCollection()->insertOne($track);
     }
     else {
       // 24-byte format like mod_unique_id values.
-      $request_id = '@@Not-a-valid-request@@';
+      $requestId = '@@Not-a-valid-request@@';
     }
 
-    $event_collection = $this->eventCollection($template_id);
-    if ($template_result->getUpsertedCount()) {
+    $eventCollection = $this->eventCollection($templateId);
+    if ($templateResult->getUpsertedCount()) {
       // Capped collections are actually size-based, not count-based, so "items"
       // is only a maximum, assuming event documents weigh 1kB, but the actual
       // number of items stored may be lower if items are heavier.
@@ -276,18 +292,18 @@ class Logger extends AbstractLogger {
         'size' => $this->items * 1024,
         'max' => $this->items,
       ];
-      $this->database->createCollection($event_collection->getCollectionName(), $options);
+      $this->database->createCollection($eventCollection->getCollectionName(), $options);
 
       // Do not create this index by default, as its cost is useless if request
       // tracking is not enabled.
       if ($this->requestTracking) {
         $key = ['requestTracking_id' => 1];
         $options = ['name' => 'admin-by-request'];
-        $event_collection->createIndex($key, $options);
+        $eventCollection->createIndex($key, $options);
       }
     }
 
-    foreach ($message_placeholders as &$placeholder) {
+    foreach ($placeholders as &$placeholder) {
       if ($placeholder instanceof MarkupInterface) {
         $placeholder = Xss::filterAdmin($placeholder);
       }
@@ -299,15 +315,15 @@ class Logger extends AbstractLogger {
       'referer' => $context['referer'],
       'timestamp' => $context['timestamp'],
       'user' => ['uid' => $context['uid']],
-      'variables' => $message_placeholders,
+      'variables' => $placeholders,
     ];
     if ($this->requestTracking) {
       // Fetch the current request on each event to support subrequest nesting.
-      $event['requestTracking_id'] = $request_id;
+      $event['requestTracking_id'] = $requestId;
       $event['requestTracking_sequence'] = $this->sequence;
       $this->sequence++;
     }
-    $event_collection->insertOne($event);
+    $eventCollection->insertOne($event);
   }
 
   /**
@@ -332,12 +348,11 @@ class Logger extends AbstractLogger {
    */
   public function ensureCappedCollection($name, $inboundSize) {
     if ($inboundSize == 0) {
-      drupal_set_message(t('Abnormal size 0 ensuring capped collection, defaulting.'), 'error');
-      $size = 100000;
+      $this->messenger->addError(t('Abnormal size 0 ensuring capped collection, defaulting.'));
+      $inboundSize = 100000;
     }
-    else {
-      $size = $inboundSize;
-    }
+
+    $size = $inboundSize;
 
     try {
       $command = [
@@ -426,20 +441,20 @@ class Logger extends AbstractLogger {
   /**
    * Return a collection, given its template id.
    *
-   * @param string $template_id
+   * @param string $templateId
    *   The string representation of a template \MongoId.
    *
    * @return \MongoDB\Collection
    *   A collection object for the specified template id.
    */
-  public function eventCollection($template_id) {
-    $collection_name = static::EVENT_COLLECTION_PREFIX . $template_id;
-    if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $collection_name)) {
+  public function eventCollection($templateId) {
+    $name = static::EVENT_COLLECTION_PREFIX . $templateId;
+    if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $name)) {
       throw new InvalidArgumentException(t('Invalid watchdog template id `@id`.', [
-        '@id' => $collection_name,
+        '@id' => $name,
       ]));
     }
-    $collection = $this->database->selectCollection($collection_name);
+    $collection = $this->database->selectCollection($name);
     return $collection;
   }
 
@@ -503,11 +518,11 @@ class Logger extends AbstractLogger {
       ],
     ];
 
-    // @var string $template_id
+    // @var string $templateId
     // @var \Drupal\mongodb_watchdog\EventTemplate $template
-    foreach ($templates as $template_id => $template) {
-      $event_collection = $this->eventCollection($template_id);
-      $cursor = $event_collection->find($selector, $options);
+    foreach ($templates as $templateId => $template) {
+      $eventCollection = $this->eventCollection($templateId);
+      $cursor = $eventCollection->find($selector, $options);
       /** @var \Drupal\mongodb_watchdog\Event $event */
       foreach ($cursor as $event) {
         $events[$event->requestTracking_sequence] = [
@@ -563,16 +578,19 @@ class Logger extends AbstractLogger {
   /**
    * Return an array of templates uses during a given request.
    *
-   * @param string $unsafe_request_id
+   * @param string $unsafeRequestId
    *   A request "unique_id".
    *
    * @return \Drupal\mongodb_watchdog\EventTemplate[]
    *   An array of EventTemplate instances.
+   *
+   * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+   * @see https://github.com/phpmd/phpmd/issues/561
    */
-  public function requestTemplates($unsafe_request_id) {
-    $request_id = "${unsafe_request_id}";
+  public function requestTemplates($unsafeRequestId) {
     $selector = [
-      'request_id' => $request_id,
+      // Variable quoted to avoid passing an object and risk a NoSQL injection.
+      'requestId' => "${unsafeRequestId}",
     ];
 
     $cursor = $this
@@ -583,15 +601,15 @@ class Logger extends AbstractLogger {
           'template_id' => 1,
         ],
       ]);
-    $template_ids = [];
+    $templateIds = [];
     foreach ($cursor as $request) {
-      $template_ids[] = $request['template_id'];
+      $templateIds[] = $request['template_id'];
     }
-    if (empty($template_ids)) {
+    if (empty($templateIds)) {
       return [];
     }
 
-    $selector = ['_id' => ['$in' => $template_ids]];
+    $selector = ['_id' => ['$in' => $templateIds]];
     $options = [
       'typeMap' => [
         'array' => 'array',

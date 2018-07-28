@@ -82,10 +82,10 @@ class MongoDbCommands implements ContainerInjectionInterface {
    *   The serialized version of the query results.
    */
   public function find(string $alias, string $collection, string $selector = '{}'): string {
-    /** @var \MongoDB\Database $db */
-    $db = $this->dbFactory->get($alias);
+    /** @var \MongoDB\Database $database */
+    $database = $this->dbFactory->get($alias);
     $jsonSelector = json_decode($selector);
-    $docs1 = $db->selectCollection($collection)
+    $docs1 = $database->selectCollection($collection)
       ->find($jsonSelector, [
         'typeMap' => [
           'root' => 'array',

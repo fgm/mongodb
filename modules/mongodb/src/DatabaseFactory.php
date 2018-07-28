@@ -29,34 +29,34 @@ class DatabaseFactory {
   /**
    * Constructor.
    *
-   * @param \Drupal\mongodb\ClientFactory $client_factory
+   * @param \Drupal\mongodb\ClientFactory $clientFactory
    *   The Client factory service.
    * @param \Drupal\Core\Site\Settings $settings
    *   The settings service.
    */
-  public function __construct(ClientFactory $client_factory, Settings $settings) {
-    $this->clientFactory = $client_factory;
+  public function __construct(ClientFactory $clientFactory, Settings $settings) {
+    $this->clientFactory = $clientFactory;
     $this->settings = $settings->get('mongodb')['databases'];
   }
 
   /**
    * Return the MongoDB database matching an alias.
    *
-   * @param string $alias
+   * @param string $dbAlias
    *   The alias string, like "default".
    *
    * @return \MongoDB\Database|null
    *   The selected database, or NULL if an error occurred.
    */
-  public function get($alias) {
-    if (!isset($this->settings[$alias])) {
+  public function get($dbAlias) {
+    if (!isset($this->settings[$dbAlias])) {
       throw new \InvalidArgumentException(new FormattableMarkup('Nonexistent database alias: @alias', [
-        '@alias' => $alias,
+        '@alias' => $dbAlias,
       ]));
     }
     try {
-      list($client_alias, $database) = $this->settings[$alias];
-      $client = $this->clientFactory->get($client_alias);
+      list($clientAlias, $database) = $this->settings[$dbAlias];
+      $client = $this->clientFactory->get($clientAlias);
       $result = $client->selectDatabase($database);
     }
     // Includes its descendant \MongoDb\Exception\InvalidArgumentException.

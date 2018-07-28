@@ -41,17 +41,15 @@ class KeyValueExpirableFactory extends KeyValueFactory implements KeyValueExpira
    *
    * @param string $collection
    *   The name of the collection holding key and value pairs.
-   * @param bool $index
-   *   Ensure TTL index. False is used by Drush to avoid indexing twice.
    *
    * @return \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface
    *   A key/value store implementation for the given $collection.
    *
    * @see drush_mongodb_storage_import_keyvalue()
    */
-  public function get($collection, $index = TRUE) {
-    $store_collection = $this->database->selectCollection(static::COLLECTION_PREFIX . $collection);
-    $store = new KeyValueStoreExpirable($collection, $store_collection, $index);
+  public function get($collection) {
+    $storeCollection = $this->database->selectCollection(static::COLLECTION_PREFIX . $collection);
+    $store = new KeyValueStoreExpirable($collection, $storeCollection);
     $store->setTimeService($this->time);
     return $store;
   }

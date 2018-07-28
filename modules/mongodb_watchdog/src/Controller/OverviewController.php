@@ -21,6 +21,10 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * The controller for the logger overview page.
+ *
+ * D8 has no session API, so use of $_SESSION is required, so ignore warnings.
+ *
+ * @SuppressWarnings("PHPMD.Superglobals")
  */
 class OverviewController extends ControllerBase {
   const EVENT_TYPE_MAP = [
@@ -81,25 +85,25 @@ class OverviewController extends ControllerBase {
    *   The MongoDB logger, to load stored events.
    * @param \Drupal\Core\Config\ImmutableConfig $config
    *   The module configuration.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   A module handler.
-   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   * @param \Drupal\Core\Form\FormBuilderInterface $formBuilder
    *   The form builder service.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The core date_formatter service.
    */
   public function __construct(
     LoggerInterface $logger,
     Logger $watchdog,
     ImmutableConfig $config,
-    ModuleHandlerInterface $module_handler,
-    FormBuilderInterface $form_builder,
-    DateFormatterInterface $date_formatter) {
+    ModuleHandlerInterface $moduleHandler,
+    FormBuilderInterface $formBuilder,
+    DateFormatterInterface $dateFormatter) {
     parent::__construct($logger, $watchdog, $config);
 
-    $this->dateFormatter = $date_formatter;
-    $this->formBuilder = $form_builder;
-    $this->moduleHandler = $module_handler;
+    $this->dateFormatter = $dateFormatter;
+    $this->formBuilder = $formBuilder;
+    $this->moduleHandler = $moduleHandler;
 
     // Add terminal "/".
     $this->rootLength = Unicode::strlen(DRUPAL_ROOT);
@@ -211,16 +215,16 @@ class OverviewController extends ControllerBase {
     /** @var \Drupal\Core\Config\ImmutableConfig $config */
     $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
 
-    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
-    $date_formatter = $container->get('date.formatter');
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter */
+    $dateFormatter = $container->get('date.formatter');
 
-    /** @var \Drupal\Core\Form\FormBuilderInterface $form_builder */
-    $form_builder = $container->get('form_builder');
+    /** @var \Drupal\Core\Form\FormBuilderInterface $formBuilder */
+    $formBuilder = $container->get('form_builder');
 
-    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
-    $module_handler = $container->get('module_handler');
+    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler */
+    $moduleHandler = $container->get('module_handler');
 
-    return new static($logger, $watchdog, $config, $module_handler, $form_builder, $date_formatter);
+    return new static($logger, $watchdog, $config, $moduleHandler, $formBuilder, $dateFormatter);
   }
 
   /**
@@ -270,15 +274,15 @@ class OverviewController extends ControllerBase {
       return $cell;
     }
 
-    $event_collection = $this->watchdog->eventCollection($template->_id);
-    $event = $event_collection->findOne([], static::EVENT_TYPE_MAP);
+    $eventCollection = $this->watchdog->eventCollection($template->_id);
+    $event = $eventCollection->findOne([], static::EVENT_TYPE_MAP);
     if (!($event instanceof Event)) {
       return $cell;
     }
 
     $file = $event->variables['%file'] ?? '';
     if ($file && strncmp($file, DRUPAL_ROOT, $this->rootLength) === 0) {
-      $hover = Unicode::substr($file, $this->rootLength + 1);
+      $hover = mb_substr($file, $this->rootLength + 1);
       $file = Unicode::truncate(basename($file), 30);
     }
     else {
@@ -289,7 +293,7 @@ class OverviewController extends ControllerBase {
     $cell = [
       '#type' => 'html_tag',
       '#tag' => 'span',
-      '#value' => "${file}#${line}",
+      '#value' => implode("#", [$file, $line]),
     ];
 
     if ($hover) {
@@ -310,6 +314,8 @@ class OverviewController extends ControllerBase {
    *
    * @return \Drupal\mongodb_watchdog\EventTemplate[]
    *   The data array.
+   *
+   * @throws \ReflectionException
    */
   protected function getRowData(Request $request) {
     $count = $this->watchdog->templatesCount();

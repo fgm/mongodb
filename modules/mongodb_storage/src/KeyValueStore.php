@@ -64,7 +64,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * {@inheritdoc}
    *
    * The __wakeup() method cannot use the container, because its constructor is
-   * never invoked, and the container itself should not be serialized.
+   * never invoked, and the container itself must not be serialized.
    */
   public function __wakeup() {
     /** @var \Drupal\mongodb\DatabaseFactory $databaseFactory */
@@ -89,10 +89,10 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    *   A list of item names to delete.
    */
   public function deleteMultiple(array $keys) {
-    $string_keys = array_map([$this, 'stringifyKey'], $keys);
+    $stringKeys = array_map([$this, 'stringifyKey'], $keys);
     $selector = [
       '_id' => [
-        '$in' => $string_keys,
+        '$in' => $stringKeys,
       ],
     ];
     $this->mongoDbCollection->deleteMany($selector);
@@ -128,10 +128,10 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * @see KeyValueStoreInterface::getMultiple()
    */
   public function getMultiple(array $keys) {
-    $string_keys = array_map([$this, 'stringifyKey'], $keys);
+    $stringKeys = array_map([$this, 'stringifyKey'], $keys);
     $selector = [
       '_id' => [
-        '$in' => $string_keys,
+        '$in' => $stringKeys,
       ],
     ];
     $cursor = $this->mongoDbCollection->find($selector, static::LEGACY_TYPE_MAP);
@@ -168,20 +168,20 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    *
    * @param string $key
    *   The key to rename.
-   * @param string $new_key
+   * @param string $newKey
    *   The new key name.
    */
-  public function rename($key, $new_key) {
-    $string_key = $this->stringifyKey($key);
-    $string_new = $this->stringifyKey($new_key);
+  public function rename($key, $newKey) {
+    $stringKey = $this->stringifyKey($key);
+    $stringNew = $this->stringifyKey($newKey);
 
-    if ($string_key === $string_new) {
+    if ($stringKey === $stringNew) {
       return;
     }
 
-    $value = $this->get($string_key);
-    $this->setIfNotExists($string_new, $value);
-    $this->delete($string_key);
+    $value = $this->get($stringKey);
+    $this->setIfNotExists($stringNew, $value);
+    $this->delete($stringKey);
   }
 
   /**

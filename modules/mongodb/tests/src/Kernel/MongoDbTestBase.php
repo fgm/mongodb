@@ -82,7 +82,9 @@ abstract class MongoDbTestBase extends KernelTestBase {
     parent::setUp();
     // $_ENV if it comes from phpunit.xml <env>
     // $_SERVER if it comes from the phpunit command line environment.
-    $this->uri = $_ENV['MONGODB_URI'] ?? $_SERVER['MONGODB_URI'] ?? static::DEFAULT_URI;
+    $this->uri = $_ENV['MONGODB_URI']
+      ?? $_SERVER['MONGODB_URI']
+      ?? static::DEFAULT_URI;
 
     $this->settings = new Settings([MongoDb::MODULE => $this->getSettingsArray()]);
   }

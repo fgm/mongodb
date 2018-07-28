@@ -46,8 +46,8 @@ class KeyValueFactory implements KeyValueFactoryInterface {
    *   A key/value store implementation for the given $collection.
    */
   public function get($collection) {
-    $store_collection = $this->database->selectCollection(static::COLLECTION_PREFIX . $collection);
-    $store = new KeyValueStore($collection, $store_collection);
+    $storeCollection = $this->database->selectCollection(static::COLLECTION_PREFIX . $collection);
+    $store = new KeyValueStore($collection, $storeCollection);
     return $store;
   }
 

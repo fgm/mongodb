@@ -195,13 +195,13 @@ class CommandsTest extends KeyValueTestBase {
     $commands = Storage::commands();
     $commands->import();
 
-    $kv = $this->container->get($service);
+    $keyValue = $this->container->get($service);
     $mongoCollections = $this->getKvCollectionNames($prefix);
     $this->assertEquals(array_keys($expectedCollections), $mongoCollections, "Collection names match");
-    foreach ($expectedCollections as $collectionName => $expectedCollectionData) {
-      $all = $kv->get($collectionName)->getAll();
+    foreach ($expectedCollections as $collectionName => $expected) {
+      $all = $keyValue->get($collectionName)->getAll();
       ksort($all);
-      $this->assertEquals($expectedCollectionData, $all);
+      $this->assertEquals($expected, $all);
     }
   }
 
