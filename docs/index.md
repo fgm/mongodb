@@ -1,8 +1,8 @@
 # MongoDB&reg; suite for Drupal&reg;
 
 The MongoDB suite for Drupal 8 is a set of modules enabling the storage of
-various types of data on a Drupal site in mongodb.
-This is a addition to the standard SQL storage used by Drupal.
+various types of data on a Drupal site in MongoDB. This comes in addition to the
+standard SQL storage used by Drupal.
 
 It comprises several Drupal modules, each implementing a specific functionality.
 With the exception of the base `mongodb` module, upon which all others depend
@@ -43,17 +43,10 @@ Module           | Information
 [mongodb_logger]: https://github.com/FGM/mongodb_logger/
 
 
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
-
-
 ## Legal information
 
-* This suite of modules is licensed under the General Public License, v2.0 or later (GPL-2.0-or-later).
+* This suite of modules is licensed under the General Public License,
+  v2.0 or later (GPL-2.0-or-later).
 * MongoDB is a registered trademark of MongoDB Inc.
 * Drupal is a registered trademark of Dries Buytaert.
 
