@@ -10,6 +10,11 @@ use MongoDB\BSON\Unserializable;
  * Class EventTemplate models an event template.
  *
  * Templates are the invariant part of events.
+ *
+ * Since this is essentially a value object, naming is constrained by the
+ * property names in MongoDB, so ignore variable naming rules for fields.
+ *
+ * @SuppressWarnings(PHPMD.CamelCasePropertyName)
  */
 class EventTemplate implements Unserializable {
   use StringTranslationTrait;

@@ -66,7 +66,8 @@ the following settings:
     )
 
 Also, `connection_options` might be specified to allow for connecting to
-replica sets (and any other options listed on [http://php.net/manual/mongoclient.construct.php][construct]
+replica sets (and any other options listed on 
+[http://php.net/manual/mongoclient.construct.php][construct]
 
 [construct]: (http://php.net/manual/mongoclient.construct.php)
 

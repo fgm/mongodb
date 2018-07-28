@@ -59,14 +59,17 @@
   </listeners>
   <!-- Filter for coverage reports. -->
   <filter>
-    <whitelist>
+    <whitelist
+      addUncoveredFilesFromWhitelist="true"
+      processUncoveredFilesFromWhitelist="true">
       <directory>../modules/contrib/mongodb</directory>
       <!-- By definition test classes have no tests. -->
       <exclude>
-        <directory suffix="Test.php">./</directory>
-        <directory suffix="TestBase.php">./</directory>
+        <file>../modules/contrib/mongodb/example.settings.local.php</file>
+        <directory suffix="Test.php">../modules/contrib/mongodb</directory>
+        <directory suffix="TestBase.php">../modules/contrib/mongodb</directory>
         <!-- There is a remaining legacy test for reference in watchdog for now -->
-        <directory suffix=".test">./</directory>
+        <directory suffix=".test">../modules/contrib/mongodb</directory>
       </exclude>
      </whitelist>
   </filter>

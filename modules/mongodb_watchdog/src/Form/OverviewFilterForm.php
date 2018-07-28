@@ -10,6 +10,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the MongoDB Watchdog overview filter form.
+ *
+ * D8 has no session API, so use of $_SESSION is required, so ignore warnings.
+ *
+ * @SuppressWarnings("PHPMD.Superglobals")
  */
 class OverviewFilterForm extends FormBase {
   const SESSION_KEY = 'mongodb_watchdog_overview_filter';
@@ -34,7 +38,7 @@ class OverviewFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $formState) {
     $filters = $this->getFilters();
 
     $form['filters'] = [
@@ -43,7 +47,7 @@ class OverviewFilterForm extends FormBase {
       '#open' => TRUE,
     ];
 
-    $session_filter = $_SESSION[static::SESSION_KEY] ?? [];
+    $sessionFilter = $_SESSION[static::SESSION_KEY] ?? [];
     foreach ($filters as $key => $filter) {
       $form['filters']['status'][$key] = [
         '#title' => $filter['title'],
@@ -53,8 +57,8 @@ class OverviewFilterForm extends FormBase {
         '#options' => $filter['options'],
       ];
 
-      if (!empty($session_filter[$key])) {
-        $form['filters']['status'][$key]['#default_value'] = $session_filter[$key];
+      if (!empty($sessionFilter[$key])) {
+        $form['filters']['status'][$key]['#default_value'] = $sessionFilter[$key];
       }
     }
 
@@ -66,7 +70,7 @@ class OverviewFilterForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Filter'),
     ];
-    if (!empty($session_filter)) {
+    if (!empty($sessionFilter)) {
       $form['filters']['actions']['reset'] = [
         '#type' => 'submit',
         '#value' => $this->t('Reset'),
@@ -82,7 +86,7 @@ class OverviewFilterForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
-    $watchdog = $container->get('mongodb.logger');
+    $watchdog = $container->get(Logger::SERVICE_LOGGER);
 
     return new static($watchdog);
   }
@@ -133,34 +137,33 @@ class OverviewFilterForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Parameter $form is needed by FormInterface, so ignore warning.
+   *
+   * @SuppressWarnings("PMD.UnusedFormalParameter")
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    $filters = $this->getFilters();
-    foreach ($filters as $name => $filter) {
-      if ($form_state->hasValue($name)) {
-        $_SESSION[static::SESSION_KEY][$name] = $form_state->getValue($name);
+  public function submitForm(array &$form, FormStateInterface $formState) {
+    $filters = array_keys($this->getFilters());
+    foreach ($filters as $name) {
+      if ($formState->hasValue($name)) {
+        $_SESSION[static::SESSION_KEY][$name] = $formState->getValue($name);
       }
     }
   }
 
   /**
    * Resets the filter form.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
    */
-  public function resetForm(array &$form, FormStateInterface $form_state) {
+  public function resetForm() {
     $_SESSION[static::SESSION_KEY] = [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    if ($form_state->isValueEmpty('type') && $form_state->isValueEmpty('severity')) {
-      $form_state->setErrorByName('type', $this->t('You must select something to filter by.'));
+  public function validateForm(array &$form, FormStateInterface $formState) {
+    if ($formState->isValueEmpty('type') && $formState->isValueEmpty('severity')) {
+      $formState->setErrorByName('type', $this->t('You must select something to filter by.'));
     }
   }
 

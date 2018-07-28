@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\mongodb\Tests\Kernel;
+namespace Drupal\Tests\mongodb\Kernel;
 
 use Drupal\Core\Site\Settings;
 use Drupal\KernelTests\KernelTestBase;
@@ -55,24 +55,22 @@ abstract class MongoDbTestBase extends KernelTestBase {
    */
   protected function getSettingsArray() : array {
     return [
-      MongoDb::MODULE => [
-        'clients' => [
-          static::CLIENT_BAD_ALIAS => [
-            'uri' => 'mongodb://localhost:80',
-            'uriOptions' => [],
-            'driverOptions' => [],
-          ],
-          static::CLIENT_TEST_ALIAS => [
-            'uri' => $this->uri,
-            'uriOptions' => [],
-            'driverOptions' => [],
-          ],
+      'clients' => [
+        static::CLIENT_BAD_ALIAS => [
+          'uri' => 'mongodb://localhost:80',
+          'uriOptions' => [],
+          'driverOptions' => [],
         ],
-        'databases' => [
-          static::DB_DEFAULT_ALIAS => [static::CLIENT_TEST_ALIAS, $this->getDatabasePrefix()],
-          static::DB_INVALID_ALIAS => [static::CLIENT_TEST_ALIAS, ''],
-          static::DB_BAD_CLIENT_ALIAS => [static::CLIENT_BAD_ALIAS, $this->getDatabasePrefix()],
+        static::CLIENT_TEST_ALIAS => [
+          'uri' => $this->uri,
+          'uriOptions' => [],
+          'driverOptions' => [],
         ],
+      ],
+      'databases' => [
+        static::DB_DEFAULT_ALIAS => [static::CLIENT_TEST_ALIAS, $this->getDatabasePrefix()],
+        static::DB_INVALID_ALIAS => [static::CLIENT_TEST_ALIAS, ''],
+        static::DB_BAD_CLIENT_ALIAS => [static::CLIENT_BAD_ALIAS, $this->getDatabasePrefix()],
       ],
     ];
   }
@@ -84,9 +82,11 @@ abstract class MongoDbTestBase extends KernelTestBase {
     parent::setUp();
     // $_ENV if it comes from phpunit.xml <env>
     // $_SERVER if it comes from the phpunit command line environment.
-    $this->uri = $_ENV['MONGODB_URI'] ?? $_SERVER['MONGODB_URI'] ?? static::DEFAULT_URI;
+    $this->uri = $_ENV['MONGODB_URI']
+      ?? $_SERVER['MONGODB_URI']
+      ?? static::DEFAULT_URI;
 
-    $this->settings = new Settings($this->getSettingsArray());
+    $this->settings = new Settings([MongoDb::MODULE => $this->getSettingsArray()]);
   }
 
   /**

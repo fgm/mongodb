@@ -2,6 +2,8 @@
 
 namespace Drupal\mongodb;
 
+// @codingStandardsIgnoreLine
+use Drupal\mongodb\Commands\MongoDbCommands;
 use MongoDB\Collection;
 
 /**
@@ -13,11 +15,23 @@ class MongoDb {
 
   const DB_DEFAULT = 'default';
 
+  const EXTENSION = 'mongodb';
   const MODULE = 'mongodb';
 
+  const SERVICE_COMMANDS = 'drupal.mongodb.commands';
   const SERVICE_DB_FACTORY = 'mongodb.database_factory';
 
   protected static $libraryVersion;
+
+  /**
+   * Service helper for commands.
+   *
+   * @return \Drupal\mongodb\Commands\MongoDbCommands
+   *   Return the commands service.
+   */
+  public static function commands() : MongoDbCommands {
+    return \Drupal::service(static::SERVICE_COMMANDS);
+  }
 
   /**
    * Guess an approximation of the library version, to handle API changes.
@@ -35,7 +49,7 @@ class MongoDb {
    *
    * @see https://github.com/mongodb/mongo-php-library/issues/558
    */
-  public static function libraryVersion(): string {
+  public static function libraryApiVersion() : string {
     if (!empty(static::$libraryVersion)) {
       return static::$libraryVersion;
     }
@@ -49,6 +63,28 @@ class MongoDb {
     }
 
     return (static::$libraryVersion = '1.2.0');
+  }
+
+  /**
+   * Count items matching a selector in a collection.
+   *
+   * Do not use Collection::count() after extension 1.4.0, so rely on a strategy
+   * choice.
+   *
+   * @param \MongoDB\Collection $collection
+   *   The collection for which to count items.
+   * @param array $selector
+   *   The collection selector.
+   *
+   * @return int
+   *   The number of elements matching the selector in the collection.
+   */
+  public static function countCollection(Collection $collection, array $selector = []) : int {
+    if (version_compare(static::libraryApiVersion(), '1.4.0') >= 0) {
+      return $collection->countDocuments($selector);
+    }
+
+    return $collection->count($selector);
   }
 
 }

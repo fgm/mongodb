@@ -31,7 +31,7 @@ class ClientFactory {
    *   The system settings.
    */
   public function __construct(Settings $settings) {
-    $this->settings = $settings->get('mongodb')['clients'];
+    $this->settings = $settings->get(MongoDb::MODULE)['clients'];
   }
 
   /**

@@ -23,11 +23,9 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    *
    * @see \Drupal\mongodb_storage\KeyValueStoreExpirable::setTimeService()
    */
-  public function __construct($collection, $storeCollection, $index = TRUE) {
+  public function __construct($collection, $storeCollection) {
     parent::__construct($collection, $storeCollection);
-    if ($index) {
-      $this->ensureIndexes();
-    }
+    $this->ensureIndexes();
   }
 
   /**
@@ -56,7 +54,7 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
         [
           'expireAfterSeconds' => 0,
           'key' => ['expire' => 1],
-          'name' => "ttl_${name}",
+          'name' => "ttl_" . $name,
         ],
       ];
       $this->mongoDbCollection->createIndexes($indexes);

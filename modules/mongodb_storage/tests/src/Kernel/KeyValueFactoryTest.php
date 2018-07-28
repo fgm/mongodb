@@ -1,10 +1,7 @@
 <?php
 
-namespace Drupal\mongodb_storage\Test\Kernel;
+namespace Drupal\Tests\mongodb_storage\Kernel;
 
-use Drupal\mongodb\MongoDb;
-use Drupal\mongodb\Tests\Kernel\MongoDbTestBase;
-use Drupal\mongodb_storage\KeyValueFactory;
 use Drupal\mongodb_storage\KeyValueStore;
 use Drupal\mongodb_storage\KeyValueStoreExpirable;
 use Drupal\mongodb_storage\Storage;
@@ -12,29 +9,13 @@ use Drupal\mongodb_storage\Storage;
 /**
  * Class KeyValueFactoryTest.
  *
+ * @coversDefaultClass \Drupal\mongodb_storage\KeyValueFactory
+ *
  * @group MongoDB
  */
-class KeyValueFactoryTest extends MongoDbTestBase {
+class KeyValueFactoryTest extends KeyValueTestBase {
 
   const COLLECTION = 'xyzzy';
-
-  public static $modules = [
-    MongoDb::MODULE,
-    Storage::MODULE,
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getSettingsArray(): array {
-    $settings = parent::getSettingsArray();
-    $settings[MongoDb::MODULE]['databases'][KeyValueFactory::DB_KEYVALUE] = [
-      static::CLIENT_TEST_ALIAS,
-      $this->getDatabasePrefix(),
-    ];
-
-    return $settings;
-  }
 
   /**
    * Test the collections provided by the expirable Key-Value factory.

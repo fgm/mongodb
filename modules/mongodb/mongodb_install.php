@@ -5,26 +5,24 @@
  * Install file for the MongoDB module.
  */
 
-use Drupal\Core\Site\Settings;
-
 /**
  * Requirements check: MongoDB extension.
  *
  * @param array $ret
  *   The running requirements array.
- * @param string $extension_name
+ * @param string $name
  *   The name of the extension to check.
  *
  * @return bool
  *   Did requirements check succeed ?
  */
-function _mongodb_requirements_extension(array &$ret, $extension_name) {
-  $success = extension_loaded($extension_name);
+function _mongodb_requirements_extension(array &$ret, $name) {
+  $success = extension_loaded($name);
   if (!$success) {
     $ret['mongodb'] += [
       'value' => t('Extension not loaded'),
       'description' => t('Mongodb requires the non-legacy PHP MongoDB extension (@name) to be installed.', [
-        '@name' => $extension_name,
+        '@name' => $name,
       ]),
       'severity' => REQUIREMENT_ERROR,
     ];
@@ -39,29 +37,27 @@ function _mongodb_requirements_extension(array &$ret, $extension_name) {
  *   The running requirements array.
  * @param array $description
  *   The running description array.
- * @param string $extension_name
+ * @param string $name
  *   The name of the extension to check.
  *
  * @return bool
  *   Did requirements check succeed ?
  */
-function _mongodb_requirements_extension_version(array &$ret, array &$description, $extension_name) {
-  $minimum_version = '1.1.7';
-  $extension_version = phpversion($extension_name);
-  $version_status = version_compare($extension_version, $minimum_version);
-  $success = $version_status >= 0;
-  if ($success) {
-    $description[] = t('Extension version @version found.', ['@version' => $extension_version]);
-  }
-  else {
-    $ret['mongodb'] += [
-      'severity' => REQUIREMENT_ERROR,
-      'description' => t('Module needs extension @name @minimum_version or later, found @version.', [
-        '@name' => $extension_name,
-        '@minimum_version' => $minimum_version,
-        '@version' => $extension_version,
-      ]),
-    ];
+function _mongodb_requirements_extension_version(array &$ret, array &$description, $name) {
+  $minimumVersion = '1.1.7';
+  $extensionVersion = phpversion($name);
+  $versionStatus = version_compare($extensionVersion, $minimumVersion);
+  $success = $versionStatus >= 0;
+  $description[] = $success
+    ? t('Extension version @version found.', ['@version' => $extensionVersion])
+    : t('Module needs extension @name @minimum_version or later, found @version.', [
+      '@name' => $name,
+      '@minimum_version' => $minimumVersion,
+      '@version' => $extensionVersion,
+    ]);
+
+  if (!$success) {
+    $ret['mongodb']['severity'] = REQUIREMENT_ERROR;
   }
 
   return $success;
@@ -110,12 +106,12 @@ function _mongodb_requirements_aliases(array &$ret, array &$description, array $
  *   Did requirements check succeed ?
  */
 function _mongodb_requirements_databases(array $settings, array $databases, array &$description) {
-  $client_aliases = $settings['clients'] ?? [];
+  $aliases = $settings['clients'] ?? [];
   $warnings = [];
   $success = TRUE;
   foreach ($databases as $database => $list) {
     list($client,) = $list;
-    if (empty($client_aliases[$client])) {
+    if (empty($aliases[$client])) {
       $success = FALSE;
       $warnings[] = t('Database "@db" references undefined client "@client".', [
         '@db' => $database,
@@ -140,8 +136,8 @@ function _mongodb_requirements_databases(array $settings, array $databases, arra
  * Implements hook_requirements().
  */
 function mongodb_requirements() {
-  // Autoloaded may not be available during install.
-  $extension_name = 'mongodb';
+  // Autoloader may not be available during install.
+  $name = 'mongodb';
 
   $ret = [];
   $ret['mongodb'] = [
@@ -150,15 +146,15 @@ function mongodb_requirements() {
   ];
   $description = [];
 
-  if (!_mongodb_requirements_extension($ret, $extension_name)) {
+  if (!_mongodb_requirements_extension($ret, $name)) {
     return $ret;
   }
 
-  if (!_mongodb_requirements_extension_version($ret, $description, $extension_name)) {
+  if (!_mongodb_requirements_extension_version($ret, $description, $name)) {
     return $ret;
   }
 
-  $settings = Settings::get('mongodb');
+  $settings = \Drupal::service('settings')->get($name);
   $databases = $settings['databases'] ?? [];
 
   if (!_mongodb_requirements_aliases($ret, $description, $databases)) {

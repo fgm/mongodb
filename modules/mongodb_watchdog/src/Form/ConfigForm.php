@@ -2,7 +2,6 @@
 
 namespace Drupal\mongodb_watchdog\Form;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -24,13 +23,13 @@ class ConfigForm extends ConfigFormBase {
   /**
    * ConfigForm constructor.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The core config.factory service.
    * @param array $typed
    *   The type config for the module.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, array $typed) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $configFactory, array $typed) {
+    parent::__construct($configFactory);
     $this->typed = $typed;
   }
 
@@ -47,16 +46,16 @@ class ConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $formState) {
     $config = $this->config(Logger::CONFIG_NAME);
-    foreach ($config->getRawData() as $key => $default_value) {
-      if (Unicode::substr($key, 0, 1) === '_') {
+    foreach ($config->getRawData() as $key => $default) {
+      if (mb_substr($key, 0, 1) === '_') {
         continue;
       }
       $schema = $this->typed['mapping'][$key];
       list($title, $description) = explode(': ', $schema['label']);
       $form[$key] = [
-        '#default_value' => $default_value,
+        '#default_value' => $default,
         '#description' => $description,
         '#title' => $title,
       ];
@@ -81,17 +80,17 @@ class ConfigForm extends ConfigFormBase {
       }
     }
 
-    $parentedForm = parent::buildForm($form, $form_state);
+    $parentedForm = parent::buildForm($form, $formState);
     return $parentedForm;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $formState) {
     $config = $this->config(Logger::CONFIG_NAME);
     foreach (array_keys($config->getRawData()) as $key) {
-      $config->set($key, intval($form_state->getValue($key)));
+      $config->set($key, intval($formState->getValue($key)));
     }
     $config->save();
     drupal_set_message($this->t('The configuration options have been saved.'));

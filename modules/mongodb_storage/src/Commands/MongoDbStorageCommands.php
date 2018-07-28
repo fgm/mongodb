@@ -2,19 +2,24 @@
 
 namespace Drupal\mongodb_storage\Commands;
 
-use Drupal\Component\Datetime\Time;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\StatementInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseFactory;
 use Drupal\mongodb_storage\KeyValueExpirableFactory;
 use Drupal\mongodb_storage\KeyValueFactory;
+use Drupal\mongodb_storage\Storage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Drush command service for mongodb_storage.
  */
-class MongoDbStorageCommands {
+class MongoDbStorageCommands implements ContainerInjectionInterface {
+
+  const KVP_TABLE = 'key_value';
+  const KVE_TABLE = 'key_value_expire';
 
   /**
    * The database service.
@@ -35,7 +40,7 @@ class MongoDbStorageCommands {
    *
    * @var \Drupal\mongodb_storage\KeyValueExpirableFactory
    */
-  protected $expirableMongoDbFactory;
+  protected $expirableMoFactory;
 
   /**
    * The database KV factory.
@@ -49,7 +54,7 @@ class MongoDbStorageCommands {
    *
    * @var \Drupal\mongodb_storage\KeyValueFactory
    */
-  protected $persistentMongoDbFactory;
+  protected $persistentMoFactory;
 
   /**
    * The datetime.time service.
@@ -71,9 +76,9 @@ class MongoDbStorageCommands {
    *   The database KV factory.
    * @param \Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory $expirableDbFactory
    *   The expirable database KV factory.
-   * @param \Drupal\mongodb_storage\KeyValueFactory $persistentMongoDbFactory
+   * @param \Drupal\mongodb_storage\KeyValueFactory $persistentMoFactory
    *   The MongoDB KV factory.
-   * @param \Drupal\mongodb_storage\KeyValueExpirableFactory $expirableMongoDbFactory
+   * @param \Drupal\mongodb_storage\KeyValueExpirableFactory $expirableMoFactory
    *   The expirable MongoDB KV factory.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The datetime.time service.
@@ -82,16 +87,35 @@ class MongoDbStorageCommands {
     Connection $database,
     KeyValueDatabaseFactory $persistentDbFactory,
     KeyValueDatabaseExpirableFactory $expirableDbFactory,
-    KeyValueFactory $persistentMongoDbFactory,
-    KeyValueExpirableFactory $expirableMongoDbFactory,
+    KeyValueFactory $persistentMoFactory,
+    KeyValueExpirableFactory $expirableMoFactory,
     TimeInterface $time
   ) {
     $this->database = $database;
     $this->persistentDbFactory = $persistentDbFactory;
     $this->expirableDbFactory = $expirableDbFactory;
-    $this->persistentMongoDbFactory = $persistentMongoDbFactory;
-    $this->expirableMongoDbFactory = $expirableMongoDbFactory;
+    $this->persistentMoFactory = $persistentMoFactory;
+    $this->expirableMoFactory = $expirableMoFactory;
     $this->time = $time;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var \Drupal\Core\Database\Connection $database */
+    $database = $container->get('database');
+    /** @var \Drupal\Core\KeyValueStore\DatabaseStorage $kvDb */
+    $kvDb = $container->get('keyvalue.database');
+    /** @var \Drupal\Core\KeyValueStore\DatabaseStorageExpirable $kvExpirableDb */
+    $kvExpirableDb = $container->get('keyvalue.expirable.database');
+    /** @var \Drupal\mongodb_storage\KeyValueStore $kvMo */
+    $kvMo = $container->get(Storage::SERVICE_KV);
+    /** @var \Drupal\mongodb_storage\KeyValueStoreExpirable $kvExpirableMo */
+    $kvExpirableMo = $container->get(Storage::SERVICE_KVE);
+    /** @var \Drupal\Component\Datetime\TimeInterface $time */
+    $time = $container->get('datetime.time');
+    return new static($database, $kvDb, $kvExpirableDb, $kvMo, $kvExpirableMo, $time);
   }
 
   /**
@@ -101,7 +125,7 @@ class MongoDbStorageCommands {
    *   The name of the KV table.
    *
    * @return \Drupal\Core\Database\StatementInterface
-   *   A cursor to the invididual collection names.
+   *   A cursor to the individual collection names.
    */
   protected function getCollections(string $tableName) : StatementInterface {
     $cursor = $this->database->select($tableName, 's')
@@ -120,16 +144,14 @@ class MongoDbStorageCommands {
   protected function importPersistent(StatementInterface $cursor) {
     foreach ($cursor as $row) {
       $collection = $row->collection;
-      echo "  $collection\n";
 
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface $dbStore */
       $dbStore = $this->persistentDbFactory->get($collection);
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
-      $mgStore = $this->persistentMongoDbFactory->get($collection, FALSE);
+      $mgStore = $this->persistentMoFactory->get($collection);
 
       $mgStore->deleteAll();
       foreach ($dbStore->getAll() as $key => $value) {
-        echo "    $key\n";
         $mgStore->set($key, $value);
       }
     }
@@ -151,7 +173,6 @@ class MongoDbStorageCommands {
     $columns = ['name', 'value', 'expire'];
     foreach ($cursor as $row) {
       $collection = $row->collection;
-      echo "  $collection\n";
 
       $valueCursor = $this->database
         ->select($tableName, 'kve')
@@ -160,12 +181,12 @@ class MongoDbStorageCommands {
         ->execute();
 
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
-      $mgStore = $this->expirableMongoDbFactory->get($collection, FALSE);
+      $mgStore = $this->expirableMoFactory->get($collection, FALSE);
 
       $mgStore->deleteAll();
       foreach ($valueCursor as $valueRow) {
         $key = $valueRow->name;
-        $value = $valueRow->value;
+        $value = unserialize($valueRow->value);
         $now = $this->time->getCurrentTime();
         $expire = $valueRow->expire;
         $mgStore->setWithExpire($key, $value, $expire - $now);
@@ -177,15 +198,13 @@ class MongoDbStorageCommands {
    * The command implementation for most-ikv: import the DB KV to MongoDB.
    */
   public function import() {
-    $tableName = 'key_value';
-    $cursor = $this->getCollections($tableName);
-    echo "$tableName\n";
+    $cursor = $this->getCollections(static::KVP_TABLE);
+    echo static::KVP_TABLE . PHP_EOL;
     $this->importPersistent($cursor);
 
-    $tableName = 'key_value_expire';
-    $cursor = $this->getCollections($tableName);
-    echo "$tableName\n";
-    $this->importExpirable($cursor, $tableName);
+    $cursor = $this->getCollections(static::KVE_TABLE);
+    echo static::KVE_TABLE . PHP_EOL;
+    $this->importExpirable($cursor, static::KVE_TABLE);
   }
 
 }

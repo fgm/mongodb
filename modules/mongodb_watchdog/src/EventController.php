@@ -61,20 +61,20 @@ class EventController {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config
    *   The config.factory service.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The core data.formatter service.
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
    *   The MongoDB logger service, to load events.
    */
   public function __construct(ConfigFactoryInterface $config,
-    DateFormatterInterface $date_formatter,
+    DateFormatterInterface $dateFormatter,
     Logger $watchdog) {
     // Needed for other values so build it first.
     $this->front = Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString();
 
     $this->anonymous = $config->get('user.settings')->get('anonymous');
-    $this->baseLength = Unicode::strlen($this->front) - 1;
-    $this->dateFormatter = $date_formatter;
+    $this->baseLength = mb_strlen($this->front) - 1;
+    $this->dateFormatter = $dateFormatter;
     $this->watchdog = $watchdog;
   }
 
