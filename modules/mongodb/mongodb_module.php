@@ -15,7 +15,7 @@ function mongodb_help($route) {
         ':project' => 'https://www.drupal.org/project/mongodb',
         ':mongo' => 'https://www.mongodb.com/',
         ':docs' => 'https://fgm.github.io/mongodb',
-      ]);
+      ]) . '</p>';
   }
 }
 

@@ -6,9 +6,10 @@ use Drupal\Core\Site\Settings;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\BrowserTestBase;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Class ControllerTest
+ * Class ControllerTest.
  *
  * @group MongoDB
  */
@@ -20,9 +21,18 @@ class ControllerTest extends BrowserTestBase {
   const DB_DEFAULT_ALIAS = 'default';
 
   protected static $modules = [
+    // Needed to check admin/help/mongodb.
+    'help',
     MongoDb::MODULE,
     Logger::MODULE,
   ];
+
+  /**
+   * An administrator account.
+   *
+   * @var \Drupal\user\Entity\User
+   */
+  protected $admin;
 
   /**
    * A basic authenticated user account.
@@ -32,7 +42,7 @@ class ControllerTest extends BrowserTestBase {
   protected $anyUser;
 
   /**
-   * An administrator-type user account.
+   * An administrator-type user account, but not an administrator.
    *
    * @var \Drupal\user\Entity\User
    */
@@ -60,7 +70,11 @@ class ControllerTest extends BrowserTestBase {
   protected $uri;
 
   /**
-   * Enable modules and create users with specific permissions.
+   * {@inheritdoc}
+   *
+   * Configure settings and create users with specific permissions.
+   *
+   * @see \Drupal\Tests\mongodb_watchdog\Functional\ControllerTest::writeSettings()
    */
   public function setUp() {
     // $_ENV if it comes from phpunit.xml <env>
@@ -77,15 +91,16 @@ class ControllerTest extends BrowserTestBase {
     parent::setUp();
 
     // Create users.
+    $this->admin = $this->drupalCreateUser([], 'test_admin', TRUE);
     $this->bigUser = $this->drupalCreateUser([
       'administer site configuration',
       'access administration pages',
       'access site reports',
       'administer users',
-    ]);
+    ], 'test_honcho');
     $this->anyUser = $this->drupalCreateUser([
       'access content',
-    ]);
+    ], 'test_lambda');
 
     $this->requestTime = $this->container
       ->get('datetime.time')
@@ -103,6 +118,9 @@ class ControllerTest extends BrowserTestBase {
     $this->assertNotNull($this->collection, t('Access MongoDB watchdog collection'));
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function tearDown() {
     // Get the database before container is torn down.
     $database = $this->container
@@ -123,7 +141,7 @@ class ControllerTest extends BrowserTestBase {
    *   drupal_rewrite_settings().
    *
    * @throws \Exception
-
+   *
    * @see \Drupal\Core\Test\FunctionalTestSetupTrait::writeSettings()
    */
   protected function writeSettings(array $settings) {
@@ -132,10 +150,12 @@ class ControllerTest extends BrowserTestBase {
     $filename = $this->siteDirectory . '/settings.php';
 
     // Customizations.
-    $settings['settings'] += [MongoDb::MODULE => (object) [
-      'value' => $this->getSettingsArray(),
-      'required' => TRUE,
-    ]];
+    $settings['settings'] += [
+      MongoDb::MODULE => (object) [
+        'value' => $this->getSettingsArray(),
+        'required' => TRUE,
+      ],
+    ];
 
     // End of code taken from trait again.
     // system_requirements() removes write permissions from settings.php
@@ -171,6 +191,7 @@ class ControllerTest extends BrowserTestBase {
    * Getter for the test database prefix.
    *
    * @return string
+   *   The prefix.
    *
    * @see \Drupal\KernelTests\KernelTestBase::getDatabasePrefix()
    */
@@ -179,28 +200,133 @@ class ControllerTest extends BrowserTestBase {
   }
 
   /**
-   * Login users, create dblog events, and test dblog functionality through the admin and user interfaces.
+   * Verify the logged-in user has the desired access to the log report.
+   *
+   * @param int $statusCode
+   *   HTTP status code.
+   *
+   * @throws \Behat\Mink\Exception\ExpectationException
+   * @throws \Behat\Mink\Exception\ResponseTextException
+   *
+   * The first of the assertions would really belong in a functional test for
+   * the mongodb module. But until it gets a functional test, keeping it here
+   * saves some test running time over having one more functional test in
+   * mongodb module just for this.
    */
-  public function testDbLog() {
-    // Login the admin user.
-    $this->drupalLogin($this->bigUser);
-    return;
+  private function verifyReports($statusCode = Response::HTTP_OK) {
+    // View MongoDB help page.
+    $this->drupalGet('/admin/help');
+    $session = $this->assertSession();
+    $session->statusCodeEquals($statusCode);
+    if ($statusCode == Response::HTTP_OK) {
+      $session->pageTextContains('MongoDB');
+    }
 
-    // No implementation
-    // $row_limit = 100;
-    // $this->verifyRowLimit($row_limit);
-    // No implementation
-    // $this->verifyCron($row_limit);
-    $this->verifyEvents();
-    $this->verifyReports();
+    $this->drupalGet('/admin/help/mongodb');
+    $session = $this->assertSession();
+    $session->statusCodeEquals($statusCode);
+    if ($statusCode == Response::HTTP_OK) {
+      // DBLog help was displayed.
+      $session->pageTextContains('implements a generic interface');
+    }
 
-    // Login the regular user.
-    $this->drupalLogin($this->anyUser);
-    $this->verifyReports(403);
+    // View MongoDB watchdog overview report.
+    $this->drupalGet('/admin/reports/mongodb/watchdog');
+    $session = $this->assertSession();
+    $session->statusCodeEquals($statusCode);
+    if ($statusCode == Response::HTTP_OK) {
+      // MongoDB watchdog report was displayed.
+      $expectedTexts = [
+        'Recent log messages in MongoDB',
+        'Filter log messages',
+        'Type',
+        'Severity',
+        'Latest',
+        'Severity',
+        'Message',
+        'Source',
+      ];
+      foreach ($expectedTexts as $expectedText) {
+        $session->pageTextContains($expectedText);
+      }
+    }
+
+    // View MongoDB watchdog page-not-found report.
+    $this->drupalGet('/admin/reports/mongodb/watchdog/page-not-found');
+    $session = $this->assertSession();
+    $session->statusCodeEquals($statusCode);
+    if ($statusCode == Response::HTTP_OK) {
+      // MongoDB watchdog page-not-found report was displayed.
+      $session->pageTextContains("Top 'page not found' errors in MongoDB");
+    }
+
+    // View MongoDB watchdog access-denied report.
+    $this->drupalGet('/admin/reports/mongodb/watchdog/access-denied');
+    $session = $this->assertSession();
+    $session->statusCodeEquals($statusCode);
+    if ($statusCode == Response::HTTP_OK) {
+      // MongoDB watchdog access-denied report was displayed.
+      $session->pageTextContains("Top 'access denied' errors in MongoDB");
+    }
+
+    // Create an event to ensure an event page exists, using the standard PSR-3
+    // service instead of the Drupal logger channel to ensure getting this
+    // logger with its specific features.
+    $expectedMessage = $this->randomString(32);
+    /** @var \Drupal\mongodb_watchdog\Logger $logger */
+    $logger = $this->container->get(Logger::SERVICE_LOGGER);
+    $logger->info($expectedMessage, ['with' => 'context']);
+
+    $selector = ['message' => $expectedMessage];
+    $event = $logger->templateCollection()
+      ->findOne($selector, MongoDb::ID_PROJECTION);
+    $eventId = $event['_id'];
+
+    // View MongoDB Watchdog event page.
+    $this->drupalGet("/admin/reports/mongodb/watchdog/$eventId");
+    $session = $this->assertSession();
+    $session->statusCodeEquals($statusCode);
+    // MongoDB watchdog event page was displayed.
+    if ($statusCode == Response::HTTP_OK) {
+      $expectedTexts = [
+        'Event template',
+        'ID',
+        'Changed',
+        'Count',
+        'Type',
+        'Message',
+        'Severity',
+        $eventId,
+        'Event occurrences',
+        $expectedMessage,
+      ];
+      foreach ($expectedTexts as $expectedText) {
+        $session->pageTextContains($expectedText);
+      }
+    }
   }
 
   /**
-   * Login an admin user, create dblog event, and test clearing dblog functionality through the admin interface.
+   * The access and contents of the admin/reports/mongodb/watchdog[/*] pages.
+   *
+   * @TODO verifyRowLimit(), verifyCron(), verifyEvents() as per DbLog.
+   */
+  public function testDbLog() {
+    $expectations = [
+      [$this->admin, Response::HTTP_OK],
+      [$this->bigUser, Response::HTTP_OK],
+      [$this->anyUser, Response::HTTP_FORBIDDEN],
+    ];
+    /** @var \Drupal\user\Entity\User $account */
+    foreach ($expectations as $expectation) {
+      list($account, $statusCode) = $expectation;
+      $this->drupalLogin($account);
+      $this->verifyReports($statusCode);
+    }
+  }
+
+  /**
+   * Test the UI clearing feature.
    */
   public function testDbLogAddAndClear() {
     $this->pass(__METHOD__);

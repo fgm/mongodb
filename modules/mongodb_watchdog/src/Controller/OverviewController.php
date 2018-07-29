@@ -2,7 +2,7 @@
 
 namespace Drupal\mongodb_watchdog\Controller;
 
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -248,7 +248,9 @@ class OverviewController extends ControllerBase {
 
       // Limited-length message.
       default:
-        $message = Unicode::truncate(strip_tags(SafeMarkup::format($template->message, [])), 56, TRUE, TRUE);
+        $markup = new FormattableMarkup($template->message, []);
+        $message = Unicode::truncate(strip_tags($markup->__toString()),
+          56, TRUE, TRUE);
         $cell = Link::createFromRoute($message, 'mongodb_watchdog.reports.detail', [
           'eventTemplate' => $template->_id,
         ]);

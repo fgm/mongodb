@@ -101,51 +101,6 @@ class MongoDBLogTestCase extends WebTestBase {
   }
 
   /**
-   * Verify the logged in user has the desired access to the various dblog nodes.
-   *
-   * @param int $response
-   *   HTTP response code.
-   */
-  private function verifyReports($response = 200) {
-    $quote = '&#039;';
-
-    // View dblog help node.
-    $this->drupalGet('admin/help/dblog');
-    $this->assertResponse($response);
-    if ($response == 200) {
-      $this->assertText(t('Database logging'), t('DBLog help was displayed'));
-    }
-
-    // View dblog report node.
-    $this->drupalGet('admin/reports/dblog');
-    $this->assertResponse($response);
-    if ($response == 200) {
-      $this->assertText(t('Recent log entries'), t('DBLog report was displayed'));
-    }
-
-    // View dblog page-not-found report node.
-    $this->drupalGet('admin/reports/page-not-found');
-    $this->assertResponse($response);
-    if ($response == 200) {
-      $this->assertText(t('Top ' . $quote . 'page not found' . $quote . ' errors'), t('DBLog page-not-found report was displayed'));
-    }
-
-    // View dblog access-denied report node.
-    $this->drupalGet('admin/reports/access-denied');
-    $this->assertResponse($response);
-    if ($response == 200) {
-      $this->assertText(t('Top ' . $quote . 'access denied' . $quote . ' errors'), t('DBLog access-denied report was displayed'));
-    }
-
-    // View dblog event node.
-    $this->drupalGet('admin/reports/event/1');
-    $this->assertResponse($response);
-    if ($response == 200) {
-      $this->assertText(t('Details'), t('DBLog event node was displayed'));
-    }
-  }
-
-  /**
    * Verify events.
    */
   private function verifyEvents() {

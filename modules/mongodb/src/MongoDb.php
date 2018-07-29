@@ -16,8 +16,12 @@ class MongoDb {
   const EXTENSION = 'mongodb';
   const MODULE = 'mongodb';
 
+  const SERVICE_CLIENT_FACTORY = 'mongodb.client_factory';
   const SERVICE_DB_FACTORY = 'mongodb.database_factory';
   const SERVICE_TOOLS = 'mongodb.tools';
+
+  // A frequent projection to just request the document ID.
+  const ID_PROJECTION = ['projection' => ['_id' => 1]];
 
   protected static $libraryVersion;
 
