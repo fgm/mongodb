@@ -13,6 +13,7 @@ use Drupal\mongodb\MongoDb;
 use MongoDB\Database;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
+use MongoDB\Model\CollectionInfoIterator;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -41,7 +42,12 @@ class Logger extends AbstractLogger {
 
   const MODULE = 'mongodb_watchdog';
 
+  // The service for the specific PSR-3 logger for MongoDB.
   const SERVICE_LOGGER = 'mongodb.logger';
+  // The service for the Drupal LoggerChannel for this module, logging to all
+  // active loggers.
+  const SERVICE_CHANNEL = 'logger.channel.mongodb_watchdog';
+  // The service for hook_requirements().
   const SERVICE_REQUIREMENTS = 'mongodb.watchdog_requirements';
   const SERVICE_SANITY_CHECK = 'mongodb.watchdog.sanity_check';
 
@@ -508,16 +514,16 @@ class Logger extends AbstractLogger {
   /**
    * List the event collections.
    *
-   * @return \MongoDB\Collection[]
+   * @return \MongoDB\Model\CollectionInfoIterator
    *   The collections with a name matching the event pattern.
    */
-  public function eventCollections() {
+  public function eventCollections() : CollectionInfoIterator {
     $options = [
       'filter' => [
         'name' => ['$regex' => static::EVENT_COLLECTIONS_PATTERN],
       ],
     ];
-    $result = iterator_to_array($this->database->listCollections($options));
+    $result = $this->database->listCollections($options);
     return $result;
   }
 

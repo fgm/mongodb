@@ -32,7 +32,7 @@ class ControllerTest extends BrowserTestBase {
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $admin;
+  protected $adminUser;
 
   /**
    * A basic authenticated user account.
@@ -91,7 +91,7 @@ class ControllerTest extends BrowserTestBase {
     parent::setUp();
 
     // Create users.
-    $this->admin = $this->drupalCreateUser([], 'test_admin', TRUE);
+    $this->adminUser = $this->drupalCreateUser([], 'test_admin', TRUE);
     $this->bigUser = $this->drupalCreateUser([
       'administer site configuration',
       'access administration pages',
@@ -311,9 +311,9 @@ class ControllerTest extends BrowserTestBase {
    *
    * @TODO verifyRowLimit(), verifyCron(), verifyEvents() as per DbLog.
    */
-  public function testDbLog() {
+  public function testLoggerReportsAccess() {
     $expectations = [
-      [$this->admin, Response::HTTP_OK],
+      [$this->adminUser, Response::HTTP_OK],
       [$this->bigUser, Response::HTTP_OK],
       [$this->anyUser, Response::HTTP_FORBIDDEN],
     ];
@@ -328,35 +328,50 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Test the UI clearing feature.
    */
-  public function testDbLogAddAndClear() {
-    $this->pass(__METHOD__);
-    return;
-    global $base_root;
-    // Get a count of how many watchdog entries there are.
-    $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
-    $log = [
-      'type'        => 'custom',
-      'message'     => 'Log entry added to test the doClearTest clear down.',
-      'variables'   => [],
-      'severity'    => WATCHDOG_NOTICE,
-      'link'        => NULL,
-      'user'        => $this->bigUser,
-      'request_uri' => $base_root . request_uri(),
-      'referer'     => $_SERVER['HTTP_REFERER'],
-      'ip'          => ip_address(),
-      'timestamp'   => $this->requestTime,
-    ];
-    // Add a watchdog entry.
-    dblog_watchdog($log);
-    // Make sure the table count has actually incremented.
-    $this->assertEqual($count + 1, db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField(), t('dblog_watchdog() added an entry to the dblog :count', [':count' => $count]));
+  public function testLoggerAddAndUiClear() {
+    // Drop the logger database to ensure no collections.
+    $this->container->get(MongoDb::SERVICE_DB_FACTORY)
+      ->get(Logger::DB_LOGGER)
+      ->drop();
+
+    /** @var \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel */
+    $loggerChannel = $this->container->get(Logger::SERVICE_CHANNEL);
+    // Add a watchdog entry. Be sure not to include placeholder delimiters.
+    $message = str_replace(['{', '}', '@', '%', ':'], '', $this->randomString(32));
+    $loggerChannel->notice($message);
+
+    // Make sure the collections were updated.
+    $logger = $this->container->get(Logger::SERVICE_LOGGER);
+    $templates = $logger->templateCollection();
+    $this->assertEquals(1, MongoDb::countCollection($templates),
+      'Logging created templates collection and added a template to it.');
+
+    $template = $templates->findOne(['message' => $message], MongoDb::ID_PROJECTION);
+    $this->assertNotNull($template, "Logged message was found: [${message}]");
+    $templateId = $template['_id'];
+    $events = $logger->eventCollection($templateId);
+    $this->assertEquals(1, MongoDb::countCollection($events),
+      'Logging created events collection and added a template to it.');
+
     // Login the admin user.
-    $this->drupalLogin($this->bigUser);
+    $this->drupalLogin($this->adminUser);
     // Now post to clear the db table.
-    $this->drupalPost('admin/reports/dblog', [], t('Clear log messages'));
-    // Count rows in watchdog that previously related to the deleted user.
-    $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
-    $this->assertEqual($count, 0, t('DBLog contains :count records after a clear.', [':count' => $count]));
+    $this->drupalPostForm('admin/reports/mongodb/confirm', [], 'Confirm');
+
+    // Make the sure logs were dropped. After a UI clear, the templates
+    // collection should exist, since it is recreated as a capped collection as
+    // part of the clear, but be empty, and there should be no event collection.
+    $count = MongoDb::countCollection($templates);
+    $failMessage = 'Logger templates collection was cleared';
+    if ($count > 0) {
+      $options = ['projection' => ['_id' => 0, 'message' => 1]];
+      $messages = iterator_to_array($templates->find([], $options));
+      $failMessage = "Logger templates collection still contains messages: "
+        . json_encode($messages);
+    }
+    $this->assertEquals(0, $count, $failMessage);
+    $this->assertFalse($logger->eventCollections()->valid(),
+      "Event collections were dropped");
   }
 
   /**

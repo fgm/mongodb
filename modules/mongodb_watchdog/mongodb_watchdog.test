@@ -9,16 +9,10 @@ use Drupal\simpletest\WebTestBase;
 
 /**
  * Test the behaviour of watchdog() mongodb_watchdog, not dblog.
+ *
+ * Older broken code inherited from D6 dblog tests
  */
 class MongoDBLogTestCase extends WebTestBase {
-  /**
-   * Override the default "standard" profile for this test, we need to include
-   * a test-specific module, which should not be present on a standard install.
-   *
-   * @var string
-   */
-  protected $profile = 'testing';
-
   /**
    * The current MongoDB collection.
    *
@@ -27,45 +21,9 @@ class MongoDBLogTestCase extends WebTestBase {
   protected $collection;
 
   /**
-   * The current test group.
-   *
-   * @var string
-   */
-  protected $group = 'Before setUp()';
-
-  /**
    * Drupal 6 does not have REQUEST_TIME, use a custom value to minimize D6/D7 differences.
    */
   protected $request_time;
-
-  /**
-   *
-   */
-  public static function getInfo() {
-    return [
-      'name' => 'MongoDB log functionality',
-      'description' => 'Generate events and verify watchdog entries; verify user access to log reports based on persmissions.',
-      'group' => 'MongoDB',
-    ];
-  }
-
-  /**
-   * Clear the MongoDB data: simpletest only clears the main SQL database.
-   *
-   * (non-PHPdoc)
-   *
-   * @see WebTestBase::tearDown()
-   */
-  public function tearDown() {
-    $this->group = t('Teardown');
-    $this->pass('Clear watchdog collections', $this->group);
-    module_load_include('inc', 'mongodb_watchdog', 'mongodb_watchdog.admin');
-    mongodb_watchdog_clear_log_submit();
-
-    parent::tearDown();
-  }
-
-  // @FIXME Below this line is older broken code inherited from dblog tests
 
   /**
    * Generate dblog entries.

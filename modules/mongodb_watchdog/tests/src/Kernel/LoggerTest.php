@@ -82,7 +82,7 @@ class LoggerTest extends MongoDbTestBase {
    * @param string $message
    *   The message to look for.
    *
-   * @return string|null
+   * @return array|null
    *   The document containing the message, if any ; NULL otherwise.
    */
   protected function find($message) {
