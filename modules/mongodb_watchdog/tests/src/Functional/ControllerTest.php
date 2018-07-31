@@ -2,10 +2,13 @@
 
 namespace Drupal\Tests\mongodb_watchdog\Functional;
 
+use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Site\Settings;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\BrowserTestBase;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -19,6 +22,27 @@ class ControllerTest extends BrowserTestBase {
   const CLIENT_TEST_ALIAS = 'test';
 
   const DB_DEFAULT_ALIAS = 'default';
+
+  const PATH_DENIED = '/admin/reports/mongodb/watchdog/access-denied';
+  const PATH_EVENT_BASE = "/admin/reports/mongodb/watchdog/";
+  const PATH_NOT_FOUND = '/admin/reports/mongodb/watchdog/page-not-found';
+  const PATH_OVERVIEW = 'admin/reports/mongodb/watchdog';
+
+  /**
+   * Map of PSR3 log constants to RFC 5424 log constants.
+   *
+   * @var array
+   */
+  const LEVEL_TRANSLATION = [
+    LogLevel::EMERGENCY => RfcLogLevel::EMERGENCY,
+    LogLevel::ALERT => RfcLogLevel::ALERT,
+    LogLevel::CRITICAL => RfcLogLevel::CRITICAL,
+    LogLevel::ERROR => RfcLogLevel::ERROR,
+    LogLevel::WARNING => RfcLogLevel::WARNING,
+    LogLevel::NOTICE => RfcLogLevel::NOTICE,
+    LogLevel::INFO => RfcLogLevel::INFO,
+    LogLevel::DEBUG => RfcLogLevel::DEBUG,
+  ];
 
   protected static $modules = [
     // Needed to check admin/help/mongodb.
@@ -200,6 +224,105 @@ class ControllerTest extends BrowserTestBase {
   }
 
   /**
+   * Get the log entry information form the page.
+   *
+   * @return array
+   *   List of entries and their information.
+   */
+  protected function getLogEntries() : array {
+    $entries = [];
+    if ($table = $this->getLogsEntriesTable()) {
+      /** @var \Behat\Mink\Element\NodeElement $row */
+      foreach ($table as $row) {
+        /** @var \Behat\Mink\Element\NodeElement[] $cells */
+        $cells = $row->findAll('css', 'td');
+        $entries[] = [
+          'severity' => $this->getSeverityConstant($cells[2]->getAttribute('class')),
+          'type' => $cells[3]->getText(),
+          'message' => $cells[4]->getText(),
+        ];
+      }
+    }
+    return $entries;
+  }
+
+  /**
+   * Gets the watchdog severity constant corresponding to the CSS class.
+   *
+   * @param string $class
+   *   CSS class attribute.
+   *
+   * @return int|null
+   *   The watchdog severity constant or NULL if not found.
+   */
+  protected function getSeverityConstant(string $class) : int {
+    // Class: "mongodb-watchdog__severity--(level)", prefix length = 28.
+    $level = substr($class, 28);
+    return static::LEVEL_TRANSLATION[$level];
+  }
+
+  /**
+   * Find the Logs table in the DOM.
+   *
+   * @return \Behat\Mink\Element\NodeElement[]
+   *   The return value of a xpath search.
+   */
+  protected function getLogsEntriesTable() : array {
+    return $this->xpath('.//table/tbody/tr');
+  }
+
+  /**
+   * Asserts that the counts for displayed entries match the expected counts.
+   *
+   * @param $types
+   *   The type information to compare against.
+   */
+  protected function assertTypeCount(array $types) {
+    $entries = $this->getLogEntries();
+    $reducer = function ($accu, $curr) {
+      $accu[$curr['type'] . '-' . $curr['severity']] = [$curr['type'], $curr['severity']];
+      return $accu;
+    };
+    $actual = array_reduce($entries, $reducer, []);
+    $expected = array_reduce($types, $reducer, []);
+    $this->assertEquals($expected, $actual, "Inserted events are found on page");
+  }
+
+  /**
+   * Generate dblog entries.
+   *
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The mongodb.logger service.
+   * @param int $count
+   *   Number of log entries to generate.
+   * @param string $type
+   *   The type of watchdog entry.
+   * @param int $severity
+   *   The severity of the watchdog entry.
+   */
+  private function insertLogEntries(
+    LoggerInterface $logger,
+    int $count,
+    string $type = 'custom',
+    int $severity = RfcLogLevel::EMERGENCY
+  ) {
+    $ip = '::1';
+    $context = [
+      'channel'     => $type,
+      'link'        => NULL,
+      'user'        => ['uid' => $this->bigUser->id()],
+      'request_uri' => "http://[$ip]/",
+      'referer'     => $_SERVER['HTTP_REFERER'] ?? '',
+      'ip'          => $ip,
+      'timestamp'   => $this->requestTime,
+    ];
+    $message = $this->randomString();
+    for ($i = 0; $i < $count; $i++) {
+      $logger->log($severity, $message, $context);
+    }
+  }
+
+  /**
    * Verify the logged-in user has the desired access to the log report.
    *
    * @param int $statusCode
@@ -231,7 +354,7 @@ class ControllerTest extends BrowserTestBase {
     }
 
     // View MongoDB watchdog overview report.
-    $this->drupalGet('/admin/reports/mongodb/watchdog');
+    $this->drupalGet(static::PATH_OVERVIEW);
     $session = $this->assertSession();
     $session->statusCodeEquals($statusCode);
     if ($statusCode == Response::HTTP_OK) {
@@ -252,7 +375,7 @@ class ControllerTest extends BrowserTestBase {
     }
 
     // View MongoDB watchdog page-not-found report.
-    $this->drupalGet('/admin/reports/mongodb/watchdog/page-not-found');
+    $this->drupalGet(self::PATH_NOT_FOUND);
     $session = $this->assertSession();
     $session->statusCodeEquals($statusCode);
     if ($statusCode == Response::HTTP_OK) {
@@ -261,7 +384,7 @@ class ControllerTest extends BrowserTestBase {
     }
 
     // View MongoDB watchdog access-denied report.
-    $this->drupalGet('/admin/reports/mongodb/watchdog/access-denied');
+    $this->drupalGet(self::PATH_DENIED);
     $session = $this->assertSession();
     $session->statusCodeEquals($statusCode);
     if ($statusCode == Response::HTTP_OK) {
@@ -283,7 +406,7 @@ class ControllerTest extends BrowserTestBase {
     $eventId = $event['_id'];
 
     // View MongoDB Watchdog event page.
-    $this->drupalGet("/admin/reports/mongodb/watchdog/$eventId");
+    $this->drupalGet(static::PATH_EVENT_BASE . $eventId);
     $session = $this->assertSession();
     $session->statusCodeEquals($statusCode);
     // MongoDB watchdog event page was displayed.
@@ -378,69 +501,66 @@ class ControllerTest extends BrowserTestBase {
    * Test the dblog filter on admin/reports/dblog.
    */
   public function testFilter() {
-    $this->pass(__METHOD__);
-    return;
     $this->drupalLogin($this->bigUser);
 
     // Clear log to ensure that only generated entries are found.
-    db_delete('watchdog')->execute();
+    $database = $this->container
+      ->get(MongoDb::SERVICE_DB_FACTORY)
+      ->get(Logger::DB_LOGGER);
+    $database->drop();
+
+    $logger = $this->container->get(Logger::SERVICE_LOGGER);
 
     // Generate watchdog entries.
-    $type_names = [];
+    $typeNames = [];
     $types = [];
     for ($i = 0; $i < 3; $i++) {
-      $type_names[] = $type_name = $this->randomName();
-      $severity = WATCHDOG_EMERGENCY;
+      $typeNames[] = $typeName = $this->randomMachineName();
+      $severity = RfcLogLevel::EMERGENCY;
       for ($j = 0; $j < 3; $j++) {
         $types[] = $type = [
           'count' => mt_rand(1, 5),
-          'type' => $type_name,
+          'type' => $typeName,
           'severity' => $severity++,
         ];
-        $this->generateLogEntries($type['count'], $type['type'], $type['severity']);
+        $this->insertLogEntries($logger, $type['count'], $type['type'], $type['severity']);
       }
     }
-
     // View the dblog.
-    $this->drupalGet('admin/reports/dblog');
+    $this->drupalGet(self::PATH_OVERVIEW);
 
     // Confirm all the entries are displayed.
-    $count = $this->getTypeCount($types);
-    foreach ($types as $key => $type) {
-      $this->assertEqual($count[$key], $type['count'], 'Count matched');
-    }
+    $this->assertTypeCount($types);
 
     // Filter by each type and confirm that entries with various severities are
     // displayed.
-    foreach ($type_names as $type_name) {
+    foreach ($typeNames as $typeName) {
       $edit = [
-        'type[]' => [$type_name],
+        'type[]' => [$typeName],
       ];
-      $this->drupalPost(NULL, $edit, t('Filter'));
+      $this->drupalPostForm(NULL, $edit, 'Filter');
 
-      // Count the number of entries of this type.
-      $type_count = 0;
-      foreach ($types as $type) {
-        if ($type['type'] == $type_name) {
-          $type_count += $type['count'];
-        }
-      }
-
-      $count = $this->getTypeCount($types);
-      $this->assertEqual(array_sum($count), $type_count, 'Count matched');
+      // Check whether the displayed event templates match our filter.
+      $filteredTypes = array_filter($types, function (array $type) use ($typeName) {
+        return $type['type'] === $typeName;
+      });
+      $this->assertTypeCount($filteredTypes);
     }
 
-    // Set filter to match each of the three type attributes and confirm the
-    // number of entries displayed.
+    // Set filter to match each of the combined filter sets and confirm the
+    // entries displayed.
     foreach ($types as $key => $type) {
       $edit = [
-        'type[]' => [$type['type']],
-        'severity[]' => [$type['severity']],
+        'type[]' => $typeType = $type['type'],
+        'severity[]' => $typeSeverity = $type['severity'],
       ];
-      $this->drupalPost(NULL, $edit, t('Filter'));
+      $this->drupalPostForm(NULL, $edit, 'Filter');
 
-      $count = $this->getTypeCount($types);
-      $this->assertEqual(array_sum($count), $type['count'], 'Count matched');
+      $filteredTypes = array_filter($types, function (array $type) use ($typeType, $typeSeverity) {
+        return $type['type'] === $typeType && $type['severity'] == $typeSeverity;
+      });
+
+      $this->assertTypeCount($filteredTypes);
     }
   }
 

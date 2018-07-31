@@ -26,39 +26,6 @@ class MongoDBLogTestCase extends WebTestBase {
   protected $request_time;
 
   /**
-   * Generate dblog entries.
-   *
-   * @param int $count
-   *   Number of log entries to generate.
-   * @param $type
-   *   The type of watchdog entry.
-   * @param $severity
-   *   The severity of the watchdog entry.
-   */
-  private function generateLogEntries($count, $type = 'custom', $severity = WATCHDOG_NOTICE) {
-    global $base_root;
-
-    // Prepare the fields to be logged.
-    $log = [
-      'type'        => $type,
-      'message'     => 'Log entry added to test the dblog row limit.',
-      'variables'   => [],
-      'severity'    => $severity,
-      'link'        => NULL,
-      'user'        => $this->big_user,
-      'request_uri' => $base_root . request_uri(),
-      'referer'     => $_SERVER['HTTP_REFERER'],
-      'ip'          => ip_address(),
-      'timestamp'   => $this->request_time,
-    ];
-    $message = 'Log entry added to test the dblog row limit.';
-    for ($i = 0; $i < $count; $i++) {
-      $log['message'] = $this->randomString();
-      dblog_watchdog($log);
-    }
-  }
-
-  /**
    * Verify events.
    */
   private function verifyEvents() {
@@ -270,51 +237,6 @@ class MongoDBLogTestCase extends WebTestBase {
         break;
     }
     return $content;
-  }
-
-  /**
-   * Get the log entry information form the page.
-   *
-   * @return
-   *   List of entries and their information.
-   */
-  protected function getLogEntries() {
-    $entries = [];
-    if ($table = $this->xpath('.//table[@id="admin-dblog"]')) {
-      $table = array_shift($table);
-      foreach ($table->tbody->tr as $row) {
-        $entries[] = [
-          'severity' => $this->getSeverityConstant($row['class']),
-          'type' => $this->asText($row->td[1]),
-          'message' => $this->asText($row->td[3]),
-          'user' => $this->asText($row->td[4]),
-        ];
-      }
-    }
-    return $entries;
-  }
-
-  /**
-   * Get the count of entries per type.
-   *
-   * @param $types
-   *   The type information to compare against.
-   *
-   * @return
-   *   The count of each type keyed by the key of the $types array.
-   */
-  protected function getTypeCount(array $types) {
-    $entries = $this->getLogEntries();
-    $count = array_fill(0, count($types), 0);
-    foreach ($entries as $entry) {
-      foreach ($types as $key => $type) {
-        if ($entry['type'] == $type['type'] && $entry['severity'] == $type['severity']) {
-          $count[$key]++;
-          break;
-        }
-      }
-    }
-    return $count;
   }
 
   /**

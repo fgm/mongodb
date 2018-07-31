@@ -46,7 +46,7 @@ services:
       - '@messenger'
 
   mongodb.watchdog.sanity_check:
-    class: 'Drupal\mongodb_watchdog\Install\Sanitycheck'
+    class: 'Drupal\mongodb_watchdog\Install\SanityCheck'
     arguments:
       - '@mongodb.database_factory'
       - '@config.factory'

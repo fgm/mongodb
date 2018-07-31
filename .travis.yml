@@ -97,11 +97,11 @@ before_script:
   # Define MongoDB aliases for mongodb_* submodules.
   - tail --lines=+12 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
 
-  # reference and enable mongodb modules in build site
-  #- ln -s $(readlink -e $(cd -)) drupal-8.6.x-dev/modules/custom/mongodb
+  # Reference and enable mongodb modules in build site
+  #- ln -s $(readlink -e $(cd -)) drupal-8.7.x-dev/modules/custom/mongodb
   - vendor/bin/drush -y en mongodb_storage mongodb_watchdog
 
-  # Not needed: we don't have any web tests at this point.
+  # Needed for web tests in mongodb_watchdog.
   # start a web server on port 8080, run in the background; wait for initialization.
   - vendor/bin/drush runserver 127.0.0.1:8080 &
   - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
