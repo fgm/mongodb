@@ -2,8 +2,8 @@ site_name: MongoDB for Drupal
 pages:
   - Home: 'index.md'
   - Installation: 'install.md'
+  - Layout: 'layout.md'
   - Modules:
-    - 'Layout': 'modules/layout.md'
     - 'Driver: `mongodb`': 'modules/mongodb.md'
     - 'Key-value: `mongodb_storage`': 'modules/mongodb_storage.md'
     - 'Logger: `mongodb_watchdog`': 'modules/mongodb_watchdog.md'
@@ -12,4 +12,5 @@ pages:
     - 'Tests': 'tests.md'
 theme: readthedocs
 repo_url: https://github.com/FGM/mongodb
-
+markdown_extensions:
+  - footnotes

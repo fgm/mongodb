@@ -1,11 +1,14 @@
 # Logger: `mongodb_watchdog`
 
 The `mongodb_watchdog` module stores the log entries for your Drupal site
-in MongoDB collection as mentioned in [Settings Configuration](../../install#settings-configuration)
+in MongoDB collections as mentioned in [Settings Configuration](../../install#settings-configuration)
 
-This module uses a separate database, using the `logger` database alias in settings.
+This module uses a separate database, defined by the `logger` database alias in settings.
 Do NOT point that alias to the same database as `default`, because the module
 drops the `logger` database when uninstalling, which would drop all your other data with it.
+
+## Configuration
+  Below are the configurable variables available in `mongodb_watchdog.settings`
 
  * `mongodb.watchdog.items`
     * the maximum item limit on the capped collection used by the module.

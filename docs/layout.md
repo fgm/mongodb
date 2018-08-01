@@ -1,5 +1,5 @@
 ## Project layout
-### Module layout
+### Module layout[^1]
     modules                    # The folder containing the code for modules in this suite
         mongodb                # driver
         mongodb_storage        # key-value
@@ -13,8 +13,14 @@
     core.phpunit.xml           # PHPUnit configuration file
     example.settings.local.php # Example settings to connect to MongoDB
 
-### Documentation layout
+### Documentation layout[^2]
     mkdocs.yml    # The configuration file.
     docs/
         index.md  # The documentation homepage.
         ...       # Other markdown pages, images and other files.
+
+[^1]: [Main module branch][Mainbranch]
+[^2]: [Documentation branch][Docbranch]
+
+[Mainbranch]: https://github.com/fgm/mongodb
+[Docbranch]: https://github.com/fgm/mongodb/tree/mkdocs

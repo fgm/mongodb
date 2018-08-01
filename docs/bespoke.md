@@ -13,7 +13,7 @@ Drupal adaptation on top of the standard `mongodb` [extension] and
 [PHP library].
 
 [extension]: http://php.net/mongodb
-[PHP library]: http://mongodb.github.io/mongo-php-library/
+[PHP library]: https://docs.mongodb.com/php-library/current
 
 
 ## Example
