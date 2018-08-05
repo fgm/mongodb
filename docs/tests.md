@@ -1,10 +1,12 @@
 The newly ported modules have some test coverage, which can be checked with
 PHPUnit.
 
+[![Coverage Status](https://coveralls.io/repos/github/fgm/mongodb/badge.svg?branch=8.x-2.x)](https://coveralls.io/github/fgm/mongodb?branch=8.x-2.x)
+
 # PHPUnit
 ## Writing custom tests
 
-The `mongodb` module provides a `Drupal\mongodb\Tests\MongoDbTestBase` base
+The `mongodb` module provides a `Drupal\Tests\mongodb\Kernel\MongoDbTestBase` base
 class on which to build custom kernel tests for [bespoke] modules, as
 it provides a per-test database created during test <code>setUp()</code>, and
 dropped during <code>tearDown()</code>.
@@ -37,14 +39,21 @@ instance themselves.
       protected $database;
 
       /**
-       * Add a custom alias to settings and instantiate a custom database.
+       * Override getSettingsArray method to include custom test database
        */
-      public function setUp() {
-        parent::setUp();
+      public function getSettingsArray(): array {
+        $settings = parent::getSettingsArray();
         $this->settings['databases'][static::MODULE] = [
           static::CLIENT_TEST_ALIAS,
           $this->getTestDatabaseName(static::MODULE),
         ];
+      }
+
+      /**
+       * Add a custom alias to settings and instantiate a custom database.
+       */
+      public function setUp() {
+        parent::setUp();
         $this->database = new DatabaseFactory(
           new ClientFactory($this->settings),
           $this->settings
@@ -86,15 +95,12 @@ With the Simpletest UI apparently going away in Drupal 8.2 (cf [#2566767],
 The typical full command to run tests looks like this (`\` is to avoid too long a line):
 
     MONGODB_URI=mongodb://somemongohost:27017 \
-    SIMPLETEST_DB=mysql://someuser:somepassword@localhost/somedatabase \
-    phpunit -c core/phpunit.xml.dist
+    PHPUNIT_OPTS="-c phpunit.xml -v --debug --coverage-clover=modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
 
 * Optional: `MONGODB_URI` points to a working MongoDB instance. This variable is optional:
   if it is not provided, the tests will default to `mongodb://localhost:27017`.
-* Required: `SIMPLETEST_DB` is the standard Drupal 8 variable needed to run tests that
-  can need the database service.
 
-Both variables can be set in the `core/phpunit.xml` custom configuration file.
+Above variable can be set in the `core/phpunit.xml` custom configuration file.
 
 
 ### Using a `phpunit.xml` configuration file
@@ -117,20 +123,24 @@ Or to generate a coverage report:
 
         <phpunit ...snip...>
           <php>
-            <env name="SIMPLETEST_DB" value="mysql://someuser:somepass@somesqlhost/somedb"/>
             <env name="MONGODB_URI" value="mongodb://somemongohost:27017" />
           </php>
           <testsuites ...snip...>...snip...</testsuites>
           <listeners>...snip...</listener>
           </listeners>
           <filter>
-            <whitelist>
+            <whitelist
+              addUncoveredFilesFromWhitelist="true"
+              processUncoveredFilesFromWhitelist="true">
               <directory>../modules/contrib/mongodb</directory>
+              <!-- By definition test classes have no tests. -->
               <exclude>
-                <directory>../modules/contrib/mongodb/modules/mongodb/src/Tests</directory>
-                <directory suffix="Test.php">./</directory>
-                <directory suffix="TestBase.php">./</directory>
+                <file>../modules/contrib/mongodb/example.settings.local.php</file>
+                <directory suffix="Test.php">../modules/contrib/mongodb</directory>
+                <directory suffix="TestBase.php">../modules/contrib/mongodb</directory>
+                <!-- There is a remaining legacy test for reference in watchdog for now -->
+                <directory suffix=".test">../modules/contrib/mongodb</directory>
               </exclude>
-             </whitelist>
+            </whitelist>
           </filter>
         </phpunit>

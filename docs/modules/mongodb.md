@@ -19,11 +19,11 @@ settings,
 
 * `Drupal\mongodb\DatabaseFactory` : This is the recommended entry point for
   most applications, returning a `MongoDb\Database` from a simple alias string.
-    * `__construct(ClientFactory $client_factory, Settings $settings)`. This is
+    * `__construct(ClientFactory $clientFactory, Settings $settings)`. This is
       normally invoked by the container, to which the class is exposed as
       `mongodb.database_factory`.
-    * `get(string $alias): MongoDb\Database`; returns a `Database` instance
-      matching the value defined in Drupal settings for `$alias`.
+    * `get(string $dbAlias): MongoDb\Database`; returns a `Database` instance
+      matching the value defined in Drupal settings for `$dbAlias`.
 * `Drupal\mongodb\ClientFactory`: This one may be needed for more complex
   applications, e.g. those wishing to handle operations spanning connections
   to multiple MongoDB replica sets/sharded clusters.
@@ -35,7 +35,7 @@ settings,
 
 ## Test base class
 
-The module provides a `\Drupal\mongodb\Tests\MongoDbTestBase` extending core
+The module provides a `\Drupal\Tests\mongodb\Kernel\MongoDbTestBase` extending core
 class `KernelTestBase`. This allows modules to define their own integration
 tests using the module services, and taking advantage of running in a per-test
 database. What it actually provides:
@@ -66,11 +66,12 @@ database. What it actually provides:
       to have the test base define the properties before doing their own work.
     * Tests need to invoke `parent::tearDown()` near the end of their own
       `tearDown()` - if any - to drop the default test database.
-    * Tests needing non-default test databases need to extend `$this->settings`
-      to add their own database alias after invoking `parent::setUp()`, and need
-      to drop that database during their own `tearDown()`. They can use
-      `$this->getTestDatabaseName($postfix)` method to build a per-test
-      database name that will not collide with the default database.
+    * Tests needing non-default test databases need to override the
+      `getSettingsArray()` function to add their own database alias after
+      invoking `parent::setUp()`, and need to drop that database during their
+      own `tearDown()`. They can use `$this->getTestDatabaseName($postfix)`
+      method to build a per-test database name that will not collide with the
+      default database.
 
 A complete example of how to write a test using that base class is given on the
 [tests] page.

@@ -1,9 +1,9 @@
 ## Project layout
 ### Module layout[^1]
     modules                    # The folder containing the code for modules in this suite
-        mongodb                # driver
-        mongodb_storage        # key-value
-        mongodb_watchdog       # logger
+        mongodb                # Driver
+        mongodb_storage        # Key-value
+        mongodb_watchdog       # Logger
     .coveralls.yml             # Code coverage configuration file
     .scrutinizer.yml           # Scrutinizer configuration file
     .travis.yml                # Travis build configuration  file
