@@ -35,8 +35,6 @@ Module              | In a word | Information
 
 Modules expected to be ported to 8.x-2.x in some release after 2.0 include:
 
-`mongodb_cache` module
-
 Module              | In a word | Information
 --------------------|-----------|-------------------------------------------
 mongodb_cache       | cache     | Cache storage, with server-side expiration
