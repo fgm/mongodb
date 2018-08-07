@@ -7,7 +7,7 @@ the legacy `mongo` extension, or on top of the Doctrine ODM for MongoDB,
 suffering from a total lack of integration with the underlying core Drupal CMS.
 
 This module provides a degree of version independence for the API changes in
-[PHP library]. Refer `Drupal\mongodb\MongoDb` class for an example.
+[PHP library]. Refer to the `Drupal\mongodb\MongoDb` class for an example.
 
 Starting with 8.x-2.0, such one-off code can be developed on top of the base
 `mongodb` module: unlike earlier releases, 8.x-2.x uses the PHP-standard

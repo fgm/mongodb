@@ -4,7 +4,8 @@ The `mongodb_storage` module implements the [key-value storage][keyvallink]
 for Drupal in MongoDB.
 
 * To use the MongoDB Key-Value (Expirable) storage:
-    * ensure there is a `keyvalue` database alias as in [settings configuration](../../install#settings-configuration).
+    * ensure there is a `keyvalue` database alias as in 
+      [settings configuration](../../install#settings-configuration).
     * declare MongoDB as the default keyvalue storage implementation by editing
       the existing declarations in the `sites/default/services.yml` file:
 
