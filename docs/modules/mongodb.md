@@ -56,11 +56,12 @@ database. What it actually provides:
     * `CLIENT_TEST_ALIAS` is the alias for the default MongoDB test client
     * `DB_DEFAULT_ALIAS` is the alias for the default test database
 * Modules:
-    * The test base enabled the `mongodb` modules, since all modules using
-      MongoDB are expected to depend on it.
-    * Module tests will typically want their own module enabled, so they will
-      need to add to `static::$modules` instead of redefining it, to avoid
-      losing the `mongodb` module.
+    * The test base enabled the `mongodb` modules, since all modules using MongoDB
+      are expected to depend on it.
+    * Module tests will typically want their own module enabled, so they will need
+      to redefine `static::$modules` including the `mongodb` module as done in
+      `Drupal\Tests\mongodb_storage\Kernel\KeyValueTestBase` and
+      `Drupal\Tests\mongodb_watchdog\Kernel\LoggerTest`.
 * `setUp()` / `tearDown()`:
     * Tests need to invoke `parent::setUp()` near the top of their own
       `setUp()`, to have the test base define the properties before doing their
