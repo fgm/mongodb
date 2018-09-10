@@ -1,0 +1,7 @@
+services:
+  drupal.mongodb_storage.commands:
+    arguments:
+    - '@mongodb.storage.sql_import'
+    class: Drupal\mongodb_storage\Commands\MongoDbStorageCommands
+    tags:
+      - { name: drush.command }

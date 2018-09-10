@@ -3,22 +3,22 @@
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
 use Drupal\mongodb\MongoDb;
-use Drupal\mongodb_storage\Commands\MongoDbStorageCommands;
+use Drupal\mongodb_storage\Install\SqlImport;
 use Drupal\mongodb_storage\KeyValueExpirableFactory;
 use Drupal\mongodb_storage\KeyValueFactory;
 use Drupal\mongodb_storage\Storage;
 
 /**
- * Class CommandsTest.
+ * Class SqlImportTest.
  *
- * @coversDefaultClass \Drupal\mongodb_storage\Commands\MongoDbStorageCommands
+ * @coversDefaultClass \Drupal\mongodb_storage\Install\SqlImport
  *
  * @group MongoDB
  */
-class CommandsTest extends KeyValueTestBase {
+class SqlImportTest extends KeyValueTestBase {
 
-  const IMPORT_OUTPUT = MongoDbStorageCommands::KVP_TABLE . PHP_EOL
-  . MongoDbStorageCommands::KVE_TABLE . PHP_EOL;
+  const IMPORT_OUTPUT = SqlImport::KVP_TABLE . PHP_EOL
+  . SqlImport::KVE_TABLE . PHP_EOL;
 
   public static $modules = [
     'system',
@@ -34,15 +34,23 @@ class CommandsTest extends KeyValueTestBase {
   protected $database;
 
   /**
+   * The mongodb.storage.sql_import service.
+   *
+   * @var \Drupal\mongodb_storage\Install\SqlImport
+   */
+  protected $sqlImport;
+
+  /**
    * Install the database keyvalue tables for import.
    */
   public function setUp() {
     parent::setUp();
     $this->installSchema('system', [
-      MongoDbStorageCommands::KVP_TABLE,
-      MongoDbStorageCommands::KVE_TABLE,
+      SqlImport::KVP_TABLE,
+      SqlImport::KVE_TABLE,
     ]);
     $this->database = $this->container->get('database');
+    $this->sqlImport = $this->container->get(Storage::SERVICE_SQL_IMPORT);
   }
 
   /**
@@ -89,35 +97,24 @@ class CommandsTest extends KeyValueTestBase {
   }
 
   /**
-   * @covers ::create
-   */
-  public function testFactory() {
-    $commands = MongoDbStorageCommands::create($this->container);
-    $this->assertInstanceOf(MongoDbStorageCommands::class, $commands);
-  }
-
-  /**
    * @covers ::__construct
    */
-  public function testCommandsService() {
-    $commands = $this->container->get(Storage::SERVICE_COMMANDS);
-    $this->assertInstanceOf(MongoDbStorageCommands::class, $commands,
-      "Commands service is available");
-    $this->assertTrue(method_exists($commands, 'import'));
+  public function testImportService() {
+    $this->assertInstanceOf(SqlImport::class, $this->sqlImport,
+      "SQL import service is available");
+    $this->assertTrue(method_exists($this->sqlImport, 'import'));
   }
 
   /**
    * @covers ::import
    */
-  public function testCommandImport() {
-    /** @var \Drupal\mongodb_storage\Commands\MongoDbStorageCommands $commands */
-    $commands = $this->container->get(Storage::SERVICE_COMMANDS);
+  public function testImport() {
     $this->expectOutputString(self::IMPORT_OUTPUT);
-    $commands->import();
+    $this->sqlImport->import();
   }
 
   /**
-   * Data provider for testCommandImportActual.
+   * Data provider for testImportActual.
    *
    * @return array
    *   The test data.
@@ -125,12 +122,12 @@ class CommandsTest extends KeyValueTestBase {
   public function importProvider() : array {
     return [
       [
-        MongoDbStorageCommands::KVP_TABLE,
+        SqlImport::KVP_TABLE,
         Storage::SERVICE_KV,
         KeyValueFactory::COLLECTION_PREFIX,
       ],
       [
-        MongoDbStorageCommands::KVE_TABLE,
+        SqlImport::KVE_TABLE,
         Storage::SERVICE_KVE,
         KeyValueExpirableFactory::COLLECTION_PREFIX,
       ],
@@ -144,7 +141,7 @@ class CommandsTest extends KeyValueTestBase {
    *
    * @dataProvider importProvider
    */
-  public function testCommandImportActual(string $table, string $service, string $prefix) {
+  public function testImportActual(string $table, string $service, string $prefix) {
     if (!function_exists(system_schema::class)) {
       \module_load_install('system');
     }
@@ -192,8 +189,7 @@ class CommandsTest extends KeyValueTestBase {
     $insert->execute();
 
     $this->expectOutputString(self::IMPORT_OUTPUT);
-    $commands = Storage::commands();
-    $commands->import();
+    $this->sqlImport->import();
 
     $keyValue = $this->container->get($service);
     $mongoCollections = $this->getKvCollectionNames($prefix);

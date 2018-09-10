@@ -39,6 +39,7 @@ class Logger extends AbstractLogger {
 
   const SERVICE_LOGGER = 'mongodb.logger';
   const SERVICE_REQUIREMENTS = 'mongodb.watchdog_requirements';
+  const SERVICE_SANITY_CHECK = 'mongodb.watchdog.sanity_check';
 
   const TRACKER_COLLECTION = 'watchdog_tracker';
   const TEMPLATE_COLLECTION = 'watchdog';

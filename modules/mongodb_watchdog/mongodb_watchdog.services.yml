@@ -43,3 +43,9 @@ services:
       - '@request_stack'
       - '@serialization.yaml'
       - '@messenger'
+
+  mongodb.watchdog.sanity_check:
+    class: 'Drupal\mongodb_watchdog\Install\Sanitycheck'
+    arguments:
+      - '@mongodb.database_factory'
+      - '@config.factory'

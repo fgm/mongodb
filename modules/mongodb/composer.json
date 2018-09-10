@@ -19,6 +19,13 @@
     "drush/drush": "< 9.3"
   },
   "description": "Drupal 8.2 driver for MongoDB",
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": "^9"
+      }
+    }
+  },
   "homepage": "https://www.drupal.org/project/mongodb",
   "keywords": ["drupal", "mongodb"],
   "license": "GPL-2.0-or-later",

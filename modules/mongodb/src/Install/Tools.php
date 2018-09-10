@@ -1,18 +1,17 @@
 <?php
 
-namespace Drupal\mongodb\Commands;
+namespace Drupal\mongodb\Install;
 
 use Drupal\Component\Serialization\SerializationInterface;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\mongodb\DatabaseFactory;
 use Drupal\mongodb\MongoDb;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use MongoDB\Exception\InvalidArgumentException;
 
 /**
  * Class MongoDbCommands provides the Drush commands for the mongodb module.
  */
-class MongoDbCommands implements ContainerInjectionInterface {
+class Tools {
 
   /**
    * The mongobb.database_factory service.
@@ -56,19 +55,6 @@ class MongoDbCommands implements ContainerInjectionInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    /** @var \Drupal\mongodb\DatabaseFactory $dbFactory */
-    $dbFactory = $container->get(MongoDb::SERVICE_DB_FACTORY);
-    /** @var \Drupal\Core\Serialization\Yaml $yaml */
-    $yaml = $container->get('serialization.yaml');
-    /** @var \Drupal\Core\Site\Settings $settings */
-    $settings = $container->get('settings');
-    return new static($dbFactory, $settings, $yaml);
-  }
-
-  /**
    * Command callback for mongodb:mdbf.
    *
    * @param string $alias
@@ -78,13 +64,16 @@ class MongoDbCommands implements ContainerInjectionInterface {
    * @param string $selector
    *   The selector to apply to the query.
    *
-   * @return string
-   *   The serialized version of the query results.
+   * @return array
+   *   The query results.
    */
-  public function find(string $alias, string $collection, string $selector = '{}'): string {
+  public function find(string $alias, string $collection, string $selector = '{}'): array {
     /** @var \MongoDB\Database $database */
     $database = $this->dbFactory->get($alias);
     $jsonSelector = json_decode($selector);
+    if ($jsonSelector === NULL) {
+      throw new InvalidArgumentException("Your JSON selector could not be decoded. Here is how PHP received it: " . var_export($selector, true));
+    }
     $docs1 = $database->selectCollection($collection)
       ->find($jsonSelector, [
         'typeMap' => [
@@ -99,17 +88,17 @@ class MongoDbCommands implements ContainerInjectionInterface {
     foreach ($docs1 as $doc1) {
       $docs2[] = json_decode(json_encode($doc1), TRUE);
     }
-    return $this->yaml->encode($docs2);
+    return $docs2;
   }
 
   /**
    * Command callback for mongodb:mdbs.
    *
-   * @return string
-   *   The serialized version of the MongoDB portion of the settings.
+   * @return array
+   *   The MongoDB portion of the settings.
    */
-  public function settings(): string {
-    return $this->yaml->encode($this->settings->get(MongoDb::MODULE));
+  public function settings(): array {
+    return $this->settings->get(MongoDb::MODULE);
   }
 
 }

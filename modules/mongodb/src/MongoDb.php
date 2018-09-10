@@ -2,8 +2,6 @@
 
 namespace Drupal\mongodb;
 
-// @codingStandardsIgnoreLine
-use Drupal\mongodb\Commands\MongoDbCommands;
 use MongoDB\Collection;
 
 /**
@@ -18,20 +16,10 @@ class MongoDb {
   const EXTENSION = 'mongodb';
   const MODULE = 'mongodb';
 
-  const SERVICE_COMMANDS = 'drupal.mongodb.commands';
   const SERVICE_DB_FACTORY = 'mongodb.database_factory';
+  const SERVICE_TOOLS = 'mongodb.tools';
 
   protected static $libraryVersion;
-
-  /**
-   * Service helper for commands.
-   *
-   * @return \Drupal\mongodb\Commands\MongoDbCommands
-   *   Return the commands service.
-   */
-  public static function commands() : MongoDbCommands {
-    return \Drupal::service(static::SERVICE_COMMANDS);
-  }
 
   /**
    * Guess an approximation of the library version, to handle API changes.

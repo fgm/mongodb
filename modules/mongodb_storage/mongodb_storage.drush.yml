@@ -1,4 +1,0 @@
-commands:
-  mongodb_storage-import-keyvalue:
-    aliases: ['most-ikv']
-    description: 'Import the database KeyValue contents from default keys to MongoDB.'

@@ -4,6 +4,7 @@
 # Generated files
 ## MkDocs
 /site/
+*.patch
 
 ## Composer
 /vendor/

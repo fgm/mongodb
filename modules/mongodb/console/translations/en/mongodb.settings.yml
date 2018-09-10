@@ -1,0 +1,2 @@
+description: 'Display the MongoDB settings'
+help: 'This shows how the MongoDB modules understand the portion of the site settings related to them.'
