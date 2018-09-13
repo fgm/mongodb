@@ -9,63 +9,121 @@
  * Implements hook_requirements().
  */
 function mongodb_requirements($phase) {
-  $extension_name = 'mongo';
-
+  global $extension_name;
+  global $t;
   $requirements = array();
+
   // Ensure translations don't break at install time.
   $t = get_t();
+
+  // Check MongoDB extension version requirements
+  mongodb_check_extension($requirements);
 
   $requirements['mongodb_extension'] = array(
     'title' => $t('MongoDB extension (!extension)', array(
       '!extension' => $extension_name,
     )),
   );
-  if (!extension_loaded($extension_name)) {
-    $requirements['mongodb_extension'] = array(
-      'value' => $t('Not found'),
-      'description' => $t('MongoDB requires the PHP MongoDB extension to be installed.'),
-      'severity' => REQUIREMENT_ERROR,
-    );
-  }
-  else {
-    $extension = new ReflectionExtension($extension_name);
-    $version = $extension->getVersion();
-    $requirements['mongodb_extension'] += array(
-      'value' => $version,
-      'severity' => REQUIREMENT_OK,
-    );
 
-    // Server versions prior to 1.3 do not support findAndModify command
-    // needed by mongodb_next_id() function.
-    $min_version = '1.3';
+  // Check MongoDB server version requirements
+  mongodb_check_server($phase, $requirements);
 
-    // During install, the module is not yet loaded by core.
-    if ($phase == 'install') {
-      require_once __DIR__ . '/mongodb.module';
+  return $requirements;
+}
+
+/**
+ * Checks mongodb extension version.
+ */
+function mongodb_check_extension(&$requirements) {
+  global $extension_name;
+  if (extension_loaded('mongodb')) {
+    $extension_name = 'mongodb';
+    if (class_exists(MongoClient::class)) {
+      $requirements['mongodb_extension'] += array(
+        'value' => t('Properly replaced'),
+        'description' => $t('The mongo-php-adapter library and the ext-mongodb extension are present, replacing the ext-mongo extension.'),
+        'severity' => REQUIREMENT_OK,
+      );
     }
-    $db = mongodb();
-
-    $requirements['mongodb_server'] = array(
-      'title' => $t('MongoDB server'),
-    );
-    $return = $db->execute('db.version();');
-    $version = $return['retval'];
-    if (version_compare($version, $min_version) == -1) {
-      $requirements['mongodb_server'] += array(
-        'value' => $version,
-        'description' => $t('MongoDB module requires MongoDB server version @min_version or higher.', array(
-          '@min_version' => $min_version,
-        )),
+    else {
+      $requirements['mongodb_extension'] += array(
+        'value' => t('Insufficient'),
+        'description' => $t('The ext-mongodb extension is present, but the mongo-php-adapter is missing, so it cannot replace the old ext-mongo extension.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+  elseif (!extension_loaded('mongo')) {
+    if (class_exists(MongoClient::class)) {
+      $requirements['mongodb_extension'] += array(
+        'value' => t('Insufficient'),
+        'description' => $t('The mongo-php-adapter library is present, but the ext-mongodb is missing, so it cannot replace the old ext-mongo extension.'),
         'severity' => REQUIREMENT_ERROR,
       );
     }
     else {
-      $requirements['mongodb_server'] += array(
-        'value' => $version,
-        'severity' => REQUIREMENT_OK,
+      $requirements['mongodb_extension'] += array(
+        'value' => t('Insufficient'),
+        'description' => $t('Neither the old ext-mongo nor the new ext-mongodb extension nor the mongo-php-adapter library are present.'),
+        'severity' => REQUIREMENT_ERROR,
       );
     }
   }
+  else {
+    $extension_name = 'mongo';
+    if (class_exists(\Alcaeus\MongoDbAdapter\TypeInterface::class)) {
+      $requirements['mongodb_library_redundant'] = array(
+        'title' => 'mongo-php-adapter',
+        'value' => t('Redundant'),
+        'description' => t('The mongo-php-adapter library is installed while the old ext-mongo extension is present. This does not hurt, but is somewhat redundant.'),
+        'severity' => REQUIREMENT_WARNING,
+      );
+    }
+  }
+}
 
-  return $requirements;
+/**
+ * Checks mongodb server version.
+ */
+function mongodb_check_server($phase, &$requirements) {
+  global $extension_name;
+  global $t;
+
+  $extension = new ReflectionExtension($extension_name);
+  $version = $extension->getVersion();
+  $requirements['mongodb_extension'] += array(
+    'value' => $version,
+    'severity' => REQUIREMENT_OK,
+  );
+
+  // Server versions prior to 1.3 do not support findAndModify command
+  // needed by mongodb_next_id() function.
+  $min_version = '1.3';
+
+  // During install, the module is not yet loaded by core.
+  if ($phase == 'install') {
+    require_once __DIR__ . '/mongodb.module';
+  }
+  $db = mongodb();
+
+  $requirements['mongodb_server'] = array(
+    'title' => $t('MongoDB server'),
+  );
+  $return = $db->execute('db.version();');
+  $version = $return['retval'];
+  if (version_compare($version, $min_version) == -1) {
+    $requirements['mongodb_server'] += array(
+      'value' => $version,
+      'description' => $t('MongoDB module requires MongoDB server version @min_version or higher.', array(
+        '@min_version' => $min_version,
+      )),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+  else {
+    $requirements['mongodb_server'] += array(
+      'value' => $version,
+      'severity' => REQUIREMENT_OK,
+    );
+  }
 }
