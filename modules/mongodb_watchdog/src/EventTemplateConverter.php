@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Core\ParamConverter\ParamConverterInterface;
@@ -42,7 +44,7 @@ class EventTemplateConverter implements ParamConverterInterface {
   /**
    * {@inheritdoc}
    */
-  public function convert($value, $definition, $name, array $defaults) {
+  public function convert($value, $definition, $name, array $defaults): ?EventTemplate {
     if (!is_string($value)) {
       $this->logger->notice('Non-string event template id: %id', ['%id' => var_export($value, TRUE)]);
       return NULL;
@@ -60,17 +62,19 @@ class EventTemplateConverter implements ParamConverterInterface {
     ];
 
     // Returns null if there is no match, as expected by ParamConverter.
+    // Never returns an array as findOne() could, because of $options.
     $template = $this->watchdog->templateCollection()->findOne($selector, $options);
     if (empty($template)) {
       $this->logger->notice('Invalid event template id: %id', ['%id' => $value]);
     }
+    assert(is_null($template) || $template instanceof EventTemplate);
     return $template;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function applies($definition, $name, Route $route) {
+  public function applies($definition, $name, Route $route): bool {
     return $definition['type'] === static::PARAM_TYPE;
   }
 

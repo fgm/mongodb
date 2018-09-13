@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb\Install;
 
 use Drupal\Component\Serialization\SerializationInterface;
@@ -72,7 +74,7 @@ class Tools {
     $database = $this->dbFactory->get($alias);
     $jsonSelector = json_decode($selector);
     if ($jsonSelector === NULL) {
-      throw new InvalidArgumentException("Your JSON selector could not be decoded. Here is how PHP received it: " . var_export($selector, true));
+      throw new InvalidArgumentException("Your JSON selector could not be decoded. Here is how PHP received it: " . var_export($selector, TRUE));
     }
     $docs1 = $database->selectCollection($collection)
       ->find($jsonSelector, [

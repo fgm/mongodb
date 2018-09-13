@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\Tests\mongodb\Kernel;
 
 use Drupal\mongodb\ClientFactory;
@@ -61,9 +63,9 @@ class DatabaseFactoryTest extends MongoDbTestBase {
       $this->assertTrue(TRUE, 'Throws expected exception for unset database alias.');
     }
     catch (\Exception $e) {
-      $this->fail('Unexpected exception thrown for unset alias: @exception', [
+      $this->fail(strtr('Unexpected exception thrown for unset alias: @exception', [
         '@exception' => $e->getMessage(),
-      ]);
+      ]));
     }
   }
 

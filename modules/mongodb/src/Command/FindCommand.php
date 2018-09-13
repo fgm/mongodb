@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb\Command;
 
 use Drupal\Component\Serialization\SerializationInterface;
@@ -58,23 +60,35 @@ class FindCommand extends ContainerAwareCommand {
     $name = static::NAME;
     $arguments = "${name}.arguments";
 
+    $usageGeneric = <<<USAGE
+<collection> <query>
+    <query> is a single JSON selector in single string format. Quote it.
+USAGE;
+
+    $usageNoSelector = <<<USAGE
+logger watchdog
+    Get the logger/watchdog error-level templates
+USAGE;
+
+    $usageStringInt = <<<USAGE
+logger watchdog '{ "severity": 3 }'
+    Get all the logger/watchdog entries tracking rows.
+USAGE;
+
+    $usageTwoStrings = <<<USAGE
+keyvalue kvp_state '{ "_id": "system.theme_engine.files" }'
+    Get a specific State entry. Note how escaping needs to be performed in the shell.
+USAGE;
+
     $this
       ->setName('mongodb:find')
       ->setAliases(['mdbf', 'mo-find'])
       ->setDescription($this->trans("${name}.description"))
       ->setHelp($this->trans("${name}.help"))
-      ->addUsage("<collection> <query>\n    <query> is a single JSON selector in single string format. Quote it.")
-      ->addUsage("logger watchdog\n    Get the logger/watchdog error-level templates")
-      ->addUsage(<<<USAGE
-logger watchdog '{ "severity": 3 }'
-    Get all the logger/watchdog entries tracking rows.
-USAGE
-      )
-      ->addUsage(<<<USAGE
-mdbf keyvalue kvp_state '{ "_id": "system.theme_engine.files" }'
-    Get a specific State entry. Note how escaping needs to be performed in the shell.
-USAGE
-)
+      ->addUsage($usageGeneric)
+      ->addUsage($usageNoSelector)
+      ->addUsage($usageStringInt)
+      ->addUsage($usageTwoStrings)
       ->addArgument('alias', InputArgument::REQUIRED, "${arguments}.alias")
       ->addArgument('collection', InputArgument::REQUIRED, "${arguments}.collection")
       ->addArgument('selector', InputArgument::OPTIONAL, "${arguments}.selector", '{ }');

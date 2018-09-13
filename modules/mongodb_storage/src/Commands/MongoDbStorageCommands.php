@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_storage\Commands;
 
 use Drupal\mongodb_storage\Install\SqlImport;

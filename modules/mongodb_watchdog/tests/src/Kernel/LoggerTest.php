@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\Tests\mongodb_watchdog\Kernel;
 
 use Drupal\Core\Logger\RfcLogLevel;
@@ -15,7 +17,6 @@ use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
  * @group MongoDB
  */
 class LoggerTest extends MongoDbTestBase {
-
   /**
    * The event templates collection.
    *
@@ -77,6 +78,24 @@ class LoggerTest extends MongoDbTestBase {
   }
 
   /**
+   * Replaces PSR-3 braces by angle brackets.
+   *
+   * Braces in log($l, $message, $c) will be interpreted as PSR-3 placeholders.
+   * As such they need to be avoid when inserted randomly.
+   *
+   * @param string $message
+   *   The raw message.
+   *
+   * @return string
+   *   The replacement message.
+   *
+   * @see \Drupal\Core\Logger\LogMessageParserInterface::parseMessagePlaceholders()
+   */
+  public static function debrace(string $message): string {
+    return str_replace(['{', '}'], ['<', '>'], $message);
+  }
+
+  /**
    * Simplified query to look for a logged message.
    *
    * @param string $message
@@ -112,8 +131,7 @@ class LoggerTest extends MongoDbTestBase {
     $this->collection = $database->selectCollection(Logger::TEMPLATE_COLLECTION);
     $this->collection->drop();
 
-    // Test at this default level.
-    $message = $this->randomString(32);
+    $message = static::debrace($this->randomString(32));
     $logger->log($limit, $message);
     $this->assertEntry($message);
 

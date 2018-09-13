@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Commands;
 
 use Drupal\mongodb_watchdog\Install\Sanitycheck;
@@ -47,7 +49,7 @@ class MongoDbWatchdogCommands extends DrushCommands {
    * @command mongodb:watchdog:sanitycheck
    * @aliases mdbwsc,mowd-sc
    */
-  public function sanityCheck(array $options = ['format' => 'yaml']) {
+  public function sanityCheck(array $options = ['format' => 'yaml']): array {
     return $this->sanityCheck->buildCollectionstats();
   }
 

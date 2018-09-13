@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\Tests\mongodb_watchdog\Functional;
 
 use Drupal\Core\Logger\RfcLogLevel;
@@ -17,7 +19,6 @@ use Symfony\Component\HttpFoundation\Response;
  * @group MongoDB
  */
 class ControllerTest extends BrowserTestBase {
-
   const DEFAULT_URI = 'mongodb://localhost:27017';
   const CLIENT_TEST_ALIAS = 'test';
 
@@ -92,6 +93,19 @@ class ControllerTest extends BrowserTestBase {
    * @var string
    */
   protected $uri;
+
+  /**
+   * Remove all Drupal markup placeholders.
+   *
+   * @param string $message
+   *   The raw message.
+   *
+   * @return string
+   *   The replacement message.
+   */
+  protected static function neuter(string $message): string {
+    return str_replace(['{', '}', '@', '%', ':'], '', $message);
+  }
 
   /**
    * {@inheritdoc}
@@ -274,7 +288,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Asserts that the counts for displayed entries match the expected counts.
    *
-   * @param $types
+   * @param array $types
    *   The type information to compare against.
    */
   protected function assertTypeCount(array $types) {
@@ -384,7 +398,7 @@ class ControllerTest extends BrowserTestBase {
     }
 
     // View MongoDB watchdog access-denied report.
-    $this->drupalGet(self::PATH_DENIED);
+    $this->drupalGet(static::PATH_DENIED);
     $session = $this->assertSession();
     $session->statusCodeEquals($statusCode);
     if ($statusCode == Response::HTTP_OK) {
@@ -460,7 +474,7 @@ class ControllerTest extends BrowserTestBase {
     /** @var \Drupal\Core\Logger\LoggerChannelInterface $loggerChannel */
     $loggerChannel = $this->container->get(Logger::SERVICE_CHANNEL);
     // Add a watchdog entry. Be sure not to include placeholder delimiters.
-    $message = str_replace(['{', '}', '@', '%', ':'], '', $this->randomString(32));
+    $message = static::neuter($this->randomString(32));
     $loggerChannel->notice($message);
 
     // Make sure the collections were updated.
@@ -549,7 +563,7 @@ class ControllerTest extends BrowserTestBase {
 
     // Set filter to match each of the combined filter sets and confirm the
     // entries displayed.
-    foreach ($types as $key => $type) {
+    foreach ($types as $type) {
       $edit = [
         'type[]' => $typeType = $type['type'],
         'severity[]' => $typeSeverity = $type['severity'],

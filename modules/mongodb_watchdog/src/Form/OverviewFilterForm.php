@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Form;
 
 use Drupal\Core\Form\FormBase;
@@ -38,7 +40,7 @@ class OverviewFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $formState) {
+  public function buildForm(array $form, FormStateInterface $formState): array {
     $filters = $this->getFilters();
 
     $form['filters'] = [
@@ -84,7 +86,7 @@ class OverviewFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     /** @var \Drupal\mongodb_watchdog\Logger $watchdog */
     $watchdog = $container->get(Logger::SERVICE_LOGGER);
 
@@ -102,7 +104,7 @@ class OverviewFilterForm extends FormBase {
    *   - where: The filter condition.
    *   - options: Array of options for the select list for the filter.
    */
-  public function getFilters() {
+  public function getFilters(): array {
     $filters = [];
 
     foreach ($this->watchdog->templateTypes() as $type) {
@@ -131,7 +133,7 @@ class OverviewFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'mongodb-watchdog__filter-form';
   }
 
@@ -142,7 +144,7 @@ class OverviewFilterForm extends FormBase {
    *
    * @SuppressWarnings("PMD.UnusedFormalParameter")
    */
-  public function submitForm(array &$form, FormStateInterface $formState) {
+  public function submitForm(array &$form, FormStateInterface $formState): void {
     $filters = array_keys($this->getFilters());
     foreach ($filters as $name) {
       if ($formState->hasValue($name)) {
@@ -154,14 +156,14 @@ class OverviewFilterForm extends FormBase {
   /**
    * Resets the filter form.
    */
-  public function resetForm() {
+  public function resetForm(): void {
     $_SESSION[static::SESSION_KEY] = [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $formState) {
+  public function validateForm(array &$form, FormStateInterface $formState): void {
     if ($formState->isValueEmpty('type') && $formState->isValueEmpty('severity')) {
       $formState->setErrorByName('type', $this->t('You must select something to filter by.'));
     }

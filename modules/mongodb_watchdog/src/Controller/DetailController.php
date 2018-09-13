@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Controller;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Template\Attribute;
 use Drupal\mongodb_watchdog\EventController;
@@ -53,10 +56,10 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The event template.
    *
-   * @return string[string|array]
+   * @return array
    *   A render array.
    */
-  public function build(Request $request, EventTemplate $eventTemplate) {
+  public function build(Request $request, EventTemplate $eventTemplate): array {
     $top = $this->getTop($eventTemplate);
 
     $rows = $this->getRowData($request, $eventTemplate);
@@ -76,10 +79,10 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The template for which to built the detail lines.
    *
-   * @return string[string|array]
+   * @return array
    *   A render array for the main table.
    */
-  protected function buildMainTable(array $events, EventTemplate $eventTemplate) {
+  protected function buildMainTable(array $events, EventTemplate $eventTemplate): array {
     $ret = [
       '#attributes' => new Attribute(['class' => 'mongodb_watchdog__detail']),
       '#caption' => $this->t('Event occurrences'),
@@ -97,7 +100,7 @@ class DetailController extends ControllerBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
    *   A table header array.
    */
-  protected function buildMainTableHeader() {
+  protected function buildMainTableHeader(): array {
     $header = [
       $this->t('Date'),
       $this->t('User'),
@@ -121,8 +124,10 @@ class DetailController extends ControllerBase {
    *
    * @return string[array|string]
    *   A render array for a table.
+   *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  protected function buildMainTableRows(array $events, EventTemplate $eventTemplate) {
+  protected function buildMainTableRows(array $events, EventTemplate $eventTemplate): array {
     $rows = [];
 
     foreach ($events as $event) {
@@ -139,17 +144,17 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The event template for which the title is built.
    *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   * @return \Drupal\Component\Render\MarkupInterface
    *   The page title.
    */
-  public function buildTitle(EventTemplate $eventTemplate) {
+  public function buildTitle(EventTemplate $eventTemplate): MarkupInterface {
     return $this->t('MongoDB events: "@template"', ['@template' => $eventTemplate->message]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     /** @var \Psr\Log\LoggerInterface $logger */
     $logger = $container->get('logger.channel.mongodb_watchdog');
 
@@ -176,7 +181,7 @@ class DetailController extends ControllerBase {
    * @return \Drupal\mongodb_watchdog\Event[]
    *   The data array.
    */
-  protected function getRowData(Request $request, EventTemplate $eventTemplate) {
+  protected function getRowData(Request $request, EventTemplate $eventTemplate): array {
     $count = $this->watchdog->eventCount($eventTemplate);
     $page = $this->setupPager($request, $count);
     $skip = $page * $this->itemsPerPage;
@@ -199,7 +204,7 @@ class DetailController extends ControllerBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
    *   A render array for a table.
    */
-  protected function getTop(EventTemplate $eventTemplate = NULL) {
+  protected function getTop(EventTemplate $eventTemplate = NULL): array {
     $rows = [];
     foreach ($eventTemplate->keys() as $key => $info) {
       $value = $eventTemplate->{$key};

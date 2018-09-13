@@ -5,6 +5,8 @@
  * Contains the main module connecting Drupal to MongoDB.
  */
 
+declare(strict_types = 1);
+
 /**
  * Implements hook_help().
  */

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -50,9 +52,10 @@ class DatabaseFactory {
    */
   public function get($dbAlias) {
     if (!isset($this->settings[$dbAlias])) {
-      throw new \InvalidArgumentException(new FormattableMarkup('Nonexistent database alias: @alias', [
+
+      throw new \InvalidArgumentException((new FormattableMarkup('Nonexistent database alias: @alias', [
         '@alias' => $dbAlias,
-      ]));
+      ]))->__toString());
     }
     try {
       list($clientAlias, $database) = $this->settings[$dbAlias];

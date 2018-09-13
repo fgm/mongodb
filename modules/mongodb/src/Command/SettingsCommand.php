@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb\Command;
 
 use Drupal\Component\Serialization\SerializationInterface;

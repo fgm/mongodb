@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Core\Config\ImmutableConfig;
@@ -56,14 +58,14 @@ abstract class ControllerBase extends CoreControllerBase {
    *
    * @param array $main
    *   A render array for the main table.
-   * @param array|null $top
+   * @param array $top
    *   A render array for the top element present on some controllers results.
    *
-   * @return string[string|array]
+   * @return array
    *   A render array for the whole controller.
    */
-  protected function buildDefaults(array $main, array $top = NULL) {
-    $ret = empty($top) ? [] : ['top' => $top];
+  protected function buildDefaults(array $main, array $top): array {
+    $ret = ['top' => $top];
 
     $ret += [
       'main' => $main,
@@ -82,10 +84,10 @@ abstract class ControllerBase extends CoreControllerBase {
    * @param \Drupal\Core\StringTranslation\TranslatableMarkup $markup
    *   The message proper.
    *
-   * @return string[string|\Drupal\Core\StringTranslation\TranslatableMarkup]
+   * @return array
    *   A render array for a message.
    */
-  protected function buildEmpty(TranslatableMarkup $markup) {
+  protected function buildEmpty(TranslatableMarkup $markup): array {
     $ret = [
       '#markup' => $markup,
       '#prefix' => '<div class="mongodb-watchdog__message">',
@@ -101,8 +103,8 @@ abstract class ControllerBase extends CoreControllerBase {
    * @return array
    *   A render array for the top filter form.
    */
-  protected function getTop() {
-    $top = NULL;
+  protected function getTop(): array {
+    $top = [];
     return $top;
   }
 
@@ -117,7 +119,7 @@ abstract class ControllerBase extends CoreControllerBase {
    * @return int
    *   The number of the page to display, starting at 0.
    */
-  public function setupPager(Request $request, $count) {
+  public function setupPager(Request $request, int $count): int {
     $height = $this->itemsPerPage;
     pager_default_initialize($count, $height);
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Component\Datetime\TimeInterface;
@@ -10,7 +12,9 @@ use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\mongodb\MongoDb;
+use MongoDB\Collection;
 use MongoDB\Database;
+use MongoDB\Driver\Cursor;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
 use MongoDB\Model\CollectionInfoIterator;
@@ -208,7 +212,7 @@ class Logger extends AbstractLogger {
    *
    * @throws \ReflectionException
    */
-  protected function enhanceLogEntry(array &$entry, array $backtrace) {
+  protected function enhanceLogEntry(array &$entry, array $backtrace): void {
     // Create list of functions to ignore in backtrace.
     static $ignored = [
       'call_user_func_array' => 1,
@@ -261,7 +265,7 @@ class Logger extends AbstractLogger {
    *
    * @see https://httpd.apache.org/docs/2.4/en/mod/mod_unique_id.html
    */
-  public function log($level, $template, array $context = []) {
+  public function log($level, $template, array $context = []): void {
     // PSR-3 LoggerInterface documents level as "mixed", while the RFC itself
     // in §1.1 implies implementations may know about non-standard levels. In
     // the case of Drupal implementations, this includes the 8 RFC5424 levels.
@@ -362,7 +366,7 @@ class Logger extends AbstractLogger {
       }
     }
     $event = [
-      'hostname' => mb_substr($context['ip'] ?? NULL, 0, 128),
+      'hostname' => mb_substr($context['ip'] ?? '', 0, 128),
       'link' => $context['link'] ?? NULL,
       'location' => $context['request_uri'] ?? NULL,
       'referer' => $context['referer'] ?? NULL,
@@ -399,7 +403,7 @@ class Logger extends AbstractLogger {
    *
    * @see https://jira.mongodb.org/browse/SERVER-1938
    */
-  public function ensureCappedCollection($name, $inboundSize) {
+  public function ensureCappedCollection($name, $inboundSize): Collection {
     if ($inboundSize == 0) {
       $this->messenger->addError(t('Abnormal size 0 ensuring capped collection, defaulting.'));
       $inboundSize = 100000;
@@ -446,7 +450,7 @@ class Logger extends AbstractLogger {
    * because we write to this collection a lot, and the smaller index on two
    * numbers should be much faster to create than one with a string included.
    */
-  public function ensureSchema() {
+  public function ensureSchema(): void {
     $trackerCollection = $this->ensureCappedCollection(static::TRACKER_COLLECTION, $this->requests * 1024);
     $indexes = [
       [
@@ -500,7 +504,7 @@ class Logger extends AbstractLogger {
    * @return \MongoDB\Collection
    *   A collection object for the specified template id.
    */
-  public function eventCollection($templateId) {
+  public function eventCollection($templateId): Collection {
     $name = static::EVENT_COLLECTION_PREFIX . $templateId;
     if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $name)) {
       throw new InvalidArgumentException(t('Invalid watchdog template id `@id`.', [
@@ -553,7 +557,7 @@ class Logger extends AbstractLogger {
    * @return \Drupal\mongodb_watchdog\EventTemplate|\Drupal\mongodb_watchdog\Event[]
    *   An array of [template, event] arrays, ordered by occurrence order.
    */
-  public function requestEvents($requestId, $skip = 0, $limit = 0) {
+  public function requestEvents($requestId, $skip = 0, $limit = 0): array {
     $templates = $this->requestTemplates($requestId);
     $selector = [
       'requestTracking_id' => $requestId,
@@ -601,7 +605,7 @@ class Logger extends AbstractLogger {
    * @return int
    *   The number of events matching the unique_id.
    */
-  public function requestEventsCount($requestId) {
+  public function requestEventsCount($requestId): int {
     if (empty($requestId)) {
       return 0;
     }
@@ -625,7 +629,7 @@ class Logger extends AbstractLogger {
    * @param int $limit
    *   The limit value.
    */
-  public function setLimit(int $limit) {
+  public function setLimit(int $limit): void {
     $this->limit = $limit;
   }
 
@@ -650,7 +654,7 @@ class Logger extends AbstractLogger {
    * @SuppressWarnings(PHPMD.UnusedFormalParameter)
    * @see https://github.com/phpmd/phpmd/issues/561
    */
-  public function requestTemplates($unsafeRequestId) {
+  public function requestTemplates($unsafeRequestId): array {
     $selector = [
       // Variable quoted to avoid passing an object and risk a NoSQL injection.
       'requestId' => "${unsafeRequestId}",
@@ -686,6 +690,7 @@ class Logger extends AbstractLogger {
     foreach ($cursor as $template) {
       $templates[$template->_id] = $template;
     }
+
     return $templates;
   }
 
@@ -695,7 +700,7 @@ class Logger extends AbstractLogger {
    * @return \MongoDB\Collection
    *   The collection.
    */
-  public function trackerCollection() {
+  public function trackerCollection(): Collection {
     return $this->database->selectCollection(static::TRACKER_COLLECTION);
   }
 
@@ -705,7 +710,7 @@ class Logger extends AbstractLogger {
    * @return \MongoDB\Collection
    *   The collection.
    */
-  public function templateCollection() {
+  public function templateCollection(): Collection {
     return $this->database->selectCollection(static::TEMPLATE_COLLECTION);
   }
 
@@ -724,7 +729,7 @@ class Logger extends AbstractLogger {
    * @return \MongoDB\Driver\Cursor
    *   A query result for the templates.
    */
-  public function templates(array $types = [], array $levels = [], $skip = 0, $limit = 0) {
+  public function templates(array $types = [], array $levels = [], $skip = 0, $limit = 0): Cursor {
     $selector = [];
     if (!empty($types)) {
       $selector['type'] = ['$in' => array_values($types)];
@@ -761,7 +766,7 @@ class Logger extends AbstractLogger {
    * @return string[]
    *   An array of distinct EventTemplate types.
    */
-  public function templateTypes() {
+  public function templateTypes(): array {
     $ret = $this->templateCollection()->distinct('type');
     return $ret;
   }

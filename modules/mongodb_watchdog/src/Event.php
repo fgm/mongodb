@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Core\Logger\RfcLogLevel;
@@ -43,7 +45,7 @@ class Event implements Unserializable {
   // @codingStandardsIgnoreEnd
 
   /**
-   * User id.
+   * User id. Use uid() instead for type safety.
    *
    * @var int
    */
@@ -92,7 +94,7 @@ class Event implements Unserializable {
    *
    * @var array
    */
-  public $variables;
+  public $variables = [];
 
   /**
    * A RFC5424 severity level.
@@ -109,7 +111,7 @@ class Event implements Unserializable {
   public $link;
 
   /**
-   * The absolute URL for the path on which the event was logged.
+   * The absolute URL for the path on which event was logged. Use location().
    *
    * @var string
    */
@@ -149,12 +151,32 @@ class Event implements Unserializable {
   /**
    * {@inheritdoc}
    */
-  public function bsonUnserialize(array $data) {
+  public function bsonUnserialize(array $data): void {
     foreach (static::KEYS as $key) {
       if (isset($data[$key])) {
         $this->{$key} = $data[$key];
       }
     }
+  }
+
+  /**
+   * Type-safe getter for location.
+   *
+   * @return string
+   *   The location property, always as a string, never NULL.
+   */
+  public function location(): string {
+    return (string) $this->location ?? '';
+  }
+
+  /**
+   * Type-safe getter for uid.
+   *
+   * @return int
+   *   The uid property, always as an int, never NULL.
+   */
+  public function uid(): int {
+    return (int) $this->uid;
   }
 
 }

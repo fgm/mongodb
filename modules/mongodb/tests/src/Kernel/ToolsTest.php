@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\Tests\mongodb\Kernel;
 
 use Drupal\mongodb\Install\Tools;
