@@ -1,37 +1,73 @@
 # Driver: `mongodb`
 
 The `mongodb` module is the main module in the suite, providing a thin Drupal
-adapter for the standard MongoDB PHP library, in the form of two factory
+adapter for the standard MongoDB PHP library, in the form of two Symfony factory
 services and a base test class.
 
 
 ## Factories
 
 The basic idea of these factory services is to provide a way to create
-instances of the standard `Client` and `Database` classes from a simple alias
-string, taking all properties initialized during these creations from the
-Drupal standard `Settings` object.
+instances of the standard MongoDB `Client` and `Database` classes from a simple
+alias string, taking all properties from the Drupal standard `Settings` object.
 
 This allows code to be unaware of the execution environment, referring to
 database or client by a functional alias, while the specifics of accessing
 the relevant `mongod`/`mongos` and database are left to per-environment
 settings,
 
-* `Drupal\mongodb\DatabaseFactory` : This is the recommended entry point for
-  most applications, returning a `MongoDb\Database` from a simple alias string.
+* `Drupal\mongodb\DatabaseFactory` : The recommended entry point for most
+  applications, returning a `MongoDb\Database` from an alias string.
     * `__construct(ClientFactory $clientFactory, Settings $settings)`. This is
-      normally invoked by the container, to which the class is exposed as
-      `mongodb.database_factory`.
+      normally invoked by the container, to which the class is exposed as the
+      `mongodb.database_factory` service.
     * `get(string $dbAlias): MongoDb\Database`; returns a `Database` instance
       matching the value defined in Drupal settings for `$dbAlias`.
 * `Drupal\mongodb\ClientFactory`: This one may be needed for more complex
   applications, e.g. those wishing to handle operations spanning connections
   to multiple MongoDB replica sets/sharded clusters.
     * `__construct(Settings $settings)`. This is normally invoked by the
-      container, to which the class is exposed as `mongodb.client_factory`.
-    * `get(string $alias): MongoDb\Client`; returns a `Client` instance matching
+      container, to which the class is exposed as the `mongodb.client_factory`
+      service.
+    * `get(string $alias): MongoDb\Client`: returns a `Client` instance matching
       the value defined in Drupal settings for `$alias`.
 
+
+## Troubleshooting commands:
+
+The module provides two commands designed to help troubleshoot issues and access
+the contents of the MongoDB databases. Both are available for Drush and Drupal
+Console indifferently.
+
+* `drush mongodb:settings` reports how the module suite sees the settings. It
+  needs no parameters, and returns YAML output looking like this:
+
+        clients:
+          default:
+            uri: 'mongodb://localhost:27017'
+            uriOptions: {  }
+            driverOptions: {  }
+        databases:
+          default:
+            - default
+            - drupal
+          keyvalue:
+            - default
+            - keyvalue
+          logger:
+            - default
+
+* `drush mongodb:find <db_alias> <collection> <selector>` allows running a
+  MongoDB query from the command line on the chosen database alias and
+  collection, returning the results as YAML, as in the following example. Note
+  that passing JSON selectors from the `bash` command lines requires escaping as
+  in that example:
+
+        $ drush mongodb:find keyvalue kvp_state '{ "_id": "node.min_max_update_time" }'
+        -
+          _id: node.min_max_update_time
+          value: 'a:2:{s:11:"min_created";N;s:11:"max_created";N;}'$
+        $
 
 ## Test base class
 
@@ -56,11 +92,11 @@ database. What it actually provides:
     * `CLIENT_TEST_ALIAS` is the alias for the default MongoDB test client
     * `DB_DEFAULT_ALIAS` is the alias for the default test database
 * Modules:
-    * The test base enabled the `mongodb` modules, since all modules using MongoDB
-      are expected to depend on it.
-    * Module tests will typically want their own module enabled, so they will need
-      to redefine `static::$modules` including the `mongodb` module as done in
-      `Drupal\Tests\mongodb_storage\Kernel\KeyValueTestBase` and
+    * The test base enables the `mongodb` modules, since all modules using
+      MongoDB are expected to depend on it.
+    * Module tests will typically want their own module enabled, so they will
+      need to redefine `static::$modules` including the `mongodb` module as done
+      in `Drupal\Tests\mongodb_storage\Kernel\KeyValueTestBase` and
       `Drupal\Tests\mongodb_watchdog\Kernel\LoggerTest`.
 * `setUp()` / `tearDown()`:
     * Tests need to invoke `parent::setUp()` near the top of their own

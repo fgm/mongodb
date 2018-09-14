@@ -4,16 +4,14 @@
 The MongoDB module and sub-modules need some configuration to be useful. This
 guide assumes that :
 
-* a [MongoDB][download] 3.0 to 4.0 server instance is already installed,
+* A [MongoDB][download] 3.0 to 4.0 server instance is already installed,
   configured and available for connection from the Drupal instance.
-* the site will be running [Drupal][drupal] 8.[56].x, with [Drush][drush] 
-  8.x[^1].
-* the [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or
+* The site will be running [Drupal][drupal] 8.6.x or 8.7.x, with [Drush][drush] 
+  9.x.
+* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or
   later is installed and configured.
-* PHP is version 7.0.x to 7.2.x.
-
-[^1]: There is a [plan][drush9] to support Drush 9.x.
-
+* PHP is version 7.1.x to 7.2.x. PHP 7.3.x might work but is not tested: be sure
+  to [report any issue][report] you could have with it.
 * We recommend [using Composer](#installing-using-composer) for installing this
   module.
 
@@ -27,33 +25,33 @@ maintained by MongoDB Inc.:
    * [MongoDB Windows installation][MongoDBWindows]
 
 [download]: https://www.mongodb.org/downloads
-[drupal]: https://www.drupal.org/project/drupal
-[drush]: https://www.drupal.org/project/drush
+[drupal]: https://www.drupal.org/download
+[drush]: https://www.drush.org/
 [php]: http://php.net/downloads.php
 [mongo]: http://php.net/mongo
 [mongodb]: http://php.net/mongodb
-[drush9]: https://www.drupal.org/project/mongodb/issues/2986785
+[report]: https://www.drupal.org/node/add/project-issue/mongodb
 [PHPMongoDBext]: http://php.net/mongodb
 [MongoDBMac]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/
 [MongoDBLinux]: https://docs.mongodb.com/manual/administration/install-on-linux/
 [MongoDBWindows]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
 [removedhttp]: https://docs.mongodb.com/manual/release-notes/3.6-compatibility/#http-interface-and-rest-api
 
-If MongoDB 3.0 to 3.5[^2] is installed on `localhost:27017` and the `mongod`
+If MongoDB 3.0 to 3.5[^1] is installed on `localhost:27017` and the `mongod`
 server was started with the `–httpinterface` option, you may view the web admin
 interface:
 
     http://localhost:28017/
 
-[^2]: This option is [deprecated from 3.6 version][removedhttp].
+[^1]: This option is [deprecated from 3.6 version][removedhttp].
 
 
 ## Settings Configuration
 
 * Download the module package, as per 
   [Installing contributed modules (Drupal 8)][install]
-* Copy the relevant section from the `mongodb/example.settings.local.php` to
-  your `settings.local.php` file if you use one, or `settings.php` otherwise,
+* Copy the relevant section from `mongodb/example.settings.local.php` to your
+  `settings.local.php` file if you use one, or `settings.php` otherwise,
   and adapt it to match your MongoDB settings. These settings are used by the
   `mongodb` module to connect to your MongoDB servers, with the `default` server
   being the one started in previous steps.
@@ -89,11 +87,11 @@ $settings['mongodb'] = [
 ];
 ```
   * With these settings:
-    * the `default` database alias will handle collections in the `drupal`
-      database on the `default` MongoDB server installed in earlier steps
-    * the `keyvalue` database alias will store key-value collections on the
+    * The `default` database alias will handle collections in the `drupal`
+      database on the `default` MongoDB server installed in earlier steps.
+    * The `keyvalue` database alias will store key-value collections on the
       same `default` MongoDB server, but in a separate `keyvalue` database.
-    * the `logger` database alias will store logger collections on the same
+    * The `logger` database alias will store logger collections on the same
       `default` MongoDB server, but in a separate `logger` database.
 
 Once the module is installed and enabled, you can check its requirements on
@@ -104,45 +102,15 @@ Once the module is installed and enabled, you can check its requirements on
 
 ## Installing using Composer
 
-* This section is applicable if you are already using [Composer][composer] in
-your site to manage module dependencies.
+If you are already using [Composer][composer] in your site to manage module
+dependencies, installing is just a two-steps process:
+
+* At the root of your site, add this package:
+
+         composer require "drupal/mongodb:^2.0.0"
+
+* Enable the `mongodb` module. You now have access to the MongoDB services and
+  Drush/Console commands for the `mongodb` module.
 
 [composer]: https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies
-
-  * At the root of your site
-    * If you are using the `drupal-composer/drupal-project` skeleton, just add
-      this package:
-
-         `composer require drupal/mongodb "^2.0.0"`
-
-    * Otherwise also add a composer requirement by typing:
-
-        `composer require drupal/mongodb "^2.0.0"`
-        `composer require mongodb/mongodb "^1.2.0"`
-
-  * Enable the `mongodb` module. You now have access to the MongoDB services and
-  Drush commands for the `mongodb` module.
-
-[install]: https://www.drupal.org/documentation/install/modules-themes/modules-8
-
-Note that there is currently a bug with Composer-based deployment from
-packages.drupal.org/8 :
-[#2985860: packages.drupal.org/8 serves incorrect composer.json for module mongodb][composer issue].
-
-The workaround is:
-
-* either require `mongodb/mongodb` directly in the root `composer.json` of the
-  project,
-* or add this JSON fragment in the root `composer.json` to fetch the code from
-  Github instead of Drupal:
-
-```json
-      "repositories": {
-          "type": "vcs",
-          "url": "https://github.com/fgm/mongodb.git"
-      },
-      "require": {
-          "drupal/mongodb":"dev-8.x-2.x"
-      }
-```
-[composer issue]: https://www.drupal.org/project/project_composer/issues/2985860
+[install]: https://www.drupal.org/docs/8/extending-drupal-8/installing-drupal-8-modules
