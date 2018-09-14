@@ -43,3 +43,70 @@ See `Drupal\Core\Logger\RfcLogLevel` and `Psr\Log\LogLevel` for further
 information about severity levels.
 
 [kiBwiki]: https://en.wikipedia.org/wiki/Kibibyte
+
+## Troubleshooting command
+
+The module provides one single command designed to help troubleshoot issues with
+logging when this module is enabled. It is available for Drush and Drupal
+Console indifferently.
+
+The command takes no arguments and returns an analysis of the logger collections
+which needs to be interpreted.
+
+    $ drush mongodb:watchdog:sanitycheck
+    0: 0
+    1: 2
+    1000: 1
+    2000: 0
+    3000: 0
+    4000: 0
+    5000: 0
+    6000: 0
+    7000: 0
+    8000: 0
+    9000: 0
+    9999: 0
+    10000: 0
+    $
+    
+What the output of this command represents is the number of `watchdog_event_*`
+collections with a document count in the range specified as the key.
+ 
+In the results, the first and last two entries are specific: they match exact
+counts, while the others are intervals, so the actual buckets are: `0`, `1`,
+`2..1000`, `1001..2000`, ..., `9001..9998`, `9999`, `10000`. The specific
+value 10000 is the number of entries allowed in event collections, as these are
+MongoDB capped collections: whatever its value `n`, the command will report 
+`0`, `1`, `n-1`, `n`, and 9 ranges in between.
+
+
+### Interpreting the results
+
+As a general rule, on a high-load site, all buckets should have comparable
+numbers, and the number of events logged grouped by pattern is pseudo-random,
+except for the `0` bucket, which should be empty.
+
+* `0` bucket non-empty: unless there was specific manipulation performed by
+  hand, this is a bug, and should be reported: event collections are created
+  when an event is created, by the first insertion, and dropped as needed, but
+  never truncated or created without an insert.
+* `1` bucket has a high value, possibly orders of magnitude higher than other
+  buckets. This denotes an incorrect use of the Drupal logger system, for which
+  the PSR-3 `message` parameter is a message template, and the variant part of
+  the message is expressed as placeholder values in the options. Look for calls
+  to log operations passing a variable as the message and replace them by a
+  template containing placeholders for the variable content in the message.
+* `n-1` bucket has a high value: suspicious situation with the logger,
+  especially if the "n" value is low or 0: please report a possible bug, with
+  accompanying data
+* `n` bucket has a high value
+    * `n-1` has a high value too: this is a mostly  normal situation,
+      especially if the value in the previous bucket is also high, although it
+      means the data rotation in your site is possibly a bit high and you should
+      increase the size of the capped collections to ensure longer retention of
+      data.
+    * `n-1` has a low or 0 value: your logs are saturated by the site, and you
+      are losing information, as all the capped collections in that situation
+      are rolling over constantly. Ensure you have enough storage and raise the
+      value capped collection size.
+    * The config value to change in these cases is `mongodb.watchdog.items`.

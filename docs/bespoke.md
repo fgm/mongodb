@@ -91,18 +91,21 @@ If the `mongodb_watchdog` module is enabled:
 * the `@logger.channel.foo` logger instance passed to the `Bar` constructor will
   be a Drupal-standard `LoggerChannel` instance, dispatching events to all
   active loggers in the site. This is the service most "classic" Drupal
-  applications will want to use, as it has no visible dependence on MongoDB.
+  applications will want to use, as it has no visible dependence on MongoDB. .
 * the `@mongodb.logger` logger instance passed to the `Baz` constructor will be
-  a PSR-3-standard `LoggerInterface` only writing to MongoDB, but still
-  providing the standard Drupal UI to examine the application logs. When using
-  this service, the `type` option must be set in the message context to appear
-  as a logging channel in the Drupal logs UI. This is the service applications
-  written in a "decoupled components" style will prefer.
+  a PSR-3-standard logger only writing to MongoDB instead of logging through the
+  central Drupal logging channel mechanism, but still providing the standard
+  Drupal UI to examine the application logs. When using this service, the 
+  `type` option MUST be set in the message context to appear as a logging
+  channel in the Drupal logs UI. This is the service applications written in a
+  "decoupled components" style will prefer.
+* In both cases, code receiving such a logger service by dependency injection
+  should type-hint it to the PSR-3 `LoggerInterface`.
 
 
 ### Component logic
 
-Finally the component application logic can use the services without receiving
+Finally, the component application logic can use the services without receiving
 any Drupal-specific dependency. In this example, we can simply assume the
 service code is located within the module itself, for simplicity:
 
