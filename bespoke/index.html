@@ -1,0 +1,745 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.5.3">
+    
+    
+      
+        <title>Bespoke code - MongoDB for Drupal</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7a952b86.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.cbb835fc.min.css">
+        
+          
+          
+          <meta name="theme-color" content="#8bc34b">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="light-green" data-md-color-accent="">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#bespoke-code" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="MongoDB for Drupal" class="md-header__button md-logo" aria-label="MongoDB for Drupal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M303.973 108.136C268.2 72.459 234.187 38.35 224.047 0c-9.957 38.35-44.25 72.459-80.019 108.136-53.561 53.564-114.312 114.22-114.312 205.3-2.337 107.3 82.752 196.18 190.053 198.517S415.948 429.2 418.285 321.9q.091-4.231 0-8.464c0-91.08-60.751-151.736-114.312-205.3Zm-174.326 223a130.282 130.282 0 0 0-15.211 24.153 4.978 4.978 0 0 1-3.319 2.766h-1.659c-4.333 0-9.219-8.481-9.219-8.481-1.29-2.028-2.489-4.149-3.687-6.361l-.83-1.752c-11.247-25.72-1.475-62.318-1.475-62.318a160.585 160.585 0 0 1 23.231-49.873 290.8 290.8 0 0 1 21.022-27.657l9.219 9.219 43.512 44.434a4.979 4.979 0 0 1 0 6.638L145.78 312.33Zm96.612 127.311a67.2 67.2 0 0 1-49.781-111.915c14.2-16.871 31.528-33.464 50.334-55.313 22.309 23.785 36.875 40.1 51.164 57.986a28.413 28.413 0 0 1 2.95 4.425 65.905 65.905 0 0 1 11.984 37.981 66.651 66.651 0 0 1-66.466 66.836ZM352.371 351.6a7.743 7.743 0 0 1-6.176 5.347H344.9a11.249 11.249 0 0 1-6.269-5.07 348.21 348.21 0 0 0-39.456-48.952l-17.788-18.435-59.087-61.305a497.888 497.888 0 0 1-35.4-36.322 12.033 12.033 0 0 0-.922-1.382 35.4 35.4 0 0 1-4.7-9.219v-1.752a31.346 31.346 0 0 1 9.218-27.656c11.432-11.431 22.955-22.954 33.833-34.939 11.984 13.275 24.8 26 37.428 38.627a530.991 530.991 0 0 1 69.6 79.1 147.494 147.494 0 0 1 27.011 83.8 134.109 134.109 0 0 1-5.997 38.158Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MongoDB for Drupal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Bespoke code
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/fgm/mongodb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="MongoDB for Drupal" class="md-nav__button md-logo" aria-label="MongoDB for Drupal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M303.973 108.136C268.2 72.459 234.187 38.35 224.047 0c-9.957 38.35-44.25 72.459-80.019 108.136-53.561 53.564-114.312 114.22-114.312 205.3-2.337 107.3 82.752 196.18 190.053 198.517S415.948 429.2 418.285 321.9q.091-4.231 0-8.464c0-91.08-60.751-151.736-114.312-205.3Zm-174.326 223a130.282 130.282 0 0 0-15.211 24.153 4.978 4.978 0 0 1-3.319 2.766h-1.659c-4.333 0-9.219-8.481-9.219-8.481-1.29-2.028-2.489-4.149-3.687-6.361l-.83-1.752c-11.247-25.72-1.475-62.318-1.475-62.318a160.585 160.585 0 0 1 23.231-49.873 290.8 290.8 0 0 1 21.022-27.657l9.219 9.219 43.512 44.434a4.979 4.979 0 0 1 0 6.638L145.78 312.33Zm96.612 127.311a67.2 67.2 0 0 1-49.781-111.915c14.2-16.871 31.528-33.464 50.334-55.313 22.309 23.785 36.875 40.1 51.164 57.986a28.413 28.413 0 0 1 2.95 4.425 65.905 65.905 0 0 1 11.984 37.981 66.651 66.651 0 0 1-66.466 66.836ZM352.371 351.6a7.743 7.743 0 0 1-6.176 5.347H344.9a11.249 11.249 0 0 1-6.269-5.07 348.21 348.21 0 0 0-39.456-48.952l-17.788-18.435-59.087-61.305a497.888 497.888 0 0 1-35.4-36.322 12.033 12.033 0 0 0-.922-1.382 35.4 35.4 0 0 1-4.7-9.219v-1.752a31.346 31.346 0 0 1 9.218-27.656c11.432-11.431 22.955-22.954 33.833-34.939 11.984 13.275 24.8 26 37.428 38.627a530.991 530.991 0 0 1 69.6 79.1 147.494 147.494 0 0 1 27.011 83.8 134.109 134.109 0 0 1-5.997 38.158Z"/></svg>
+
+    </a>
+    MongoDB for Drupal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/fgm/mongodb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        Installation
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layout/" class="md-nav__link">
+        File system layout
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Modules
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Modules" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Modules
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb/" class="md-nav__link">
+        Driver: mongodb
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb_storage/" class="md-nav__link">
+        K/V and Queue: mongodb_storage
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb_watchdog/" class="md-nav__link">
+        Logger: mongodb_watchdog
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          Development
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Development" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Development
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Bespoke code
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Bespoke code
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+    <nav class="md-nav" aria-label="Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-environment-settings" class="md-nav__link">
+    Per-environment settings
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-based-module-adapter" class="md-nav__link">
+    Service-based module adapter
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#component-logic" class="md-nav__link">
+    Component logic
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    Tests
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tests/" class="md-nav__link">
+        Tests
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+    <nav class="md-nav" aria-label="Example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-environment-settings" class="md-nav__link">
+    Per-environment settings
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-based-module-adapter" class="md-nav__link">
+    Service-based module adapter
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#component-logic" class="md-nav__link">
+    Component logic
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    Tests
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  <a href="https://github.com/fgm/mongodb/edit/master/docs/bespoke.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+<h1 id="bespoke-code">Bespoke code</h1>
+<p>Beyond the simple use cases covered by this standard package, most uses of
+MongoDB in Drupal projects appear in enteprise-class bespoke developments. Until
+this version, this usually meant totally custom code, built either straight from
+the legacy <code>mongo</code> extension, the current <code>mongodb</code> extension, or on top of the
+PHP Library or the Doctrine ODM for MongoDB, suffering from a total lack of
+integration with the underlying core Drupal CMS.</p>
+<p>This module provides a degree of version independence for the API changes in
+<a href="https://docs.mongodb.com/php-library/current">PHP library</a>. Refer to the <code>Drupal\mongodb\MongoDb</code> class for an example.</p>
+<p>Starting with 8.x-2.0 vrsions,
+such a one-off code can be developed on top of the base <code>mongodb</code> module:
+unlike earlier releases, 8.x-2.x uses the PHP-standard connection methods and options,
+without deviation, adding only a thin layer of Drupal adaptation on top of the standard
+<code>mongodb</code> <a href="http://php.net/mongodb">extension</a> and <a href="https://docs.mongodb.com/php-library/current">PHP library</a>.</p>
+<h2 id="example">Example</h2>
+<p>The familiar Drupal alias mechanism for databases is available to provide easy,
+string-referenced access to <code>Client</code> and <code>Database</code> instances through the
+package-provided <code>ClientFactory</code> and <code>DatabaseFactory</code> services respectively.</p>
+<p>Most such code is likely to be service based, so the example given below
+demonstrates a service <code>bar</code> in module <code>foo</code>, using a custom <code>foo-database</code>
+database aliased as <code>foodb</code>, to keep its storage separate from the main database
+used by the package modules, and its logic independent of other Drupal modules.</p>
+<h3 id="per-environment-settings">Per-environment settings</h3>
+<p>The site local settings file includes the alias definition, binding it to the
+actual database credentials, allowing for per-environment configuration:</p>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="c1">// settings.local.php</span>
+<span class="nv">$settings</span><span class="p">[</span><span class="s1">&#39;mongodb&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s1">&#39;clients&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="c1">// Client alias =&gt; constructor parameters.</span>
+    <span class="s1">&#39;default&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+      <span class="s1">&#39;uri&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;mongodb://localhost:27017&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;uriOptions&#39;</span> <span class="o">=&gt;</span> <span class="p">[],</span>
+      <span class="s1">&#39;driverOptions&#39;</span> <span class="o">=&gt;</span> <span class="p">[],</span>
+    <span class="p">],</span>
+  <span class="p">],</span>
+  <span class="s1">&#39;databases&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="c1">// Collection alias =&gt; [ client_alias, collection_name ]</span>
+    <span class="s1">&#39;default&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="s1">&#39;drupal&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;logger&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="s1">&#39;logger&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;foodb&#39;</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="s1">&#39;foo-database&#39;</span><span class="p">],</span>
+  <span class="p">],</span>
+<span class="p">];</span>
+</code></pre></div>
+<p>With such a configuration, the <code>foodb</code> alias is available to all MongoDB-using
+modules in the site, possibly pointing to different databases depending on the
+environment (development, staging, production...).</p>
+<h3 id="service-based-module-adapter">Service-based module adapter</h3>
+<p>The <code>foo.services.yml</code> service file for the bespoke <code>foo.module</code> can then
+reference <code>foodb</code> to access the database with a constant alias, regardless
+of the environment:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># modules/custom/Foo/foo.services.yml</span><span class="w"></span>
+<span class="nt">services</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">foo.storage</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">class</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;MongoDB\Database&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">factory</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;@mongodb.database_factory&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;get&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;foodb&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
+
+<span class="w">  </span><span class="nt">foo.bar</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">class</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Drupal\foo\Bar&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;@foo.storage&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;@logger.channel.foo&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
+
+<span class="w">  </span><span class="nt">foo.baz</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">class</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Drupal\foo\Baz&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">arguments</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;@foo.storage&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;@mongodb.logger&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
+</code></pre></div>
+<p>This allows services in the module to access the database in both function code
+for Drupal hooks, and OO code for component-level logic without having to be
+environment-aware.</p>
+<p>If the <code>mongodb_watchdog</code> module is enabled:</p>
+<ul>
+<li>the <code>@logger.channel.foo</code> logger instance passed to the <code>Bar</code> constructor will
+  be a Drupal-standard <code>LoggerChannel</code> instance, dispatching events to all
+  active loggers in the site. This is the service most "classic" Drupal
+  applications will want to use, as it has no visible dependence on MongoDB. .</li>
+<li>the <code>@mongodb.logger</code> logger instance passed to the <code>Baz</code> constructor will be
+  a PSR-3-standard logger only writing to MongoDB instead of logging through the
+  central Drupal logging channel mechanism, but still providing the standard
+  Drupal UI to examine the application logs. When using this service, the
+  <code>type</code> option MUST be set in the message context to appear as a logging
+  channel in the Drupal logs UI. This is the service applications written in a
+  "decoupled components" style will prefer.</li>
+<li>In both cases, code receiving such a logger service by dependency injection
+  should type-hint it to the PSR-3 <code>LoggerInterface</code>.</li>
+</ul>
+<h3 id="component-logic">Component logic</h3>
+<p>Finally, the component application logic can use the services without receiving
+any Drupal-specific dependency. In this example, we can simply assume the
+service code is located within the module itself, for simplicity:</p>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="c1">// modules/custom/Foo/src/Bar.php</span>
+<span class="k">use</span> <span class="nx">MongoDb\Database</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Psr\Log\LoggerInterface</span><span class="p">;</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Database</span> <span class="nv">$database</span><span class="p">,</span> <span class="nx">LoggerInterface</span> <span class="nv">$logger</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">database</span> <span class="o">=</span> <span class="nv">$database</span><span class="p">;</span>
+  <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">logger</span> <span class="o">=</span> <span class="nv">$logger</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="nf">baz</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// Perform some business logic using $this-&gt;database.</span>
+  <span class="c1">// Log it using $this-&gt;logger.</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Having the code only receive standard services (like a PSR-3 logger) or
+<a href="https://docs.mongodb.com/php-library/current">PHP library</a> classes allows it to be written as an agnostic component,
+that can be brought in using Composer and shared with non-Drupal code.
+This is often  useful in bespoke projects, which tend to combine Drupal 9/10
+with other parts of the application written in Laravel &ge; 5 or Symfony &ge; 4,
+since the code has no Drupal-specific dependency in that case,
+only exposing a PSR-3 standard API.</p>
+<h3 id="tests">Tests</h3>
+<p>The <code>mongodb</code> module provides a <code>MongoDbTestBase</code> base test class allowing
+kernel-based integration tests, as described on the <a href="/tests">tests</a> page.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../modules/mongodb_watchdog/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Logger: mongodb_watchdog" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Logger: mongodb_watchdog
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../tests/" class="md-footer__link md-footer__link--next" aria-label="Next: Tests" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Tests
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.5bf1dace.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.37e9125f.min.js"></script>
+      
+    
+  </body>
+</html>

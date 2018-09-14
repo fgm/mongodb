@@ -1,3 +1,0 @@
-service_name: travis-ci
-coverage_clover: modules/contrib/mongodb/coverage.clover
-json_path: modules/contrib/mongodb/coverage.json

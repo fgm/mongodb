@@ -1,8 +1,0 @@
-services:
-  mongodb_watchdog.command.sanitycheck:
-    class: Drupal\mongodb_watchdog\Command\SanityCheckCommand
-    arguments:
-      - '@mongodb.watchdog.sanity_check'
-      - '@serialization.yaml'
-    tags:
-      - { name: drupal.command }

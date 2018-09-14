@@ -1,5 +1,0 @@
-items: 10000
-requests: 100000
-limit: 7
-items_per_page: 50
-request_tracking: false

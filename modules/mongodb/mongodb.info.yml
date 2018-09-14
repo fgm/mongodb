@@ -1,7 +1,0 @@
-core: '8.x'
-core_version_requirement: ^8 || ^9 || ^10
-description: 'Integration between Drupal and MongoDB.'
-name: 'MongoDB'
-package: 'MongoDB'
-php: '7.x'
-type: 'module'
