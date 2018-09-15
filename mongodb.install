@@ -5,13 +5,14 @@
  * Install file for MongoDB module.
  */
 
-use Drupal\mongodb\Install\Requirements;
+use Drupal\mongodb\Install;
 
 /**
  * Implements hook_requirements().
  */
 function mongodb_requirements($phase) {
-  $requirements = Drupal\mongodb\Install\Requirements::check($phase);
+  $req_obj = new Requirements();
+  $requirements = $req_obj->check($phase);
 
   return $requirements;
 }
