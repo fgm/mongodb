@@ -41,7 +41,9 @@ class ConfigForm extends ConfigFormBase {
   public static function create(ContainerInterface $container): self {
     return new static(
       $container->get('config.factory'),
-      $container->get('config.typed')->getDefinition('mongodb_watchdog.settings')
+      $container
+        ->get('config.typed')
+        ->getDefinition('mongodb_watchdog.settings')
     );
   }
 

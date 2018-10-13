@@ -42,7 +42,7 @@ class TopController extends ControllerBase {
    * @param \MongoDB\Database $database
    *   Needed because there is no group() command in phplib yet.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
-   *   The core pager.manager service
+   *   The core pager.manager service.
    *
    * @see https://jira.mongodb.org/browse/PHPLIB-177
    */

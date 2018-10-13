@@ -48,10 +48,10 @@ abstract class ControllerBase extends CoreControllerBase {
    *   The logger.channel.mongodb_watchdog service.
    * @param \Drupal\mongodb_watchdog\Logger $watchdog
    *   The mongodb.logger service, to load stored events.
+   * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
+   *   The core pager.manager service.
    * @param \Drupal\Core\Config\ImmutableConfig $config
    *   The mongodb_watchdog configuration.
-   * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
-   *   The core pager.manager service
    */
   public function __construct(
     LoggerInterface $logger,

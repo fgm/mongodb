@@ -54,7 +54,7 @@ class RequestController extends ControllerBase {
    * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The core date.formatter service.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
-   *   The core pager.manager service
+   *   The core pager.manager service.
    * @param \Drupal\Core\Logger\RfcLogLevel $rfcLogLevel
    *   A RfcLogLevel instance, to avoid static access.
    */

@@ -80,7 +80,6 @@ class OverviewController extends ControllerBase {
    */
   protected $rootLength;
 
-
   /**
    * Controller constructor.
    *
@@ -97,7 +96,7 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The core date_formatter service.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
-   *   The core pager.manager service
+   *   The core pager.manager service.
    */
   public function __construct(
     LoggerInterface $logger,

@@ -39,7 +39,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventController $eventController
    *   The event controller service.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
-   *   The core pager.manager service
+   *   The core pager.manager service.
    */
   public function __construct(
     LoggerInterface $logger,

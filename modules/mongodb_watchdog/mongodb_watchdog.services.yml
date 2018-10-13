@@ -1,6 +1,10 @@
 parameters:
 
 services:
+  argument_resolver.mongodb_watchdog.form_state:
+    class: Drupal\mongodb_watchdog\Controller\ArgumentResolver\FormStateValueResolver
+    public: false
+
   logger.channel.mongodb_watchdog:
     parent: logger.channel_base
     arguments: ['mongodb_watchdog']
