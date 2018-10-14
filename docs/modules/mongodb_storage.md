@@ -10,13 +10,15 @@ To use the MongoDB Key-Value (Expirable) storage:
 * ensure there is a `keyvalue` database alias as in
   [settings configuration](../../install#settings-configuration).
 * declare MongoDB as the default Key-Value storage implementation by editing
-  the existing declarations in the `sites/default/services.yml` file:
+  the existing parameter declarations in the `sites/default/services.yml` file:
 
         # In sites/default/services.yml.
-        factory.keyvalue:
-          default: keyvalue.mongodb
-        factory.keyvalue.expirable:
-          keyvalue_expirable_default: keyvalue.expirable.mongodb
+        parameters:
+          # (...snip...)
+          factory.keyvalue:
+            default: keyvalue.mongodb
+          factory.keyvalue.expirable:
+            keyvalue_expirable_default: keyvalue.expirable.mongodb
 
 * enable the module, e.g. using `drush en mongodb_storage`.
 * import the existing Key-Value contents from the database, using the Drush
