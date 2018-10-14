@@ -202,13 +202,13 @@ JAVASCRIPT;
    *
    * @param \MongoDB\Collection $collection
    *   The collection on which to perform the command.
-   * @param \stdClass $key
+   * @param array $key
    *   The grouping key.
-   * @param \stdClass $cond
+   * @param array $cond
    *   The condition.
    * @param string $reduce
    *   The reducer function: must be valid JavaScript code.
-   * @param \stdClass $initial
+   * @param array $initial
    *   The initial document.
    *
    * @return array|null
@@ -219,7 +219,7 @@ JAVASCRIPT;
    *   - keys: the number of different keys, normally matching count(retval)
    *   - ok: 1.0 in case of success.
    */
-  public function group(Collection $collection, \stdClass $key, \stdClass $cond, string $reduce, \stdClass $initial): ?array {
+  public function group(Collection $collection, array $key, array $cond, string $reduce, array $initial): ?array {
     $cursor = $this->database->command([
       'group' => [
         'ns' => $collection->getCollectionName(),
