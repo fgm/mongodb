@@ -61,7 +61,7 @@ function mongodb($alias = 'default', $retry = 3) {
   if (!isset($mongo_objects[$host][$db])) {
     try {
       // Use the 1.3 client if available.
-      if (class_exists('MongoClient')) {
+      if (class_exists(MongoClient::class)) {
         $mongo = new MongoClient($host, $options);
         // Enable read preference and tags if provided. This can also be
         // controlled on a per query basis at the cursor level if more control

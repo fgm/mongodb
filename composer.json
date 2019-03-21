@@ -1,0 +1,16 @@
+{
+  "authors": [
+    {
+      "name": "Frederic G. MARAND",
+      "email": "fgm@osinet.fr"
+    }
+  ],
+  "description": "Drupal 7 driver and services for MongoDB",
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "name": "drupal/mongodb",
+  "require": {
+    "alcaeus/mongo-php-adapter": "^1.1@dev"
+  },
+  "type": "drupal-module"
+}
