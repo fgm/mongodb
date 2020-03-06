@@ -211,7 +211,7 @@ class Resolver implements ResolverInterface {
    */
   public function isWhitelistEmpty() {
     _mongodb_path_trace();
-    assert('$this->isWhitelistSet()');
+    assert($this->isWhitelistSet());
     return empty($this->objectCache['whitelist']);
   }
 

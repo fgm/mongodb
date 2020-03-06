@@ -164,6 +164,8 @@ trait MongoDbPathTestTrait {
    * @param string $prefix
    *   The Simpletest per-test database prefix. It makes a good name for the
    *   test MongoDB database.
+   *
+   * @throws \MongoConnectionException
    */
   public function setUpTestServices($prefix) {
     global $conf;
