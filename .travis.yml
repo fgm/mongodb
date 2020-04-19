@@ -3,8 +3,9 @@ language: php
 sudo: true
 
 php:
-  - 7.1
   - 7.2
+  - 7.3
+  - 7.4
 
 services:
   - mongodb
@@ -12,7 +13,7 @@ services:
 
 matrix:
   allow_failures:
-    - php: 7.2
+    - php: 7.4
   fast_finish: true
 
 env:
@@ -65,26 +66,26 @@ install:
   # Configure PHP (mongodb is included by default).
   - echo 'date.timezone = "Europe/Paris"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
 
-  # Restore XDebug for coverage: need to back it up during removal else it won't be there to readd.
+  # Restore XDebug for coverage: need to back it up during removal else it won't be there to re-add.
   #- phpenv config-add xdebug.ini
 
 before_script:
   # Code runs in /home/travis/build, which is the checkout root.
 
-  # remove Xdebug as we don't need it, is slows everything, and it causes
+  # Remove Xdebug as we don't need it, is slows everything, and it causes
   # PHP Fatal error:  Maximum function nesting level of '256' reached
   #- phpenv config-rm xdebug.ini
   # navigate out of module directory to prevent blown stack by recursive module lookup
   - cd ../..
 
-  # download Drupal 8.7 core.
-  - wget -q -O - http://ftp.drupal.org/files/projects/drupal-8.7.x-dev.tar.gz | tar xz
-  - cd drupal-8.7.x-dev
+  # download Drupal 8.9 core.
+  - wget -q -O - http://ftp.drupal.org/files/projects/drupal-8.9.x-dev.tar.gz | tar xz
+  - cd drupal-8.9.x-dev
   - mkdir -p modules/contrib
   - mv ../fgm/mongodb modules/contrib
 
   # install dependencies (for the module) and Coveralls (for coverage) as part of the root vendors.
-  - composer require -v "drush/drush:^9.3" "drupal/console:^1.8" "mongodb/mongodb:^1.2.0" $COVERALLS
+  - composer require -v "drush/drush:^9.7" "drupal/console:^1.8" "mongodb/mongodb:^1.4.0" $COVERALLS
   - composer run-script drupal-phpunit-upgrade
   - composer show mongodb/mongodb
 

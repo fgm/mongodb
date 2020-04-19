@@ -7,6 +7,7 @@ namespace Drupal\mongodb_watchdog;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\user\Entity\User;
 use MongoDB\Driver\Cursor;
@@ -18,6 +19,7 @@ use MongoDB\Driver\Cursor;
  * Controller namespace.
  */
 class EventController {
+  use StringTranslationTrait;
 
   /**
    * The name of the anonymous user account.
@@ -118,7 +120,9 @@ class EventController {
       empty($event->referrer) ? '' : Link::fromTextAndUrl($event->referrer, Url::fromUri($event->referrer)),
       $event->hostname,
       isset($event->requestTracking_id)
-      ? Link::createFromRoute(t('Request'), 'mongodb_watchdog.reports.request', ['uniqueId' => $event->requestTracking_id])
+      ? Link::createFromRoute($this->t('Request'),
+        'mongodb_watchdog.reports.request',
+        ['uniqueId' => $event->requestTracking_id])
       : '',
     ];
 

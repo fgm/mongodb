@@ -9,6 +9,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
@@ -19,6 +20,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Class Requirements implements hook_requirements().
  */
 class Requirements implements ContainerInjectionInterface {
+  use StringTranslationTrait;
 
   /**
    * The module configuration.
@@ -117,16 +119,17 @@ class Requirements implements ContainerInjectionInterface {
     if (!isset($databases[Logger::DB_LOGGER])) {
       $state[Logger::MODULE] += [
         'severity' => REQUIREMENT_ERROR,
-        'value' => t('Missing `@alias` database alias in settings.', ['@alias' => Logger::DB_LOGGER]),
+        'value' => $this->t('Missing `@alias` database alias in settings.',
+          ['@alias' => Logger::DB_LOGGER]),
       ];
       return [$state, TRUE];
     }
 
-    list($loggerClient, $loggerDb) = $databases[Logger::DB_LOGGER];
+    [$loggerClient, $loggerDb] = $databases[Logger::DB_LOGGER];
     unset($databases[Logger::DB_LOGGER]);
     $duplicates = [];
     foreach ($databases as $alias => $list) {
-      list($client, $database) = $list;
+      [$client, $database] = $list;
       if ($loggerClient == $client && $loggerDb == $database) {
         $duplicates[] = "`$alias`";
       }
@@ -134,11 +137,11 @@ class Requirements implements ContainerInjectionInterface {
     if (!empty($duplicates)) {
       $state[Logger::MODULE] += [
         'severity' => REQUIREMENT_ERROR,
-        'value' => t('The `@alias` alias points to the same database as @others.', [
+        'value' => $this->t('The `@alias` alias points to the same database as @others.', [
           '@alias' => Logger::DB_LOGGER,
           '@others' => implode(', ', $duplicates),
         ]),
-        'description' => t('Those databases would also be dropped when uninstalling the watchdog module.'),
+        'description' => $this->t('Those databases would also be dropped when uninstalling the watchdog module.'),
       ];
       return [$state, TRUE];
     }
@@ -179,25 +182,25 @@ class Requirements implements ContainerInjectionInterface {
     if ($this->hasUniqueId()) {
       $state[Logger::MODULE] += $requestTracking
         ? [
-          'value' => t('Mod_unique_id available and used'),
+          'value' => $this->t('Mod_unique_id available and used'),
           'severity' => REQUIREMENT_OK,
-          'description' => t('Request tracking is available and active.'),
+          'description' => $this->t('Request tracking is available and active.'),
         ]
         : [
-          'value' => t('Unused mod_unique_id'),
+          'value' => $this->t('Unused mod_unique_id'),
           'severity' => REQUIREMENT_INFO,
-          'description' => t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or enable request tracking</a> for a better logging experience.'),
+          'description' => $this->t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or enable request tracking</a> for a better logging experience.'),
         ];
 
       return [$state, FALSE];
     }
 
     $state[Logger::MODULE] += [
-      'value' => t('No mod_unique_id'),
+      'value' => $this->t('No mod_unique_id'),
     ];
     if ($requestTracking) {
       if (php_sapi_name() === 'cli') {
-        $message = t('Request tracking is configured, but the site cannot check the working mod_unique_id configuration from the CLI. Be sure to validate configuration on the <a href=":report">status page</a>.', [
+        $message = $this->t('Request tracking is configured, but the site cannot check the working mod_unique_id configuration from the CLI. Be sure to validate configuration on the <a href=":report">status page</a>.', [
           ':report' => Url::fromRoute('system.status')->toString(),
         ]);
         $state[Logger::MODULE] += [
@@ -210,14 +213,14 @@ class Requirements implements ContainerInjectionInterface {
 
       $state[Logger::MODULE] += [
         'severity' => REQUIREMENT_ERROR,
-        'description' => t('Request tracking is configured, but the site is not served by Apache with a working mod_unique_id.'),
+        'description' => $this->t('Request tracking is configured, but the site is not served by Apache with a working mod_unique_id.'),
       ];
       return [$state, TRUE];
     }
 
     $state[Logger::MODULE] += [
       'severity' => REQUIREMENT_OK,
-      'description' => t('Request tracking is not configured.'),
+      'description' => $this->t('Request tracking is not configured.'),
     ];
     return [$state, FALSE];
   }
@@ -232,14 +235,14 @@ class Requirements implements ContainerInjectionInterface {
       ],
     ];
 
-    list($state, $err) = $this->checkDatabaseAliasConsistency($state);
+    [$state, $err] = $this->checkDatabaseAliasConsistency($state);
     if ($err) {
       return $state;
     }
 
     $this->loadConfig($phase !== 'runtime');
 
-    list($state, $err) = $this->checkRequestTracking($state);
+    [$state, $err] = $this->checkRequestTracking($state);
     if ($err) {
       return $state;
     }

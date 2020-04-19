@@ -11,12 +11,14 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\mongodb\MongoDb;
 use MongoDB\Collection;
 use MongoDB\Database;
 use MongoDB\Driver\Cursor;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
+use MongoDB\Driver\WriteConcern;
 use MongoDB\Model\CollectionInfoIterator;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
@@ -28,6 +30,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @package Drupal\mongodb_watchdog
  */
 class Logger extends AbstractLogger {
+  use StringTranslationTrait;
+
   // Configuration-related constants.
   // The configuration item.
   const CONFIG_NAME = 'mongodb_watchdog.settings';
@@ -388,7 +392,7 @@ class Logger extends AbstractLogger {
    *
    * @param string $name
    *   The collection name.
-   * @param int $inboundSize
+   * @param int $size
    *   The collection size cap.
    *
    * @return \MongoDB\Collection
@@ -396,41 +400,32 @@ class Logger extends AbstractLogger {
    *
    * @TODO support sharded clusters: convertToCapped does not support them.
    *
+   * @throws \MongoDB\Exception\InvalidArgumentException
+   * @throws \MongoDB\Exception\UnsupportedException
+   * @throws \MongoDB\Exception\UnexpectedValueException
+   * @throws \MongoDB\Driver\Exception\RuntimeException
+   *
    * @see https://docs.mongodb.com/manual/reference/command/convertToCapped
    *
-   * Note that MongoDB 3.2 still misses a proper exists() command, which is the
+   * Note that MongoDB 4.2 still misses a proper exists() command, which is the
    * reason for the weird try/catch logic.
    *
    * @see https://jira.mongodb.org/browse/SERVER-1938
    */
-  public function ensureCappedCollection($name, $inboundSize): Collection {
-    if ($inboundSize == 0) {
-      $this->messenger->addError(t('Abnormal size 0 ensuring capped collection, defaulting.'));
-      $inboundSize = 100000;
+  public function ensureCappedCollection(string $name, int $size): Collection {
+    if ($size === 0) {
+      $this->messenger->addError($this->t('Abnormal size 0 ensuring capped collection, defaulting.'));
+      $size = 100000;
     }
 
-    $size = $inboundSize;
+    $collection = $this->ensureCollection($name);
 
-    try {
-      $command = [
-        'collStats' => $name,
-      ];
-      $stats = $this->database->command($command, static::LEGACY_TYPE_MAP)->toArray()[0];
-    }
-    catch (RuntimeException $e) {
-      // 59 (PHP < 7.2) or 17 (PHP 7.2) are expected if the collection was not
-      // found. Other values are not.
-      if (!in_array($e->getCode(), [17, 59])) {
-        throw $e;
-      }
-
-      $this->database->createCollection($name);
-      $stats = $this->database->command([
-        'collStats' => $name,
-      ], static::LEGACY_TYPE_MAP)->toArray()[0];
-    }
-
-    $collection = $this->database->selectCollection($name);
+    $command = [
+      'collStats' => $name,
+    ];
+    $stats = $this->database
+      ->command($command, static::LEGACY_TYPE_MAP)
+      ->toArray()[0];
     if (!empty($stats['capped'])) {
       return $collection;
     }
@@ -440,6 +435,62 @@ class Logger extends AbstractLogger {
       'size' => $size,
     ];
     $this->database->command($command);
+    $this->messenger->addStatus($this->t('@name converted to capped collection size @size.', [
+      '@name' => $name,
+      '@size' => $size,
+    ]));
+    return $collection;
+  }
+
+  /**
+   * Ensure a collection exists in the logger database.
+   *
+   * - If it already existed, it will not lose any data.
+   * - If it gets created, it will be empty.
+   *
+   * @param string $name
+   *   The name of the collection.
+   *
+   * @return \MongoDB\Collection
+   *   The chosen collection, guaranteed to exist.
+   *
+   * @throws \MongoDB\Exception\InvalidArgumentException
+   * @throws \MongoDB\Exception\UnsupportedException
+   * @throws \MongoDB\Exception\UnexpectedValueException
+   * @throws \MongoDB\Driver\Exception\RuntimeException
+   */
+  public function ensureCollection(string $name): Collection {
+    $collection = $this->database
+      ->selectCollection($name);
+    $count = $collection->countDocuments();
+    // Nothing to do if it already contains documents.
+    if ($count > 0) {
+      return $collection;
+    }
+
+    // Since the MongoDB API has no way to check whether a collection exists
+    // without listing the database, and no longer exposes an API to
+    // differentiate between a nonexistent collection and an empty one, we
+    // insert dummy data to force creation of the collection, and possibly even
+    // the database, as in some versions (noticed on 4.2 WT engine) the database
+    // is dropped when its last collection is.
+    $res = $collection->insertOne([
+      '_id' => 'dummy',
+      [
+      // Ensure later operations are actually run after the server writes.
+      // See https://docs.mongodb.com/manual/reference/write-concern/#acknowledgment-behavior
+        'writeConcern' => [
+          'w' => WriteConcern::MAJORITY,
+          'j' => TRUE,
+        ],
+      ],
+    ]);
+    // With these options, all writes should be acknowledged.
+    if (!$res->isAcknowledged()) {
+      throw new RuntimeException("Failed inserting document during ensureCollection");
+    }
+    // That document should not persist.
+    $collection->deleteMany([]);
     return $collection;
   }
 
@@ -507,7 +558,7 @@ class Logger extends AbstractLogger {
   public function eventCollection($templateId): Collection {
     $name = static::EVENT_COLLECTION_PREFIX . $templateId;
     if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $name)) {
-      throw new InvalidArgumentException(t('Invalid watchdog template id `@id`.', [
+      throw new InvalidArgumentException($this->t('Invalid watchdog template id `@id`.', [
         '@id' => $name,
       ]));
     }
