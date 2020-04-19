@@ -47,9 +47,9 @@ before_install:
   # Composer: update and add to PATH.
   - sed -i '1i export PATH="$HOME/.composer/vendor/bin:$PATH"' $HOME/.bashrc
   - source $HOME/.bashrc
-  # - composer self-update
+  - composer self-update
 
-  # Drush: 8.x prefers using a local version, so don't require it globally.
+  # Drush: 9.x prefers using a local version, so don't require it globally.
 
   # MongoDB extension is preinstalled but not enabled by default.
   - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
@@ -65,6 +65,7 @@ install:
 
   # Configure PHP (mongodb is included by default).
   - echo 'date.timezone = "Europe/Paris"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
+  - echo "memory_limit = 4G" >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
 
   # Restore XDebug for coverage: need to back it up during removal else it won't be there to re-add.
   #- phpenv config-add xdebug.ini
@@ -86,7 +87,6 @@ before_script:
 
   # install dependencies (for the module) and Coveralls (for coverage) as part of the root vendors.
   - composer require -v "drush/drush:^9.7" "drupal/console:^1.8" "mongodb/mongodb:^1.4.0" $COVERALLS
-  - composer run-script drupal-phpunit-upgrade
   - composer show mongodb/mongodb
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path

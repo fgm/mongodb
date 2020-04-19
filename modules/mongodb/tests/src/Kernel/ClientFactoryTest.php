@@ -29,14 +29,17 @@ class ClientFactoryTest extends MongoDbTestBase {
       $client->listDatabases();
     }
     catch (ConnectionTimeoutException $e) {
-      $this->fail(new FormattableMarkup('Could not connect to server on @uri. Enable one on @default or specify one in MONGODB_URI.', [
+      $fail = new FormattableMarkup('Could not connect to server on @uri. Enable one on @default or specify one in MONGODB_URI.', [
         '@default' => static::DEFAULT_URI,
         '@uri' => $this->uri,
-      ]));
+      ]);
+      $this->fail("$fail");
     }
     catch (\Exception $e) {
       $this->fail($e->getMessage());
     }
+    $this->assertNotNull($clientFactory, "clientFactory must not be null");
+    $this->assertEquals(ClientFactory::class, get_class($clientFactory));
   }
 
   /**

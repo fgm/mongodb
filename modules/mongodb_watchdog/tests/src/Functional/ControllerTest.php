@@ -89,6 +89,15 @@ class ControllerTest extends BrowserTestBase {
   protected $collection;
 
   /**
+   * The default theme, needed after 8.8.0.
+   *
+   * @var string
+   *
+   * @see https://www.drupal.org/node/3083055
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * The time the test started, simulating a request time.
    *
    * @var int
@@ -161,7 +170,7 @@ class ControllerTest extends BrowserTestBase {
     catch (\Exception $e) {
       $this->collection = NULL;
     }
-    $this->assertNotNull($this->collection, $this->t('Access MongoDB watchdog collection'));
+    $this->assertNotNull($this->collection, (string) $this->t('Access MongoDB watchdog collection'));
   }
 
   /**

@@ -68,9 +68,9 @@ class LoggerTest extends MongoDbTestBase {
   public function assertEntry($message) {
     $logged = $this->find($message);
     $this->assertNotNull($logged,
-      $this->t('Event %message is logged', ['%message' => $message]));
+      (string) $this->t('Event %message is logged', ['%message' => $message]));
     $this->assertTrue(isset($logged['message']) && $logged['message'] == $message,
-      $this->t('Logged message is unchanged'));
+      (string) $this->t('Logged message is unchanged'));
   }
 
   /**
@@ -82,7 +82,7 @@ class LoggerTest extends MongoDbTestBase {
   public function assertNoEntry($message) {
     $logged = $this->find($message);
     $this->assertNull($logged,
-      $this->t('Event %message is not logged', ['%message' => $message]));
+      (string) $this->t('Event %message is not logged', ['%message' => $message]));
   }
 
   /**
@@ -128,7 +128,7 @@ class LoggerTest extends MongoDbTestBase {
     $config = $this->config(Logger::CONFIG_NAME);
     $limit = $config->get(Logger::CONFIG_LIMIT);
     $this->assertEquals(RfcLogLevel::DEBUG, $limit,
-      $this->t('%name defaults to @level', [
+      (string) $this->t('%name defaults to @level', [
         '%name' => Logger::CONFIG_LIMIT,
         '@level' => RfcLogLevel::DEBUG,
       ]));

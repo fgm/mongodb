@@ -94,6 +94,31 @@ class Tools {
   }
 
   /**
+   * List collections matching $regex in database $alias.
+   *
+   * @param string $alias
+   *   The alias in which to list the collections.
+   * @param string $regex
+   *   The pattern collection names must match.
+   *
+   * @return array
+   *   An array of collection objects.
+   */
+  public function listCollections(string $alias, string $regex): array {
+    /** @var \MongoDB\Database $database */
+    $database = $this->dbFactory->get($alias);
+    $collections = [];
+    foreach ($database->listCollections() as $info) {
+      $name = $info->getName();
+      $collection = $database->selectCollection($name);
+      if (preg_match($regex, $name)) {
+        $collections[] = $collection;
+      }
+    }
+    return $collections;
+  }
+
+  /**
    * Command callback for mongodb:mdbs.
    *
    * @return array

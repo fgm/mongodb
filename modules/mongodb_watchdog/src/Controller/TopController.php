@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\mongodb_watchdog\Logger;
 use MongoDB\BSON\Javascript;
 use MongoDB\Collection;
@@ -40,6 +41,8 @@ class TopController extends ControllerBase {
    *   The module configuration.
    * @param \MongoDB\Database $database
    *   Needed because there is no group() command in phplib yet.
+   * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
+   *   The core pager.manager service
    *
    * @see https://jira.mongodb.org/browse/PHPLIB-177
    */
@@ -47,8 +50,9 @@ class TopController extends ControllerBase {
     LoggerInterface $logger,
     Logger $watchdog,
     ImmutableConfig $config,
-    Database $database) {
-    parent::__construct($logger, $watchdog, $config);
+    Database $database,
+    PagerManagerInterface $pagerManager) {
+    parent::__construct($logger, $watchdog, $pagerManager, $config);
 
     $this->database = $database;
   }
@@ -147,7 +151,10 @@ class TopController extends ControllerBase {
     /** @var \MongoDB\Database $database */
     $database = $container->get('mongodb.watchdog_storage');
 
-    return new static($logger, $watchdog, $config, $database);
+    /** @var \Drupal\Core\Pager\PagerManagerInterface $pagerManager */
+    $pagerManager = $container->get('pager.manager');
+
+    return new static($logger, $watchdog, $config, $database, $pagerManager);
   }
 
   /**

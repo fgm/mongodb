@@ -6,6 +6,7 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\mongodb_watchdog\EventController;
 use Drupal\mongodb_watchdog\EventTemplate;
@@ -37,13 +38,16 @@ class DetailController extends ControllerBase {
    *   The module configuration.
    * @param \Drupal\mongodb_watchdog\EventController $eventController
    *   The event controller service.
+   * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
+   *   The core pager.manager service
    */
   public function __construct(
     LoggerInterface $logger,
     Logger $watchdog,
     ImmutableConfig $config,
-    EventController $eventController) {
-    parent::__construct($logger, $watchdog, $config);
+    EventController $eventController,
+    PagerManagerInterface $pagerManager) {
+    parent::__construct($logger, $watchdog, $pagerManager, $config);
 
     $this->eventController = $eventController;
   }
@@ -167,7 +171,10 @@ class DetailController extends ControllerBase {
     /** @var \Drupal\mongodb_watchdog\EventController $eventController */
     $eventController = $container->get('mongodb.watchdog_event_controller');
 
-    return new static($logger, $watchdog, $config, $eventController);
+    /** @var \Drupal\Core\Pager\PagerManagerInterface $pagerManager */
+    $pagerManager = $container->get('pager.manager');
+
+    return new static($logger, $watchdog, $config, $eventController, $pagerManager);
   }
 
   /**

@@ -6,6 +6,7 @@ namespace Drupal\mongodb_watchdog\Controller;
 
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Controller\ControllerBase as CoreControllerBase;
+use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\mongodb_watchdog\Logger;
 use Psr\Log\LoggerAwareTrait;
@@ -27,6 +28,13 @@ abstract class ControllerBase extends CoreControllerBase {
   protected $itemsPerPage;
 
   /**
+   * The pager.manager service.
+   *
+   * @var \Drupal\Core\Pager\PagerManagerInterface
+   */
+  protected $pagerManager;
+
+  /**
    * The MongoDB logger, to load events.
    *
    * @var \Drupal\mongodb_watchdog\Logger
@@ -42,11 +50,18 @@ abstract class ControllerBase extends CoreControllerBase {
    *   The mongodb.logger service, to load stored events.
    * @param \Drupal\Core\Config\ImmutableConfig $config
    *   The mongodb_watchdog configuration.
+   * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
+   *   The core pager.manager service
    */
-  public function __construct(LoggerInterface $logger, Logger $watchdog, ImmutableConfig $config) {
+  public function __construct(
+    LoggerInterface $logger,
+    Logger $watchdog,
+    PagerManagerInterface $pagerManager,
+    ImmutableConfig $config) {
     $this->setLogger($logger);
 
     $this->itemsPerPage = $config->get('items_per_page');
+    $this->pagerManager = $pagerManager;
     $this->watchdog = $watchdog;
   }
 
@@ -121,7 +136,7 @@ abstract class ControllerBase extends CoreControllerBase {
    */
   public function setupPager(Request $request, int $count): int {
     $height = $this->itemsPerPage;
-    pager_default_initialize($count, $height);
+    $this->pagerManager->createPager($count, $height);
 
     $requestedPage = intval($request->query->get('page', 0));
     $page = $this->getPage($count, $requestedPage, $height);

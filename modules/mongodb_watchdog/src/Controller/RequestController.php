@@ -8,6 +8,7 @@ use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\mongodb_watchdog\Event;
 use Drupal\mongodb_watchdog\Logger;
 use Psr\Log\LoggerInterface;
@@ -52,6 +53,8 @@ class RequestController extends ControllerBase {
    *   The module configuration.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The core date.formatter service.
+   * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
+   *   The core pager.manager service
    * @param \Drupal\Core\Logger\RfcLogLevel $rfcLogLevel
    *   A RfcLogLevel instance, to avoid static access.
    */
@@ -60,8 +63,9 @@ class RequestController extends ControllerBase {
     Logger $watchdog,
     ImmutableConfig $config,
     DateFormatterInterface $dateFormatter,
+    PagerManagerInterface $pagerManager,
     RfcLogLevel $rfcLogLevel) {
-    parent::__construct($logger, $watchdog, $config);
+    parent::__construct($logger, $watchdog, $pagerManager, $config);
 
     $this->dateFormatter = $dateFormatter;
     $this->rfcLogLevel = $rfcLogLevel;
@@ -93,7 +97,7 @@ class RequestController extends ControllerBase {
       $main = $this->buildEmpty($this->t('No events found for this request.'));
     }
     else {
-      list(, $first) = reset($events);
+      [, $first] = reset($events);
       $top = $this->getTop($uniqueId, $first);
       $main = $this->buildMainTable($events);
     }
@@ -156,7 +160,7 @@ class RequestController extends ControllerBase {
 
     /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
     /** @var \Drupal\mongodb_watchdog\Event $event */
-    foreach ($events as list($template, $event)) {
+    foreach ($events as [$template, $event]) {
       $row = [];
       $row[] = ['data' => $event->requestTracking_sequence];
       $row[] = $template->type;
@@ -193,9 +197,12 @@ class RequestController extends ControllerBase {
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter */
     $dateFormatter = $container->get('date.formatter');
 
+    /** @var \Drupal\Core\Pager\PagerManagerInterface $pagerManager */
+    $pagerManager = $container->get('pager.manager');
+
     $rfcLogLevel = new RfcLogLevel();
 
-    return new static($logger, $watchdog, $config, $dateFormatter, $rfcLogLevel);
+    return new static($logger, $watchdog, $config, $dateFormatter, $pagerManager, $rfcLogLevel);
   }
 
   /**
