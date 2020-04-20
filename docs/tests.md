@@ -104,7 +104,7 @@ recommended. See `mongodb_storage` or `mongodb_watchdog` tests for examples.
 
 ## Running tests
 
-Now that Simpletest is for all intents and purposes deprecated in Drupal 8.6,
+Now that Simpletest is for all intents and purposes deprecated since Drupal 8.6,
 and its UI apparently going away (cf [#2566767]), tests should be run from the
 PHPUnit command line.
 
@@ -113,13 +113,19 @@ PHPUnit command line.
 
 ### Running directly
 
-The typical full command to run tests looks like this (`\` is to avoid too long a line):
+The typical full command to run tests looks like the next example (`\` is to
+avoid too long a line). Assuming a `composer-project` deployment with Drupal in
+the `web/` directory, you'll need to run phpunit from the Drupal root, not the
+project root:
 
+    cd web
     SIMPLETEST_BASE_URL=http://localhost                \
-    BROWSERTEST_OUTPUT_DIRECTORY=/some/existing/writable/pre-existing/path \
+    BROWSERTEST_OUTPUT_DIRECTORY=/some/writable/pre-existing/path \
     SIMPLETEST_DB=mysql://user:pass@localhost/drupal8   \
     MONGODB_URI=mongodb://somemongohost:27017           \
-    PHPUNIT_OPTS="-c phpunit.xml -v --debug --coverage-clover=modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
+    ../vendor/bin/phpunit -c $PWD/core/phpunit.xml.dist \
+        -v --debug --coverage-clover=/tmp/cover.xml     \
+        modules/contrib/mongodb
 
 * Functional tests: the `SIMPLETEST_BASE_URL` and `BROWSERTEST_OUTPUT_DIRECTORY`
   variables are needed. Kernel and Unit tests do not need them.
@@ -127,7 +133,10 @@ The typical full command to run tests looks like this (`\` is to avoid too long 
   provided, the tests will default to `mongodb://localhost:27017`.
 
 These variables can also be set in the `core/phpunit.xml` custom configuration
-file to simplify the command line.
+file to simplify the command line, as described on Drupal.org [Running PHPUnit tests]
+page.
+
+[Running PHPUnit tests]: https://www.drupal.org/node/2116263
 
 
 ### Using a `phpunit.xml` configuration file

@@ -30,6 +30,30 @@ class MongodbCommands extends DrushCommands {
   }
 
   /**
+   * Drop the Simpletest leftover collections.
+   *
+   * @command mongodb:clean-tests
+   * @aliases mdct,mo-clean
+   *
+   * @usage drush mongodb:clean-tests
+   *   Clean test results after "bash tests.bash".
+   */
+  function mongodbCleanTests() {
+    $dbs = array_keys($this->tools->settings()['databases']);
+    foreach ($dbs as $dbAlias) {
+      /** @var \MongoDB\Collection[] $collections */
+      $collections = $this->tools->listCollections($dbAlias,
+        "/^simpletest/");
+      foreach ($collections as $collection) {
+        $this->logger()->notice("Dropping {collectionName}", [
+          'collectionName' => $collection->getCollectionName(),
+        ]);
+        $collection->drop();
+      }
+    }
+  }
+
+  /**
    * Execute a find() query against a collection.
    *
    * @param string $alias

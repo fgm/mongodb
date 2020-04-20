@@ -6,6 +6,7 @@ namespace Drupal\Tests\mongodb_watchdog\Functional;
 
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\BrowserTestBase;
@@ -19,6 +20,8 @@ use Symfony\Component\HttpFoundation\Response;
  * @group MongoDB
  */
 class ControllerTest extends BrowserTestBase {
+  use StringTranslationTrait;
+
   const DEFAULT_URI = 'mongodb://localhost:27017';
   const CLIENT_TEST_ALIAS = 'test';
 
@@ -45,6 +48,11 @@ class ControllerTest extends BrowserTestBase {
     LogLevel::DEBUG => RfcLogLevel::DEBUG,
   ];
 
+  /**
+   * These modules need to be enabled.
+   *
+   * @var array
+   */
   protected static $modules = [
     // Needed to check admin/help/mongodb.
     'help',
@@ -79,6 +87,15 @@ class ControllerTest extends BrowserTestBase {
    * @var \MongoDB\Collection
    */
   protected $collection;
+
+  /**
+   * The default theme, needed after 8.8.0.
+   *
+   * @var string
+   *
+   * @see https://www.drupal.org/node/3083055
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * The time the test started, simulating a request time.
@@ -153,7 +170,7 @@ class ControllerTest extends BrowserTestBase {
     catch (\Exception $e) {
       $this->collection = NULL;
     }
-    $this->assertNotNull($this->collection, t('Access MongoDB watchdog collection'));
+    $this->assertNotNull($this->collection, (string) $this->t('Access MongoDB watchdog collection'));
   }
 
   /**
@@ -456,7 +473,7 @@ class ControllerTest extends BrowserTestBase {
     ];
     /** @var \Drupal\user\Entity\User $account */
     foreach ($expectations as $expectation) {
-      list($account, $statusCode) = $expectation;
+      [$account, $statusCode] = $expectation;
       $this->drupalLogin($account);
       $this->verifyReports($statusCode);
     }

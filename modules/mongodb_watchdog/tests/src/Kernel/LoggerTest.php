@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\Tests\mongodb_watchdog\Kernel;
 
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
@@ -17,6 +18,8 @@ use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
  * @group MongoDB
  */
 class LoggerTest extends MongoDbTestBase {
+  use StringTranslationTrait;
+
   /**
    * The event templates collection.
    *
@@ -24,6 +27,11 @@ class LoggerTest extends MongoDbTestBase {
    */
   protected $collection;
 
+  /**
+   * These modules need to be enabled.
+   *
+   * @var array
+   */
   public static $modules = [
     'system',
     MongoDb::MODULE,
@@ -60,9 +68,9 @@ class LoggerTest extends MongoDbTestBase {
   public function assertEntry($message) {
     $logged = $this->find($message);
     $this->assertNotNull($logged,
-      t('Event %message is logged', ['%message' => $message]));
+      (string) $this->t('Event %message is logged', ['%message' => $message]));
     $this->assertTrue(isset($logged['message']) && $logged['message'] == $message,
-      t('Logged message is unchanged'));
+      (string) $this->t('Logged message is unchanged'));
   }
 
   /**
@@ -74,7 +82,7 @@ class LoggerTest extends MongoDbTestBase {
   public function assertNoEntry($message) {
     $logged = $this->find($message);
     $this->assertNull($logged,
-      t('Event %message is not logged', ['%message' => $message]));
+      (string) $this->t('Event %message is not logged', ['%message' => $message]));
   }
 
   /**
@@ -120,7 +128,7 @@ class LoggerTest extends MongoDbTestBase {
     $config = $this->config(Logger::CONFIG_NAME);
     $limit = $config->get(Logger::CONFIG_LIMIT);
     $this->assertEquals(RfcLogLevel::DEBUG, $limit,
-      t('%name defaults to @level', [
+      (string) $this->t('%name defaults to @level', [
         '%name' => Logger::CONFIG_LIMIT,
         '@level' => RfcLogLevel::DEBUG,
       ]));

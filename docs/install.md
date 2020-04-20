@@ -4,13 +4,13 @@
 The MongoDB module and sub-modules need some configuration to be useful. This
 guide assumes that :
 
-* A [MongoDB][download] 3.0 to 4.0 server instance is already installed,
+* A [MongoDB][download] 3.0 to 4.2.x server instance is already installed,
   configured and available for connection from the Drupal instance.
-* The site will be running [Drupal][drupal] 8.6.x or 8.7.x, with [Drush][drush] 
+* The site will be running [Drupal][drupal] 8.8.x or 8.9.x, with [Drush][drush]
   9.x.
-* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.1.7 or
+* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.4 or
   later is installed and configured.
-* PHP is version 7.1.x to 7.2.x. PHP 7.3.x might work but is not tested: be sure
+* PHP is version 7.2.x to 7.3.x. PHP 7.4.x might work but is not tested: be sure
   to [report any issue][report] you could have with it.
 * We recommend [using Composer](#installing-using-composer) for installing this
   module.
@@ -37,18 +37,18 @@ maintained by MongoDB Inc.:
 [MongoDBWindows]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
 [removedhttp]: https://docs.mongodb.com/manual/release-notes/3.6-compatibility/#http-interface-and-rest-api
 
-If MongoDB 3.0 to 3.5[^1] is installed on `localhost:27017` and the `mongod`
-server was started with the `–httpinterface` option, you may view the web admin
+If MongoDB 3.0 to 3.5[^1] is installed on `localhost:27017` and you started the
+`mongod` with the `–httpinterface` option, you may view the web admin
 interface:
 
     http://localhost:28017/
 
-[^1]: This option is [deprecated from 3.6 version][removedhttp].
+[^1]: This option is [deprecated from 3.6 version][removedhttp] on.
 
 
 ## Settings Configuration
 
-* Download the module package, as per 
+* Download the module package, as per
   [Installing contributed modules (Drupal 8)][install]
 * Copy the relevant section from `mongodb/example.settings.local.php` to your
   `settings.local.php` file if you use one, or `settings.php` otherwise,
@@ -94,6 +94,9 @@ $settings['mongodb'] = [
     * The `logger` database alias will store logger collections on the same
       `default` MongoDB server, but in a separate `logger` database.
 
+The module contains an example default implementation of these settings, which
+you can copy or include, in `mongodb/example.settings.local.php`.
+
 Once the module is installed and enabled, you can check its requirements on
 `/admin/reports/status`:
 
@@ -107,7 +110,11 @@ dependencies, installing is just a two-steps process:
 
 * At the root of your site, add this package:
 
-         composer require "drupal/mongodb:^2.0.0"
+        # Stable version
+        composer require "drupal/mongodb:^2.0.0"
+
+        # Latest version
+        composer require "drupal/mongodb:dev-2.x"
 
 * Enable the `mongodb` module. You now have access to the MongoDB services and
   Drush/Console commands for the `mongodb` module.

@@ -12,6 +12,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Render\RenderableInterface;
 use Drupal\mongodb_watchdog\Event;
 use Drupal\mongodb_watchdog\EventTemplate;
@@ -79,6 +80,7 @@ class OverviewController extends ControllerBase {
    */
   protected $rootLength;
 
+
   /**
    * Controller constructor.
    *
@@ -94,6 +96,8 @@ class OverviewController extends ControllerBase {
    *   The form builder service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The core date_formatter service.
+   * @param \Drupal\Core\Pager\PagerManagerInterface $pagerManager
+   *   The core pager.manager service
    */
   public function __construct(
     LoggerInterface $logger,
@@ -101,8 +105,9 @@ class OverviewController extends ControllerBase {
     ImmutableConfig $config,
     ModuleHandlerInterface $moduleHandler,
     FormBuilderInterface $formBuilder,
-    DateFormatterInterface $dateFormatter) {
-    parent::__construct($logger, $watchdog, $config);
+    DateFormatterInterface $dateFormatter,
+    PagerManagerInterface $pagerManager) {
+    parent::__construct($logger, $watchdog, $pagerManager, $config);
 
     $this->dateFormatter = $dateFormatter;
     $this->formBuilder = $formBuilder;
@@ -228,7 +233,10 @@ class OverviewController extends ControllerBase {
     /** @var \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler */
     $moduleHandler = $container->get('module_handler');
 
-    return new static($logger, $watchdog, $config, $moduleHandler, $formBuilder, $dateFormatter);
+    /** @var \Drupal\Core\Pager\PagerManagerInterface $pagerManager */
+    $pagerManager = $container->get('pager.manager');
+
+    return new static($logger, $watchdog, $config, $moduleHandler, $formBuilder, $dateFormatter, $pagerManager);
   }
 
   /**
