@@ -32,17 +32,17 @@ function mongodb_watchdog_install() {
  * @see http://blog.riff.org/2015_08_27_drupal_8_tip_of_the_day_autoloaded_code_in_a_module_install_file
  */
 function mongodb_watchdog_requirements($phase) {
-  $driver = 'mongodb';
-  $module = 'mongodb_watchdog';
   if ($phase === 'install') {
-    // Dependencies may not be installed yet, and module isn't.
-    drupal_classloader_register($driver, drupal_get_path('module', $driver));
-    drupal_classloader_register($module, drupal_get_path('module', $module));
+    // Dependencies may not be installed yet, and module isn't either.
+    require_once __DIR__ . "/../mongodb/mongodb.module";
+    require_once __DIR__ . "/src/Install/Requirements.php";
+
     // Module is not yet available so its services aren't either.
     $requirements = \Drupal::classResolver()
       ->getInstanceFromDefinition(Requirements::class);
   }
   else {
+    // Outside install phase, the whole module is available.
     /** @var \Drupal\mongodb_watchdog\Install\Requirements $requirements */
     $requirements = \Drupal::service(Logger::SERVICE_REQUIREMENTS);
 

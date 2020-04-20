@@ -32,7 +32,7 @@ class ToolsTest extends MongoDbTestBase {
   public function testToolsSettings() {
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
     $actual = $tools->settings();
-    $this->assertInternalType('array', $actual);
+    $this->assertIsArray($actual);
     $expected = $this->getSettingsArray();
     $this->assertEquals($expected, $actual);
   }
@@ -71,7 +71,7 @@ class ToolsTest extends MongoDbTestBase {
 
       $selectorString = json_encode($selector);
       $actual = $tools->find(MongoDb::DB_DEFAULT, $collectionName, $selectorString);
-      $this->assertInternalType('array', $actual);
+      $this->assertIsArray($actual);
       $this->assertEquals($count, count($actual));
     }
   }
