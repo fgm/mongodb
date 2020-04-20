@@ -2,5 +2,6 @@ name = MongoDB Migrate
 description = Migrate fields from MySQL to MongoDB
 package = MongoDB
 core = 7.x
+php = 5.4
 dependencies[] = entity
 dependencies[] = mongodb_field_storage

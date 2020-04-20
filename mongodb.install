@@ -5,6 +5,8 @@
  * Install file for MongoDB module.
  */
 
+use Alcaeus\MongoDbAdapter\TypeInterface;
+
 /**
  * Implements hook_requirements().
  */
@@ -54,7 +56,7 @@ function mongodb_requirements($phase) {
     }
   }
   else {
-    if (class_exists(\Alcaeus\MongoDbAdapter\TypeInterface::class)) {
+    if (class_exists(TypeInterface::class)) {
       $requirements['mongodb_library_redundant'] = array(
         'title' => 'mongo-php-adapter',
         'value' => t('Redundant'),

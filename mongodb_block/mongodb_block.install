@@ -9,16 +9,17 @@
  * Implements hook_requirements().
  */
 function mongodb_block_requirements($phase) {
-  $requirements = array();
+  $requirements = [];
 
   if ($phase == 'install') {
     $t = get_t();
     if (module_exists('block')) {
-      $requirements['block'] = array(
+      $requirements['block'] = [
+        'title' => $t('MongoDB Block'),
         'description' => $t('Block module has to be disabled first.'),
         'severity' => REQUIREMENT_ERROR,
         'value' => $t('Block module'),
-      );
+      ];
     }
   }
   return $requirements;

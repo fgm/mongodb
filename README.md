@@ -40,7 +40,7 @@ The level of stability of the various components is variable :
 INSTALLATION
 ------------
 
-Install as usual, see [http://drupal.org/node/895232][install] for further 
+Install as usual, see [http://drupal.org/node/895232][install] for further
 information.
 
 [install]: http://drupal.org/node/895232
@@ -51,20 +51,42 @@ installed and configured on localhost or remote server. This module additionally
 provides Drush integration to make queries against the MongoDB databases used by
 Drupal.
 
-If MongoDB is installed on localhost, you may view the web admin interface:
+If MongoDB 3.1 to 3.5 is installed on localhost, you may view the web admin 
+interface on:
 
     http://localhost:28017/
+
+When using PHP 7.x, install the `mongo-php-adapter` library using Composer, and
+enable the composer autoloader. One simple way to do this is to use the 
+`composer_manager` module ; a more efficient one is to have the Drupal project
+be one level below the project root, say in `public/`, and use this:
+
+```bash
+cd $project_dir
+composer require alcaeus/mongo-php-adapter
+# This will also install the mongodb/mongodb library.
+# - Drupal is in public/
+# - vendored dependencies are in vendor/ 
+```
+
+Then edit your `settings.local.php` file to enable the Composer autoloader for
+all the Composer dependencies in the site:
+
+```php
+// In (project_dir)/public/sites/default/settings.local.php
+require_once "../vendor/autoload.php";
+```
 
 
 REQUIREMENTS
 ------------
 
-MongoDB module only supports:
+The MongoDB module suite only supports:
 
 * MongoDB server versions 1.3 or higher.
-* `mongo` (not `mongodb`) extension, or the `mongo-php-adapter` library together with the `mongodb` extension.
-* PHP 5.1 or higher.
-  * PHP 5.4 or higher is required for the cache plugin and watchdog module.
+* `mongo` (not `mongodb`) extension, or the `mongo-php-adapter` library
+  together with the `mongodb` extension.
+* PHP 5.4 to 7.1
 
 
 CONFIGURATION VARIABLES
@@ -102,7 +124,7 @@ the following settings:
     )
 
 Also, `connection_options` might be specified to allow for connecting to
-replica sets (and any other options listed on 
+replica sets (and any other options listed on
 [http://php.net/manual/mongoclient.construct.php][construct]
 
 [construct]: (http://php.net/manual/mongoclient.construct.php)
@@ -262,7 +284,7 @@ EXAMPLE:
 
     $conf['watchdog_limit'] = WATCHDOG_CRITICAL;
 
-See [watchdog_severity_levels()][levels] for further information about Watchdog 
+See [watchdog_severity_levels()][levels] for further information about Watchdog
 severity levels.
 
 [levels]: http://api.drupal.org/api/drupal/includes--common.inc/function/watchdog_severity_levels/7
@@ -366,7 +388,7 @@ there is no need to enable the mongodb_cache module.
 EXAMPLE:
 
     # Session Caching
-    $sessionDir = "$mongoDir/mongodb_session"; 
+    $sessionDir = "$mongoDir/mongodb_session";
     $conf['session_inc']                 = "$sessionDir/mongodb_session.inc";
     $conf['cache_session']               = '\Drupal\mongodb_cache\Cache';
 
@@ -392,13 +414,13 @@ Run helper from the package directory:
 * The cache plugin can run core-equivalent tests : these are the core tests,
   wrapped in a `setUp()`/`tearDown()` sequence supporting the use of a non-SQL
   cache. Run the tests in the `MongoDB: Cache` group instead of `Cache`.
-* Available test groups are "MongoDB: Base", MongoDB: Cache" and "MongoDB: 
-  Watchdog". The tests in the legacy "MongoDB" group are not usable at this 
+* Available test groups are "MongoDB: Base", MongoDB: Cache" and "MongoDB:
+  Watchdog". The tests in the legacy "MongoDB" group are not usable at this
   point.
 * To run tests from the command line via run-tests.sh
     * use concurrency = 1. The current core test wrapping does not support
       concurrent tests.
-    * check permissions, and run as the web user, like 
+    * check permissions, and run as the web user, like
       `sudo -u www-data run-tests.sh`
 
 
@@ -408,7 +430,7 @@ TROUBLESHOOTING
 If installing mongodb_field_storage from an Install Profile:
 
 * Do not enable the module in the profile `.info` file.
-* Do not include the module specific `$conf` variable in `settings.php` during 
+* Do not include the module specific `$conf` variable in `settings.php` during
   install.
 * In the profiles `hook_install()` function, include:
 
