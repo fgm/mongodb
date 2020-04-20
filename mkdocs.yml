@@ -1,5 +1,5 @@
 site_name: MongoDB for Drupal
-pages:
+nav:
   - Home: 'index.md'
   - Installation: 'install.md'
   - Layout: 'layout.md'
@@ -11,6 +11,6 @@ pages:
     - 'Bespoke code': 'bespoke.md'
     - 'Tests': 'tests.md'
 theme: readthedocs
-repo_url: https://github.com/FGM/mongodb
+repo_url: https://github.com/fgm/mongodb
 markdown_extensions:
   - footnotes
