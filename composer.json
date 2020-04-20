@@ -32,7 +32,7 @@
     "mongodb/mongodb": "^1.4.0"
   },
   "require-dev": {
-      "squizlabs/php_codesniffer": "^3"
+      "squizlabs/php_codesniffer": "^3.5"
   },
   "support": {
     "docs": "https://github.com/fgm/mongodb/blob/8.x-2.x/README.md",
