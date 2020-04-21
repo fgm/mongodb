@@ -19,6 +19,7 @@ use MongoDB\Driver\Cursor;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
 use MongoDB\Driver\WriteConcern;
+use MongoDB\Model\CollectionInfo;
 use MongoDB\Model\CollectionInfoIterator;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
@@ -419,12 +420,8 @@ class Logger extends AbstractLogger {
     }
 
     $collection = $this->ensureCollection($name);
-
-    $command = [
-      'collStats' => $name,
-    ];
     $stats = $this->database
-      ->command($command, static::LEGACY_TYPE_MAP)
+      ->command(['collStats' => $name], static::LEGACY_TYPE_MAP)
       ->toArray()[0];
     if (!empty($stats['capped'])) {
       return $collection;
@@ -456,41 +453,30 @@ class Logger extends AbstractLogger {
    *
    * @throws \MongoDB\Exception\InvalidArgumentException
    * @throws \MongoDB\Exception\UnsupportedException
-   * @throws \MongoDB\Exception\UnexpectedValueException
    * @throws \MongoDB\Driver\Exception\RuntimeException
    */
   public function ensureCollection(string $name): Collection {
     $collection = $this->database
       ->selectCollection($name);
-    $count = $collection->countDocuments();
-    // Nothing to do if it already contains documents.
-    if ($count > 0) {
-      return $collection;
+
+    $info = current(iterator_to_array((
+      $this->database->listCollections(['filter' => ['name' => $name]])
+    )));
+    // If the collection doesn't exist, create it, ensuring later operations are
+    // actually run after the server writes:
+    // https://docs.mongodb.com/manual/reference/write-concern/#acknowledgment-behavior
+    if ($info === FALSE) {
+      $res = $collection->insertOne([
+        '_id' => 'dummy',
+        ['writeConcern' => ['w' => WriteConcern::MAJORITY, 'j' => TRUE]],
+      ]);
+      // With these options, all writes should be acknowledged.
+      if (!$res->isAcknowledged()) {
+        throw new RuntimeException("Failed inserting document during ensureCollection");
+      }
+      $collection->deleteMany([]);
     }
 
-    // Since the MongoDB API has no way to check whether a collection exists
-    // without listing the database, and no longer exposes an API to
-    // differentiate between a nonexistent collection and an empty one, we
-    // insert dummy data to force creation of the collection, and possibly even
-    // the database, as in some versions (noticed on 4.2 WT engine) the database
-    // is dropped when its last collection is.
-    $res = $collection->insertOne([
-      '_id' => 'dummy',
-      [
-      // Ensure later operations are actually run after the server writes.
-      // See https://docs.mongodb.com/manual/reference/write-concern/#acknowledgment-behavior
-        'writeConcern' => [
-          'w' => WriteConcern::MAJORITY,
-          'j' => TRUE,
-        ],
-      ],
-    ]);
-    // With these options, all writes should be acknowledged.
-    if (!$res->isAcknowledged()) {
-      throw new RuntimeException("Failed inserting document during ensureCollection");
-    }
-    // That document should not persist.
-    $collection->deleteMany([]);
     return $collection;
   }
 
