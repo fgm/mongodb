@@ -22,7 +22,7 @@
   "extra": {
     "drush": {
       "services": {
-        "drush.services.yml": "^9"
+        "drush.services.yml": "^9 || ^10"
       }
     }
   },
@@ -33,10 +33,10 @@
   "name": "drupal/mongodb",
   "prefer-stable": false,
   "require": {
-    "php": ">=7.1.0",
+    "php": ">=7.2.0",
     "ext-json": "*",
-    "ext-mongodb": "^1.1.7",
-    "mongodb/mongodb": "^1.2.0"
+    "ext-mongodb": "^1.5.1",
+    "mongodb/mongodb": "^1.5.0"
   },
   "require-dev": {
       "squizlabs/php_codesniffer": "^2.8.1"

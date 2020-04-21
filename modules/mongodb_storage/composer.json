@@ -3,12 +3,14 @@
   "extra": {
     "drush": {
       "services": {
-        "drush.services.yml": "^9"
+        "drush.services.yml": "^9 || ^10"
       }
     }
   },
   "require": {
-    "php": ">=7.1.0",
-    "ext-json": "*"
+    "php": ">=7.2.0",
+    "ext-json": "*",
+    "ext-mongodb": "^1.5.1",
+    "mongodb/mongodb": "^1.5.0"
   }
 }
