@@ -495,16 +495,17 @@ class ControllerTest extends BrowserTestBase {
     $loggerChannel->notice($message);
 
     // Make sure the collections were updated.
+    /** @var \Drupal\mongodb_watchdog\Logger $logger */
     $logger = $this->container->get(Logger::SERVICE_LOGGER);
     $templates = $logger->templateCollection();
-    $this->assertEquals(1, MongoDb::countCollection($templates),
+    $this->assertEquals(1, $templates->countDocuments(),
       'Logging created templates collection and added a template to it.');
 
     $template = $templates->findOne(['message' => $message], MongoDb::ID_PROJECTION);
     $this->assertNotNull($template, "Logged message was found: [${message}]");
     $templateId = $template['_id'];
     $events = $logger->eventCollection($templateId);
-    $this->assertEquals(1, MongoDb::countCollection($events),
+    $this->assertEquals(1, $events->countDocuments(),
       'Logging created events collection and added a template to it.');
 
     // Login the admin user.
@@ -515,7 +516,7 @@ class ControllerTest extends BrowserTestBase {
     // Make the sure logs were dropped. After a UI clear, the templates
     // collection should exist, since it is recreated as a capped collection as
     // part of the clear, but be empty, and there should be no event collection.
-    $count = MongoDb::countCollection($templates);
+    $count = $templates->countDocuments();
     $failMessage = 'Logger templates collection was cleared';
     if ($count > 0) {
       $options = ['projection' => ['_id' => 0, 'message' => 1]];

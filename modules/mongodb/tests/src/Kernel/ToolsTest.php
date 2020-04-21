@@ -43,6 +43,7 @@ class ToolsTest extends MongoDbTestBase {
   public function testFind() {
     /** @var \Drupal\mongodb\DatabaseFactory $database */
     $dbFactory = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
+    /** @var \MongoDB\Database $database */
     $database = $dbFactory->get(MongoDb::DB_DEFAULT);
 
     $collectionName = $this->randomMachineName();
@@ -55,7 +56,7 @@ class ToolsTest extends MongoDbTestBase {
     $docCount = count($documents);
     $collection->insertMany($documents);
     // Just a sanity check.
-    $this->assertEquals($docCount, MongoDb::countCollection($collection));
+    $this->assertEquals($docCount, $collection->countDocuments());
 
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
 

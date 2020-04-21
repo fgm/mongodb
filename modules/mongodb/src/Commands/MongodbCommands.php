@@ -38,7 +38,7 @@ class MongodbCommands extends DrushCommands {
    * @usage drush mongodb:clean-tests
    *   Clean test results after "bash tests.bash".
    */
-  function mongodbCleanTests() {
+  public function mongodbCleanTests() {
     $dbs = array_keys($this->tools->settings()['databases']);
     foreach ($dbs as $dbAlias) {
       /** @var \MongoDB\Collection[] $collections */

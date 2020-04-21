@@ -12,14 +12,12 @@ use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\mongodb\MongoDb;
 use MongoDB\Collection;
 use MongoDB\Database;
 use MongoDB\Driver\Cursor;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
 use MongoDB\Driver\WriteConcern;
-use MongoDB\Model\CollectionInfo;
 use MongoDB\Model\CollectionInfoIterator;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
@@ -578,7 +576,8 @@ class Logger extends AbstractLogger {
    *   The number of matching events.
    */
   public function eventCount(EventTemplate $template) : int {
-    return MongoDb::countCollection($this->eventCollection($template->_id));
+    return $this->eventCollection($template->_id)
+      ->countDocuments();
   }
 
   /**
@@ -654,7 +653,7 @@ class Logger extends AbstractLogger {
       $selector = [
         'requestTracking_id' => $requestId,
       ];
-      $count += MongoDb::countCollection($eventCollection, $selector);
+      $count += $eventCollection->countDocuments($selector);
     }
 
     return $count;
@@ -676,7 +675,8 @@ class Logger extends AbstractLogger {
    * @throws \ReflectionException
    */
   public function templatesCount(): int {
-    return MongoDb::countCollection($this->templateCollection());
+    return $this->templateCollection()
+      ->countDocuments();
   }
 
   /**

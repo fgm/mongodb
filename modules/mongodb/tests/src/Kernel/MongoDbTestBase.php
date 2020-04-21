@@ -25,6 +25,11 @@ abstract class MongoDbTestBase extends KernelTestBase {
   const DB_DEFAULT_ALIAS = 'default';
   const DB_UNSET_ALIAS = 'unset';
 
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
   public static $modules = [MongoDb::MODULE];
 
   /**
@@ -34,6 +39,11 @@ abstract class MongoDbTestBase extends KernelTestBase {
    */
   protected $settings;
 
+  /**
+   * The MongoDB URI for a test server.
+   *
+   * @var string
+   */
   protected $uri;
 
   /**

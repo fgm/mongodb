@@ -74,7 +74,7 @@ class SanityCheck {
     foreach ($collections as $collectionInfo) {
       $name = $collectionInfo->getName();
       $collection = $database->selectCollection($name);
-      $count = $collection->count();
+      $count = $collection->countDocuments();
       if (preg_match('/' . Logger::EVENT_COLLECTIONS_PATTERN . '/', $name)) {
         $this->store($count);
       }

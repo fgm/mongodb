@@ -18,6 +18,11 @@ use MongoDB\Database;
  */
 class DatabaseFactoryTest extends MongoDbTestBase {
 
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
   public static $modules = [MongoDb::MODULE];
 
   /**

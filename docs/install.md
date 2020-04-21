@@ -4,18 +4,18 @@
 The MongoDB module and sub-modules need some configuration to be useful. This
 guide assumes that :
 
-* A [MongoDB][download] 3.0 to 4.2.x server instance is already installed,
-  configured and available for connection from the Drupal instance.
+* A [MongoDB][download] 4.0 to 4.2.x server instance has already been installed,
+  configured and is available for connection from the Drupal instance.
 * The site will be running [Drupal][drupal] 8.8.x or 8.9.x, with [Drush][drush]
-  9.x.
-* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.4 or
+  10.x.
+* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.7 or
   later is installed and configured.
 * PHP is version 7.2.x to 7.3.x. PHP 7.4.x might work but is not tested: be sure
   to [report any issue][report] you could have with it.
 * We recommend [using Composer](#installing-using-composer) for installing this
   module.
 
-Check out the [MongoDB extension and library for PHP][PHPMongoDBext]
+Check out the [MongoDB extension and library for PHP][PHPMongoDBlib]
 
 Installing MongoDB itself is best explained in these official resources
 maintained by MongoDB Inc.:
@@ -24,6 +24,11 @@ maintained by MongoDB Inc.:
    * [MongoDB LINUX installation][MongoDBLinux]
    * [MongoDB Windows installation][MongoDBWindows]
 
+MongoDB below 4.0 is no longer supported, which means you can no longer get
+a basic web admin interface by running `mongod` with the `–httpinterface`: that
+feature was [removed in 3.6][removedhttp]. To some extent, it has been superseded
+by the [free monitoring][freemonitoring] service offered by MongoDB Inc.
+
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/download
 [drush]: https://www.drush.org/
@@ -31,19 +36,12 @@ maintained by MongoDB Inc.:
 [mongo]: http://php.net/mongo
 [mongodb]: http://php.net/mongodb
 [report]: https://www.drupal.org/node/add/project-issue/mongodb
-[PHPMongoDBext]: http://php.net/mongodb
+[PHPMongoDBlib]: https://github.com/mongodb/mongo-php-library
 [MongoDBMac]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/
 [MongoDBLinux]: https://docs.mongodb.com/manual/administration/install-on-linux/
 [MongoDBWindows]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
 [removedhttp]: https://docs.mongodb.com/manual/release-notes/3.6-compatibility/#http-interface-and-rest-api
-
-If MongoDB 3.0 to 3.5[^1] is installed on `localhost:27017` and you started the
-`mongod` with the `–httpinterface` option, you may view the web admin
-interface:
-
-    http://localhost:28017/
-
-[^1]: This option is [deprecated from 3.6 version][removedhttp] on.
+[freemonitoring]: https://docs.mongodb.com/manual/administration/free-monitoring/
 
 
 ## Settings Configuration
@@ -118,6 +116,9 @@ dependencies, installing is just a two-steps process:
 
 * Enable the `mongodb` module. You now have access to the MongoDB services and
   Drush/Console commands for the `mongodb` module.
+* Optionally, enabled the [`mongodb_storage`](modules/mongodb_storage.md) and
+  [`mongodb_watchdog`](modules/mongodb_watchdog.md) module for
+  additional services and commands.
 
 [composer]: https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies
 [install]: https://www.drupal.org/docs/8/extending-drupal-8/installing-drupal-8-modules
