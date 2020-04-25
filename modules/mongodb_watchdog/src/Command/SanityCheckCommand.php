@@ -32,7 +32,7 @@ class SanityCheckCommand extends ContainerAwareCommand {
   /**
    * The serialisation.yaml service.
    *
-   * @var \Drupal\Core\Serialization\Yaml
+   * @var \Drupal\Component\Serialization\Yaml
    */
   protected $yaml;
 

@@ -142,6 +142,13 @@ class Logger extends AbstractLogger {
   protected $requestStack;
 
   /**
+   * Is request tracking enabled ?
+   *
+   * @var bool
+   */
+  protected $requestTracking;
+
+  /**
    * A sequence number for log events during a request.
    *
    * @var int

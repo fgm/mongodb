@@ -126,6 +126,9 @@ class EventTemplate implements Unserializable {
         ? $info['creation_callback']($datum)
         : $datum;
     }
+    if (!is_string($this->message)) {
+      $this->message = print_r($this->message, TRUE);
+    }
   }
 
   /**

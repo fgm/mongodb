@@ -7,7 +7,6 @@ namespace Drupal\mongodb_watchdog\Controller;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\mongodb_watchdog\Logger;
-use MongoDB\BSON\Javascript;
 use MongoDB\Collection;
 use MongoDB\Database;
 use Psr\Log\LoggerInterface;
@@ -22,6 +21,11 @@ class TopController extends ControllerBase {
     'page not found',
     'access denied',
   ];
+
+  const TYPE_MAP = [
+    'root' => TopResult::class,
+  ];
+
 
   /**
    * The database holding the logger collections.
@@ -68,7 +72,7 @@ class TopController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  public function build(Request $request, $type): array {
+  public function build(Request $request, string $type): array {
     $top = $this->getTop();
 
     $rows = $this->getRowData($request, $type);
@@ -124,10 +128,11 @@ class TopController extends ControllerBase {
    */
   protected function buildMainTableRows(array $counts): array {
     $rows = [];
-    foreach ($counts as $count) {
+    /** @var \Drupal\mongodb_watchdog\Controller\TopResult $result */
+    foreach ($counts as $result) {
       $row = [
-        $count['count'],
-        $count['variables.@uri'],
+        $result->count,
+        $result->uri,
       ];
       $rows[] = $row;
     }
@@ -168,7 +173,7 @@ class TopController extends ControllerBase {
    * @return array
    *   The data array.
    */
-  protected function getRowData(Request $request, $type): array {
+  protected function getRowData(Request $request, string $type): array {
     // Find _id for the error type.
     $templateCollection = $this->watchdog->templateCollection();
     $template = $templateCollection->findOne(['type' => $type], ['_id']);
@@ -180,22 +185,7 @@ class TopController extends ControllerBase {
     $collectionName = $template['_id'];
     $eventCollection = $this->watchdog->eventCollection($collectionName);
 
-    $key = ['variables.@uri' => 1];
-    $cond = [];
-    $reducer = <<<JAVASCRIPT
-function reducer(doc, accumulator) {
-  accumulator.count++;
-}
-JAVASCRIPT;
-
-    $initial = ['count' => 0];
-    $counts = $this->group($eventCollection, $key, $cond, $reducer, $initial);
-    if (empty($counts['ok'])) {
-      return [];
-    }
-
-    $counts = $counts['retval'];
-    usort($counts, [$this, 'topSort']);
+    $counts = $this->group($eventCollection, 'variables.@uri', []);
 
     $page = $this->setupPager($request, count($counts));
     $skip = $page * $this->itemsPerPage;
@@ -205,58 +195,52 @@ JAVASCRIPT;
   }
 
   /**
-   * Command wrapper for missing MongoDB group() implementation in PHPlib.
+   * Command wrapper for removed MongoDB group() method/command.
    *
    * @param \MongoDB\Collection $collection
    *   The collection on which to perform the command.
-   * @param array $key
+   * @param string $key
    *   The grouping key.
    * @param array $cond
    *   The condition.
-   * @param string $reduce
-   *   The reducer function: must be valid JavaScript code.
-   * @param array $initial
-   *   The initial document.
    *
-   * @return array|null
-   *   Void in case of error, otherwise an array with the following keys:
-   *   - waitedMS: time spent waiting
-   *   - retval: an array of command results, containing at least the key
-   *   - count: the total number of documents matched
-   *   - keys: the number of different keys, normally matching count(retval)
-   *   - ok: 1.0 in case of success.
+   * @return array
+   *   An array of stdClass rows with the following properties:
+   *   - _id: the URL
+   *   - count: the number of occurrences.
+   *   It may be empty.
+   *
+   * @throws \MongoDB\Driver\Exception\RuntimeException
+   * @throws \MongoDB\Exception\InvalidArgumentException
+   * @throws \MongoDB\Exception\UnexpectedValueException
+   * @throws \MongoDB\Exception\UnsupportedException
    */
-  public function group(Collection $collection, array $key, array $cond, string $reduce, array $initial): ?array {
-    $cursor = $this->database->command([
-      'group' => [
-        'ns' => $collection->getCollectionName(),
-        'key' => $key,
-        'cond' => $cond,
-        'initial' => $initial,
-        '$reduce' => new Javascript($reduce),
+  public function group(Collection $collection, string $key, array $cond): array {
+    $pipeline = [];
+    if (!empty($cond)) {
+      $pipeline[] = ['$match' => $cond];
+    }
+    if (!empty($key)) {
+      $pipeline[] = [
+        '$group' => [
+          '_id' => "\$${key}",
+          'count' => ['$sum' => 1],
+        ],
+      ];
+    }
+    $pipeline[] = [
+      '$sort' => [
+        'count' => -1,
+        '_id' => 1,
       ],
-    ], Logger::LEGACY_TYPE_MAP);
+    ];
 
-    $ret = $cursor->toArray();
-    $ret = reset($ret);
+    // Aggregate always returns a cursor since MongoDB 3.6.
+    /** @var \MongoDB\Driver\CursorInterface $res */
+    $res = $collection->aggregate($pipeline);
+    $res->setTypeMap(static::TYPE_MAP);
+    $ret = $res->toArray();
     return $ret;
-  }
-
-  /**
-   * Callback for usort() to sort top entries returned from a group query.
-   *
-   * @param array $first
-   *   The first value to compare.
-   * @param array $second
-   *   The second value to compare.
-   *
-   * @return int
-   *   The comparison result.
-   *
-   * @see \Drupal\mongodb_watchdog\Controller\TopController::build()
-   */
-  protected function topSort(array $first, array $second): int {
-    return $second['count'] <=> $first['count'];
   }
 
 }

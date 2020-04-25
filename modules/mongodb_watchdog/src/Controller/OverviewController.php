@@ -299,17 +299,17 @@ class OverviewController extends ControllerBase {
       $file = Unicode::truncate(basename($file), 30);
     }
     else {
-      $hover = NULL;
+      $hover = '';
     }
 
-    $line = $event->variables['%line'] ?? NULL;
+    $line = $event->variables['%line'] ?? '';
     $cell = [
       '#type' => 'html_tag',
       '#tag' => 'span',
       '#value' => implode("#", [$file, $line]),
     ];
 
-    if ($hover) {
+    if ($hover !== '') {
       $cell['#attributes'] = [
         'class' => 'mongodb-watchdog__code-path',
         'title' => $hover,
