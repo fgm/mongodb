@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\mongodb_storage;
 
-use Drupal\Component\Datetime\Time;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\mongodb\DatabaseFactory;

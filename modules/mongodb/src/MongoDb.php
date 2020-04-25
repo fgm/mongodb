@@ -68,8 +68,16 @@ class MongoDb {
   /**
    * Count items matching a selector in a collection.
    *
-   * Do not use Collection::count() after extension 1.4.0, so rely on a strategy
-   * choice.
+   * This function used to be needed when:
+   * - library versions below and above 1.4.0 were supported, as in 8.x-2.0.
+   *   With the minimum version now being 1.5.0, the Collection::count() method
+   *   is no longer needed and is deprecated.
+   * - MongoDB PHPLIB-376 was not yet fixed and needed the try/catch around
+   *   Collection::countDocuments().
+   *
+   * Since both issues have been resolved, this method is only used for
+   * compatibility and will be deprecated after the Drupal 9.0 release. It is
+   * not marked as deprecated to avoid a Drupal 9 compatibility check.
    *
    * @param \MongoDB\Collection $collection
    *   The collection for which to count items.
@@ -78,22 +86,18 @@ class MongoDb {
    *
    * @return int
    *   The number of elements matching the selector in the collection.
+   *
+   * @see https://jira.mongodb.org/browse/PHPLIB-376
    */
   public static function countCollection(Collection $collection, array $selector = []) : int {
-    if (version_compare(static::libraryApiVersion(), '1.4.0') >= 0) {
-      // Work around bug https://jira.mongodb.org/browse/PHPLIB-376 with library
-      // version 1.4.0/1.4.1.
-      try {
-        $count = $collection->countDocuments($selector);
-      }
-      catch (UnexpectedValueException $e) {
-        $count = 0;
-      }
-
-      return $count;
+    try {
+      $count = $collection->countDocuments($selector);
+    }
+    catch (UnexpectedValueException $e) {
+      $count = 0;
     }
 
-    return $collection->count($selector);
+    return $count;
   }
 
 }

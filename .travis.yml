@@ -85,8 +85,9 @@ before_script:
   - mkdir -p modules/contrib
   - mv ../fgm/mongodb modules/contrib
 
-  # install dependencies (for the module) and Coveralls (for coverage) as part of the root vendors.
-  - composer require -v "drush/drush:^9.7" "drupal/console:^1.8" "mongodb/mongodb:^1.4.0" $COVERALLS
+  # install dependencies (for the module) and Coveralls (for coverage) as part of the root vendors. Get rid of PHPunit < 7 and locked dependencies.
+  - rm -fr composer.lock vendor
+  - composer require -v "drush/drush:^9.7" "drupal/console:^1.8" "mongodb/mongodb:^1.4.0" "phpunit/phpunit:^7.5" $COVERALLS
   - composer show mongodb/mongodb
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path

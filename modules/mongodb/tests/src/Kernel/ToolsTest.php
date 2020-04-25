@@ -32,7 +32,7 @@ class ToolsTest extends MongoDbTestBase {
   public function testToolsSettings() {
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
     $actual = $tools->settings();
-    $this->assertInternalType('array', $actual);
+    $this->assertIsArray($actual);
     $expected = $this->getSettingsArray();
     $this->assertEquals($expected, $actual);
   }
@@ -43,6 +43,7 @@ class ToolsTest extends MongoDbTestBase {
   public function testFind() {
     /** @var \Drupal\mongodb\DatabaseFactory $database */
     $dbFactory = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
+    /** @var \MongoDB\Database $database */
     $database = $dbFactory->get(MongoDb::DB_DEFAULT);
 
     $collectionName = $this->randomMachineName();
@@ -55,7 +56,7 @@ class ToolsTest extends MongoDbTestBase {
     $docCount = count($documents);
     $collection->insertMany($documents);
     // Just a sanity check.
-    $this->assertEquals($docCount, MongoDb::countCollection($collection));
+    $this->assertEquals($docCount, $collection->countDocuments());
 
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
 
@@ -71,7 +72,7 @@ class ToolsTest extends MongoDbTestBase {
 
       $selectorString = json_encode($selector);
       $actual = $tools->find(MongoDb::DB_DEFAULT, $collectionName, $selectorString);
-      $this->assertInternalType('array', $actual);
+      $this->assertIsArray($actual);
       $this->assertEquals($count, count($actual));
     }
   }

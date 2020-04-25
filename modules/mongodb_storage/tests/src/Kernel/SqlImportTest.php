@@ -22,6 +22,11 @@ class SqlImportTest extends KeyValueTestBase {
   const IMPORT_OUTPUT = SqlImport::KVP_TABLE . PHP_EOL
   . SqlImport::KVE_TABLE . PHP_EOL;
 
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
   public static $modules = [
     'system',
     MongoDb::MODULE,

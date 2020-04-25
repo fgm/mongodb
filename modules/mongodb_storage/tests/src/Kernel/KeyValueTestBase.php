@@ -18,6 +18,11 @@ use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
  */
 abstract class KeyValueTestBase extends MongoDbTestBase {
 
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
   public static $modules = [
     MongoDb::MODULE,
     Storage::MODULE,
