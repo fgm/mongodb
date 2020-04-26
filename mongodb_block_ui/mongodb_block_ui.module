@@ -24,6 +24,7 @@ function mongodb_block_ui_help($path, $arg) {
       $output .= '<dd>' . t('Users with the <em>Administer mongodb blocks</em> permission can <a href="@mongodb_block_ui-add">add custom mongodb_block_uis</a>, which are then listed on the <a href="@mongodb_block_uis">Blocks administration page</a>. Once created, custom mongodb_block_uis behave just like default and module-generated mongodb_block_uis.', array('@mongodb_block_uis' => url('admin/structure/mongodb_block_ui'), '@mongodb_block_ui-add' => url('admin/structure/mongodb_block_ui/add'))) . '</dd>';
       $output .= '</dl>';
       return $output;
+
     case 'admin/structure/mongodb_block/add':
       return '<p>' . t('Use this page to create a new custom mongodb_block_ui.') . '</p>';
   }
@@ -194,7 +195,14 @@ function mongodb_block_ui_block_view($delta = 0, $edit = array()) {
  * Loads a block object.
  *
  * @param string $delta
- *   Unique ID of the block
+ *   Unique ID of the block.
+ *
+ * @return array|null
+ *   A document for the block of null if none was found.
+ *
+ * @throws \MongoConnectionException
+ * @throws \MongoException
+ * @throws \MongoWriteConcernException
  */
 function mongodb_block_ui_load($delta) {
   return mongodb_collection('block_custom')->findOne(array('_id' => (string) $delta));
@@ -237,7 +245,11 @@ function mongodb_block_ui_custom_block_form($edit = array()) {
  * Implements hook_menu_delete().
  */
 function mongodb_block_ui_menu_delete($menu) {
-  $collection->delete(array('module' => 'menu', 'delta' => $menu['menu_name']), mongodb_default_write_options());
+  $collection = mongodb_collection('block_custom');
+  $collection->remove([
+    'module' => 'menu',
+    'delta' => $menu['menu_name'],
+  ], mongodb_default_write_options());
 }
 
 /**
@@ -248,6 +260,7 @@ function mongodb_block_ui_form_system_performance_settings_alter(&$form, &$form_
   $form['caching']['block_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Cache blocks'),
+    // phpcs:ignore
     '#default_value' => variable_get('block_cache', FALSE),
     '#disabled' => $disabled,
     '#description' => $disabled ? t('Block caching is inactive because you have enabled modules defining content access restrictions.') : NULL,

@@ -2,13 +2,18 @@
 
 /**
  * @file
- * Contains \MongoDBFieldAttachStorageTestCase and \MongoDbEntityFieldQueryTestCase.
+ * Contains MongoDB Field AttachStorage and Query TestCases.
  */
 
 /**
  * Execute all the Field storage unit test with MongoDB-based field storage.
  */
+// phpcs:ignore
 class MongoDBFieldAttachStorageTestCase extends FieldAttachStorageTestCase {
+
+  /**
+   * {@inheritDoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Field attach tests (MongoDB)',
@@ -17,17 +22,25 @@ class MongoDBFieldAttachStorageTestCase extends FieldAttachStorageTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritDoc}
+   */
+  public function setUp() {
     $this->default_storage = 'mongodb_field_storage';
     parent::setUp('mongodb', 'mongodb_field_storage');
   }
+
 }
 
 /**
  * Tests EntityFieldQuery.
  */
+// phpcs:ignore
 class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
 
+  /**
+   * {@inheritDoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Entity query',
@@ -36,7 +49,10 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritDoc}
+   */
+  public function setUp() {
     parent::setUp(array('mongodb', 'mongodb_field_storage', 'field_test'));
     variable_set('field_storage_default', 'mongodb_field_storage');
 
@@ -66,8 +82,8 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
         'label' => 'Test Field',
         'settings' => array(
           'test_widget_setting' => $this->randomName(),
-        )
-      )
+        ),
+      ),
     );
 
     $instances[0] = $instance;
@@ -80,7 +96,11 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     field_create_instance($instances[0]);
 
     $this->field_names[1] = $field_name = drupal_strtolower($this->randomName() . '_field_name');
-    $field = array('field_name' => $field_name, 'type' => 'shape', 'cardinality' => 4);
+    $field = array(
+      'field_name' => $field_name,
+      'type' => 'shape',
+      'cardinality' => 4,
+    );
     $field = field_create_field($field);
     $this->fields[1] = $field;
     $instance = array(
@@ -98,8 +118,8 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
         'label' => 'Test Field',
         'settings' => array(
           'test_widget_setting' => $this->randomName(),
-        )
-      )
+        ),
+      ),
     );
 
     $instances[1] = $instance;
@@ -112,8 +132,6 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     field_create_instance($instances[1]);
 
     $this->instances = $instances;
-    // Write entity base table if there is one.
-    $entities = array();
     $key = 1;
 
     // Create entities which have a 'bundle key' defined.
@@ -171,9 +189,9 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
       drupal_write_record('test_entity_revision', $entity);
 
       db_update('test_entity')
-       ->fields(array('ftvid' => $entity->ftvid))
-       ->condition('ftid', $entity->ftid)
-       ->execute();
+        ->fields(array('ftvid' => $entity->ftvid))
+        ->condition('ftid', $entity->ftid)
+        ->execute();
 
       field_attach_update('test_entity', $entity);
     }
@@ -182,7 +200,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
   /**
    * Tests EntityFieldQuery.
    */
-  function testEntityFieldQuery() {
+  public function testEntityFieldQuery() {
     // Test entity_type condition.
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'test_entity_bundle_key');
@@ -339,7 +357,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     ), t('Test sort entity bundle in ascending order.'), TRUE);
 
     $query = new EntityFieldQuery();
-    $foo = $query
+    $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
       ->entityOrderBy('bundle', 'DESC')
       ->propertyOrderBy('ftid', 'DESC');
@@ -469,7 +487,7 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
       array('test_entity_bundle_key', 1),
     ), t('Test "in" operation with entity entity_type condition and entity_id property condition. Sort entity_id in descending order.'), TRUE);
 
-    // Test query count
+    // Test query count.
     $query = new EntityFieldQuery();
     $query_count = $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
@@ -522,8 +540,8 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
     $query
       ->entityCondition('entity_type', 'test_entity_bundle_key')
       ->fieldCondition($this->fields[1], 'shape', 'foobar', 'CONTAINS');
-    $this->assertEntityFieldQuery($query, array(
-    ), t('Test the "contains" operation on a field does not find more than necessary.'));
+    $this->assertEntityFieldQuery($query, [],
+      t('Test the "contains" operation on a field does not find more than necessary.'));
 
     $query = new EntityFieldQuery();
     $query
@@ -845,19 +863,19 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
   /**
    * Fetches the results of an EntityFieldQuery and compares.
    *
-   * @param $query
+   * @param \EntityFieldQuery $query
    *   An EntityFieldQuery to run.
-   * @param $intended_results
+   * @param array $intended_results
    *   A list of results, every entry is again a list, first being the entity
    *   type, the second being the entity_id.
-   * @param $message
+   * @param string $message
    *   The message to be displayed as the result of this test.
-   * @param $ordered
+   * @param bool $ordered
    *   If FALSE then the result of EntityFieldQuery will match
    *   $intended_results even if the order is not the same. If TRUE then order
    *   should match too.
    */
-  function assertEntityFieldQuery($query, $intended_results, $message, $ordered = FALSE) {
+  public function assertEntityFieldQuery(EntityFieldQuery $query, array $intended_results, $message, $ordered = FALSE) {
     $results = array();
     try {
       foreach ($query->execute() as $entity_type => $entity_ids) {
@@ -879,4 +897,5 @@ class MongoDbEntityFieldQueryTestCase extends DrupalWebTestCase {
       $this->fail('Exception thrown: ' . $e->getMessage());
     }
   }
+
 }

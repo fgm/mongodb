@@ -113,11 +113,11 @@ function mongodb_block_page_build(&$page) {
   $query['region']['$in'] = array_keys($all_regions);
   $blocks_result = $collection->find($query)->sort(array('weight' => 1));
   $regions_blocks = array();
-  foreach($blocks_result as $block) {
-      if(!isset($regions_blocks[$block['region']])) {
-        $regions_blocks[$block['region']] = array();
-      }
-      $regions_blocks[$block['region']][] = $block;
+  foreach ($blocks_result as $block) {
+    if (!isset($regions_blocks[$block['region']])) {
+      $regions_blocks[$block['region']] = array();
+    }
+    $regions_blocks[$block['region']][] = $block;
   }
   foreach ($regions_blocks as $region => $region_blocks) {
     $region_blocks = mongodb_block_render_blocks($region_blocks);
@@ -144,7 +144,7 @@ function mongodb_block_render_blocks(array $blocks_result) {
   $return = [];
   foreach ($blocks_result as $block) {
     // Copy module and delta out of the _id.
-    if(is_array($block) && isset($block['_id'])){
+    if (is_array($block) && isset($block['_id'])) {
       $block += $block['_id'];
     }
     $block = (object) $block;

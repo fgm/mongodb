@@ -1,19 +1,21 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_block_ui\Tests\BlockTest.
- */
-
 namespace Drupal\mongodb_block_ui\Tests;
 
-
+/**
+ * Class BlockTest.
+ */
 class BlockTest extends \DrupalWebTestCase {
 
+  /**
+   * Regions with their associated classes.
+   *
+   * @var array
+   */
   protected $regions;
 
   /**
-   * Info about the test
+   * Info about the test.
    */
   public static function getInfo() {
     return array(
@@ -24,9 +26,9 @@ class BlockTest extends \DrupalWebTestCase {
   }
 
   /**
-   * Setup the test enviroment
+   * Setup the test environment.
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp();
 
     // Create and log in an administrative user having access to the Full HTML
@@ -50,10 +52,9 @@ class BlockTest extends \DrupalWebTestCase {
   }
 
   /**
-   * Test creating custom block, moving it to a specific region and then
-   * deleting it.
+   * Test creating custom block, moving it to a region and then deleting it.
    */
-  function testCustomBlock() {
+  public function testCustomBlock() {
     // Confirm that the add block link appears on block overview pages.
     $this->drupalGet('admin/structure/block');
     $this->assertRaw(l(t('Add block'), 'admin/structure/block/add'), t('Add block link is present on block overview page for default theme.'));
@@ -114,7 +115,10 @@ class BlockTest extends \DrupalWebTestCase {
     $this->clickLink(t('delete'));
     $this->drupalPost('admin/structure/block/manage/block/' . $bid . '/delete', array(), t('Delete'));
     $this->assertRaw(t('The block %title has been removed.', array('%title' => $custom_block['info'])), t('Custom block successfully deleted.'));
-    $this->assertNoText(t($custom_block['title']), t('Custom block no longer appears on page.'));
+    $this->assertNoText(
+      // phpcs:ignore
+      t($custom_block['title']),
+      t('Custom block no longer appears on page.'));
     $count = db_query("SELECT 1 FROM {block_role} WHERE module = :module AND delta = :delta", array(':module' => $custom_block['module'], ':delta' => $custom_block['delta']))->fetchField();
     $this->assertFalse($count, t('Table block_role being cleaned.'));
   }
@@ -122,7 +126,7 @@ class BlockTest extends \DrupalWebTestCase {
   /**
    * Test creating custom block using Full HTML.
    */
-  function testCustomBlockFormat() {
+  public function testCustomBlockFormat() {
     // Add a new custom block by filling out the input form on the
     // admin/structure/block/add page.
     $custom_block = array();
@@ -162,7 +166,7 @@ class BlockTest extends \DrupalWebTestCase {
   /**
    * Test block visibility.
    */
-  function testBlockVisibility() {
+  public function testBlockVisibility() {
     $block = array();
 
     // Create a random title for the block.
@@ -205,7 +209,7 @@ class BlockTest extends \DrupalWebTestCase {
   /**
    * Test configuring and moving a module-define block to specific regions.
    */
-  function testBlock() {
+  public function testBlock() {
     // Select the Navigation block to be configured and moved.
     $block = array();
     $block['module'] = 'system';
@@ -237,9 +241,12 @@ class BlockTest extends \DrupalWebTestCase {
 
     // Confirm that the block was moved to the proper region.
     $this->assertText(t('The block settings have been updated.'), t('Block successfully move to disabled region.'));
-    $this->assertNoText(t($block['title']), t('Block no longer appears on page.'));
+    $this->assertNoText(
+      // phpcs:ignore
+      t($block['title']),
+      t('Block no longer appears on page.'));
 
-    // Confirm that the regions xpath is not available,
+    // Confirm that the regions xpath is not available.
     $xpath = $this->buildXPathQuery('//div[@id=:id]/*', array(':id' => 'block-block-' . $bid));
     $this->assertNoFieldByXPath($xpath, FALSE, t('Custom block found in no regions.'));
 
@@ -253,11 +260,10 @@ class BlockTest extends \DrupalWebTestCase {
     $this->assertText(t('The block configuration has been saved.'), t('Block title set.'));
   }
 
-
   /**
    * Move block to a region.
    */
-  function moveBlockToRegion($block, $region) {
+  public function moveBlockToRegion($block, $region) {
     // If an id for an region hasn't been specified, we assume it's the same as
     // the name.
     if (!(isset($region['class']))) {
@@ -274,7 +280,10 @@ class BlockTest extends \DrupalWebTestCase {
 
     // Confirm that the block is being displayed.
     $this->drupalGet('node');
-    $this->assertText(t($block['title']), t('Block successfully being displayed on the page.'));
+    $this->assertText(
+      // phpcs:ignore
+      t($block['title']),
+      t('Block successfully being displayed on the page.'));
 
     // Confirm that the custom block was found at the proper region.
     $xpath = $this->buildXPathQuery('//div[@class=:region-class]//div[@id=:block-id]/*', array(

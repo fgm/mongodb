@@ -1,12 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_block_ui\Tests\NonDefaultBlockAdminTest.
- */
-
 namespace Drupal\mongodb_block_ui\Tests;
-
 
 /**
  * Check for non-default theme admin.
@@ -14,7 +8,7 @@ namespace Drupal\mongodb_block_ui\Tests;
 class NonDefaultBlockAdminTest extends \DrupalWebTestCase {
 
   /**
-   * Name the test
+   * Name the test.
    */
   public static function getInfo() {
     return array(
@@ -27,7 +21,7 @@ class NonDefaultBlockAdminTest extends \DrupalWebTestCase {
   /**
    * Test non-default theme admin.
    */
-  function testNonDefaultBlockAdmin() {
+  public function testNonDefaultBlockAdmin() {
     $admin_user = $this->drupalCreateUser(array('administer blocks', 'administer themes'));
     $this->drupalLogin($admin_user);
     theme_enable(array('stark'));

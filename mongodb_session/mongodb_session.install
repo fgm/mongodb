@@ -23,7 +23,9 @@ function mongodb_session_enable() {
  * Create an index for the session collection.
  */
 function mongodb_session_ensure_indexes() {
-  $collection =   mongodb_collection(variable_get('mongodb_session', 'session'));
+  $collection = mongodb_collection(
+    variable_get('mongodb_session', 'session')
+  );
 
   $index = array(
     'sid' => 1,
@@ -40,9 +42,7 @@ function mongodb_session_ensure_indexes() {
   );
   $collection->ensureIndex($index);
 
-  $index = array(
-    'timestamp' => -1
-  );
+  $index = ['timestamp' => -1];
   $collection->ensureIndex($index);
 }
 

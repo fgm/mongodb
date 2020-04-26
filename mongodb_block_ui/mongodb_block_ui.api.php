@@ -47,10 +47,10 @@
  *     mongodb_block_ui will be registered instead to that theme's default
  *     region (the first item in the _regions array).
  *
- * After completing your mongodb_block_uis, do not forget to enable them in the
- * mongodb_block_ui admin menu.
+ *   After completing your mongodb_block_uis, do not forget to enable them in
+ *   the mongodb_block_ui admin menu.
  *
- * For a detailed usage example, see mongodb_block_ui_example.module.
+ *   For a detailed usage example, see mongodb_block_ui_example.module.
  */
 function hook_mongodb_block_ui_info() {
   $mongodb_block_uis['exciting'] = array(
@@ -83,13 +83,14 @@ function hook_mongodb_block_ui_info() {
  * @return array
  *   Optionally return the configuration form.
  *
- * For a detailed usage example, see mongodb_block_ui_example.module.
+ *   For a detailed usage example, see mongodb_block_ui_example.module.
  */
 function hook_mongodb_block_ui_configure($delta = '') {
   if ($delta == 'exciting') {
     $form['items'] = array(
       '#type' => 'select',
       '#title' => t('Number of items'),
+      // phpcs:ignore
       '#default_value' => variable_get('mymodule_mongodb_block_ui_items', 0),
       '#options' => array('1', '2', '3'),
     );
@@ -100,6 +101,8 @@ function hook_mongodb_block_ui_configure($delta = '') {
 /**
  * Save the configuration options.
  *
+ * For a detailed usage example, see mongodb_block_ui_example.module.
+ *
  * @param string $delta
  *   Which mongodb_block_ui to save the settings for. This is a descriptive
  *   string used to identify mongodb_block_uis within each module and also
@@ -107,20 +110,17 @@ function hook_mongodb_block_ui_configure($delta = '') {
  *   The $delta for each mongodb_block_ui is defined within the array that your
  *   module returns when the hook_mongodb_block_ui_info() implementation is
  *   called.
- * @param string $edit
+ * @param array $edit
  *   The submitted form data from the configuration form.
- *
- * For a detailed usage example, see mongodb_block_ui_example.module.
  */
-function hook_mongodb_block_ui_save($delta = '', $edit = array()) {
+function hook_mongodb_block_ui_save($delta = '', array $edit = []) {
   if ($delta == 'exciting') {
     variable_set('mymodule_mongodb_block_ui_items', $edit['items']);
   }
 }
 
 /**
- * Process the mongodb_block_ui when enabled in a region in order to view its
- * contents.
+ * Process the mongodb_block_ui when enabled in a region, to view its contents.
  *
  * @param string $delta
  *   Which mongodb_block_ui to return. This is a descriptive string used to
@@ -134,13 +134,13 @@ function hook_mongodb_block_ui_save($delta = '', $edit = array()) {
  *   An array which must define a 'subject' element and a 'content' element
  *   defining the mongodb_block_ui indexed by $delta.
  *
- * The functions mymodule_display_mongodb_block_ui_exciting and _amazing, as
- * used in the example, should of course be defined somewhere in your module
- * and return the content you want to display to your users. If the "content"
- * element is empty, no mongodb_block_ui will be displayed even if "subject"
- * is present.
+ *   The functions mymodule_display_mongodb_block_ui_exciting and _amazing, as
+ *   used in the example, should of course be defined somewhere in your module
+ *   and return the content you want to display to your users. If the "content"
+ *   element is empty, no mongodb_block_ui will be displayed even if "subject"
+ *   is present.
  *
- * For a detailed usage example, see mongodb_block_ui_example.module.
+ *   For a detailed usage example, see mongodb_block_ui_example.module.
  */
 function hook_mongodb_block_ui_view($delta = '') {
   switch ($delta) {
@@ -189,7 +189,7 @@ function hook_mongodb_block_ui_view($delta = '') {
  * @see hook_mongodb_block_ui_view_alter()
  * @see hook_mongodb_block_ui_view()
  */
-function hook_mongodb_block_ui_view_alter(&$data, $mongodb_block_ui) {
+function hook_mongodb_block_ui_view_alter(array &$data, $mongodb_block_ui) {
   // Remove the contextual links on all mongodb_block_uis that provide them.
   if (is_array($data['content']) && isset($data['content']['#contextual_links'])) {
     unset($data['content']['#contextual_links']);
@@ -231,7 +231,7 @@ function hook_mongodb_block_ui_view_alter(&$data, $mongodb_block_ui) {
  * @see hook_mongodb_block_ui_view_alter()
  * @see hook_mongodb_block_ui_view()
  */
-function hook_mongodb_block_ui_view_MODULE_DELTA_alter(&$data, $mongodb_block_ui) {
+function hook_mongodb_block_ui_view_MODULE_DELTA_alter(array &$data, $mongodb_block_ui) {
   // This code will only run for a specific mongodb_block_ui. For example, if
   // MODULE_DELTA in the function definition above is set to
   // "mymodule_somedelta", the code will only run on the "somedelta"
@@ -253,13 +253,13 @@ function hook_mongodb_block_ui_view_MODULE_DELTA_alter(&$data, $mongodb_block_ui
  * override the content of the mongodb_block_ui and prevent
  * hook_mongodb_block_ui_view() from running.
  *
- * @param array $mongodb_block_uis
- *   An array of $mongodb_block_uis, keyed by $bid
- *
  * This example shows how to achieve language specific visibility setting for
  * mongodb_block_uis.
+ *
+ * @param array $mongodb_block_uis
+ *   An array of $mongodb_block_uis, keyed by $bid.
  */
-function hook_mongodb_block_ui_info_alter(&$mongodb_block_uis) {
+function hook_mongodb_block_ui_info_alter(array &$mongodb_block_uis) {
   global $language, $theme_key;
 
   $result = db_query('SELECT module, delta, language FROM {my_table}');

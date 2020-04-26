@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * @file
+ * Drush 8 plugin for mongodb_migrate.
+ */
+
+/**
+ * Implements hook_drush_command().
+ */
 function mongodb_migrate_drush_command() {
   $items['mongodb-migrate-prepare'] = array(
     'description' => 'Prepare for migrate. Resets existing migration. No data is lost.',

@@ -1,12 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_block_ui\Tests\NewDefaultThemeBlocksTest.
- */
-
 namespace Drupal\mongodb_block_ui\Tests;
-
 
 /**
  * Test blocks correctly initialized when picking a new default theme.
@@ -14,7 +8,7 @@ namespace Drupal\mongodb_block_ui\Tests;
 class NewDefaultThemeBlocksTest extends \DrupalWebTestCase {
 
   /**
-   * Name the test
+   * Name the test.
    */
   public static function getInfo() {
     return array(
@@ -27,7 +21,7 @@ class NewDefaultThemeBlocksTest extends \DrupalWebTestCase {
   /**
    * Check the enabled Garland blocks are correctly copied over.
    */
-  function testNewDefaultThemeBlocks() {
+  public function testNewDefaultThemeBlocks() {
     // Create administrative user.
     $adminuser = $this->drupalCreateUser(array('administer themes'));
     $this->drupalLogin($adminuser);

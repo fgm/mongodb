@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * MongoDB Session implementation.
@@ -26,6 +27,15 @@ function mongodb_session_user_login($edit, $account) {
   mongodb_collection('fields_current', 'user')->update(array('_id' => (int) $account->uid), $save, mongodb_default_write_options(FALSE));
 }
 
+/**
+ * Obtain the roles for a user.
+ *
+ * @param object $account
+ *   A user account.
+ *
+ * @return array
+ *   The account roles, indexed by role ID.
+ */
 function _mongodb_session_get_roles($account) {
   $roles = array();
   $roles[DRUPAL_AUTHENTICATED_RID] = 'authenticated user';

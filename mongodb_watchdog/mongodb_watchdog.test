@@ -8,6 +8,7 @@
 /**
  * Test the behaviour of watchdog() mongodb_watchdog, not dblog.
  */
+// phpcs:ignore
 class MongoDBLogTestCase extends DrupalWebTestCase {
   /**
    * Name of the test helper module invoking watchdog for test.
@@ -24,14 +25,14 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   /**
    * An administrator-type user account.
    *
-   * @var stdClass
+   * @var object
    */
   protected $bigUser;
 
   /**
    * A basic authenticated user account.
    *
-   * @var stdClass
+   * @var object
    */
   protected $anyUser;
 
@@ -49,7 +50,11 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
    */
   protected $group = 'Before setUp()';
 
-  // D6 misses REQUEST_TIME, use a custom value to minimize D6/D7 differences.
+  /**
+   * D6 misses REQUEST_TIME, use a custom value to minimize D6/D7 differences.
+   *
+   * @var int
+   */
   protected $requestTime;
 
   /**
@@ -180,7 +185,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
       return;
     };
 
-    // Default limit should be WATCHDOG_DEBUG
+    // Default limit should be WATCHDOG_DEBUG.
     $this->group = t('Defaults');
     $this->assertEqual(variable_get(self::LIMIT_VARIABLE, WATCHDOG_DEBUG), WATCHDOG_DEBUG,
       t('%name defaults to WATCHDOG_DEBUG', array('%name' => self::LIMIT_VARIABLE)),
@@ -218,17 +223,17 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   /**
    * Test dblog functionality through the admin and user interfaces.
    */
-  protected function ZtestDBLog() {
+  protected function ztestDbLog() {
     // Login the admin user.
     $this->drupalLogin($this->bigUser);
 
-    // No implementation
+    // No implementation.
     /*
     $row_limit = 100;
     $this->verifyRowLimit($row_limit);
      */
 
-    // No implementation
+    // No implementation.
     /* $this->verifyCron($row_limit); */
 
     $this->verifyEvents();
@@ -253,9 +258,10 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
     global $base_root;
 
     // Prepare the fields to be logged.
+    $message = 'Log entry added to test the dblog row limit.';
     $log = array(
       'type'        => $type,
-      'message'     => 'Log entry added to test the dblog row limit.',
+      'message'     => $message,
       'variables'   => array(),
       'severity'    => $severity,
       'link'        => NULL,
@@ -265,7 +271,6 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
       'ip'          => ip_address(),
       'timestamp'   => $this->requestTime,
     );
-    $message = 'Log entry added to test the dblog row limit.';
     for ($i = 0; $i < $count; $i++) {
       $log['message'] = $this->randomString();
       dblog_watchdog($log);
@@ -299,14 +304,16 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
     $this->drupalGet('admin/reports/page-not-found');
     $this->assertResponse($response);
     if ($response == 200) {
-      $this->assertText(t('Top ' . $quote . 'page not found' . $quote . ' errors'), t('DBLog page-not-found report was displayed'));
+      // phpcs:ignore
+      $this->assertText(t("Top {$quote}page not found{$quote} errors"), t('DBLog page-not-found report was displayed'));
     }
 
     // View dblog access-denied report node.
     $this->drupalGet('admin/reports/access-denied');
     $this->assertResponse($response);
     if ($response == 200) {
-      $this->assertText(t('Top ' . $quote . 'access denied' . $quote . ' errors'), t('DBLog access-denied report was displayed'));
+      // phpcs:ignore
+      $this->assertText(t("Top {$quote}access denied{$quote} errors"), t('DBLog access-denied report was displayed'));
     }
 
     // View dblog event node.
@@ -542,7 +549,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   /**
    * Test clearing dblog functionality through the admin interface.
    */
-  protected function ZtestDBLogAddAndClear() {
+  protected function ztestDbLogAddAndClear() {
     global $base_root;
     // Get a count of how many watchdog entries there are.
     $count = db_query('SELECT COUNT(*) FROM {watchdog}')->fetchField();
@@ -574,7 +581,7 @@ class MongoDBLogTestCase extends DrupalWebTestCase {
   /**
    * Test the dblog filter on admin/reports/dblog.
    */
-  protected function ZtestFilter() {
+  protected function ztestFilter() {
     $this->drupalLogin($this->bigUser);
 
     // Clear log to ensure that only generated entries are found.

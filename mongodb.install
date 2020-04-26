@@ -26,14 +26,14 @@ function mongodb_requirements($phase) {
   if (extension_loaded('mongodb')) {
     if (class_exists(MongoClient::class)) {
       $requirements['mongodb_extension'] += array(
-        'value' => t('Properly replaced'),
+        'value' => $t('Properly replaced'),
         'description' => $t('The mongo-php-adapter library and the ext-mongodb extension are present, replacing the ext-mongo extension.'),
         'severity' => REQUIREMENT_OK,
       );
     }
     else {
       $requirements['mongodb_extension'] += array(
-        'value' => t('Insufficient'),
+        'value' => $t('Insufficient'),
         'description' => $t('The ext-mongodb extension is present, but the mongo-php-adapter is missing, so it cannot replace the old ext-mongo extension.'),
         'severity' => REQUIREMENT_ERROR,
       );
@@ -42,14 +42,14 @@ function mongodb_requirements($phase) {
   elseif (!extension_loaded('mongo')) {
     if (class_exists(MongoClient::class)) {
       $requirements['mongodb_extension'] += array(
-        'value' => t('Insufficient'),
+        'value' => $t('Insufficient'),
         'description' => $t('The mongo-php-adapter library is present, but the ext-mongodb is missing, so it cannot replace the old ext-mongo extension.'),
         'severity' => REQUIREMENT_ERROR,
       );
     }
     else {
       $requirements['mongodb_extension'] += array(
-        'value' => t('Insufficient'),
+        'value' => $t('Insufficient'),
         'description' => $t('Neither the old ext-mongo nor the new ext-mongodb extension nor the mongo-php-adapter library are present.'),
         'severity' => REQUIREMENT_ERROR,
       );
@@ -59,8 +59,8 @@ function mongodb_requirements($phase) {
     if (class_exists(TypeInterface::class)) {
       $requirements['mongodb_library_redundant'] = array(
         'title' => 'mongo-php-adapter',
-        'value' => t('Redundant'),
-        'description' => t('The mongo-php-adapter library is installed while the old ext-mongo extension is present. This does not hurt, but is somewhat redundant.'),
+        'value' => $t('Redundant'),
+        'description' => $t('The mongo-php-adapter library is installed while the old ext-mongo extension is present. This does not hurt, but is somewhat redundant.'),
         'severity' => REQUIREMENT_WARNING,
       );
     }

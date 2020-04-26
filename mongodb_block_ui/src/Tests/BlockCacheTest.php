@@ -1,24 +1,35 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_block_ui\Tests\BlockCacheTest.
- */
-
 namespace Drupal\mongodb_block_ui\Tests;
-
 
 /**
  * Test block caching.
  */
 class BlockCacheTest extends \DrupalWebTestCase {
 
-  protected $adminuser;
-  protected $normaluser;
-  protected $normaluseralt;
+  /**
+   * A pseudo-random user with admin powers.
+   *
+   * @var object
+   */
+  protected $adminUser;
 
   /**
-   * Name the test
+   * A pseudo-random normal user.
+   *
+   * @var object
+   */
+  protected $normalUser;
+
+  /**
+   * Another pseudo-random normal user.
+   *
+   * @var object
+   */
+  protected $normalUserAlt;
+
+  /**
+   * Name the test.
    */
   public static function getInfo() {
     return array(
@@ -31,20 +42,20 @@ class BlockCacheTest extends \DrupalWebTestCase {
   /**
    * Setup the test.
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp('block_test');
 
     // Create an admin user, log in and enable test blocks.
-    $this->admin_user = $this->drupalCreateUser(array('administer blocks', 'access administration pages'));
-    $this->drupalLogin($this->admin_user);
+    $this->adminUser = $this->drupalCreateUser(array('administer blocks', 'access administration pages'));
+    $this->drupalLogin($this->adminUser);
 
     // Create additional users to test caching modes.
-    $this->normal_user = $this->drupalCreateUser();
-    $this->normal_user_alt = $this->drupalCreateUser();
+    $this->normalUser = $this->drupalCreateUser();
+    $this->normalUserAlt = $this->drupalCreateUser();
     // Sync the roles, since drupalCreateUser() creates separate roles for
     // the same permission sets.
-    user_save($this->normal_user_alt, array('roles' => $this->normal_user->roles));
-    $this->normal_user_alt->roles = $this->normal_user->roles;
+    user_save($this->normalUserAlt, array('roles' => $this->normalUser->roles));
+    $this->normalUserAlt->roles = $this->normalUser->roles;
 
     // Enable block caching.
     variable_set('block_cache', TRUE);
@@ -57,13 +68,13 @@ class BlockCacheTest extends \DrupalWebTestCase {
   /**
    * Test DRUPAL_CACHE_PER_ROLE.
    */
-  function testCachePerRole() {
+  public function testCachePerRole() {
     $this->setCacheMode(DRUPAL_CACHE_PER_ROLE);
 
     // Enable our test block. Set some content for it to display.
     $current_content = $this->randomName();
     variable_set('block_test_content', $current_content);
-    $this->drupalLogin($this->normal_user);
+    $this->drupalLogin($this->normalUser);
     $this->drupalGet('');
     $this->assertText($current_content, t('Block content displays.'));
 
@@ -88,15 +99,15 @@ class BlockCacheTest extends \DrupalWebTestCase {
     $this->drupalGet('');
     $this->assertNoText($old_content, t('Anonymous user does not see content cached per-role for normal user.'));
 
-    $this->drupalLogin($this->normal_user_alt);
+    $this->drupalLogin($this->normalUserAlt);
     $this->drupalGet('');
     $this->assertText($old_content, t('User with the same roles sees per-role cached content.'));
 
-    $this->drupalLogin($this->admin_user);
+    $this->drupalLogin($this->adminUser);
     $this->drupalGet('');
     $this->assertNoText($old_content, t('Admin user does not see content cached per-role for normal user.'));
 
-    $this->drupalLogin($this->normal_user);
+    $this->drupalLogin($this->normalUser);
     $this->drupalGet('');
     $this->assertText($old_content, t('Block is served from the per-role cache.'));
   }
@@ -104,7 +115,7 @@ class BlockCacheTest extends \DrupalWebTestCase {
   /**
    * Test DRUPAL_CACHE_GLOBAL.
    */
-  function testCacheGlobal() {
+  public function testCacheGlobal() {
     $this->setCacheMode(DRUPAL_CACHE_GLOBAL);
     $current_content = $this->randomName();
     variable_set('block_test_content', $current_content);
@@ -124,7 +135,7 @@ class BlockCacheTest extends \DrupalWebTestCase {
   /**
    * Test DRUPAL_NO_CACHE.
    */
-  function testNoCache() {
+  public function testNoCache() {
     $this->setCacheMode(DRUPAL_NO_CACHE);
     $current_content = $this->randomName();
     variable_set('block_test_content', $current_content);
@@ -143,11 +154,11 @@ class BlockCacheTest extends \DrupalWebTestCase {
   /**
    * Test DRUPAL_CACHE_PER_USER.
    */
-  function testCachePerUser() {
+  public function testCachePerUser() {
     $this->setCacheMode(DRUPAL_CACHE_PER_USER);
     $current_content = $this->randomName();
     variable_set('block_test_content', $current_content);
-    $this->drupalLogin($this->normal_user);
+    $this->drupalLogin($this->normalUser);
 
     $this->drupalGet('');
     $this->assertText($current_content, t('Block content displays.'));
@@ -159,11 +170,11 @@ class BlockCacheTest extends \DrupalWebTestCase {
     $this->drupalGet('');
     $this->assertText($old_content, t('Block is served from per-user cache.'));
 
-    $this->drupalLogin($this->normal_user_alt);
+    $this->drupalLogin($this->normalUserAlt);
     $this->drupalGet('');
     $this->assertText($current_content, t('Per-user block cache is not served for other users.'));
 
-    $this->drupalLogin($this->normal_user);
+    $this->drupalLogin($this->normalUser);
     $this->drupalGet('');
     $this->assertText($old_content, t('Per-user block cache is persistent.'));
   }
@@ -171,7 +182,7 @@ class BlockCacheTest extends \DrupalWebTestCase {
   /**
    * Test DRUPAL_CACHE_PER_PAGE.
    */
-  function testCachePerPage() {
+  public function testCachePerPage() {
     $this->setCacheMode(DRUPAL_CACHE_PER_PAGE);
     $current_content = $this->randomName();
     variable_set('block_test_content', $current_content);

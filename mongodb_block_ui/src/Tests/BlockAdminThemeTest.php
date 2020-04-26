@@ -1,19 +1,14 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\mongodb_block_ui\Tests\BlockAdminThemeTest.
- */
-
 namespace Drupal\mongodb_block_ui\Tests;
-
 
 /**
  * Test the MongoDB block UI with admin themes.
  */
 class BlockAdminThemeTest extends \DrupalWebTestCase {
+
   /**
-   * Name the test
+   * Name the test.
    */
   public static function getInfo() {
     return array(
@@ -26,7 +21,7 @@ class BlockAdminThemeTest extends \DrupalWebTestCase {
   /**
    * Check for the accessibility of the admin theme on the  block admin page.
    */
-  function testAdminTheme() {
+  public function testAdminTheme() {
     // Create administrative user.
     $adminuser = $this->drupalCreateUser(array('administer blocks', 'administer themes'));
     $this->drupalLogin($adminuser);
@@ -41,4 +36,5 @@ class BlockAdminThemeTest extends \DrupalWebTestCase {
     $this->drupalGet('admin/structure/block/list/stark');
     $this->assertResponse(200, t('The block admin page for the admin theme can be accessed'));
   }
+
 }

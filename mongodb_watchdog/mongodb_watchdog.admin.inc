@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Settings for mongodb. Moved back to module file.
@@ -13,9 +14,14 @@
  *
  * @return array
  *   a form array
+ *
+ * @throws \MongoConnectionException
+ * @throws \MongoCursorException
+ * @throws \MongoCursorTimeoutException
+ * @throws \MongoException
+ * @throws \MongoWriteConcernException
  */
 function mongodb_watchdog_overview() {
-  $rows = array();
   $icons = array(
     WATCHDOG_DEBUG    => '',
     WATCHDOG_INFO     => '',
@@ -46,17 +52,19 @@ function mongodb_watchdog_overview() {
       'title' => t('emergency'),
     )),
   );
+  // TODO add the classes to the rows.
+  /*
   $classes = array(
-    WATCHDOG_DEBUG    => 'mongodb_watchdog-debug',
-    WATCHDOG_INFO     => 'mongodb_watchdog-info',
-    WATCHDOG_NOTICE   => 'mongodb_watchdog-notice',
-    WATCHDOG_WARNING  => 'mongodb_watchdog-warning',
-    WATCHDOG_ERROR    => 'mongodb_watchdog-error',
-    WATCHDOG_CRITICAL => 'mongodb_watchdog-critical',
-    WATCHDOG_ALERT    => 'mongodb_watchdog-alert',
-    WATCHDOG_EMERGENCY => 'mongodb_watchdog-emergency',
+  WATCHDOG_DEBUG    => 'mongodb_watchdog-debug',
+  WATCHDOG_INFO     => 'mongodb_watchdog-info',
+  WATCHDOG_NOTICE   => 'mongodb_watchdog-notice',
+  WATCHDOG_WARNING  => 'mongodb_watchdog-warning',
+  WATCHDOG_ERROR    => 'mongodb_watchdog-error',
+  WATCHDOG_CRITICAL => 'mongodb_watchdog-critical',
+  WATCHDOG_ALERT    => 'mongodb_watchdog-alert',
+  WATCHDOG_EMERGENCY => 'mongodb_watchdog-emergency',
   );
-
+   */
   global $pager_page_array, $pager_total, $pager_total_items, $pager_limits;
   $per_page = 50;
   $page = isset($_GET['page']) ? intval($_GET['page']) : 0;
@@ -98,6 +106,7 @@ function mongodb_watchdog_overview() {
     $rows[$id] = array(
       $icons[$value['severity']],
       isset($value['count']) && $value['count'] > 1 ? $value['count'] : '',
+      // phpcs:ignore
       t($value['type']),
       empty($value['timestamp']) ? '' : format_date($value['timestamp'], 'short'),
       empty($value['file']) ? '' : truncate_utf8(basename($value['file']), 30) . (empty($value['line']) ? '' : ('+' . $value['line'])),
@@ -139,6 +148,7 @@ function mongodb_watchdog_event(array $dblog) {
   $rows = array(
     array(
       array('data' => t('Type'), 'header' => TRUE),
+      // phpcs:ignore
       t($dblog['type']),
     ),
     array(
@@ -269,6 +279,7 @@ function _mongodb_watchdog_format_message($dblog) {
     return $dblog['message'];
   }
   // Message to translate with injected variables.
+  // phpcs:ignore
   return t($dblog['message'], $dblog['variables']);
 }
 
@@ -464,7 +475,6 @@ function mongodb_watchdog_build_filter_query() {
   }
 
   // Build query.
-  $where = $args = array();
   $types = $_SESSION['mongodb_watchdog_overview_filter']['type']
     ? $_SESSION['mongodb_watchdog_overview_filter']['type']
     : NULL;

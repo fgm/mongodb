@@ -4,6 +4,3 @@ package = MongoDB
 core = 7.x
 php = 5.4
 dependencies[] = mongodb_block
-files[] = mongodb_block_ui.module
-files[] = mongodb_block_ui.admin.inc
-files[] = mongodb_block_ui.install

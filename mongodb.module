@@ -108,6 +108,7 @@ function mongodb($alias = 'default', $retry = 3) {
  * @throws \MongoConnectionException
  *   If the connection cannot be established.
  */
+// phpcs:ignore
 function mongodb_collection() {
   $args = array_filter(func_get_args());
   if (is_array($args[0])) {
@@ -148,6 +149,7 @@ function mongodb_collection() {
 /**
  * Class MongoDebugCollection is a debug decorator for MongoCollection.
  */
+// phpcs:ignore
 class MongoDebugCollection {
 
   /**
@@ -200,6 +202,7 @@ class MongoDebugCollection {
 /**
  * Class MongoDebugCursor is a debug decorator for MongoCollection::find().
  */
+// phpcs:ignore
 class MongoDebugCursor {
 
   /**
@@ -236,8 +239,14 @@ class MongoDebugCursor {
 /**
  * Class MongodbDummy is a fake object accepting any method and doing nothing.
  */
+// phpcs:ignore
 class MongodbDummy {
 
+  /**
+   * A fake connection.
+   *
+   * @var \Mongo\Mongo
+   */
   public $connection;
 
   /**

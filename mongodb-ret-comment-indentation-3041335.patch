@@ -1,0 +1,47 @@
+diff --git a/mongodb_block_ui/mongodb_block_ui.api.php b/mongodb_block_ui/mongodb_block_ui.api.php
+index 6ce9745..fe3fc59 100644
+--- a/mongodb_block_ui/mongodb_block_ui.api.php
++++ b/mongodb_block_ui/mongodb_block_ui.api.php
+@@ -47,10 +47,10 @@
+  *     mongodb_block_ui will be registered instead to that theme's default
+  *     region (the first item in the _regions array).
+  *
+- * After completing your mongodb_block_uis, do not forget to enable them in the
+- * mongodb_block_ui admin menu.
++ *   After completing your mongodb_block_uis, do not forget to enable them in
++ *   the mongodb_block_ui admin menu.
+  *
+- * For a detailed usage example, see mongodb_block_ui_example.module.
++ *   For a detailed usage example, see mongodb_block_ui_example.module.
+  */
+ function hook_mongodb_block_ui_info() {
+   $mongodb_block_uis['exciting'] = array(
+@@ -83,7 +83,7 @@ function hook_mongodb_block_ui_info() {
+  * @return array
+  *   Optionally return the configuration form.
+  *
+- * For a detailed usage example, see mongodb_block_ui_example.module.
++ *   For a detailed usage example, see mongodb_block_ui_example.module.
+  */
+ function hook_mongodb_block_ui_configure($delta = '') {
+   if ($delta == 'exciting') {
+@@ -134,13 +134,13 @@ function hook_mongodb_block_ui_save($delta = '', $edit = array()) {
+  *   An array which must define a 'subject' element and a 'content' element
+  *   defining the mongodb_block_ui indexed by $delta.
+  *
+- * The functions mymodule_display_mongodb_block_ui_exciting and _amazing, as
+- * used in the example, should of course be defined somewhere in your module
+- * and return the content you want to display to your users. If the "content"
+- * element is empty, no mongodb_block_ui will be displayed even if "subject"
+- * is present.
++ *   The functions mymodule_display_mongodb_block_ui_exciting and _amazing, as
++ *   used in the example, should of course be defined somewhere in your module
++ *   and return the content you want to display to your users. If the "content"
++ *   element is empty, no mongodb_block_ui will be displayed even if "subject"
++ *   is present.
+  *
+- * For a detailed usage example, see mongodb_block_ui_example.module.
++ *   For a detailed usage example, see mongodb_block_ui_example.module.
+  */
+ function hook_mongodb_block_ui_view($delta = '') {
+   switch ($delta) {

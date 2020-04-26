@@ -1,19 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains Class PackageManagementTest.
- *
- * This test is about install/enable/disable/uninstall operations.
- */
-
 namespace Drupal\mongodb\Tests;
-
 
 /**
  * Test package management hooks.
  *
- * @package Drupal\mongodb
+ * This test is about install/enable/disable/uninstall operations.
  *
  * @group MongoDB: Base
  */
@@ -27,7 +19,7 @@ class PackageManagementTest extends \DrupalWebTestCase {
     return array(
       'name' => 'MongoDB package management test',
       'description' => 'install/enable/disable/uninstall operations.',
-      'group' => 'MongoDB: Base'
+      'group' => 'MongoDB: Base',
     );
   }
 

@@ -16,7 +16,7 @@ function mongodb_block_ui_admin_demo($theme = NULL) {
 /**
  * Menu callback for admin/structure/mongodb_block_ui.
  *
- * @param $theme
+ * @param string $theme
  *   The theme to display the administration page for. If not provided, defaults
  *   to the currently used theme.
  */
@@ -47,8 +47,20 @@ function mongodb_block_ui_admin_display($theme = NULL) {
 
 /**
  * Generate main mongodb_block_uis administration form.
+ *
+ * @param array $form
+ *   The form render array.
+ * @param array $form_state
+ *   The form state.
+ * @param array $blocks
+ *   The blocks to present.
+ * @param string $theme
+ *   The active theme key.
+ *
+ * @return array
+ *   A render form array for the form.
  */
-function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $theme) {
+function mongodb_block_ui_admin_display_form(array $form, array &$form_state, array $blocks, $theme) {
 
   drupal_add_css(drupal_get_path('module', 'mongodb_block_ui') . '/mongodb_block_ui.css', array('preprocess' => FALSE));
 
@@ -97,7 +109,7 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
     $form[$key]['configure'] = array(
       '#type' => 'link',
       '#title' => t('configure'),
-      '#href' =>  "$path_prefix",
+      '#href' => "$path_prefix",
     );
     if ($module == 'mongodb_block_ui') {
       $form[$key]['delete'] = array(
@@ -129,7 +141,7 @@ function mongodb_block_ui_admin_display_form($form, &$form_state, $blocks, $them
  */
 function mongodb_block_ui_admin_display_form_submit($form, &$form_state) {
   $collection = mongodb_collection('block_customized', $form['#theme_key']);
-  foreach ($form_state['values'] as $key => $block) {
+  foreach ($form_state['values'] as $block) {
     // Skip the buttons by checking for array and save only blocks that are not
     // disabled.
     if (is_array($block)) {
@@ -151,8 +163,7 @@ function mongodb_block_ui_admin_display_form_submit($form, &$form_state) {
 }
 
 /**
- * Helper function for sorting mongodb_block_uis on
- * admin/structure/mongodb_block_ui.
+ * Helper for sorting mongodb_block_uis on admin/structure/mongodb_block_ui.
  *
  * Active mongodb_block_uis are sorted by region, then by weight.
  * Disabled mongodb_block_uis are sorted by name.
@@ -201,7 +212,7 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $theme, $module, 
   }
   if ($module == 'mongodb_block_ui' && ($custom_block = mongodb_block_ui_load($delta))) {
     $block += $custom_block;
-    $form  = mongodb_block_ui_custom_block_form($block);
+    $form = mongodb_block_ui_custom_block_form($block);
   }
   $block = (object) $block;
   $form['title'] = array(
@@ -234,14 +245,14 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $theme, $module, 
     }
   }
 
-  $title = t('Pages');
   $description = t("Specify pages by using their paths. Enter one path per line.
     The '%' character is a wildcard. Example paths are %blog for the blog page
-    and %blog-wildcard for every personal blog. %front is the front page.",
-    array(
+    and %blog-wildcard for every personal blog. %front is the front page.", [
       '%blog' => 'blog',
       '%blog-wildcard' => 'blog/%',
-      '%front' => '<front>'));
+      '%front' => '<front>',
+    ]
+  );
 
   // Visibility settings.
   $form['visibility_title'] = array(
@@ -286,8 +297,6 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $theme, $module, 
   }
   else {
     if (module_exists('php') && $access) {
-      $options[] = t('Pages on which this PHP code returns <code>TRUE</code> (experts only)');
-      $title = t('Pages or PHP code');
       $description .= ' ' . t('If the PHP option is chosen, enter PHP code between %php. Note that executing incorrect PHP code can break your Drupal site.', array('%php' => '<?php ?>'));
     }
     $form['visibility']['path_include']['pages'] = array(
@@ -314,7 +323,7 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $theme, $module, 
   $form['visibility']['node_type']['types'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Show block for specific content types'),
-    '#default_value' =>  isset($block->node_type) ? $block->node_type : array(),
+    '#default_value' => isset($block->node_type) ? $block->node_type : array(),
     '#options' => node_type_get_names(),
     '#description' => t('Show this block only on pages that display content of the given type(s). If you select no types, there will be no type-specific limitation.'),
   );
@@ -330,14 +339,18 @@ function mongodb_block_ui_admin_configure($form, &$form_state, $theme, $module, 
 }
 
 /**
- *  Form validation handler for block_admin_configure().
+ * Form validation handler for block_admin_configure().
  *
- *  @param array $form
+ * @param array $form
  *   The form.
- *  @param array &$form_state
+ * @param array &$form_state
  *   The referenced form state.
+ *
+ * @throws \MongoConnectionException
+ * @throws \MongoException
+ * @throws \MongoWriteConcernException
  */
-function mongodb_block_ui_admin_configure_validate($form, &$form_state) {
+function mongodb_block_ui_admin_configure_validate(array $form, array &$form_state) {
   if ($form_state['values']['module'] == 'mongodb_block_ui') {
     $collection = mongodb_collection('block_custom');
     $find = array(
@@ -352,14 +365,20 @@ function mongodb_block_ui_admin_configure_validate($form, &$form_state) {
 }
 
 /**
- *  Form submission handler for block_admin_configure().
+ * Form submission handler for block_admin_configure().
  *
- *  @param array $form
+ * @param array $form
  *   The form.
- *  @param array &$form_state
+ * @param array &$form_state
  *   The referenced form state.
+ *
+ * @throws \MongoConnectionException
+ * @throws \MongoCursorException
+ * @throws \MongoCursorTimeoutException
+ * @throws \MongoException
+ * @throws \MongoWriteConcernException
  */
-function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
+function mongodb_block_ui_admin_configure_submit(array $form, array &$form_state) {
   // FIXME: this stores the visibility settings, the title of the block etc.
   $collection = mongodb_collection('block_customized', $form['#theme_key']);
   $id = array(
@@ -392,14 +411,17 @@ function mongodb_block_ui_admin_configure_submit($form, &$form_state) {
 }
 
 /**
- * Admin pages
+ * Admin pages.
  *
  * @param array $pages
  *   Admin pages.
  * @param array $default
- *   Default vale.
+ *   Default valye.
+ *
+ * @return array
+ *   The list of admin pages received as argument, cleaned up.
  */
-function _mongodb_block_ui_admin_pages($pages, $default) {
+function _mongodb_block_ui_admin_pages(array $pages, array $default) {
   $pages = array_map('trim', explode("\n", trim($pages)));
   if (!$pages[0]) {
     $pages = $default;
@@ -409,8 +431,18 @@ function _mongodb_block_ui_admin_pages($pages, $default) {
 
 /**
  * Menu callback: display the custom mongodb_block_ui addition form.
+ *
+ * @param array $form
+ *   The form array.
+ * @param array $form_state
+ *   The form state.
+ * @param string $theme
+ *   The active theme.
+ *
+ * @return mixed
+ *   A render array for the form.
  */
-function mongodb_block_ui_add_block_form($form, &$form_state, $theme) {
+function mongodb_block_ui_add_block_form(array $form, array &$form_state, $theme) {
   $form = mongodb_block_ui_custom_block_form();
 
   $form['title'] = array(
@@ -436,14 +468,14 @@ function mongodb_block_ui_add_block_form($form, &$form_state, $theme) {
 }
 
 /**
- * Form validation handler for mongodb_block_ui_add_block_form
+ * Form validation handler for mongodb_block_ui_add_block_form.
  *
- *  @param array $form
+ * @param array $form
  *   The form.
- *  @param array &$form_state
+ * @param array &$form_state
  *   The referenced form state.
  */
-function mongodb_block_ui_add_block_form_validate($form, &$form_state) {
+function mongodb_block_ui_add_block_form_validate(array $form, array &$form_state) {
   $blocks = module_invoke_all('block_info');
   foreach ($blocks as $block) {
     if ($form_state['values']['info'] == $block['info']) {
@@ -455,12 +487,17 @@ function mongodb_block_ui_add_block_form_validate($form, &$form_state) {
 /**
  * Save the new custom block.
  *
- *  @param array $form
+ * @param array $form
  *   The form.
- *  @param array &$form_state
+ * @param array &$form_state
  *   The referenced form state.
+ *
+ * @throws \MongoConnectionException
+ * @throws \MongoCursorException
+ * @throws \MongoCursorTimeoutException
+ * @throws \MongoException
  */
-function mongodb_block_ui_add_block_form_submit($form, &$form_state) {
+function mongodb_block_ui_add_block_form_submit(array $form, array &$form_state) {
   $collection = mongodb_collection('block_custom');
   $delta = mongodb_next_id('block_custom');
   $block = array(
@@ -509,14 +546,13 @@ function mongodb_block_ui_custom_block_delete_submit($form, &$form_state) {
   drupal_set_message(t('The block %name has been removed.', array('%name' => $form_state['values']['info'])));
   cache_clear_all();
   $form_state['redirect'] = 'admin/structure/mongodb_block';
-  return;
 }
 
 /**
  * Process variables for mongodb_block_ui-admin-display.tpl.php.
  *
  * The $variables array contains the following arguments:
- * - $form
+ * - $form.
  *
  * @see mongodb_block_ui-admin-display.tpl.php
  * @see theme_mongodb_block_ui_admin_display()
@@ -535,7 +571,6 @@ function template_preprocess_mongodb_block_ui_admin_display_form(&$variables) {
   $variables['block_listing'][MONGODB_BLOCK_REGION_NONE] = array();
 
   // Set up to track previous region in loop.
-  $last_region = '';
   foreach (element_children($variables['form']) as $i) {
     $block = &$variables['form'][$i];
 
@@ -557,8 +592,6 @@ function template_preprocess_mongodb_block_ui_admin_display_form(&$variables) {
       $variables['block_listing'][$region][$i]->configure_link = drupal_render($block['configure']);
       $variables['block_listing'][$region][$i]->delete_link = !empty($block['delete']) ? drupal_render($block['delete']) : '';
       $variables['block_listing'][$region][$i]->printed = FALSE;
-
-      $last_region = $region;
     }
   }
 

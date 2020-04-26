@@ -8,7 +8,14 @@
 /**
  * Class MongoDBQueue is the MongoDB Queue API plugin.
  */
+// phpcs:ignore
 class MongoDBQueue implements DrupalQueueInterface {
+
+  /**
+   * The collection name for the queue.
+   *
+   * @var string
+   */
   protected $collection;
 
   /**

@@ -1,19 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\mongodb_watchdog\Tests\PackageManagementTest.
- *
- * This test is about install/enable/disable/uninstall operations.
- */
-
 namespace Drupal\mongodb_watchdog\Tests;
-
 
 /**
  * Test package management hooks.
  *
- * @package Drupal\mongodb
+ * This test is about install/enable/disable/uninstall operations.
  *
  * @group MongoDB
  */
@@ -35,7 +27,7 @@ class PackageManagementTest extends \DrupalWebTestCase {
     return array(
       'name' => 'MongoDB watchdog package management test',
       'description' => 'install/enable/disable/uninstall operations.',
-      'group' => 'MongoDB: Watchdog'
+      'group' => 'MongoDB: Watchdog',
     );
   }
 
@@ -80,7 +72,9 @@ class PackageManagementTest extends \DrupalWebTestCase {
 
     $this->drupalPost(NULL, [], t('Uninstall'));
     // Broken core : this should NOT be a 200, but actually is.
-    // $this->assertResponse(200, 'Module uninstall confirmation succeeded');
+    /*
+    $this->assertResponse(200, 'Module uninstall confirmation succeeded');
+     */
 
     $this->assertText(t('The selected modules have been uninstalled.'), 'Module uninstall confirmation succeeded.');
 
