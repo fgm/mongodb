@@ -1,6 +1,6 @@
 <?php
 if (!function_exists('_drupal_session_open')) {
-  include_once dirname(__FILE__) . '/../mongodb.module';
+  include_once dirname(__FILE__) . '/../mongodb_module.php';
 
 /**
  * @file

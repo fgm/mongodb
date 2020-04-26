@@ -14,15 +14,19 @@ INTRODUCTION
 MongoDB integration for Drupal. This module is a collection of several modules,
 allowing to store different Drupal data in MongoDB.
 
-Module                | Information
-----------------------|---------------------------------------------------------
-mongodb               | Support library for the other modules
-mongodb_block         | Store block info in MongoDB much like the core block API
-mongodb_cache         | Store cache in MongoDB
-mongodb_field_storage | Store fields in MongoDB
-mongodb_queue         | DrupalQueueInterface implementation using MongoDB
-mongodb_session       | Store sessions in MongoDB
-mongodb_watchdog      | Store watchdog messages in MongoDB
+Module                | S | Information
+----------------------|---|----------------------------------------------------
+mongodb               | * | Support library for the other modules
+mongodb_block         |   | Store block info in MongoDB like the core block API
+mongodb_cache         | * | Store cache in MongoDB
+mongodb_field_storage |   | Store fields in MongoDB
+mongodb_path          | * | Store URL aliases in MongoDB
+mongodb_queue         |   | DrupalQueueInterface implementation using MongoDB
+mongodb_session       |   | Store sessions in MongoDB
+mongodb_watchdog      |   | Store watchdog messages in MongoDB
+
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/FGM/mongodb/badges/quality-score.png?b=2538542-path)](https://scrutinizer-ci.com/g/FGM/mongodb/?branch=2538542-path)
+static analysis covers components checked in the "S" column.
 
 The module is a "development" version, and as such its configuration, as well of
 some of its APIs may change with each -dev release: please read this README with
@@ -359,6 +363,7 @@ MODULE-SPECIFIC CONFIGURATION AND STATE
 The following configuration variables are needed to use the features provided
 by the the following sub-modules.
 
+
 ### mongodb_cache
 
 EXAMPLE:
@@ -383,14 +388,6 @@ EXAMPLE:
 If all modules on the site expose their cache bins via `hook_flush_caches()`,
 there is no need to enable the mongodb_cache module.
 
-### mongodb_session
-
-EXAMPLE:
-
-    # Session Caching
-    $sessionDir = "$mongoDir/mongodb_session";
-    $conf['session_inc']                 = "$sessionDir/mongodb_session.inc";
-    $conf['cache_session']               = '\Drupal\mongodb_cache\Cache';
 
 ### mongodb_field_storage
 
@@ -400,28 +397,77 @@ EXAMPLE:
     $conf['field_storage_default']       = 'mongodb_field_storage';
 
 
+### mongodb_path
+
+* The `path_inc` settings variable needs to be set in `settings.php`, to the
+  path of `mongodb_path_plugin.php` before enabling the mongodb_path module.
+* As with the core Path plugin, the `site_frontpage` configuration variable
+  defines what the MongoDB path plugin considers to be the home page of the
+  site. It causes no MongoDB-specific behavior.
+* As with the core Path plugin, the `path_alias_whitelist` state variable
+  contains an array of the first component of paths on which an alias may be
+  found. Being a state variable rebuilt by the MongoDB Path plugin, it should
+  not be modified in `settings.php`, as this would prevent its dynamic
+  maintenance.
+  
+If the module is being installed on an existing site instead of an empty one,
+use the `drush mpi` command to import the {url_alias} aliases to MongoDB. That
+command can also be used after the fact to regenerate the url_alias collection
+if a problem occurs: it does not modify the {url_alias} table.
+
+
+### mongodb_session
+
+EXAMPLE:
+
+    # Session Caching
+    $sessionDir = "$mongoDir/mongodb_session";
+    $conf['session_inc']                 = "$sessionDir/mongodb_session.inc";
+    $conf['cache_session']               = '\Drupal\mongodb_cache\Cache';
+
+
 RUNNING TESTS
 -------------
 
+Tests assume a working MongoDB connection already set up in your `settings.php`,
+including the plugins you want to test, like the cache.
+
 ### Short version:
 
-Run helper from the package directory:
+Run helper from the package directory. Drush needs to be present in your `$PATH`:
 
     bash tests.bash /your_site_root_directory
 
 ### Long version
 
-* The cache plugin can run core-equivalent tests : these are the core tests,
-  wrapped in a `setUp()`/`tearDown()` sequence supporting the use of a non-SQL
-  cache. Run the tests in the `MongoDB: Cache` group instead of `Cache`.
-* Available test groups are "MongoDB: Base", MongoDB: Cache" and "MongoDB:
-  Watchdog". The tests in the legacy "MongoDB" group are not usable at this
-  point.
-* To run tests from the command line via run-tests.sh
-    * use concurrency = 1. The current core test wrapping does not support
+* Available test groups are "MongoDB: Base", "MongoDB: Cache",
+  "MongoDB: PathAPI", and "MongoDB: Watchdog". The tests in the legacy
+  "MongoDB" group are not usable at this point.
+* The core standard tests like the "Cache" group cannot be used, because 
+  Simpletest does not allow setting up and tearing down a test MongoDB database
+  without modifying the tests, so these tests have core-equivalent versions in
+  the MongoDB:* groups, which just wrap the core tests in such a MongoDB 
+  `setUp()` / `tearDown()` sequence including cache flushing because the tests
+  may change the underlying cache plugin.
+* To run tests from the command line via `scripts/run-tests.sh`
+    * use A Linux/Unix/macOS system
+    * use `--concurrency = 1`. The current core test wrapping does not support
       concurrent tests.
     * check permissions, and run as the web user, like
       `sudo -u www-data run-tests.sh`
+
+#### mongodb_cache
+
+* Configure the cache plugin in your site settings and enable the mongodb_cache 
+  module.
+* Run the tests from the `MongoDB: Cache` group instead of the `Cache` group.
+
+#### mongodb_path
+
+* Configure the path plugin in your site settings and enable the mongodb_path
+  module.
+* Run the tests from the `MongoDB: PathAPI` group instead of the `Path API`
+  group
 
 
 TROUBLESHOOTING
@@ -436,3 +482,4 @@ If installing mongodb_field_storage from an Install Profile:
 
         module_enable(array('mongodb_field_storage'));
         drupal_flush_all_caches();
+

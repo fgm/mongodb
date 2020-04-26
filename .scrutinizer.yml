@@ -13,3 +13,5 @@ filter:
     - 'mongodb_watchdog/*'
   paths:
     - 'mongodb_cache/*'
+    - 'mongodb_path/*'
+    - 'mongodb_*.php'
