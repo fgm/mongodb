@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
 
-# This script makes it easy to run the Simpletests for the modules in the
+# This script makes it easy to runTests the Simpletests for the modules in the
 # MongoDB package. Use it in just three steps if you havec Drush in your path:
 #
-# 1 enable Simpletest: "drush en -y simpletest"
+# 1 enable Simpletest: "$DRUSH en -y simpletest"
 # 2 edit your your settings*.php to configure MongoDB connection and cache plugin.
-# 3 run: "bash tests.bash <absolute path to Drupal root>"
+# 3 runTests: "bash tests.bash <absolute path to Drupal root>"
 #
 # Notice: the script itself uses Drush to flush caches.
 
-# The path where the script will leave JUnit test results
+# The path where the script will leave JUnit test results.
 OUTPUT_DIR=/tmp/xml
-# The user name under which your web server runs
-WEB_USER=www-data
-# The prefix of the test groups to run.
+# The Drush command.
+DRUSH=${DRUSH:-drush}
+# The user name under which your web server runs.
+WEB_USER=${WEB_USER:-www-data}
+# The prefix of the test groups to runTests.
 PREFIX="MongoDB:"
-# The test groups to run.
+# The test groups to runTests.
 TESTS="Base Cache Watchdog"
 # The Drupal root directory. Dynamic from script arguments.
 BASE=
@@ -57,8 +59,25 @@ function validate_arguments {
     fi
 }
 
+# Validate the PHP configuration.
+function validate_php {
+  local version=$(php -r 'echo phpversion("mongodb") ?: 0; ')
+  echo "MongoDB Extension $version"
+  if [[ "$version" == 0 ]]; then
+    echo -e "MongoDB PHP extension not found."
+    exit 66
+  fi
+
+  version=$(php -r 'echo version_compare(phpversion(), "5.6");')
+  if [[ "$version" -lt 0 ]]; then
+    echo -e "PHP below 5.6."
+    php --version
+    exit 67
+  fi
+}
+
 # Run the module tests groups
-function run {
+function runTests {
     local base=$1
     local user=$2
     local output_dir=$3
@@ -73,16 +92,17 @@ function run {
     # Do not wrap $tests in "". It needs to be split on IFS.
     for test in $tests; do
        group="$prefix $test"
-       echo Running $group test group
+       echo "Running $group test group"
 
-       # Testers might well have renamed run-tests.sh to run-tests.php,
+       # Testers might well have renamed runTests-tests.sh to runTests-tests.php,
        # so allow it with a wildcard.
-       sudo -u $user php scripts/run-tests* \
-        --php /usr/bin/php                  \
-        --concurrency 1                     \
-        --color                             \
-        --xml "$output_dir"                 \
+       sudo -u "$user" php scripts/run-tests.sh \
+        --concurrency 1                         \
+        --verbose                               \
+        --color                                 \
+        --xml "$output_dir"                     \
         "$group"
+       # shellcheck disable=SC2181
        if [ $? -ne 0 ]; then
          break;
        fi
@@ -97,21 +117,22 @@ function clean {
 
     echo "Cleaning leftover test results in $base"
     cd "$base"
-    drush cc all
+    $DRUSH cc all
     echo "Cleaning leftover test collections in MongoDB"
-    drush mdct
-    sudo -u $user php scripts/run-tests* --clean
-    echo "Removing results directory $output"
+    $DRUSH mdct
+    sudo -u "$user" php scripts/run-tests.sh --clean
+    echo "Removing results directory ${output}"
     rm -fr "$output"
 }
 
 # ---- Main logic -------------------------------------------------------------
 
+validate_php
 validate_arguments $1
 valid=$?
 if [ "$valid" -ne 0 ]; then
   exit "$valid"
 fi
 
-run "$BASE" "$WEB_USER" "$OUTPUT_DIR" "$PREFIX" "$TESTS"
+runTests "$BASE" "$WEB_USER" "$OUTPUT_DIR" "$PREFIX" "$TESTS"
 clean "$BASE" "$WEB_USER" "$OUTPUT_DIR"
