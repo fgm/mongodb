@@ -5,6 +5,10 @@
  * Contains the main module connecting Drupal to MongoDB.
  */
 
+define("MONGODB_REPLICA_SET_PRIMARY", 1);
+define("MONGODB_SLAVE_CONNECTED", 2);
+define("MONGODB_SLAVE_NOT_CONNECTED", 1);
+
 /**
  * Implements hook_help().
  */
