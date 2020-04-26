@@ -19,3 +19,8 @@ services:
       - '@keyvalue.mongodb'
       - '@keyvalue.expirable.mongodb'
       - '@datetime.time'
+
+  mongodb_storage.ban.ip_manager:
+    class: Drupal\mongodb_storage\BanIpManager
+    arguments: [
+      - '@mongodb.database_factory'
