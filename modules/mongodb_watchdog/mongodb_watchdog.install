@@ -35,6 +35,8 @@ function mongodb_watchdog_requirements($phase) {
   if ($phase === 'install') {
     // Dependencies may not be installed yet, and module isn't either.
     require_once __DIR__ . "/../mongodb/mongodb.module";
+    require_once __DIR__ . "/../mongodb/src/MongoDb.php";
+    require_once __DIR__ . "/src/Logger.php";
     require_once __DIR__ . "/src/Install/Requirements.php";
 
     // Module is not yet available so its services aren't either.
