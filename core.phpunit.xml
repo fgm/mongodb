@@ -21,15 +21,18 @@
     <env name="SIMPLETEST_BASE_URL" value=""/>
     <!-- Example SIMPLETEST_DB value: mysql://username:password@localhost/databasename#table_prefix -->
     <env name="SIMPLETEST_DB" value=""/>
-    <!-- Example BROWSERTEST_OUTPUT_DIRECTORY value: /path/to/webroot/sites/simpletest/browser_output -->
-    <env name="BROWSERTEST_OUTPUT_DIRECTORY" value=""/>
     <!-- To have browsertest output use an alternative base URL. For example if
      SIMPLETEST_BASE_URL is an internal DDEV URL, you can set this to the
      external DDev URL so you can follow the links directly.
     -->
-    <env name="BROWSERTEST_OUTPUT_BASE_URL" value=""/>
-    <!-- To disable deprecation testing completely uncomment the next line. -->
-    <!-- <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/> -->
+    <!-- Example BROWSERTEST_OUTPUT_DIRECTORY value: /path/to/webroot/sites/simpletest/browser_output -->
+    <!-- To have browsertest output use an alternative base URL. For example if
+     SIMPLETEST_BASE_URL is an internal DDEV URL, you can set this to the
+     external DDev URL so you can follow the links directly.
+    -->
+    <env name="BROWSERTEST_OUTPUT_DIRECTORY" value=""/>
+    <!-- To disable deprecation testing completely set SYMFONY_DEPRECATIONS_HELPER value: 'disabled' -->
+    <env name="SYMFONY_DEPRECATIONS_HELPER" value="weak_vendors"/>
     <!-- Example for changing the driver class for mink tests MINK_DRIVER_CLASS value: 'Drupal\FunctionalJavascriptTests\DrupalSelenium2Driver' -->
     <env name="MINK_DRIVER_CLASS" value=''/>
     <!-- Example for changing the driver args to mink tests MINK_DRIVER_ARGS value: '["http://127.0.0.1:8510"]' -->
@@ -74,4 +77,18 @@
       </exclude>
      </whitelist>
   </filter>
+  <!-- Filter for coverage reports. -->
+  <coverage>
+    <include>
+      <directory>../modules/contrib/mongodb</directory>
+    </include>
+    <exclude>
+      <file>../modules/contrib/mongodb/example.settings.local.php</file>
+      <!-- By definition test classes have no tests. -->
+      <directory suffix="Test.php">../modules/contrib/mongodb</directory>
+      <directory suffix="TestBase.php">../modules/contrib/mongodb</directory>
+      <!-- There is a remaining legacy test for reference in watchdog for now -->
+      <directory suffix=".test">../modules/contrib/mongodb</directory>
+    </exclude>
+  </coverage>
 </phpunit>

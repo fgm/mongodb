@@ -23,7 +23,6 @@ This guide assumes that :
 * We highly recommend [using Composer](#installing-using-composer)
   to install and use this module, and its dependency,
   the [MongoDB extension and library for PHP][PHPMongoDBlib]
-
 Installing MongoDB itself is best explained in these official resources
 maintained by MongoDB Inc.:
 
@@ -118,7 +117,7 @@ $settings['mongodb'] = [
     * The `logger` database alias will store logger collections on the same
       `default` MongoDB server, but in a separate `logger` database.
     * The `queue` database alias will store queue collections on the same
-          `default` MongoDB server, but in a separate `queue` database. 
+          `default` MongoDB server, but in a separate `queue` database.
 
 The module contains an example default implementation of these settings, which
 you can copy or include, in `mongodb/example.settings.local.php`.
