@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\mongodb_watchdog\Controller;
 
@@ -157,7 +157,7 @@ abstract class ControllerBase extends CoreControllerBase {
    * @return int
    *   The actual index of the page to display.
    */
-  public static function getPage(float $count, int $requestedPage, int $height): int {
+  public static function getPage(int $count, int $requestedPage, int $height): int {
     if ($requestedPage <= 0) {
       return 0;
     }

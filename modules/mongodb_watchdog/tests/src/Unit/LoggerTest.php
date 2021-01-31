@@ -13,11 +13,16 @@ use PHPUnit\Framework\TestCase;
  */
 class LoggerTest extends TestCase {
 
+  /**
+   * {@inheritDoc}
+   */
   public function setUp(): void {
     require_once __DIR__ . "/../../modules/mongodb_watchdog_test/mongodb_watchdog_test.module";
   }
 
   /**
+   * Test for issue #3219325 about closures stack.
+   *
    * @link https://www.drupal.org/project/mongodb/issues/3219325
    * @covers ::enhanceLogEntry
    *
@@ -34,4 +39,5 @@ class LoggerTest extends TestCase {
       $this->fail($e->getMessage());
     }
   }
+
 }

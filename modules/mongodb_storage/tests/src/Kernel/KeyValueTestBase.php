@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
@@ -29,6 +29,9 @@ abstract class KeyValueTestBase extends MongoDbTestBase {
     Storage::MODULE,
   ];
 
+  /**
+   * {@inheritDoc}
+   */
   public function setUp(): void {
     parent::setUp();
 

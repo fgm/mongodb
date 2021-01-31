@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\mongodb\Command;
 
@@ -13,7 +13,7 @@ use Drupal\Console\Core\Command\ContainerAwareCommand;
 use Drupal\Console\Annotations\DrupalCommand;
 
 /**
- * Class SettingsCommand.
+ * Class SettingsCommand provides the 'commands.mongodb.settings' command.
  *
  * @DrupalCommand (
  *     extension="mongodb",

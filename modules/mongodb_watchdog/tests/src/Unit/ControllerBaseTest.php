@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_watchdog\Unit;
 
@@ -25,7 +25,7 @@ class ControllerBaseTest extends UnitTestCase {
    *
    * @dataProvider pageGenerationData
    */
-  public function testPageGeneration(int $requestedPage, float $count, int $expected) {
+  public function testPageGeneration(int $requestedPage, int $count, int $expected) {
     $actual = ControllerBase::getPage($count, $requestedPage, static::ITEMS_PER_PAGE);
     $this->assertEquals($expected, $actual);
   }
@@ -41,11 +41,11 @@ class ControllerBaseTest extends UnitTestCase {
     // One partial available page.
     $one = static::ITEMS_PER_PAGE;
     // Part of one page.
-    $partial = floor($one * 0.6);
+    $partial = (int) floor($one * 0.6);
     // More than one available page.
     $oneplus = $one + $partial;
     // Exactly two pages.
-    $two = $one * 2;
+    $two = (int) ($one * 2);
     $twoplus = $two + $partial;
 
     $expectations = [

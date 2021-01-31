@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\mongodb_watchdog\Controller;
 
@@ -86,8 +86,8 @@ class RequestController extends ControllerBase {
    *   A render array.
    */
   public function build(Request $request, string $uniqueId): array {
-    if (!preg_match('/^[\w-@]+$/', $uniqueId)) {
-      throw new NotFoundHttpException($this->t('Request ID is not well-formed.'));
+    if (!preg_match('/^[-\w@]+$/', $uniqueId)) {
+      throw new NotFoundHttpException('Request ID is not well-formed.');
     }
 
     $events = $this->getRowData($request, $uniqueId);

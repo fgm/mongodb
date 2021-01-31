@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb\Kernel;
 
@@ -10,7 +10,7 @@ use Drupal\mongodb\MongoDb;
 use MongoDB\Database;
 
 /**
- * Class DatabaseFactoryTest.
+ * Tests the DatabaseFactory.
  *
  * @coversDefaultClass \Drupal\mongodb\DatabaseFactory
  *

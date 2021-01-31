@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb\Kernel;
 
@@ -9,7 +9,7 @@ use Drupal\mongodb\ClientFactory;
 use MongoDB\Driver\Exception\ConnectionTimeoutException;
 
 /**
- * Class ClientFactoryTest.
+ * Tests the ClientFactory.
  *
  * @coversDefaultClass \Drupal\mongodb\ClientFactory
  *

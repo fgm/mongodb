@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
@@ -9,7 +9,7 @@ use Drupal\mongodb_storage\KeyValueStoreExpirable;
 use Drupal\mongodb_storage\Storage;
 
 /**
- * Class KeyValueFactoryTest.
+ * Tests the KeyValueFactory.
  *
  * @coversDefaultClass \Drupal\mongodb_storage\KeyValueFactory
  *

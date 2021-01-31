@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\mongodb_watchdog;
 
@@ -46,7 +46,9 @@ class EventTemplateConverter implements ParamConverterInterface {
    */
   public function convert($value, $definition, $name, array $defaults): ?EventTemplate {
     if (!is_string($value)) {
-      $this->logger->notice('Non-string event template id: %id', ['%id' => var_export($value, TRUE)]);
+      $this->logger->notice('Non-string event template id: %id', [
+        '%id' => var_export($value, TRUE),
+      ]);
       return NULL;
     }
 

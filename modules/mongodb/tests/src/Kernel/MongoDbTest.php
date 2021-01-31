@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb\Kernel;
 
@@ -8,7 +8,7 @@ use Drupal\mongodb\MongoDb;
 use MongoDB\Collection;
 
 /**
- * Class CommandsTest.
+ * Tests the MongoDB main class.
  *
  * @coversDefaultClass \Drupal\mongodb\MongoDb
  *

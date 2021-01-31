@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\mongodb_watchdog\Controller;
 
@@ -135,7 +135,7 @@ class DetailController extends ControllerBase {
     $rows = [];
 
     foreach ($events as $event) {
-      // TODO bring this back from "model": it is a display method.
+      // @todo bring this back from "model": it is a display method.
       $rows[] = $this->eventController->asTableRow($eventTemplate, $event);
     }
 

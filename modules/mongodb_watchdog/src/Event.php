@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\mongodb_watchdog;
 
@@ -8,7 +8,7 @@ use Drupal\Core\Logger\RfcLogLevel;
 use MongoDB\BSON\Unserializable;
 
 /**
- * Class Event.
+ * Class Event is a value object for a logged event.
  *
  * @package Drupal\mongodb_watchdog
  *

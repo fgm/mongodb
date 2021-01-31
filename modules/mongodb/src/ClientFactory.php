@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\mongodb;
 
@@ -8,7 +8,7 @@ use Drupal\Core\Site\Settings;
 use MongoDB\Client;
 
 /**
- * Class ClientFactory.
+ * Helper class to construct a MongoDB client with Drupal specific config.
  */
 class ClientFactory {
 

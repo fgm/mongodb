@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -251,6 +252,14 @@ class Logger extends AbstractLogger {
       'Drupal\Core\Logger\LoggerChannel::info' => 1,
       'Drupal\Core\Logger\LoggerChannel::notice' => 1,
       'Drupal\Core\Logger\LoggerChannel::warning' => 1,
+      'Psr\Log\AbstractLogger::alert' => 1,
+      'Psr\Log\AbstractLogger::critical' => 1,
+      'Psr\Log\AbstractLogger::debug' => 1,
+      'Psr\Log\AbstractLogger::emergency' => 1,
+      'Psr\Log\AbstractLogger::error' => 1,
+      'Psr\Log\AbstractLogger::info' => 1,
+      'Psr\Log\AbstractLogger::notice' => 1,
+      'Psr\Log\AbstractLogger::warning' => 1,
     ];
 
     foreach ($backtrace as $bt) {
@@ -259,21 +268,23 @@ class Logger extends AbstractLogger {
         if (empty($ignored[$function])) {
           $entry['%function'] = $function;
           /* Some part of the stack, like the line or file info, may be missing.
+           * From research in 2021-01, this only appears to happen on PHP < 7.0.
            *
            * @see http://goo.gl/8s75df
            *
            * No need to fetch the line using reflection: it would be redundant
            * with the name of the function.
            */
-          $entry['%line'] = isset($bt['line']) ? $bt['line'] : NULL;
-          if (empty($bt['file'])) {
+          $entry['%line'] = $bt['line'] ?? NULL;
+          $file = $bt['file'] ?? '';
+          if (empty($file) && is_callable($function)) {
             $reflectionObj = empty($bt['class'])
               ? new \ReflectionFunction($function)
               : new \ReflectionMethod($function);
-            $bt['file'] = $reflectionObj->getFileName();
+            $file = $reflectionObj->getFileName();
           }
 
-          $entry['%file'] = $bt['file'];
+          $entry['%file'] = $file;
           break;
         }
         elseif ($bt['function'] == '_drupal_exception_handler') {
@@ -317,8 +328,10 @@ class Logger extends AbstractLogger {
       '%line' => 1,
     ];
     if (!empty(array_diff_key($location, $placeholders))) {
-      $this->enhanceLogEntry($placeholders,
-        debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
+      $this->enhanceLogEntry(
+        $placeholders,
+        debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10)
+      );
     }
     $file = $placeholders['%file'];
     $line = $placeholders['%line'];
@@ -420,8 +433,6 @@ class Logger extends AbstractLogger {
    * @return \MongoDB\Collection
    *   The collection, usable for additional commands like index creation.
    *
-   * @TODO support sharded clusters: convertToCapped does not support them.
-   *
    * @throws \MongoDB\Exception\InvalidArgumentException
    * @throws \MongoDB\Exception\UnsupportedException
    * @throws \MongoDB\Exception\UnexpectedValueException
@@ -433,6 +444,7 @@ class Logger extends AbstractLogger {
    * reason for the weird try/catch logic.
    *
    * @see https://jira.mongodb.org/browse/SERVER-1938
+   * @todo support sharded clusters: convertToCapped does not support them.
    */
   public function ensureCappedCollection(string $name, int $size): Collection {
     if ($size === 0) {
@@ -453,11 +465,15 @@ class Logger extends AbstractLogger {
       'size' => $size,
     ];
     $this->database->command($command);
-    $this->messenger->addStatus($this->t('@name converted to capped collection size @size.',
-      [
-        '@name' => $name,
-        '@size' => $size,
-      ]));
+    $this->messenger->addStatus(
+      $this->t(
+        '@name converted to capped collection size @size.',
+        [
+          '@name' => $name,
+          '@size' => $size,
+        ]
+      )
+    );
     return $collection;
   }
 
@@ -481,17 +497,21 @@ class Logger extends AbstractLogger {
     $collection = $this->database
       ->selectCollection($name);
 
-    $info = current(iterator_to_array((
-    $this->database->listCollections(['filter' => ['name' => $name]])
-    )));
+    $info = current(
+      iterator_to_array(
+        $this->database->listCollections(['filter' => ['name' => $name]])
+      )
+    );
     // If the collection doesn't exist, create it, ensuring later operations are
     // actually run after the server writes:
     // https://docs.mongodb.com/manual/reference/write-concern/#acknowledgment-behavior
     if ($info === FALSE) {
-      $res = $collection->insertOne([
-        '_id' => 'dummy',
-        ['writeConcern' => ['w' => WriteConcern::MAJORITY, 'j' => TRUE]],
-      ]);
+      $res = $collection->insertOne(
+        [
+          '_id' => 'dummy',
+          ['writeConcern' => ['w' => WriteConcern::MAJORITY, 'j' => TRUE]],
+        ]
+      );
       // With these options, all writes should be acknowledged.
       if (!$res->isAcknowledged()) {
         throw new RuntimeException("Failed inserting document during ensureCollection");
@@ -567,10 +587,14 @@ class Logger extends AbstractLogger {
   public function eventCollection($templateId): Collection {
     $name = static::EVENT_COLLECTION_PREFIX . $templateId;
     if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $name)) {
-      throw new InvalidArgumentException($this->t('Invalid watchdog template id `@id`.',
-        [
-          '@id' => $name,
-        ]));
+      throw new InvalidArgumentException(
+        new FormattableMarkup(
+          'Invalid watchdog template id `@id`.',
+          [
+            '@id' => $name,
+          ]
+        )
+      );
     }
     $collection = $this->database->selectCollection($name);
     return $collection;
@@ -637,8 +661,8 @@ class Logger extends AbstractLogger {
       ],
     ];
 
-    // @var string $templateId
-    // @var \Drupal\mongodb_watchdog\EventTemplate $template
+    /** @var string $templateId */
+    /** @var \Drupal\mongodb_watchdog\EventTemplate $template */
     foreach ($templates as $templateId => $template) {
       $eventCollection = $this->eventCollection($templateId);
       $cursor = $eventCollection->find($selector, $options);
@@ -726,11 +750,11 @@ class Logger extends AbstractLogger {
     $cursor = $this
       ->trackerCollection()
       ->find($selector, static::LEGACY_TYPE_MAP + [
-          'projection' => [
-            '_id' => 0,
-            'template_id' => 1,
-          ],
-        ]);
+        'projection' => [
+          '_id' => 0,
+          'template_id' => 1,
+        ],
+      ]);
     $templateIds = [];
     foreach ($cursor as $request) {
       $templateIds[] = $request['template_id'];

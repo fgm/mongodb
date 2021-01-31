@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\mongodb\Command;
 
@@ -14,7 +14,7 @@ use Drupal\Console\Core\Command\ContainerAwareCommand;
 use Drupal\Console\Annotations\DrupalCommand;
 
 /**
- * Class FindCommand.
+ * Class FindCommand provides the 'commands.mongodb.find' command.
  *
  * @DrupalCommand (
  *     extension="mongodb",
