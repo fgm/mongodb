@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
 use Drupal\mongodb\MongoDb;
-use Drupal\mongodb_storage\KeyValueFactory;
+use Drupal\mongodb_storage\KeyValue\KeyValueFactory;
 use Drupal\mongodb_storage\Storage;
 use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
 

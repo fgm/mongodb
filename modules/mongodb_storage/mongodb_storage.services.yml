@@ -5,17 +5,24 @@ services:
     arguments:
       - '@mongodb.database_factory'
       - '@datetime.time'
-    class: 'Drupal\mongodb_storage\KeyValueExpirableFactory'
+    class: 'Drupal\mongodb_storage\KeyValue\KeyValueExpirableFactory'
   keyvalue.mongodb:
-    arguments: ['@mongodb.database_factory']
-    class: 'Drupal\mongodb_storage\KeyValueFactory'
+    arguments:
+      - '@mongodb.database_factory'
+    class: 'Drupal\mongodb_storage\KeyValue\KeyValueFactory'
 
   mongodb.storage.sql_import:
-    class: \Drupal\mongodb_storage\Install\SqlImport
+    class: Drupal\mongodb_storage\Install\SqlImport
     arguments:
       - '@database'
       - '@keyvalue.database'
       - '@keyvalue.expirable.database'
       - '@keyvalue.mongodb'
       - '@keyvalue.expirable.mongodb'
+      - '@datetime.time'
+
+  queue.mongodb:
+    class: Drupal\mongodb_storage\Queue\QueueFactory
+    arguments:
+      - '@mongodb.database_factory'
       - '@datetime.time'
