@@ -1,0 +1,5 @@
+entity.mongodb_watchdog_event_template.add_form:
+  route_name: entity.mongodb_watchdog_event_template.add_form
+  title: 'Add Event template'
+  appears_on:
+    - entity.mongodb_watchdog_event_template.collection

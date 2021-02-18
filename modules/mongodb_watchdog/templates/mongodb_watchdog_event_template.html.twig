@@ -1,0 +1,22 @@
+{#
+/**
+ * @file mongodb_watchdog_event_template.html.twig
+ * Default theme implementation to present Event template data.
+ *
+ * This template is used when viewing Event template pages.
+ *
+ *
+ * Available variables:
+ * - content: A list of content items. Use 'content' to print all content, or
+ * - attributes: HTML attributes for the container element.
+ *
+ * @see template_preprocess_mongodb_watchdog_event_template()
+ *
+ * @ingroup themeable
+ */
+#}
+<div{{ attributes.addClass('mongodb_watchdog_event_template') }}>
+  {% if content %}
+    {{- content -}}
+  {% endif %}
+</div>

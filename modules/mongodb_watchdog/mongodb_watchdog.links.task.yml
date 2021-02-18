@@ -25,3 +25,24 @@ mongodb_watchdog.config:
   title: 'Watchdog config'
   route_name: mongodb_watchdog.config
   base_route: system.admin_config_system
+# Event template routing definition
+mongodb_watchdog_event_template.settings_tab:
+  route_name: mongodb_watchdog_event_template.settings
+  title: 'Settings'
+  base_route: mongodb_watchdog_event_template.settings
+entity.mongodb_watchdog_event_template.canonical:
+  route_name: entity.mongodb_watchdog_event_template.canonical
+  base_route: entity.mongodb_watchdog_event_template.canonical
+  title: 'View'
+
+entity.mongodb_watchdog_event_template.edit_form:
+  route_name: entity.mongodb_watchdog_event_template.edit_form
+  base_route: entity.mongodb_watchdog_event_template.canonical
+  title: Edit
+
+entity.mongodb_watchdog_event_template.delete_form:
+  route_name:  entity.mongodb_watchdog_event_template.delete_form
+  base_route:  entity.mongodb_watchdog_event_template.canonical
+  title: Delete
+  weight: 10
+
