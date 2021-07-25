@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\mongodb\Queue;
+namespace Drupal\mongodb_storage\Queue;
 
 use Drupal\Core\Site\Settings;
 use MongoDB\Database;
@@ -10,21 +10,21 @@ use MongoDB\Database;
 /**
  * Defines the queue factory for the MongoDB backend.
  */
-class QueueMongodbFactory {
+class QueueMongoDBFactory {
 
   /**
    * The queue storage.
    *
    * @var \MongoDB\Database
    */
-  protected $database;
+  protected Database $database;
 
   /**
-   * The settings array.
+   * The settings from settings.php.
    *
    * @var \Drupal\Core\Site\Settings
    */
-  protected $settings;
+  protected Settings $settings;
 
   /**
    * Constructs this factory object.
@@ -45,12 +45,12 @@ class QueueMongodbFactory {
    * @param string $name
    *   The name of the collection holding key and value pairs.
    *
-   * @return \Drupal\Core\Queue\DatabaseQueue
-   *   A key/value store implementation for the given $collection.
+   * @return \Drupal\mongodb_storage\Queue\MongoDBQueue
+   *   A mongodb queue database the given $name.
    */
   public function get($name) {
     $settings = $this->settings->get('mongodb_queue_' . $name);
-    return new MongodbQueue($name, $settings, $this->database);
+    return new MongoDBQueue($name, $settings, $this->database);
   }
 
 }

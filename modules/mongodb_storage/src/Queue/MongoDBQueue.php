@@ -2,18 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Drupal\mongodb\Queue;
+namespace Drupal\mongodb_storage\Queue;
 
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\mongodb\MongoDb;
 use MongoDB\Database;
 
 /**
- * Mongodb queue implementation.
+ * MongoDB queue implementation.
  *
  * @ingroup queue
  */
-class MongodbQueue implements QueueInterface {
+class MongoDBQueue implements QueueInterface {
+
+  /* Fails tests otherwise, as $database and $collection embeds MongoDB\Driver\Manager */
+  use DependencySerializationTrait;
 
   /**
    * The queue storage.

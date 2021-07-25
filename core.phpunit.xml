@@ -22,10 +22,6 @@
     <!-- Example SIMPLETEST_DB value: mysql://username:password@localhost/databasename#table_prefix -->
     <env name="SIMPLETEST_DB" value=""/>
     <!-- Example BROWSERTEST_OUTPUT_DIRECTORY value: /path/to/webroot/sites/simpletest/browser_output -->
-    <!-- To have browsertest output use an alternative base URL. For example if
-     SIMPLETEST_BASE_URL is an internal DDEV URL, you can set this to the
-     external DDev URL so you can follow the links directly.
-    -->
     <env name="BROWSERTEST_OUTPUT_DIRECTORY" value=""/>
     <!-- To have browsertest output use an alternative base URL. For example if
      SIMPLETEST_BASE_URL is an internal DDEV URL, you can set this to the
@@ -78,18 +74,4 @@
       </exclude>
      </whitelist>
   </filter>
-  <!-- Filter for coverage reports. -->
-  <coverage>
-    <include>
-      <directory>../modules/contrib/mongodb</directory>
-    </include>
-    <exclude>
-      <file>../modules/contrib/mongodb/example.settings.local.php</file>
-      <!-- By definition test classes have no tests. -->
-      <directory suffix="Test.php">../modules/contrib/mongodb</directory>
-      <directory suffix="TestBase.php">../modules/contrib/mongodb</directory>
-      <!-- There is a remaining legacy test for reference in watchdog for now -->
-      <directory suffix=".test">../modules/contrib/mongodb</directory>
-    </exclude>
-  </coverage>
 </phpunit>
