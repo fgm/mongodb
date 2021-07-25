@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\mongodb_storage;
+namespace Drupal\mongodb_storage\KeyValue;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
@@ -12,6 +12,7 @@ use Drupal\mongodb\DatabaseFactory;
  * Class KeyValueFactory builds KeyValue stores as MongoDB collections.
  */
 class KeyValueExpirableFactory extends KeyValueFactory implements KeyValueExpirableFactoryInterface {
+
   const COLLECTION_PREFIX = 'kve_';
 
   /**

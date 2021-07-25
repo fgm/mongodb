@@ -1,5 +1,6 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
 
 namespace Drupal\mongodb\Queue;
 
@@ -19,12 +20,12 @@ class MongodbQueue implements QueueInterface {
    *
    * @var \MongoDB\Database
    */
-  protected $database;
+  protected Database $database;
 
   /**
    * The collection name for the queue.
    *
-   * @var \MongoDB\Collection[] $collection
+   * @var \MongoDB\Collection[]
    */
   protected $collection;
 
@@ -38,7 +39,7 @@ class MongodbQueue implements QueueInterface {
    * @param \MongoDB\Database $database
    *   The database object.
    */
-  public function __construct($name, $settings, Database $database) {
+  public function __construct($name, array $settings, Database $database) {
     $this->name = $name;
     $this->database = $database;
     $this->collection = $this->database
@@ -53,7 +54,7 @@ class MongodbQueue implements QueueInterface {
       $id = $this->doCreateItem($data);
     }
     catch (\Exception $e) {
-        throw $e;
+      throw $e;
     }
 
     return $id;
@@ -62,10 +63,10 @@ class MongodbQueue implements QueueInterface {
   /**
    * Adds a queue item and store it directly to the queue.
    *
-   * @param $data
+   * @param mixed $data
    *   Arbitrary data to be associated with the new task in the queue.
    *
-   * @return
+   * @return mixed
    *   A unique ID if the item was successfully created and was (best effort)
    *   added to the queue, otherwise FALSE. We don't guarantee the item was
    *   committed to disk etc, but as far as we know, the item is now in the
@@ -87,16 +88,16 @@ class MongodbQueue implements QueueInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Exception
    */
-  public function numberOfItems() {
+  public function numberOfItems(): int {
 
     try {
-      return (int) MongoDb::countCollection($this->collection);
+      return MongoDb::countCollection($this->collection);
     }
     catch (\Exception $e) {
       throw $e;
-      // If there is no collection there cannot be any items.
-      return 0;
     }
   }
 
@@ -109,11 +110,9 @@ class MongodbQueue implements QueueInterface {
     ];
     return $this->collection->findOneAndUpdate(
       [],
-      [ '$set' => $newobj ],
-      [ 'sort' => ['created' => 1],]
+      ['$set' => $newobj],
+      ['sort' => ['created' => 1]],
     );
-
-
   }
 
   /**
@@ -123,10 +122,11 @@ class MongodbQueue implements QueueInterface {
     return $this->collection
       ->updateOne(
         ['_id' => $item->_id],
-        ['$set' =>
-          [
-            'expire' => 0
-          ],
+        [
+          '$set' =>
+            [
+              'expire' => 0,
+            ],
         ]
       );
   }
@@ -139,7 +139,7 @@ class MongodbQueue implements QueueInterface {
       $this->collection
         ->deleteOne(
           [
-            '_id' => $item->_id
+            '_id' => $item->_id,
           ]
         );
     }
@@ -155,7 +155,7 @@ class MongodbQueue implements QueueInterface {
     // Create the index.
     $this->collection->createIndex([
       'expire' => 1,
-      'created' => 1
+      'created' => 1,
     ]);
   }
 

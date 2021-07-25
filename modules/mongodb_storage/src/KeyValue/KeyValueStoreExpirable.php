@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\mongodb_storage;
+namespace Drupal\mongodb_storage\KeyValue;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
@@ -72,7 +72,7 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    * @return \MongoDB\BSON\UTCDateTime
    *   Its ready-to-insert counterpart.
    */
-  protected function getBsonExpire(int $expire) : UTCDateTime {
+  protected function getBsonExpire(int $expire): UTCDateTime {
     return new UTCDateTime(1000 * ($this->time->getCurrentTime() + $expire));
   }
 
@@ -117,10 +117,11 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];
-    $replacement = $selector + [
-      'expire' => $this->getBsonExpire($expire),
-      'value' => serialize($value),
-    ];
+    $replacement = $selector +
+      [
+        'expire' => $this->getBsonExpire($expire),
+        'value' => serialize($value),
+      ];
     $options = [
       'upsert' => TRUE,
     ];
@@ -145,16 +146,18 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];
-    $replacement = $selector + [
-      'expire' => $this->getBsonExpire($expire),
-      'value' => serialize($value),
-    ];
+    $replacement = $selector +
+      [
+        'expire' => $this->getBsonExpire($expire),
+        'value' => serialize($value),
+      ];
     $options = [
       'upsert' => FALSE,
     ];
 
-    $updateResult = $this->mongoDbCollection->replaceOne($selector, $replacement, $options);
-    $result = $updateResult->getModifiedCount() ? TRUE : FALSE;
+    $updateResult = $this->mongoDbCollection->replaceOne($selector,
+      $replacement, $options);
+    $result = (bool) $updateResult->getModifiedCount();
     return $result;
   }
 

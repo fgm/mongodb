@@ -32,15 +32,6 @@ settings,
     * `get(string $alias): MongoDb\Client`: returns a `Client` instance matching
       the value defined in Drupal settings for `$alias`.
 
-##  Tell Drupal to use the queue backend
-
-This module provides default queue implementation.
-
-When you have configured basic information (host, port, ... - see install)
-add this to your settings.php file:
-
-    # Use for all queues unless otherwise specified for a specific queue.
-    $settings['queue_default'] = 'queue.mongodb';
 
 ## Troubleshooting commands:
 
@@ -118,7 +109,7 @@ database. What it actually provides:
       invoking `parent::setUp()`, and need to drop that database during their
       own `tearDown()`.
         * They can use `$this->getTestDatabaseName($postfix)` method to build a
-          per-test database name that will not collide with the default 
+          per-test database name that will not collide with the default
           database.
         * There are examples for this in the `mongodb_watchdoig` tests.
 

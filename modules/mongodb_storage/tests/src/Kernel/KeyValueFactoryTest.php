@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
-use Drupal\mongodb_storage\KeyValueStore;
-use Drupal\mongodb_storage\KeyValueStoreExpirable;
+use Drupal\mongodb_storage\KeyValue\KeyValueStore;
+use Drupal\mongodb_storage\KeyValue\KeyValueStoreExpirable;
 use Drupal\mongodb_storage\Storage;
 
 /**
  * Tests the KeyValueFactory.
  *
- * @coversDefaultClass \Drupal\mongodb_storage\KeyValueFactory
+ * @coversDefaultClass \Drupal\mongodb_storage\KeyValue\KeyValueFactory
  *
  * @group MongoDB
  */
@@ -25,7 +25,7 @@ class KeyValueFactoryTest extends KeyValueTestBase {
    * @throws \Exception
    */
   public function testGetExpirable() {
-    /** @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $factory */
+    /** @var \Drupal\Core\KeyValueStore\KeyValue\KeyValueExpirableFactoryInterface $factory */
     $factory = $this->container->get(Storage::SERVICE_KVE);
     $store = $factory->get(static::COLLECTION);
 
@@ -40,7 +40,7 @@ class KeyValueFactoryTest extends KeyValueTestBase {
    * @throws \Exception
    */
   public function testGetPersistent() {
-    /** @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $factory */
+    /** @var \Drupal\Core\KeyValueStore\KeyValue\KeyValueExpirableFactoryInterface $factory */
     $factory = $this->container->get(Storage::SERVICE_KV);
     $store = $factory->get(static::COLLECTION);
 
