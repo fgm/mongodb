@@ -6,12 +6,13 @@ guide assumes that :
 
 * A [MongoDB][download] 4.0 to 4.2.x server instance has already been installed,
   configured and is available for connection from the Drupal instance.
+  MongoDB 5.x, AWS DocumentDB and Azure CosmosDB might work but are not tested.
+  Be sure to [report any issue][report] you could have with either.
 * The site will be running [Drupal][drupal] 8.9.x or 9.x.y, with [Drush][drush]
   10.x.
 * The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.7 or
   later is installed and configured.
-* PHP is version 7.3.x to 8.0.x. PHP 8.0.x should work but is not tested: be sure
-  to [report any issue][report] you could have with it.
+* PHP is version 7.4.x to 8.0.x, to support typed properties.
 * We recommend [using Composer](#installing-using-composer) for installing this
   module.
 
@@ -81,6 +82,7 @@ $settings['mongodb'] = [
     'default' => ['default', 'drupal'],
     'keyvalue' => ['default', 'keyvalue'],
     'logger' => ['default', 'logger'],
+    'queue' => ['default', 'queue'],
   ],
 ];
 ```
@@ -91,6 +93,8 @@ $settings['mongodb'] = [
       same `default` MongoDB server, but in a separate `keyvalue` database.
     * The `logger` database alias will store logger collections on the same
       `default` MongoDB server, but in a separate `logger` database.
+    * The `queue` database alias will store queue collections on the same
+      `default` MongoDB server, but in a separate `queue` database.
 
 The module contains an example default implementation of these settings, which
 you can copy or include, in `mongodb/example.settings.local.php`.

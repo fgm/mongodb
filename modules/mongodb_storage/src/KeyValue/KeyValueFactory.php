@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\mongodb_storage;
+namespace Drupal\mongodb_storage\KeyValue;
 
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 use Drupal\mongodb\DatabaseFactory;

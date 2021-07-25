@@ -25,6 +25,7 @@ $configureMongoDb = function (array $settings): array {
       'default' => ['default', 'drupal'],
       'keyvalue' => ['default', 'keyvalue'],
       'logger' => ['default', 'logger'],
+      'queue' => ['default', 'queue'],
     ],
   ];
 

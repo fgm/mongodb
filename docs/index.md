@@ -23,7 +23,7 @@ by Drupal core for the SQL database drivers.
 | Module              | In a word | Information                                  |
 |---------------------|-----------|----------------------------------------------|
 | [mongodb]           | driver    | Client and Database services, [tests] base   |
-| [mongodb_storage]   | key-value | Key-value store, with server-side expiration |
+| [mongodb_storage]   | key-value,<br/> queue | Key-value store, with server-side expiration <br/>Default queue implementation |
 | [mongodb_watchdog]  | logger    | PSR-3 compliant logger with a built-in UI    |
 | &nbsp;              |           |                                              |
 
@@ -35,11 +35,10 @@ by Drupal core for the SQL database drivers.
 
 ### Planned
 
-Modules expected to be ported to 8.x-2.x in some release after 2.0 include:
+Modules expected to be ported to 8.x-2.x in some release after 2.1 include:
 
 | Module              | In a word | Information                                |
 |---------------------|-----------|--------------------------------------------|
-| mongodb_queue       | queue     | Queue API implementation                   |
 | mongodb_cache       | cache     | Cache storage, with server-side expiration |
 | mongodb_lock        | lock      | Lock plugin                                |
 | mongodb_path        | path      | Path plugin                                |

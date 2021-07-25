@@ -9,8 +9,8 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseFactory;
-use Drupal\mongodb_storage\KeyValueExpirableFactory;
-use Drupal\mongodb_storage\KeyValueFactory;
+use Drupal\mongodb_storage\KeyValue\KeyValueExpirableFactory;
+use Drupal\mongodb_storage\KeyValue\KeyValueFactory;
 
 /**
  * Service providing the import of the SQL-based KV storage to MongoDB.

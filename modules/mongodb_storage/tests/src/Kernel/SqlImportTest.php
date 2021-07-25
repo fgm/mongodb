@@ -8,8 +8,8 @@ use Drupal\Core\KeyValueStore\DatabaseStorage;
 use Drupal\Core\KeyValueStore\DatabaseStorageExpirable;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_storage\Install\SqlImport;
-use Drupal\mongodb_storage\KeyValueExpirableFactory;
-use Drupal\mongodb_storage\KeyValueFactory;
+use Drupal\mongodb_storage\KeyValue\KeyValueExpirableFactory;
+use Drupal\mongodb_storage\KeyValue\KeyValueFactory;
 use Drupal\mongodb_storage\Storage;
 
 /**
@@ -124,7 +124,7 @@ class SqlImportTest extends KeyValueTestBase {
    * @return array
    *   The test data.
    */
-  public function importProvider() : array {
+  public function importProvider(): array {
     return [
       [
         SqlImport::KVP_TABLE,
@@ -146,7 +146,11 @@ class SqlImportTest extends KeyValueTestBase {
    *
    * @dataProvider importProvider
    */
-  public function testImportActual(string $table, string $service, string $prefix) {
+  public function testImportActual(
+    string $table,
+    string $service,
+    string $prefix
+  ) {
     $columns = [];
     switch ($table) {
       case SqlImport::KVE_TABLE:
@@ -207,7 +211,8 @@ class SqlImportTest extends KeyValueTestBase {
 
     $keyValue = $this->container->get($service);
     $mongoCollections = $this->getKvCollectionNames($prefix);
-    $this->assertEquals(array_keys($expectedCollections), $mongoCollections, "Collection names match");
+    $this->assertEquals(array_keys($expectedCollections), $mongoCollections,
+      "Collection names match");
     foreach ($expectedCollections as $collectionName => $expected) {
       $all = $keyValue->get($collectionName)->getAll();
       ksort($all);

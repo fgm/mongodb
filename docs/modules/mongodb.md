@@ -109,7 +109,7 @@ database. What it actually provides:
       invoking `parent::setUp()`, and need to drop that database during their
       own `tearDown()`.
         * They can use `$this->getTestDatabaseName($postfix)` method to build a
-          per-test database name that will not collide with the default 
+          per-test database name that will not collide with the default
           database.
         * There are examples for this in the `mongodb_watchdoig` tests.
 
