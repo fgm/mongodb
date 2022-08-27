@@ -456,6 +456,7 @@ class ControllerTest extends BrowserTestBase {
     $selector = ['message' => $expectedMessage];
     $event = $logger->templateCollection()
       ->findOne($selector, MongoDb::ID_PROJECTION);
+    $this->assertNotNull($event);
     $eventId = $event['_id'];
 
     // View MongoDB Watchdog event page.

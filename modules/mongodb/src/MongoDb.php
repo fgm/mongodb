@@ -31,7 +31,7 @@ class MongoDb {
    *
    * @var string
    */
-  protected static $libraryVersion;
+  protected static string $libraryVersion;
 
   /**
    * Guess an approximation of the library version, to handle API changes.

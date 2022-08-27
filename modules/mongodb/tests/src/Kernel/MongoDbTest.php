@@ -21,7 +21,7 @@ class MongoDbTest extends MongoDbTestBase {
    */
   public function testLibraryVersion() {
     $actual = MongoDb::libraryApiVersion();
-    $this->assertRegExp('/[\d]\.[\d]+\.[\d]+/', $actual,
+    $this->assertMatchesRegularExpression('/[\d]\.[\d]+\.[\d]+/', $actual,
       'API version matches expected format.');
     list(, $minor,) = sscanf($actual, "%d.%d.%d");
     $hasWatch = method_exists(Collection::class, 'watch');
