@@ -177,8 +177,9 @@ build:
     analysis:
       dependencies:
         after:
-          - composer require --dev squizlabs/php_codesniffer:^3.5
+          - composer config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          - composer require --dev squizlabs/php_codesniffer:^3.6 drupal/coder:^8.3
       tests:
         override:
-          - command: phpcs-run
+          - command: php-scrutinizer-run
             use_website_config: false

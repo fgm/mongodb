@@ -1,19 +1,18 @@
-dist: bionic
+dist: focal
 
 language: php
 
-sudo: true
+os: linux
 
 php:
-  - 7.4
-  - 8.0
+  - 8.1
 
 services:
   - mongodb
 
-matrix:
+jobs:
   allow_failures:
-    - php: 8.0
+    - php: ~
   fast_finish: true
 
 env:
@@ -35,26 +34,28 @@ cache:
     - vendor
 
 before_install:
-  # Ensure we have the latest packages, including SQLite
+  # Ensure we have the latest packages, including SQLite and MongoDB
+  - wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo tee /etc/apt/trusted.gpg.d/mongodb.asc
+  - echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
   - sudo echo "deb http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse" >> /etc/apt/sources.list
   - sudo apt-get -y update > /dev/null
-  - sudo apt-get -y install sqlite3/focal
+  - sudo apt-get -y install sqlite3/focal mongodb-mongosh/focal
+  - sudo apt-get -y install dirmngr gnupg apt-transport-https ca-certificates software-properties-common
 
   # Composer: update and add to PATH.
   - sed -i '1i export PATH="$HOME/.composer/vendor/bin:$PATH"' $HOME/.bashrc
   - source $HOME/.bashrc
-  # Force Composer 1 until all plugins support Composer 2.
   - composer self-update --2
 
   # Drush: 9.x prefers using a local version, so don't require it globally.
 
-  # MongoDB extension is preinstalled but not enabled by default.
+  # The MongoDB extension is preinstalled but not enabled by default.
   - echo "extension = mongodb.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
 
 install:
-  # install php packages required for running a web server from drush on php 7
+  # Install php packages required for running a web server from drush on php 8
   # - sudo apt-get install -y --force-yes php-cgi php-mysql
-  - sudo apt-get install -y --force-yes libxml2-utils tidy
+  - sudo apt-get install -y libxml2-utils tidy
 
   # Disable XDebug for speed.
   # https://github.com/travis-ci/travis-ci/issues/1697
@@ -68,6 +69,10 @@ install:
   #- phpenv config-add xdebug.ini
 
 before_script:
+  # cf. https://docs.travis-ci.com/user/database-setup/#mongodb
+  - sleep 15
+  - mongosh mydb_test --eval 'db.createUser({user:"travis",pwd:"test",roles:["readWrite"]});'
+
   # Code runs in /home/travis/build, which is the checkout root.
 
   # Remove Xdebug as we don't need it, is slows everything, and it causes
@@ -77,14 +82,14 @@ before_script:
   - cd ../..
 
   # download Drupal 9 core.
-  - wget -q -O - https://ftp.drupal.org/files/projects/drupal-9.2.x-dev.tar.gz | tar xz
-  - cd drupal-9.2.x-dev
+  - wget -q -O - https://ftp.drupal.org/files/projects/drupal-9.4.x-dev.tar.gz | tar xz
+  - cd drupal-9.4.x-dev
   - mkdir -p modules/contrib
   - mv ../fgm/mongodb modules/contrib
 
   # install dependencies (for the module) and Coveralls (for coverage) as part of the root vendors. Get rid of PHPunit < 7 and locked dependencies.
   - rm -fr composer.lock vendor
-  - composer require -v "drush/drush:^10" drupal/console "mongodb/mongodb:^1.5.1" "phpunit/phpunit:^8.5.18" $COVERALLS
+  - composer require -v "drush/drush:^11" "mongodb/mongodb:^1.12" "phpspec/prophecy-phpunit:^2" "phpunit/phpunit:^9.5" $COVERALLS
   - composer show mongodb/mongodb
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
@@ -96,7 +101,7 @@ before_script:
   - tail --lines=+12 modules/contrib/mongodb/example.settings.local.php >> sites/default/settings.php
 
   # Reference and enable mongodb modules in build site
-  #- ln -s $(readlink -e $(cd -)) drupal-9.1.x-dev/modules/custom/mongodb
+  #- ln -s $(readlink -e $(cd -)) drupal-9.4.x-dev/modules/custom/mongodb
   - vendor/bin/drush -y en mongodb_storage mongodb_watchdog
 
   # Needed for web tests in mongodb_watchdog.
