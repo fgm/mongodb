@@ -10,7 +10,17 @@ nav:
   - Development:
     - 'Bespoke code': 'bespoke.md'
     - 'Tests': 'tests.md'
-theme: readthedocs
 repo_url: https://github.com/fgm/mongodb
 markdown_extensions:
   - footnotes
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+
+theme:
+  name: material
+  palette:
+    primary: light green
+    #scheme: default
+  icon:
+    logo: fontawesome/brands/drupal #material/drupal

@@ -22,77 +22,79 @@ This example show how to write a test using a custom `foo` database for the
 eponymous module `foo`, assuming individual tests do not drop the database
 instance themselves.
 
-    <?php
+```php
+<?php
 
-    namespace Drupal\\Tests\foo\Kernel;
+namespace Drupal\\Tests\foo\Kernel;
 
-    use Drupal\mongodb\MongoDb;
-    use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
+use Drupal\mongodb\MongoDb;
+use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
 
-    /**
-     * @coversDefaultClass \Drupal\foo\Foo
-     *
-     * @group foo
-     */
-    class FooTest extends MongoDbTestBase {
-      const MODULE = 'foo';
+/**
+ * @coversDefaultClass \Drupal\foo\Foo
+ *
+ * @group foo
+ */
+class FooTest extends MongoDbTestBase {
+  const MODULE = 'foo';
 
-      protected static $modules = [
-        MongoDb::MODULE,
-        static::MODULE,
-      ];
+  protected static $modules = [
+    MongoDb::MODULE,
+    static::MODULE,
+  ];
 
-      /**
-       * The test database.
-       */
-      protected $database;
+  /**
+   * The test database.
+   */
+  protected $database;
 
-      /**
-       * Override getSettingsArray method to include custom test database
-       */
-      public function getSettingsArray(): array {
-        $settings = parent::getSettingsArray();
-        $settings[MongoDb::MODULE]['databases']['foo_alias'] = [
-          static::CLIENT_TEST_ALIAS,
-          $this->getDatabasePrefix(),
-        ];
+  /**
+   * Override getSettingsArray method to include custom test database
+   */
+  public function getSettingsArray(): array {
+    $settings = parent::getSettingsArray();
+    $settings[MongoDb::MODULE]['databases']['foo_alias'] = [
+      static::CLIENT_TEST_ALIAS,
+      $this->getDatabasePrefix(),
+    ];
 
-        return $settings;
-      }
+    return $settings;
+  }
 
-      /**
-       * Add a custom alias to settings and instantiate a custom database.
-       *
-       * If the tests do not need a specific database, no setUp()/tearDown() is
-       * even needed.
-       */
-      public function setUp(): void {
-        parent::setUp();
-        $this->database = new DatabaseFactory(
-          new ClientFactory($this->settings),
-          $this->settings
-        )->get(static::MODULE);
-      }
+  /**
+   * Add a custom alias to settings and instantiate a custom database.
+   *
+   * If the tests do not need a specific database, no setUp()/tearDown() is
+   * even needed.
+   */
+  public function setUp(): void {
+    parent::setUp();
+    $this->database = new DatabaseFactory(
+      new ClientFactory($this->settings),
+      $this->settings
+    )->get(static::MODULE);
+  }
 
-      /**
-       * Drop the custom database.
-       *
-       * If the tests do not need a specific database, no setUp()/tearDown() is
-       * even needed.
-       */
-      public function tearDown(): void {
-        $this->database->drop();
-        parent::tearDown();
-      }
+  /**
+   * Drop the custom database.
+   *
+   * If the tests do not need a specific database, no setUp()/tearDown() is
+   * even needed.
+   */
+  public function tearDown(): void {
+    $this->database->drop();
+    parent::tearDown();
+  }
 
-      /**
-       * @covers ::whatever
-       */
-      public function testWhatever() {
-        // ... custom test logic...
-      }
+  /**
+   * @covers ::whatever
+   */
+  public function testWhatever() {
+    // ... custom test logic...
+  }
 
-    }
+}
+```
 
 In most cases, modules implementing will implement multiple classes, hence have
 multiple tests, in which case having a per-module base test class will be
@@ -104,12 +106,12 @@ recommended. See `mongodb_storage` or `mongodb_watchdog` tests for examples.
 
 ## Running tests
 
-Now that Simpletest is for all intents and purposes deprecated since Drupal 8.6,
-and its UI apparently going away (cf [#2566767]), tests should be run from the
-PHPUnit command line.
+Now that Simpletest has been [deprecated since Drupal 8.8][simpletest],
+and its UI is going away (cf.&nbsp;[#2566767]),
+tests should be run from the PHPUnit command line.
 
 [#2566767]: https://www.drupal.org/node/2566767
-
+[simpletest]: https://www.drupal.org/node/3091784
 
 ### Running directly
 
@@ -118,14 +120,16 @@ avoid too long a line). Assuming a `composer-project` deployment with Drupal in
 the `web/` directory, you'll need to run phpunit from the Drupal root, not the
 project root:
 
-    cd web
-    SIMPLETEST_BASE_URL=http://localhost                \
-    BROWSERTEST_OUTPUT_DIRECTORY=/some/writable/pre-existing/path \
-    SIMPLETEST_DB=mysql://user:pass@localhost/drupal8   \
-    MONGODB_URI=mongodb://somemongohost:27017           \
-    ../vendor/bin/phpunit -c $PWD/core/phpunit.xml.dist \
-        -v --debug --coverage-clover=/tmp/cover.xml     \
-        modules/contrib/mongodb
+```bash
+cd web
+SIMPLETEST_BASE_URL=http://localhost                \
+BROWSERTEST_OUTPUT_DIRECTORY=/some/writable/pre-existing/path \
+SIMPLETEST_DB=mysql://user:pass@localhost/drupal10  \
+MONGODB_URI=mongodb://somemongohost:27017           \
+../vendor/bin/phpunit -c $PWD/core/phpunit.xml.dist \
+    -v --debug --coverage-clover=/tmp/cover.xml     \
+    modules/contrib/mongodb
+```
 
 * Functional tests: the `SIMPLETEST_BASE_URL` and `BROWSERTEST_OUTPUT_DIRECTORY`
   variables are needed. Kernel and Unit tests do not need them.
@@ -136,18 +140,22 @@ These variables can also be set in the `core/phpunit.xml` custom configuration
 file to simplify the command line, as described on Drupal.org [Running PHPUnit tests]
 page.
 
-[Running PHPUnit tests]: https://www.drupal.org/node/2116263
+[Running PHPUnit tests]: https://www.drupal.org/docs/automated-testing/phpunit-in-drupal/running-phpunit-tests
 
 
 ### Using a `phpunit.xml` configuration file
 
 The test command can also be simplified using a `phpunit.xml` configuration file:
 
-    phpunit -c core/phpunit.xml
+```bash
+phpunit -c core/phpunit.xml
+```
 
 Or to generate a coverage report:
 
-    phpunit -c core/phpunit.xml --coverage-html=/some/coverage/path modules/contrib/mongodb
+```bash
+phpunit -c core/phpunit.xml --coverage-html=/some/coverage/path modules/contrib/mongodb
+```
 
 In this syntax, `core/phpunit.xml` is a local copy of the default
 `mongodb/core.phpunit.xml` configuration file, tweaked for the local

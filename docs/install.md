@@ -1,19 +1,19 @@
 # Installation and Settings
 ## Prerequisites
 
-The MongoDB module and sub-modules need some configuration to be useful. This
-guide assumes that :
+The MongoDB module and sub-modules need some configuration to be useful.
+This guide assumes that :
 
-* A [MongoDB][download] 4.0 to 4.2.x server instance has already been installed,
+* A [MongoDB][download] 4.2 to 6.x server instance has already been installed,
   configured and is available for connection from the Drupal instance.
-* The site will be running [Drupal][drupal] 8.9.x or 9.x.y, with [Drush][drush]
-  10.x.
-* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.7 or
+* The site will be running [Drupal][drupal] 9.4.x, 9.5.x or 10.0.x,
+  with [Drush][drush] 11.x.
+* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.13 or
   later is installed and configured.
-* PHP is version 7.3.x to 8.0.x. PHP 8.0.x should work but is not tested: be sure
-  to [report any issue][report] you could have with it.
-* We recommend [using Composer](#installing-using-composer) for installing this
-  module.
+* PHP is version 8.1.x. PHP 8.2.x should work but is not tested:
+  be sure to [report any issue][report] you could have with it.
+* We highly recommend [using Composer](#installing-using-composer)
+  to install and use this module.
 
 Check out the [MongoDB extension and library for PHP][PHPMongoDBlib]
 
@@ -25,18 +25,18 @@ maintained by MongoDB Inc.:
    * [MongoDB Windows installation][MongoDBWindows]
 
 MongoDB below 4.0 is no longer supported, which means you can no longer get
-a basic web admin interface by running `mongod` with the `–httpinterface`: that
-feature was [removed in 3.6][removedhttp]. To some extent, it has been superseded
-by the [free monitoring][freemonitoring] service offered by MongoDB Inc.
+a basic web admin interface by running `mongod` with the `–httpinterface`:
+that feature was [removed in 3.6][removedhttp].
+To some extent, it has been superseded by the [free monitoring][freemonitoring] service offered by MongoDB Inc.
 
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/download
 [drush]: https://www.drush.org/
 [php]: http://php.net/downloads.php
-[mongo]: http://php.net/mongo
+[mongo]: https://pecl.php.net/package/mongo
 [mongodb]: http://php.net/mongodb
 [report]: https://www.drupal.org/node/add/project-issue/mongodb
-[PHPMongoDBlib]: https://github.com/mongodb/mongo-php-library
+[PHPMongoDBlib]: https://www.mongodb.com/docs/php-library/current/
 [MongoDBMac]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/
 [MongoDBLinux]: https://docs.mongodb.com/manual/administration/install-on-linux/
 [MongoDBWindows]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
@@ -46,13 +46,13 @@ by the [free monitoring][freemonitoring] service offered by MongoDB Inc.
 
 ## Settings Configuration
 
-* Download the module package, as per
-  [Installing contributed modules (Drupal 8/9)][install]
+* Download the module package, as per the Drupal documentation about
+  [Installing modules][install].
 * Copy the relevant section from `mongodb/example.settings.local.php` to your
   `settings.local.php` file if you use one, or `settings.php` otherwise,
-  and adapt it to match your MongoDB settings. These settings are used by the
-  `mongodb` module to connect to your MongoDB servers, with the `default` server
-  being the one started in previous steps.
+  and adapt it to match your MongoDB settings.
+  These settings are used by the `mongodb` module to connect to your MongoDB servers,
+  with the `default` server being the one started in previous steps.
   * The `clients` key contains an associative array of connection by
     connection alias, with the default connection parameters being under the
     `default` key, and additional keys allowing the use of other
@@ -116,9 +116,9 @@ dependencies, installing is just a two-steps process:
 
 * Enable the `mongodb` module. You now have access to the MongoDB services and
   Drush/Console commands for the `mongodb` module.
-* Optionally, enabled the [`mongodb_storage`](modules/mongodb_storage.md) and
-  [`mongodb_watchdog`](modules/mongodb_watchdog.md) module for
-  additional services and commands.
+* Optionally, enabled the [`mongodb_storage`](modules/mongodb_storage.md)
+  and [`mongodb_watchdog`](modules/mongodb_watchdog.md) modules,
+  for additional services and commands.
 
-[composer]: https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies
-[install]: https://www.drupal.org/docs/8/extending-drupal-8/installing-drupal-8-modules
+[composer]: https://www.drupal.org/docs/develop/using-composer/manage-dependencies
+[install]: https://www.drupal.org/docs/extending-drupal/installing-modules#s-add-a-module-with-composer

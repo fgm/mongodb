@@ -11,11 +11,11 @@ This package is a collection of several modules, allowing Drupal sites to store
 various data in MongoDB, either using the provided modules, or writing their own
 on top of the main `mongodb` module to take .
 
-Module                | Information
-----------------------|---------------------------------------------------------
-mongodb               | Drupal/Drush wrapper around mongodb-php-library.
-mongodb_storage       | Key-value storage in MongoDB.
-mongodb_watchdog      | Store logger (watchdog) messages in MongoDB.
+| Module            | Information                                      |
+|-------------------|--------------------------------------------------|
+| mongodb           | Drupal/Drush wrapper around mongodb-php-library. |
+| mongodb_storage   | Key-value storage in MongoDB.                    |
+|  mongodb_watchdog | Store logger (watchdog) messages in MongoDB.     |
 
 The complete documentation is available on [Github pages].
 

@@ -1,6 +1,6 @@
 # MongoDB suite for Drupal
 
-The MongoDB suite for Drupal 8 and 9 is a set of modules enabling the storage of
+The MongoDB suite for Drupal 10 and 9 is a set of modules enabling the storage of
 various types of data on a Drupal&reg; site in MongoDB&reg;. This comes in
 addition to the standard SQL storage used by Drupal.
 
@@ -25,7 +25,6 @@ by Drupal core for the SQL database drivers.
 | [mongodb]           | driver    | Client and Database services, [tests] base   |
 | [mongodb_storage]   | key-value | Key-value store, with server-side expiration |
 | [mongodb_watchdog]  | logger    | PSR-3 compliant logger with a built-in UI    |
-| &nbsp;              |           |                                              |
 
 [mongodb]: /modules/mongodb
 [mongodb_storage]: /modules/mongodb_storage
@@ -43,7 +42,6 @@ Modules expected to be ported to 8.x-2.x in some release after 2.0 include:
 | mongodb_cache       | cache     | Cache storage, with server-side expiration |
 | mongodb_lock        | lock      | Lock plugin                                |
 | mongodb_path        | path      | Path plugin                                |
-| &nbsp;              |           |                                            |
 
 Some of these are likely to be included as `mongodb_storage` features, not as
 additional sub-modules.
@@ -54,16 +52,17 @@ additional sub-modules.
 This module has no direct equivalent in earlier versions, but its development
 has been considered too.
 
-Module           | Information
------------------|-------------------------------------------------------
-`mongodb_debug`  | Provides low-level debug information.
-&nbsp;           |
+| Module          | Information                           |
+|-----------------|---------------------------------------|
+ | `mongodb_debug` | Provides low-level debug information. |
 
-A D7 version exists as the [mongodb_logger] project, but it depends on the
-legacy `mongo` PHP extension. Futures versions will need the 1.5 version of the
-`mongodb` extension which implements the MongoDB [APM specification].
 
-[APM specification]: http://php.net/manual/fr/mongodb.tutorial.apm.php
+A D7 version exists as the [mongodb_logger] project,
+but it depends on the legacy `mongo` PHP extension.
+Any future version will need a version of the `mongodb` extension which implements the
+[MongoDB APM specification].
+
+[MongoDB APM specification]: http://php.net/manual/fr/mongodb.tutorial.apm.php
 [mongodb_logger]: https://github.com/FGM/mongodb_logger/
 
 
