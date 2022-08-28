@@ -1,21 +1,28 @@
 # Installation and Settings
-## Prerequisites
 
-The MongoDB module and sub-modules need some configuration to be useful.
+To summarize:
+
+- Install prerequisites
+- Download the MongoDB module suite to the site
+- Configure settings
+
+
+## Installing the prerequisites
+
+The MongoDB module and submodules need some configuration to be useful.
 This guide assumes that :
 
 * A [MongoDB][download] 4.2 to 6.x server instance has already been installed,
   configured and is available for connection from the Drupal instance.
-* The site will be running [Drupal][drupal] 9.4.x, 9.5.x or 10.0.x,
-  with [Drush][drush] 11.x.
 * The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.13 or
   later is installed and configured.
+* The site will be running [Drupal][drupal] 9.4.x, 9.5.x or 10.0.x,
+  with [Drush][drush] 11.x.
 * PHP is version 8.1.x. PHP 8.2.x should work but is not tested:
   be sure to [report any issue][report] you could have with it.
 * We highly recommend [using Composer](#installing-using-composer)
-  to install and use this module.
-
-Check out the [MongoDB extension and library for PHP][PHPMongoDBlib]
+  to install and use this module, and its dependency,
+  the [MongoDB extension and library for PHP][PHPMongoDBlib]
 
 Installing MongoDB itself is best explained in these official resources
 maintained by MongoDB Inc.:
@@ -27,7 +34,8 @@ maintained by MongoDB Inc.:
 MongoDB below 4.0 is no longer supported, which means you can no longer get
 a basic web admin interface by running `mongod` with the `–httpinterface`:
 that feature was [removed in 3.6][removedhttp].
-To some extent, it has been superseded by the [free monitoring][freemonitoring] service offered by MongoDB Inc.
+To some extent, this feature has been superseded by the
+[free cloud monitoring][freemonitoring] service offered by MongoDB Inc.
 
 [download]: https://www.mongodb.org/downloads
 [drupal]: https://www.drupal.org/download
@@ -44,10 +52,25 @@ To some extent, it has been superseded by the [free monitoring][freemonitoring] 
 [freemonitoring]: https://docs.mongodb.com/manual/administration/free-monitoring/
 
 
-## Settings Configuration
+## Downloading the modules
 
-* Download the module package, as per the Drupal documentation about
-  [Installing modules][install].
+If you are already using [Composer][composer] in your site to manage module
+dependencies, as recommended, installing is just one command:
+
+```bash
+cd <site root path>
+# Download the tagged (stable) version:
+composer require -nvv -W --prefer-stable "drupal/mongodb:^2.1"
+# ...or the latest version:
+composer require -nvv -W "drupal/mongodb:dev-2.x"
+```
+
+Alternatively, download the module package by any other means,
+as per the Drupal documentation about [Installing modules][install].
+
+
+## Configuring settings
+
 * Copy the relevant section from `mongodb/example.settings.local.php` to your
   `settings.local.php` file if you use one, or `settings.php` otherwise,
   and adapt it to match your MongoDB settings.
@@ -63,9 +86,10 @@ To some extent, it has been superseded by the [free monitoring][freemonitoring] 
     database to avoid stepping on each other's toes. This is especially useful
     for bespoke modules created for the needs of a specific site, which can thus
     use their own databases, possibly located on other MongoDB clusters.
-    For example, with the following settings:
+    For example, consider the following settings:
 
 ```php
+<?php
 // In sites/default/settings.local.php.
 $settings['mongodb'] = [
   'clients' => [
@@ -84,6 +108,7 @@ $settings['mongodb'] = [
   ],
 ];
 ```
+
   * With these settings:
     * The `default` database alias will handle collections in the `drupal`
       database on the `default` MongoDB server installed in earlier steps.
@@ -95,30 +120,22 @@ $settings['mongodb'] = [
 The module contains an example default implementation of these settings, which
 you can copy or include, in `mongodb/example.settings.local.php`.
 
+## Enabling the module
+
+Enable the `mongodb` module, using `drush en mongodb` or the Drupal UI.
+
+You now have access to the MongoDB services and Drush/Console commands for the `mongodb` module.
+
 Once the module is installed and enabled, you can check its requirements on
 `/admin/reports/status`:
 
 ![MongoDB on status page](images/mongodb-requirements.png)
 
+You can configure it on `/admin/config/system/mongodb/watchdog`.
 
-## Installing using Composer
-
-If you are already using [Composer][composer] in your site to manage module
-dependencies, installing is just a two-steps process:
-
-* At the root of your site, add this package:
-
-        # Stable version
-        composer require "drupal/mongodb:^2.0.0"
-
-        # Latest version
-        composer require "drupal/mongodb:dev-2.x"
-
-* Enable the `mongodb` module. You now have access to the MongoDB services and
-  Drush/Console commands for the `mongodb` module.
-* Optionally, enabled the [`mongodb_storage`](modules/mongodb_storage.md)
-  and [`mongodb_watchdog`](modules/mongodb_watchdog.md) modules,
-  for additional services and commands.
+Optionally, enable the [`mongodb_storage`](modules/mongodb_storage.md)
+and [`mongodb_watchdog`](modules/mongodb_watchdog.md) modules,
+for additional services and commands.
 
 [composer]: https://www.drupal.org/docs/develop/using-composer/manage-dependencies
 [install]: https://www.drupal.org/docs/extending-drupal/installing-modules#s-add-a-module-with-composer

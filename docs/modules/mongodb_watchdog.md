@@ -4,6 +4,15 @@ The `mongodb_watchdog` module stores the log entries for your Drupal site
 in MongoDB collections as mentioned in
 [Settings Configuration](../../install#settings-configuration)
 
+It also exposes a logs browsing UI on `admin/reports/mongodb/watchdog/`,
+with additional features in comparison with the built-in database logging:
+
+- location of error log, with source file and line number
+- integrated display of the Top404 and Top403
+- grouping of logs by message
+- optional: grouping of logs by HTTP request, when the `mongodb_watchdog.request_tracking`
+  configuration is enabled
+
 This module uses a separate database, defined by the `logger` database alias in
 settings. Do NOT point that alias to the same database as `default`, because the
 module Drops the `logger` database when uninstalling, which would drop all your
@@ -68,15 +77,15 @@ which needs to be interpreted.
     9999: 0
     10000: 0
     $
-    
+
 What the output of this command represents is the number of `watchdog_event_*`
 collections with a document count in the range specified as the key.
- 
+
 In the results, the first and last two entries are specific: they match exact
 counts, while the others are intervals, so the actual buckets are: `0`, `1`,
 `2..1000`, `1001..2000`, ..., `9001..9998`, `9999`, `10000`. The specific
 value 10000 is the number of entries allowed in event collections, as these are
-MongoDB capped collections: whatever its value `n`, the command will report 
+MongoDB capped collections: whatever its value `n`, the command will report
 `0`, `1`, `n-1`, `n`, and 9 ranges in between.
 
 
