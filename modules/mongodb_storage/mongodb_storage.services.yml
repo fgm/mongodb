@@ -7,7 +7,8 @@ services:
       - '@datetime.time'
     class: 'Drupal\mongodb_storage\KeyValue\KeyValueExpirableFactory'
   keyvalue.mongodb:
-    arguments: [ '@mongodb.database_factory' ]
+    arguments:
+      - '@mongodb.database_factory'
     class: 'Drupal\mongodb_storage\KeyValue\KeyValueFactory'
 
   mongodb.storage.queue:

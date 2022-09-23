@@ -25,6 +25,7 @@ This guide assumes that :
 * We highly recommend [using Composer](#installing-using-composer)
   to install and use this module, and its dependency,
   the [MongoDB extension and library for PHP][PHPMongoDBlib]
+
 Installing MongoDB itself is best explained in these official resources
 maintained by MongoDB Inc.:
 

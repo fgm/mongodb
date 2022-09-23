@@ -117,11 +117,10 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];
-    $replacement = $selector +
-      [
-        'expire' => $this->getBsonExpire($expire),
-        'value' => serialize($value),
-      ];
+    $replacement = $selector + [
+      'expire' => $this->getBsonExpire($expire),
+      'value' => serialize($value),
+    ];
     $options = [
       'upsert' => TRUE,
     ];
@@ -146,11 +145,10 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];
-    $replacement = $selector +
-      [
-        'expire' => $this->getBsonExpire($expire),
-        'value' => serialize($value),
-      ];
+    $replacement = $selector + [
+      'expire' => $this->getBsonExpire($expire),
+      'value' => serialize($value),
+    ];
     $options = [
       'upsert' => FALSE,
     ];

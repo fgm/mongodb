@@ -53,7 +53,7 @@ has been considered too.
 
 | Module          | Information                           |
 |-----------------|---------------------------------------|
- | `mongodb_debug` | Provides low-level debug information. |
+| `mongodb_debug` | Provides low-level debug information. |
 
 
 A D7 version exists as the [mongodb_logger] project,
