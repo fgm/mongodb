@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
-use Drupal\KernelTests\KernelTestBase;
-use Drupal\mongodb_storage\Queue\MongoDBQueue;
-use Drupal\mongodb_storage\Storage;
+use Drupal\Core\Queue\QueueInterface;
 
 /**
  * Queues and dequeues a set of items to check the basic queue functionality.
  *
- * @coversDefaultClass \Drupal\mongodb_storage\Queue\MongoDbQueue
+ * @coversDefaultClass \Drupal\mongodb_storage\Queue\Queue
  *
  * @group MongoDB
  */
@@ -23,24 +21,15 @@ class QueueTest extends QueueTestBase {
   /**
    * Tests the System queue.
    */
-  public function testMongoDBQueue() {
+  public function testMongoDbQueue() {
     // Create two queues.
-    $queue1 = new MongoDBQueue(
-      $this->randomMachineName(),
-      $this->getSettingsArray(),
-      $this->container->get(Storage::SERVICE_QUEUE_STORAGE)
-    );
-    $queue1->createQueue();
+    $qf = $this->container->get('queue.mongodb');
+    $q1 = $qf->get($this->randomMachineName());
+    $q1->createQueue();
+    $q2 = $qf->get($this->randomMachineName());
+    $q2->createQueue();
 
-    $queue2 = new MongoDBQueue(
-      $this->randomMachineName(),
-      $this->getSettingsArray(),
-      $this->container->get(Storage::SERVICE_QUEUE_STORAGE)
-    );
-    $queue1->createQueue();
-
-    $this->runQueueTest($queue1, $queue2);
-    //    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n"); ob_flush();
+    $this->runQueueTest($q1, $q2);
   }
 
   /**
@@ -51,7 +40,7 @@ class QueueTest extends QueueTestBase {
    * @param \Drupal\Core\Queue\QueueInterface $queue2
    *   An instantiated queue object.
    */
-  protected function runQueueTest($queue1, $queue2) {
+  protected function runQueueTest(QueueInterface $queue1, QueueInterface $queue2) {
     // Create four items.
     $data = [];
     for ($i = 0; $i < 4; $i++) {
@@ -74,67 +63,35 @@ class QueueTest extends QueueTestBase {
 
     // First two dequeued items should match the first two items we queued.
     $score = $this->queueScore($data, $new_items);
-
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
     $this->assertEquals(2, $score, 'Two items matched');
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
 
     // Add two more items.
     $queue1->createItem($data[2]);
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
     $queue1->createItem($data[3]);
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
 
-    $this->assertSame(4, $queue1->numberOfItems(),
-      'Queue 1 is not empty after adding items.');
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
-    $this->assertSame(0, $queue2->numberOfItems(),
-      'Queue 2 is empty while Queue 1 has items');
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
+    $this->assertSame(4, $queue1->numberOfItems(), 'Queue 1 is not empty after adding items.');
+    $this->assertSame(0, $queue2->numberOfItems(), 'Queue 2 is empty while Queue 1 has items');
 
     $items[] = $item = $queue1->claimItem();
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
     $new_items[] = $item->data;
-
     $items[] = $item = $queue1->claimItem();
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
     $new_items[] = $item->data;
 
     // All dequeued items should match the items we queued exactly once,
     // therefore the score must be exactly 4.
-    $this->assertEquals(4, $this->queueScore($data, $new_items),
-      'Four items matched');
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
+    $this->assertEquals(4, $this->queueScore($data, $new_items), 'Four items matched');
 
     // There should be no duplicate items.
-    $this->assertEquals(4, $this->queueScore($new_items, $new_items),
-      'Four items matched');
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
+    $this->assertEquals(4, $this->queueScore($new_items, $new_items), 'Four items matched');
 
     // Delete all items from queue1.
     foreach ($items as $item) {
       $queue1->deleteItem($item);
     }
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
 
     // Check that both queues are empty.
     $this->assertSame(0, $queue1->numberOfItems(), 'Queue 1 is empty');
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
     $this->assertSame(0, $queue2->numberOfItems(), 'Queue 2 is empty');
-    // fwrite(STDERR, __METHOD__ . " line " . __LINE__ . "\n");
-    ob_flush();
   }
 
   /**

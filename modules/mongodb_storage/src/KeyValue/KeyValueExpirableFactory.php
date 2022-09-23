@@ -6,6 +6,7 @@ namespace Drupal\mongodb_storage\KeyValue;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
+use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use Drupal\mongodb\DatabaseFactory;
 
 /**
@@ -49,7 +50,7 @@ class KeyValueExpirableFactory extends KeyValueFactory implements KeyValueExpira
    *
    * @see drush_mongodb_storage_import_keyvalue()
    */
-  public function get($collection) {
+  public function get($collection): KeyValueStoreExpirableInterface {
     $storeCollection = $this->database->selectCollection(static::COLLECTION_PREFIX . $collection);
     $store = new KeyValueStoreExpirable($collection, $storeCollection);
     $store->setTimeService($this->time);

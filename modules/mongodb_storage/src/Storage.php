@@ -19,5 +19,4 @@ class Storage {
 
   const SERVICE_SQL_IMPORT = 'mongodb.storage.sql_import';
 
-  const SERVICE_QUEUE_STORAGE = 'mongodb.storage.queue';
 }

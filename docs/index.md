@@ -23,7 +23,8 @@ by Drupal core for the SQL database drivers.
 | Module              | In a word | Information                                  |
 |---------------------|-----------|----------------------------------------------|
 | [mongodb]           | driver    | Client and Database services, [tests] base   |
-| [mongodb_storage]   | key-value,<br/> queue | Key-value store, with server-side expiration <br/>Default queue implementation |
+| [mongodb_storage]   | key-value | Key-value store, with server-side expiration |
+|                     | queue     | Default queue implementation                 |
 | [mongodb_watchdog]  | logger    | PSR-3 compliant logger with a built-in UI    |
 
 [mongodb]: /modules/mongodb

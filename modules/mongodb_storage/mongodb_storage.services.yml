@@ -11,11 +11,6 @@ services:
       - '@mongodb.database_factory'
     class: 'Drupal\mongodb_storage\KeyValue\KeyValueFactory'
 
-  mongodb.storage.queue:
-    class: MongoDB\Database
-    factory: [ '@mongodb.database_factory', 'get' ]
-    arguments: [ 'queue' ]
-
   mongodb.storage.sql_import:
     class: Drupal\mongodb_storage\Install\SqlImport
     arguments:
@@ -27,5 +22,7 @@ services:
       - '@datetime.time'
 
   queue.mongodb:
-    class: Drupal\mongodb_storage\Queue\QueueMongoDBFactory
-    arguments: [ '@mongodb.storage.queue', '@settings' ]
+    class: Drupal\mongodb_storage\Queue\QueueFactory
+    arguments:
+      - '@mongodb.database_factory'
+      - '@datetime.time'

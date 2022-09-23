@@ -8,7 +8,7 @@ The `mongodb_storage` module implements two Drupal APIs in MongoDB:
 [keyvallink]: https://en.wikipedia.org/wiki/Key-value_database
 [queueapilink]: https://api.drupal.org/api/drupal/core%21core.api.php/group/queue/9.2.x
 
-[settings]: ../../install#settings-configuration
+[settings]: ../install.md#settings-configuration
 [default_queue]: https://api.drupal.org/api/drupal/core%21lib%21Drupal.php/function/Drupal%3A%3Aqueue/9.2.x
 
 ## Key-Value (Expirable) storage
