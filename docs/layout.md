@@ -12,6 +12,6 @@
     mkdocs.yml                 # The Mkdocs configuration file
     modules/                   #
         mongodb                # Driver
-        mongodb_storage        # Key-value
+        mongodb_storage        # Key-value and Queue
         mongodb_watchdog       # Logger
     phpcs.xml                  # The PHPCodeSniffer configuration file

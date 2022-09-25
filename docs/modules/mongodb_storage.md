@@ -1,4 +1,4 @@
-# Key-value: `mongodb_storage`
+# Key-value and Queue: `mongodb_storage`
 
 The `mongodb_storage` module implements two Drupal APIs in MongoDB:
 
@@ -8,7 +8,7 @@ The `mongodb_storage` module implements two Drupal APIs in MongoDB:
 [keyvallink]: https://en.wikipedia.org/wiki/Key-value_database
 [queueapilink]: https://api.drupal.org/api/drupal/core%21core.api.php/group/queue/9.2.x
 
-[settings]: ../install.md#settings-configuration
+[settings]: ../install#settings-configuration
 [default_queue]: https://api.drupal.org/api/drupal/core%21lib%21Drupal.php/function/Drupal%3A%3Aqueue/9.2.x
 
 ## Key-Value (Expirable) storage
@@ -49,7 +49,7 @@ of the configuration steps.
 
 ## Queue service
 
-This module provides a default MongoDB Queue API implementation.
+This module provides a MongoDB Queue API implementation.
 
 * Enable the module, e.g. using `drush en mongodb_storage`.
 * Define a `queue` database alias, as described in [settings configuration][settings]
