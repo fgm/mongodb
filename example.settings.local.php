@@ -33,4 +33,4 @@ $configureMongoDb = function (array $settings): array {
 };
 
 // @codingStandardsIgnoreLine
-$settings = $configureMongoDb($settings);
+$settings = $configureMongoDb($settings ?? []);

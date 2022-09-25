@@ -5,6 +5,8 @@
 ## MkDocs
 /site/
 *.patch
+/tmp/*
+!/tmp/.gitkeep
 
 ## Composer
 /vendor/

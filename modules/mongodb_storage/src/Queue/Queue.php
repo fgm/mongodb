@@ -36,7 +36,7 @@ class Queue implements QueueInterface {
    *
    * @var \Drupal\Component\Datetime\Time
    */
-  protected Time $time;
+  public Time $time;
 
   /**
    * Queue constructor.
@@ -50,31 +50,6 @@ class Queue implements QueueInterface {
     $this->collectionName = $collection->getCollectionName();
     $this->mongoDbCollection = $collection;
     $this->time = $time;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __sleep() {
-    return [
-      'collectionName',
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * The __wakeup() method cannot use the container, because its constructor is
-   * never invoked, and the container itself must not be serialized.
-   */
-  public function __wakeup() {
-    /** @var \Drupal\mongodb\DatabaseFactory $databaseFactory */
-    $dbFactory = \Drupal::service(MongoDb::SERVICE_DB_FACTORY);
-
-    /** @var \MongoDB\Database $database */
-    $database = $dbFactory->get(QueueFactory::DB_QUEUE);
-    $this->mongoDbCollection = $database->selectCollection($this->mongoDbCollectionName);
-    $this->time = \Drupal::service("datetime.time");
   }
 
   /**
@@ -108,13 +83,14 @@ class Queue implements QueueInterface {
    * {@inheritdoc}
    */
   public function claimItem($lease_time = 30): Item|bool {
-    $newobj = [
-      'expires' => time() + $lease_time,
+    $now = $this->time->getCurrentTime();
+    $newObj = [
+      'expires' => $now + $lease_time,
     ];
     /** @var \MongoDB\Model\BSONDocument|null $libRes */
     $libRes = $this->mongoDbCollection->findOneAndUpdate(
-      ['expires' => 0],
-      ['$set' => $newobj],
+      ['expires' => ['$lte' => $now]],
+      ['$set' => $newObj],
       [
         'returnDocument' => FindOneAndUpdate::RETURN_DOCUMENT_AFTER,
         'sort' => ['created' => 1],
@@ -132,15 +108,13 @@ class Queue implements QueueInterface {
   public function releaseItem($item): bool {
     $res = $this->mongoDbCollection
       ->updateOne(
-        ['_id' => $item->_id],
-        [
-          '$set' =>
-            [
-              'expires' => 0,
-            ],
-        ]
+        ['_id' => $item->id()],
+        ['$set' => ['expires' => 0]],
       );
-    return $res->isAcknowledged();
+    return $res->isAcknowledged()
+      && $res->getMatchedCount() == 1
+      && $res->getModifiedCount() == 1
+      && $res->getUpsertedCount() == 0;
   }
 
   /**

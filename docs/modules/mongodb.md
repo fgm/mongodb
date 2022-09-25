@@ -35,9 +35,8 @@ settings,
 
 ## Troubleshooting commands:
 
-The module provides two commands designed to help troubleshoot issues and access
-the contents of the MongoDB databases. Both are available for Drush and Drupal
-Console indifferently.
+The module provides two Drush commands designed to help troubleshoot issues and access
+the contents of the MongoDB databases.
 
 * `drush mongodb:settings` reports how the module suite sees the settings. It
   needs no parameters, and returns YAML output looking like this:

@@ -1,2 +1,0 @@
-description: 'Import the in-SQL-database Key-Value to MongoDB.'
-help: 'This command imports both the persistent and expirable key-value contents from the SQL database to MongoDB.'

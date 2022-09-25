@@ -112,7 +112,7 @@ function _mongodb_requirements_databases(array $settings, array $databases, arra
   $warnings = [];
   $success = TRUE;
   foreach ($databases as $database => $list) {
-    list($client,) = $list;
+    [$client,] = $list;
     if (empty($aliases[$client])) {
       $success = FALSE;
       $warnings[] = t('Database "@db" references undefined client "@client".', [

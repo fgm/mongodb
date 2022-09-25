@@ -111,19 +111,19 @@ class EventController {
       $this->dateFormatter->format($event->timestamp, 'short'),
       $this->userCache[$uid],
       $template->asString($event->variables),
-      // Locations generated from Drush/Console will not necessarily match the
+      // Locations generated from Drush will not necessarily match the
       // site home URL, and will not therefore not necessarily be reachable, so
       // we only generate a link if the location is "within" the site.
       (mb_strpos($location, $this->front) === 0)
-      ? Link::fromTextAndUrl(mb_substr($location, $this->baseLength), Url::fromUri($location))
-      : $location,
+        ? Link::fromTextAndUrl(mb_substr($location, $this->baseLength), Url::fromUri($location))
+        : $location,
       empty($event->referrer) ? '' : Link::fromTextAndUrl($event->referrer, Url::fromUri($event->referrer)),
       $event->hostname,
       isset($event->requestTracking_id)
-      ? Link::createFromRoute($this->t('Request'),
-        'mongodb_watchdog.reports.request',
-        ['uniqueId' => $event->requestTracking_id])
-      : '',
+        ? Link::createFromRoute($this->t('Request'),
+          'mongodb_watchdog.reports.request',
+          ['uniqueId' => $event->requestTracking_id])
+        : '',
     ];
 
     return $ret;

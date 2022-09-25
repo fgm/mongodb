@@ -68,7 +68,7 @@ class ToolsTest extends MongoDbTestBase {
 
     foreach ($expectations as $expectation) {
       // Current coding standards don't support foreach (foo as list()).
-      list($selector, $count) = $expectation;
+      [$selector, $count] = $expectation;
 
       $selectorString = json_encode($selector);
       $actual = $tools->find(MongoDb::DB_DEFAULT, $collectionName, $selectorString);

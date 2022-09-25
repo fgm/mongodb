@@ -55,9 +55,8 @@ information about severity levels.
 
 ## Troubleshooting command
 
-The module provides one single command designed to help troubleshoot issues with
-logging when this module is enabled. It is available for Drush and Drupal
-Console indifferently.
+The module provides one single Drush command designed to help troubleshoot issues with
+logging when this module is enabled.
 
 The command takes no arguments and returns an analysis of the logger collections
 which needs to be interpreted.

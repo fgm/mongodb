@@ -106,7 +106,7 @@ class SqlImportTest extends KeyValueTestBase {
    */
   public function testImportService() {
     $this->assertInstanceOf(SqlImport::class, $this->sqlImport,
-      "SQL import service is available");
+      'SQL import service is available');
     $this->assertTrue(method_exists($this->sqlImport, 'import'));
   }
 
@@ -212,7 +212,7 @@ class SqlImportTest extends KeyValueTestBase {
     $keyValue = $this->container->get($service);
     $mongoCollections = $this->getKvCollectionNames($prefix);
     $this->assertEquals(array_keys($expectedCollections), $mongoCollections,
-      "Collection names match");
+      'Collection names match');
     foreach ($expectedCollections as $collectionName => $expected) {
       $all = $keyValue->get($collectionName)->getAll();
       ksort($all);

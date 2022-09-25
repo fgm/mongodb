@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
-use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Queue\QueueInterface;
+use Drupal\KernelTests\Core\Queue\QueueTest as coreQueueTest;
+use Drupal\mongodb\MongoDb;
+use Drupal\mongodb_storage\Queue\Item;
+use Drupal\mongodb_storage\Queue\Queue;
+use Drupal\mongodb_storage\Queue\QueueFactory;
+use Drupal\mongodb_storage\Storage;
+use MongoDB\BSON\ObjectId;
+use MongoDB\Model\BSONDocument;
 
 /**
  * Queues and dequeues a set of items to check the basic queue functionality.
@@ -16,97 +23,177 @@ use Drupal\Core\Queue\QueueInterface;
  */
 class QueueTest extends QueueTestBase {
 
-  use DependencySerializationTrait;
+  /**
+   * The queue.mongodb service.
+   *
+   * @var \Drupal\mongodb_storage\Queue\QueueFactory|null
+   */
+  protected ?QueueFactory $queueFactory;
 
   /**
-   * Tests the System queue.
+   * {@inheritDoc}
    */
-  public function testMongoDbQueue() {
+  public function setUp(): void {
+    parent::setUp();
+    $this->queueFactory = $this->container->get(Storage::SERVICE_QUEUE);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function tearDown(): void {
+    unset($this->queueFactory);
+    parent::tearDown();
+  }
+
+  /**
+   * Creates a queue Item from the data specified or generated.
+   *
+   * @param \Drupal\Core\Queue\QueueInterface $q
+   *   An already created queue.
+   * @param mixed $data
+   *   The data to use for the item, or NULL to generate a pseudo-random item.
+   *
+   * @return \Drupal\mongodb_storage\Queue\Item
+   *   An item based on $data after insertion.
+   */
+  protected function createItem(QueueInterface $q, mixed $data = NULL): Item {
+    $c1 = $q->numberOfItems();
+    if (empty($data)) {
+      $data = [$this->randomMachineName() => $this->randomObject()];
+    }
+    // Now will always be <= the actual stored item.
+    $now = ($q instanceof Queue) ? $q->time->getCurrentTime() : time();
+    /** @var \MongoDB\BSON\ObjectId $id */
+    $id = $q->createItem($data);
+    $this->assertTrue($id instanceof ObjectId);
+    $this->assertEquals($c1 + 1, $q->numberOfItems());
+    return Item::fromDoc(
+      new BSONDocument([
+        '_id' => $id,
+        'created' => $now,
+        'expires' => 0,
+        'data' => serialize($data),
+      ])
+    );
+  }
+
+  /**
+   * Create a queue from the given name or a pseudo-random one.
+   *
+   * @param string $name
+   *   The name to use, or empty to generate a pseudo-random name.
+   *
+   * @return \Drupal\Core\Queue\QueueInterface
+   *   A queue instance.
+   */
+  protected function createQueue(string $name = ''): QueueInterface {
+    if (empty($name)) {
+      $name = $this->randomMachineName();
+    }
+    $q = $this->queueFactory->get($name);
+    $q->createQueue();
+    $this->assertEquals(0, $q->numberOfItems());
+    return $q;
+  }
+
+  /**
+   * Test that expired claims automatically release items.
+   */
+  public function testClaimTimeout(): void {
+    $q = $this->createQueue();
+    $id = $this->createItem($q)->id();
+
+    /** @var \Drupal\mongodb_storage\Queue\Item|bool $claimed */
+    $claimed = $q->claimItem(0);
+    $this->assertEquals($id, $claimed->id());
+
+    // Since the claim expired immediately, the item is available again.
+    $c2 = $q->claimItem();
+    $this->assertTrue($c2 instanceof Item);
+    $this->assertEquals($id, $c2->id());
+  }
+
+  /**
+   * Validates collection creation and removal.
+   */
+  public function testCreateDeleteQueue(): void {
+    $name = $this->randomMachineName();
+    $expectedName = "q_${name}";
+
+    /** @var \Drupal\mongodb\DatabaseFactory $dbf */
+    $dbf = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
+    $db = $dbf->get('queue');
+
+    $q = $this->queueFactory->get($name);
+    $q->createQueue();
+    $actualNames = $db->listCollectionNames();
+    $this->assertContains(
+      $expectedName,
+      $actualNames,
+      "Creating queue ${name} did not create collection $expectedName",
+    );
+
+    $q->deleteQueue();
+    $actualNames = $db->listCollectionNames();
+    $this->assertNotContains(
+      $expectedName,
+      $actualNames,
+      "Deleting queue ${name} did not remove collection $expectedName",
+    );
+  }
+
+  /**
+   * Tests the Queue createItem / claimItem / deleteItem operations.
+   */
+  public function testMongoDbQueue(): void {
     // Create two queues.
-    $qf = $this->container->get('queue.mongodb');
-    $q1 = $qf->get($this->randomMachineName());
+    $q1 = $this->queueFactory->get($this->randomMachineName());
     $q1->createQueue();
-    $q2 = $qf->get($this->randomMachineName());
+    $q2 = $this->queueFactory->get($this->randomMachineName());
     $q2->createQueue();
 
     $this->runQueueTest($q1, $q2);
   }
 
   /**
-   * Queues and dequeues a set of items to check the basic queue functionality.
+   * Reuse the core QueueTest::runQueueTest to catch regressions.
    *
-   * @param \Drupal\Core\Queue\QueueInterface $queue1
-   *   An instantiated queue object.
-   * @param \Drupal\Core\Queue\QueueInterface $queue2
-   *   An instantiated queue object.
+   * This implementation is a workaround for 3311758 in case it is now fixed.
    */
-  protected function runQueueTest(QueueInterface $queue1, QueueInterface $queue2) {
-    // Create four items.
-    $data = [];
-    for ($i = 0; $i < 4; $i++) {
-      $data[] = [$this->randomMachineName() => $this->randomMachineName()];
-    }
-
-    // Queue items 1 and 2 in the queue1.
-    $queue1->createItem($data[0]);
-    $queue1->createItem($data[1]);
-
-    // Retrieve two items from queue1.
-    $items = [];
-    $new_items = [];
-
-    $items[] = $item = $queue1->claimItem();
-    $new_items[] = $item->data;
-
-    $items[] = $item = $queue1->claimItem();
-    $new_items[] = $item->data;
-
-    // First two dequeued items should match the first two items we queued.
-    $score = $this->queueScore($data, $new_items);
-    $this->assertEquals(2, $score, 'Two items matched');
-
-    // Add two more items.
-    $queue1->createItem($data[2]);
-    $queue1->createItem($data[3]);
-
-    $this->assertSame(4, $queue1->numberOfItems(), 'Queue 1 is not empty after adding items.');
-    $this->assertSame(0, $queue2->numberOfItems(), 'Queue 2 is empty while Queue 1 has items');
-
-    $items[] = $item = $queue1->claimItem();
-    $new_items[] = $item->data;
-    $items[] = $item = $queue1->claimItem();
-    $new_items[] = $item->data;
-
-    // All dequeued items should match the items we queued exactly once,
-    // therefore the score must be exactly 4.
-    $this->assertEquals(4, $this->queueScore($data, $new_items), 'Four items matched');
-
-    // There should be no duplicate items.
-    $this->assertEquals(4, $this->queueScore($new_items, $new_items), 'Four items matched');
-
-    // Delete all items from queue1.
-    foreach ($items as $item) {
-      $queue1->deleteItem($item);
-    }
-
-    // Check that both queues are empty.
-    $this->assertSame(0, $queue1->numberOfItems(), 'Queue 1 is empty');
-    $this->assertSame(0, $queue2->numberOfItems(), 'Queue 2 is empty');
+  protected function runQueueTest(
+    QueueInterface $queue1,
+    QueueInterface $queue2
+  ): void {
+    $coreTest = new coreQueueTest();
+    $rc = new \ReflectionClass($coreTest);
+    $rm = $rc->getMethod('runQueueTest');
+    $rm->setAccessible(TRUE);
+    $rm->invoke($coreTest, $queue1, $queue2);
   }
 
   /**
-   * Returns the number of equal items in two arrays.
+   * Test the createItem / releaseItem behaviour.
    */
-  protected function queueScore($items, $new_items): int {
-    $score = 0;
-    foreach ($items as $item) {
-      foreach ($new_items as $new_item) {
-        if ($item === $new_item) {
-          $score++;
-        }
-      }
-    }
-    return $score;
+  public function testReleaseItem(): void {
+    $q = $this->createQueue();
+    $id = $this->createItem($q)->id();
+
+    /** @var \Drupal\mongodb_storage\Queue\Item|bool $claimed */
+    $claimed = $q->claimItem();
+    $this->assertTrue($claimed instanceof Item);
+    $this->assertEquals($id, $claimed->id());
+    // Claiming does not consume the item.
+    $this->assertEquals(1, $q->numberOfItems());
+
+    // But it makes it unavailable.
+    $c2 = $q->claimItem();
+    $this->assertFalse($c2);
+
+    // While releasing it makes it available again.
+    $q->releaseItem($claimed);
+    $c3 = $q->claimItem();
+    $this->assertTrue($c3 instanceof Item);
   }
 
 }

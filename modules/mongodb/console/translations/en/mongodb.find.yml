@@ -1,2 +1,0 @@
-description: 'Execute a find() query against a collection.'
-help: 'By default, it will use a find({}) query if you do not specify a selector'
