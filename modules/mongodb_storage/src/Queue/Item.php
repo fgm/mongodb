@@ -1,0 +1,77 @@
+<?php
+
+namespace Drupal\mongodb_storage\Queue;
+
+use MongoDB\BSON\ObjectId;
+use MongoDB\Model\BSONDocument;
+
+/**
+ * Class Item is the type returned by claimItem on MongoDB queues.
+ *
+ * Its properties are public because they are documented as part of
+ * Drupal\Core\Queue\QueueInterface::claimItem().
+ */
+class Item {
+
+  /**
+   * The timestamp at which the item was stored in the DB.
+   *
+   * @var int
+   */
+  public int $created;
+
+  /**
+   * The timestamp at which the claim which returned this item will expire.
+   *
+   * At that point, the item will be released automatically for other claims.
+   *
+   * @var int
+   */
+  public int $expires;
+
+  /**
+   * The data as published to the queue by createItem.
+   *
+   * @var mixed
+   */
+  public mixed $data;
+
+  /**
+   * A string representation of the _id key.
+   *
+   * Its name is required by QueueInterface::claimItem().
+   *
+   * @var string
+   */
+  // phpcs:ignore
+  public string $item_id;
+
+  /**
+   * Constructs a new instance from a BSONDocument returned by a find call.
+   *
+   * @param \MongoDB\Model\BSONDocument $doc
+   *   The input document.
+   *
+   * @return static
+   *   A new instance.
+   */
+  public static function fromDoc(BSONDocument $doc): self {
+    $that = new self();
+    $that->created = $doc['created'];
+    $that->data = unserialize($doc['data']);
+    $that->expire = $doc['expires'];
+    $that->item_id = $doc['_id'] ?? new ObjectId();
+    return $that;
+  }
+
+  /**
+   * The item _id, ready to be used in queries.
+   *
+   * @return \MongoDB\BSON\ObjectId
+   *   The ID in ObjectId form.
+   */
+  public function id(): ObjectId {
+    return new ObjectId($this->item_id);
+  }
+
+}

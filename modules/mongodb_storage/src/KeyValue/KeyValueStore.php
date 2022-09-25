@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\mongodb_storage;
+namespace Drupal\mongodb_storage\KeyValue;
 
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\Core\KeyValueStore\StorageBase;
@@ -37,20 +37,20 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    *
    * @var \MongoDb\Collection
    */
-  protected $mongoDbCollection;
+  protected Collection $mongoDbCollection;
 
   /**
    * KeyValueStore constructor.
    *
-   * @param string $collection
-   *   The KV collection name.
-   * @param \MongoDB\Collection|null $storeCollection
+   * @param string $collectionName
+   *   The KV (not MongoDB) collection name.
+   * @param \MongoDB\Collection|null $collection
    *   The eponymous MongoDB collection.
    */
-  public function __construct($collection, Collection $storeCollection = NULL) {
-    parent::__construct($collection);
-    $this->collectionName = $storeCollection->getCollectionName();
-    $this->mongoDbCollection = $storeCollection;
+  public function __construct($collectionName, Collection $collection = NULL) {
+    parent::__construct($collectionName);
+    $this->collectionName = $collection->getCollectionName();
+    $this->mongoDbCollection = $collection;
   }
 
   /**
@@ -74,7 +74,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
 
     /** @var \MongoDB\Database $database */
     $database = $dbFactory->get(KeyValueFactory::DB_KEYVALUE);
-    $this->collection = $database->selectCollection($this->collectionName);
+    $this->mongoDbCollection = $database->selectCollection($this->collectionName);
   }
 
   /**

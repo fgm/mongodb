@@ -1,3 +1,4 @@
+# 2022-09-23: MongoDB doesn't support focal yet.
 dist: focal
 
 language: php
@@ -7,9 +8,7 @@ os: linux
 php:
   - 8.1
 
-services:
-  - mongodb
-
+services: []
 jobs:
   allow_failures:
     - php: ~
@@ -35,12 +34,21 @@ cache:
 
 before_install:
   # Ensure we have the latest packages, including SQLite and MongoDB
+  # - sudo echo "deb http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse" >> /etc/apt/sources.list
+  - sudo apt-get -y update > /dev/null
+
+  - sudo apt-get -y install dirmngr gnupg apt-transport-https ca-certificates software-properties-common
+  # Get the MongoDB public GPG key: needs gnupg above
   - wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo tee /etc/apt/trusted.gpg.d/mongodb.asc
   - echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-  - sudo echo "deb http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse" >> /etc/apt/sources.list
   - sudo apt-get -y update > /dev/null
-  - sudo apt-get -y install sqlite3/focal mongodb-mongosh/focal
-  - sudo apt-get -y install dirmngr gnupg apt-transport-https ca-certificates software-properties-common
+  - sudo apt-get -y install sqlite3/focal mongodb-org/focal
+  - sudo systemctl daemon-reload
+  - sudo systemctl start mongod
+
+  # Install php packages required for running a web server from drush on php 8
+  # - sudo apt-get install -y --force-yes php-cgi php-mysql
+  - sudo apt-get install -y libxml2-utils tidy
 
   # Composer: update and add to PATH.
   - sed -i '1i export PATH="$HOME/.composer/vendor/bin:$PATH"' $HOME/.bashrc
