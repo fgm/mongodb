@@ -30,7 +30,7 @@ class KeyValueFactoryTest extends KeyValueTestBase {
     $store = $factory->get(static::COLLECTION);
 
     $this->assertInstanceOf(KeyValueStoreExpirable::class, $store,
-      "Store is not an expirable key-value");
+      'Store is not an expirable key-value');
     $actual = $store->getCollectionName();
     $this->assertEquals(static::COLLECTION, $actual, 'Collection name matches');
   }
@@ -46,9 +46,9 @@ class KeyValueFactoryTest extends KeyValueTestBase {
     $store = $factory->get(static::COLLECTION);
 
     $this->assertInstanceOf(KeyValueStore::class, $store,
-      "Store is a MongoDB key-value");
+      'Store is a MongoDB key-value');
     $this->assertNotInstanceOf(KeyValueStoreExpirable::class, $store,
-      "Store is not an expirable key-value");
+      'Store is not an expirable key-value');
     $actual = $store->getCollectionName();
     $this->assertEquals(static::COLLECTION, $actual, 'Collection name matches');
   }

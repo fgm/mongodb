@@ -17,20 +17,17 @@ jobs:
 env:
   global:
     - MODULE_NAME='mongodb'
+    - MODULE_PATH="modules/contrib/$MODULE_NAME"
     - BASE_URL=http://127.0.0.1:8080
     - DB_NAME='travis_ci_mongodb'
     - DB_URL="sqlite://localhost/test"
     - COVERAGE_FILE=coverage.clover
     # Relative path for coverage is relative to current directory of running
-    # code, not current directory launching phpunit. This means D8 root.
-    - PHPUNIT_OPTS="-c phpunit.xml -v --debug --coverage-clover=modules/contrib/$MODULE_NAME/$COVERAGE_FILE"
+    # code, not current directory launching phpunit. This means Drupal root.
+    - PHPUNIT_OPTS="-c core/phpunit.xml -v --debug --coverage-clover=$MODULE_PATH/$COVERAGE_FILE"
 
     # Code coverage via coveralls.io
     - COVERALLS="php-coveralls/php-coveralls:^2"
-
-cache:
-  directories:
-    - vendor
 
 before_install:
   # Ensure we have the latest packages, including SQLite and MongoDB
@@ -120,20 +117,21 @@ before_script:
 script:
   # Configure and run the tests
   # Use explicit config filtering Drupal core from coverage report.
-  - cp modules/contrib/$MODULE_NAME/core.phpunit.xml core/phpunit.xml
-  - cd core
-  - SIMPLETEST_BASE_URL="$BASE_URL" SIMPLETEST_DB="$DB_URL" ../vendor/bin/phpunit $PHPUNIT_OPTS ../modules/contrib/$MODULE_NAME
-  - cd ..
+  - cp $MODULE_PATH/core.phpunit.xml core/phpunit.xml
+  - export SIMPLETEST_BASE_URL="$BASE_URL"
+  - export SIMPLETEST_DB="$DB_URL"
+  - export XDEBUG_MODE="coverage"
+  - ./vendor/bin/phpunit $PHPUNIT_OPTS $MODULE_PATH
 
 after_script:
-  - cd modules/contrib/$MODULE_NAME
+  - cd $MODULE_PATH
 
   # Show the basic coverage info in log.
   - xmllint --xpath "/coverage/project/metrics" $COVERAGE_FILE  | tidy -xml -q --indent-attributes 1
 
+  # Report coverage to Coveralls.io, which runs from project root.
+  - php ../../../vendor/bin/php-coveralls --exclude-no-stmt -c .coveralls.yml -r . -x $COVERAGE_FILE -o coverage.json -vvv
+
   # Report coverage to Scrutinizer, which runs from checkout directory.
   - wget https://scrutinizer-ci.com/ocular.phar
   - php ocular.phar code-coverage:upload -vvv --format=php-clover $COVERAGE_FILE
-
-  # Report coverage to Coveralls.io, which runs from project root.
-  - php ../../../vendor/bin/php-coveralls --exclude-no-stmt -c .coveralls.yml -r . -x coverage.clover -o coverage.json -vvv

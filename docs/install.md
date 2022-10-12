@@ -144,8 +144,8 @@ as configured in the example above.
 
 Enable the `mongodb` module, using `drush en mongodb` or the Drupal UI.
 
-You now have access to the MongoDB services and Drush/Console commands for
-the `mongodb` module.
+You now have access to the MongoDB services and Drush commands
+for the `mongodb` module.
 
 Once the module is installed and enabled, you can check its requirements on
 `/admin/reports/status`:

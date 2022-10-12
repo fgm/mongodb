@@ -43,14 +43,14 @@ abstract class MongoDbTestBase extends KernelTestBase {
    *
    * @var \Drupal\Core\Site\Settings
    */
-  protected $settings;
+  protected Settings $settings;
 
   /**
    * The MongoDB URI for a test server.
    *
    * @var string
    */
-  protected $uri;
+  protected string $uri;
 
   /**
    * Obtain the name of a per-test database.
@@ -104,6 +104,8 @@ abstract class MongoDbTestBase extends KernelTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * This setUp configures $this->settings and $this->>uri.
    */
   public function setUp(): void {
     parent::setUp();
@@ -118,6 +120,9 @@ abstract class MongoDbTestBase extends KernelTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * This tearDown drops the test database, so child classes do not need to
+   * clean up behind them.
    */
   public function tearDown(): void {
     $clientFactory = new ClientFactory($this->settings);

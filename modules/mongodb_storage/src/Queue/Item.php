@@ -57,9 +57,9 @@ class Item {
    */
   public static function fromDoc(BSONDocument $doc): self {
     $that = new self();
-    $that->created = $doc['created'];
-    $that->data = unserialize($doc['data']);
-    $that->expire = $doc['expires'];
+    $that->created = $doc['created'] ?? time();
+    $that->data = unserialize($doc['data'] ?? 'N;');
+    $that->expires = (int) $doc['expires'] ?? 0;
     $that->item_id = $doc['_id'] ?? new ObjectId();
     return $that;
   }

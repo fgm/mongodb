@@ -57,7 +57,7 @@ class ConfigForm extends ConfigFormBase {
         continue;
       }
       $schema = $this->typed['mapping'][$key];
-      list($title, $description) = explode(': ', $schema['label']);
+      [$title, $description] = explode(': ', $schema['label']);
       $form[$key] = [
         '#default_value' => $default,
         '#description' => $description,

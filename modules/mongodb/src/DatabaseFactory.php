@@ -58,7 +58,7 @@ class DatabaseFactory {
       ]))->__toString());
     }
     try {
-      list($clientAlias, $database) = $this->settings[$dbAlias];
+      [$clientAlias, $database] = $this->settings[$dbAlias];
       $client = $this->clientFactory->get($clientAlias);
       $result = $client->selectDatabase($database);
     }

@@ -23,7 +23,7 @@ class MongoDbTest extends MongoDbTestBase {
     $actual = MongoDb::libraryApiVersion();
     $this->assertMatchesRegularExpression('/[\d]\.[\d]+\.[\d]+/', $actual,
       'API version matches expected format.');
-    list(, $minor,) = sscanf($actual, "%d.%d.%d");
+    [, $minor] = sscanf($actual, "%d.%d.%d");
     $hasWatch = method_exists(Collection::class, 'watch');
     $hasCountDocuments = method_exists(Collection::class, 'countDocuments');
     switch ($minor) {

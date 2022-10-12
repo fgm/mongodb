@@ -15,7 +15,6 @@
     }
   ],
   "conflict": {
-    "drupal/console": "< 1.8",
     "drush/drush": "< 9.3"
   },
   "description": "Drupal 8.2 driver for MongoDB",

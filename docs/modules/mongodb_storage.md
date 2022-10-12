@@ -41,9 +41,9 @@ To use the MongoDB Key-Value (Expirable) storage:
 
 ### Import of SQL Key-Value content
 
-The module provides one single command to import the content of the default SQL
-storage for Key-Value into MongoDB. The command is available for Drush and
-Drupal Console indifferently, and is described in the previous paragraph as part
+The module provides one single Drush command to import the content of the default SQL
+storage for Key-Value into MongoDB.
+It is  described in the previous paragraph as part
 of the configuration steps.
 
 
