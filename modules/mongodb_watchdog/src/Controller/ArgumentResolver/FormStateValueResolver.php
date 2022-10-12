@@ -20,7 +20,7 @@ class FormStateValueResolver implements ArgumentValueResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function supports(Request $request, ArgumentMetadata $argument) {
+  public function supports(Request $request, ArgumentMetadata $argument): bool {
     $argumentInterfaceMatches = $argument->getType() === FormStateInterface::class;
     $requestAttributeExists = $request->attributes->has(static::NAME_LEGACY);
     return $argumentInterfaceMatches || $requestAttributeExists;
@@ -29,7 +29,7 @@ class FormStateValueResolver implements ArgumentValueResolverInterface {
   /**
    * {@inheritdoc}
    */
-  public function resolve(Request $request, ArgumentMetadata $argument) {
+  public function resolve(Request $request, ArgumentMetadata $argument): iterable {
     $formState = $request->attributes->has(static::NAME_LEGACY)
       ? $request->attributes->get(static::NAME_LEGACY)
       : NULL;

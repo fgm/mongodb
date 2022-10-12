@@ -752,12 +752,12 @@ class Logger extends AbstractLogger {
       ->find($selector, static::LEGACY_TYPE_MAP + [
         'projection' => [
           '_id' => 0,
-          'template_id' => 1,
+          'templateId' => 1,
         ],
       ]);
     $templateIds = [];
     foreach ($cursor as $request) {
-      $templateIds[] = $request['template_id'];
+      $templateIds[] = $request['templateId'];
     }
     if (empty($templateIds)) {
       return [];

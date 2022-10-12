@@ -40,7 +40,7 @@ class RequestController extends ControllerBase {
    *
    * @var int
    */
-  protected $rootLength;
+  protected int $rootLength;
 
   /**
    * Controller constructor.
@@ -93,7 +93,7 @@ class RequestController extends ControllerBase {
     $events = $this->getRowData($request, $uniqueId);
 
     if (empty($events)) {
-      $top = NULL;
+      $top = [];
       $main = $this->buildEmpty($this->t('No events found for this request.'));
     }
     else {
@@ -275,7 +275,7 @@ class RequestController extends ControllerBase {
    */
   public function simplifyPath(string $path) {
     $ret = (mb_strpos($path, DRUPAL_ROOT) === 0)
-      ? mb_strpos($path, $this->rootLength)
+      ? mb_strpos($path, (string) $this->rootLength)
       : $path;
 
     return $ret;
