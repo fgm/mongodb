@@ -35,48 +35,52 @@ class Logger extends AbstractLogger {
 
   // Configuration-related constants.
   // The configuration item.
-  const CONFIG_NAME = 'mongodb_watchdog.settings';
+  public const CONFIG_NAME = 'mongodb_watchdog.settings';
 
   // The individual configuration keys.
-  const CONFIG_ITEMS = 'items';
+  public const CONFIG_ITEMS = 'items';
 
-  const CONFIG_REQUESTS = 'requests';
+  public const CONFIG_REQUESTS = 'requests';
 
-  const CONFIG_LIMIT = 'limit';
+  public const CONFIG_LIMIT = 'limit';
 
-  const CONFIG_ITEMS_PER_PAGE = 'items_per_page';
+  public const CONFIG_ITEMS_PER_PAGE = 'items_per_page';
 
-  const CONFIG_REQUEST_TRACKING = 'request_tracking';
+  public const CONFIG_REQUEST_TRACKING = 'request_tracking';
 
   // The logger database alias.
-  const DB_LOGGER = 'logger';
+  public const DB_LOGGER = 'logger';
 
   // The default channel exposed when using the raw PSR-3 contract.
-  const DEFAULT_CHANNEL = 'psr-3';
+  public const DEFAULT_CHANNEL = 'psr-3';
 
-  const MODULE = 'mongodb_watchdog';
+  // The magic invalid request ID used in events not triggered by a Web requests
+  // with a valid UNIQUE_ID. 23-byte format, unlike mod_unique_id values (24).
+  public const INVALID_REQUEST = '@@Not-a-valid-request@@';
+
+  public const MODULE = 'mongodb_watchdog';
 
   // The service for the specific PSR-3 logger for MongoDB.
-  const SERVICE_LOGGER = 'mongodb.logger';
+  public const SERVICE_LOGGER = 'mongodb.logger';
 
   // The service for the Drupal LoggerChannel for this module, logging to all
   // active loggers.
-  const SERVICE_CHANNEL = 'logger.channel.mongodb_watchdog';
+  public const SERVICE_CHANNEL = 'logger.channel.mongodb_watchdog';
 
   // The service for hook_requirements().
-  const SERVICE_REQUIREMENTS = 'mongodb.watchdog_requirements';
+  public const SERVICE_REQUIREMENTS = 'mongodb.watchdog_requirements';
 
-  const SERVICE_SANITY_CHECK = 'mongodb.watchdog.sanity_check';
+  public const SERVICE_SANITY_CHECK = 'mongodb.watchdog.sanity_check';
 
-  const TRACKER_COLLECTION = 'watchdog_tracker';
+  public const TRACKER_COLLECTION = 'watchdog_tracker';
 
-  const TEMPLATE_COLLECTION = 'watchdog';
+  public const TEMPLATE_COLLECTION = 'watchdog';
 
-  const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
+  public const EVENT_COLLECTION_PREFIX = 'watchdog_event_';
 
-  const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{32}$';
+  public const EVENT_COLLECTIONS_PATTERN = '^watchdog_event_[[:xdigit:]]{32}$';
 
-  const LEGACY_TYPE_MAP = [
+  public const LEGACY_TYPE_MAP = [
     'typeMap' => [
       'array' => 'array',
       'document' => 'array',
@@ -370,8 +374,7 @@ class Logger extends AbstractLogger {
       $this->trackerCollection()->insertOne($track);
     }
     else {
-      // 24-byte format like mod_unique_id values.
-      $requestId = '@@Not-a-valid-request@@';
+      $requestId = self::INVALID_REQUEST;
     }
 
     $eventCollection = $this->eventCollection($templateId);
