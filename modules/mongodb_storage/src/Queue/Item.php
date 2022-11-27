@@ -60,18 +60,18 @@ class Item {
     $that->created = $doc['created'] ?? time();
     $that->data = unserialize($doc['data'] ?? 'N;');
     $that->expires = (int) $doc['expires'] ?? 0;
-    $that->item_id = $doc['_id'] ?? new ObjectId();
+    $that->item_id = (string) ($doc['_id'] ?? new ObjectId());
     return $that;
   }
 
   /**
    * The item _id, ready to be used in queries.
    *
-   * @return \MongoDB\BSON\ObjectId
+   * @return string
    *   The ID in ObjectId form.
    */
-  public function id(): ObjectId {
-    return new ObjectId($this->item_id);
+  public function id(): string {
+    return $this->item_id;
   }
 
 }

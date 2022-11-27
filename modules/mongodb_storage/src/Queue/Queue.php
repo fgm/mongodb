@@ -7,6 +7,7 @@ namespace Drupal\mongodb_storage\Queue;
 use Drupal\Component\Datetime\Time;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\mongodb\MongoDb;
+use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 use MongoDB\Operation\FindOneAndUpdate;
 
@@ -57,7 +58,7 @@ class Queue implements QueueInterface {
    *
    * @throws \Exception
    */
-  public function createItem($data) {
+  public function createItem($data): string {
     $item = [
       'created' => $this->time->getCurrentTime(),
       // Prevent BSON transform.
@@ -67,7 +68,7 @@ class Queue implements QueueInterface {
 
     $result = $this->mongoDbCollection->insertOne($item);
 
-    return $result->getInsertedId();
+    return (string) $result->getInsertedId();
   }
 
   /**
@@ -108,7 +109,7 @@ class Queue implements QueueInterface {
   public function releaseItem($item): bool {
     $res = $this->mongoDbCollection
       ->updateOne(
-        ['_id' => $item->id()],
+        ['_id' => new ObjectId($item->id())],
         ['$set' => ['expires' => 0]],
       );
     return $res->isAcknowledged()
@@ -121,7 +122,7 @@ class Queue implements QueueInterface {
    * {@inheritdoc}
    */
   public function deleteItem($item) {
-    $this->mongoDbCollection->deleteOne(['_id' => $item->id()]);
+    $this->mongoDbCollection->deleteOne(['_id' => new ObjectId($item->id())]);
   }
 
   /**

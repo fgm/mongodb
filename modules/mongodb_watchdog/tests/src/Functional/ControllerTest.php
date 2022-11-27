@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_watchdog\Functional;
 
+use Behat\Mink\Exception\ExpectationException;
+use Behat\Mink\Exception\ResponseTextException;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -498,7 +500,13 @@ class ControllerTest extends BrowserTestBase {
     foreach ($expectations as $expectation) {
       [$account, $statusCode] = $expectation;
       $this->drupalLogin($account);
-      $this->verifyReports($statusCode);
+      try {
+        $this->verifyReports($statusCode);
+      } catch (ResponseTextException $e) {
+        $this->fail(sprintf("response text exception: %s", $e));
+      } catch (ExpectationException $e) {
+        $this->fail(sprintf("expectation exception: %s", $e));
+      }
     }
   }
 
