@@ -7,7 +7,7 @@ class Files {
 
   public const MODULE = 'mongodb_files';
 
-  public const SCHEME = 'mongodb';
+  public const SCHEME = 'gridfs';
 
   public const SERVICE_WRAPPER = 'stream_wrapper.mongodb';
 

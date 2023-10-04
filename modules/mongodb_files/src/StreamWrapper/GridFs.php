@@ -9,8 +9,10 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\mongodb\DatabaseFactory;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_files\Files;
+use MongoDB\BSON\ObjectIdInterface;
 use MongoDB\Database;
 use MongoDB\GridFS\Bucket;
+use MongoDB\Model\BSONDocument;
 
 // phpcs:disable Drupal.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
 // phpcs:disable Squiz.PHP.NonExecutableCode.ReturnNotRequired
@@ -58,6 +60,8 @@ class GridFs implements StreamWrapperInterface {
    * @var resource
    */
   protected $downloadRes;
+
+  protected ObjectIdInterface $fid;
 
   /**
    * Constructor.
@@ -155,6 +159,12 @@ class GridFs implements StreamWrapperInterface {
    * {@inheritdoc}
    */
   public function stream_eof() {
+    if (empty($this->filename) || empty($this->fid)) {
+      return FALSE;
+    }
+    if (empty($this->downloadRes)) {
+      $this->downloadRes = $this->bucket->openDownloadStream($this->fid);
+    }
     return;
   }
 
@@ -203,18 +213,26 @@ class GridFs implements StreamWrapperInterface {
     $found = $this->bucket->findOne([
       'filename' => $filename,
     ]);
-    if (!is_array($found)) {
+    if (!($found instanceof BSONDocument)) {
       return FALSE;
     }
     $this->filename = $filename;
+    $this->fid = $found['_id'];
     return TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function stream_read($count) {
-    return;
+  public function stream_read($count): string|false {
+    if (empty($this->filename) || empty($this->fid)) {
+      return FALSE;
+    }
+    if (empty($this->downloadRes)) {
+      $this->downloadRes = $this->bucket->openDownloadStream($this->fid);
+    }
+    $read = fread($this->downloadRes, $count);
+    return $read;
   }
 
   /**
@@ -234,8 +252,31 @@ class GridFs implements StreamWrapperInterface {
   /**
    * {@inheritdoc}
    */
-  public function stream_stat() {
-    return;
+  #[ArrayShape([
+    "dev" => "int",
+    "ino" => "int",
+    "mode" => "int",
+    "nlink" => "int",
+    "uid" => "int",
+    "gid" => "int",
+    "rdev" => "int",
+    "size" => "int",
+    "atime" => "int",
+    "mtime" => "int",
+    "ctime" => "int",
+    "blksize" => "int",
+    "blocks" => "int"
+  ])]
+  public function stream_stat(): array|false {
+    if (empty($this->filename) || empty($this->fid)) {
+      return FALSE;
+    }
+    if (empty($this->downloadRes)) {
+      $this->downloadRes = $this->bucket->openDownloadStream($this->fid);
+    }
+    assert(is_resource($this->downloadRes), "Attempted stream_stat on unopened file");
+    $stat = fstat($this->downloadRes);
+    return $stat;
   }
 
   /**
