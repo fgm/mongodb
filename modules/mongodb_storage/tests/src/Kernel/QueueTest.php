@@ -119,7 +119,7 @@ class QueueTest extends QueueTestBase {
    */
   public function testCreateDeleteQueue(): void {
     $name = $this->randomMachineName();
-    $expectedName = "q_${name}";
+    $expectedName = "q_$name";
 
     /** @var \Drupal\mongodb\DatabaseFactory $dbf */
     $dbf = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
@@ -131,7 +131,7 @@ class QueueTest extends QueueTestBase {
     $this->assertContains(
       $expectedName,
       $actualNames,
-      "Creating queue ${name} did not create collection $expectedName",
+      "Creating queue $name did not create collection $expectedName",
     );
 
     $q->deleteQueue();
@@ -139,7 +139,7 @@ class QueueTest extends QueueTestBase {
     $this->assertNotContains(
       $expectedName,
       $actualNames,
-      "Deleting queue ${name} did not remove collection $expectedName",
+      "Deleting queue $name did not remove collection $expectedName",
     );
   }
 

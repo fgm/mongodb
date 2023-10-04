@@ -528,7 +528,7 @@ class ControllerTest extends BrowserTestBase {
     );
 
     $template = $templates->findOne(['message' => $message], MongoDb::ID_PROJECTION);
-    $this->assertNotNull($template, "Logged message was found: [${message}]");
+    $this->assertNotNull($template, "Logged message was found: [$message]");
     $templateId = $template['_id'];
     $events = $logger->eventCollection($templateId);
     $this->assertEquals(

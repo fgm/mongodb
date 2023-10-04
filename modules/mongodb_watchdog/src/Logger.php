@@ -744,7 +744,7 @@ class Logger extends AbstractLogger {
   public function requestTemplates($unsafeRequestId): array {
     $selector = [
       // Variable quoted to avoid passing an object and risk a NoSQL injection.
-      'requestId' => "${unsafeRequestId}",
+      'requestId' => "$unsafeRequestId",
     ];
 
     $cursor = $this

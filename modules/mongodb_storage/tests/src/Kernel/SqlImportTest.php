@@ -162,7 +162,7 @@ class SqlImportTest extends KeyValueTestBase {
         break;
 
       default:
-        $this->fail("Unexpected table requested: ${table}.");
+        $this->fail("Unexpected table requested: $table.");
     }
 
     $actualPreDbCount = $this->countTable($table);
