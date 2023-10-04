@@ -223,7 +223,7 @@ class TopController extends ControllerBase {
     if (!empty($key)) {
       $pipeline[] = [
         '$group' => [
-          '_id' => "\$${key}",
+          '_id' => "\${$key}",
           'count' => ['$sum' => 1],
         ],
       ];
