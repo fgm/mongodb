@@ -35,11 +35,11 @@ class FormStateValueResolverTest extends UnitTestCase {
   }
 
   /**
-   * Test extra optionnal argument resolution.
+   * Test extra optional argument resolution.
    *
    * @covers ::supports
    */
-  public function testOptionnalExtraArgumentResolver() {
+  public function testOptionalExtraArgumentResolver() {
     $resolver = new FormStateValueResolver();
     $request = new Request();
     $request->attributes->add([FormStateValueResolver::NAME_LEGACY => new FormState()]);
