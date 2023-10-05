@@ -28,7 +28,7 @@ class KeyValueFactory implements KeyValueFactoryInterface {
   /**
    * A static cache for the stores.
    *
-   * @var \Drupal\mongodb_storage\KeyValueStore[]
+   * @var \Drupal\mongodb_storage\KeyValue\KeyValueStore[]
    */
   protected $stores = [];
 

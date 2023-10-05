@@ -41,7 +41,7 @@ class ToolsTest extends MongoDbTestBase {
    * @covers ::find
    */
   public function testFind() {
-    /** @var \Drupal\mongodb\DatabaseFactory $database */
+    /** @var \Drupal\mongodb\DatabaseFactory $dbFactory */
     $dbFactory = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
     /** @var \MongoDB\Database $database */
     $database = $dbFactory->get(MongoDb::DB_DEFAULT);

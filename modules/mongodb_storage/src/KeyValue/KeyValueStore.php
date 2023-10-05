@@ -35,7 +35,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    *
    * The parent class already defines $collection as the KV collection name.
    *
-   * @var \MongoDb\Collection
+   * @var \MongoDB\Collection
    */
   protected Collection $mongoDbCollection;
 
@@ -70,7 +70,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    */
   public function __wakeup() {
     /** @var \Drupal\mongodb\DatabaseFactory $databaseFactory */
-    $dbFactory = \Drupal::service(MongoDb::SERVICE_DB_FACTORY);
+    $dbFactory = \Drupal::service(MongoDb::SERVICE_DB_FACTORY); /** @phpstan-ignore-line */
 
     /** @var \MongoDB\Database $database */
     $database = $dbFactory->get(KeyValueFactory::DB_KEYVALUE);

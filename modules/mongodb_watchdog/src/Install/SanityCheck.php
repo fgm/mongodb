@@ -38,9 +38,9 @@ class SanityCheck {
   protected $dbFactory;
 
   /**
-   * The bucket size values.
+   * The bucket size.
    *
-   * @var array
+   * @var int
    */
   protected $items;
 
@@ -66,7 +66,7 @@ class SanityCheck {
    * Build a list of the number of entries per collection in the default DB.
    */
   public function buildCollectionstats(): array {
-    /** @var \Drupal\mongodb\DatabaseFactory $databaseFactory */
+    /** @var \MongoDB\Database $database */
     $database = $this->dbFactory->get(Logger::DB_LOGGER);
     $this->initBucketsList();
 

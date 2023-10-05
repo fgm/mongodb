@@ -146,7 +146,7 @@ class RequestController extends ControllerBase {
   /**
    * Build the main table rows.
    *
-   * @param \Drupal\mongodb_watchdog\EventTemplate[]\Drupal\mongodb_watchdog\Event[] $events
+   * @param \Drupal\mongodb_watchdog\EventTemplate[]|\Drupal\mongodb_watchdog\Event[] $events
    *   A fully loaded array of events and their templates.
    *
    * @return array

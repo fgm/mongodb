@@ -143,13 +143,6 @@ class ControllerTest extends BrowserTestBase {
       ?? $_SERVER['MONGODB_URI']
       ?? static::DEFAULT_URI;
 
-    // This line customizes the parent site; ::writeSettings the child site.
-    $this->settings = new Settings(
-      [
-        MongoDb::MODULE => $this->getSettingsArray(),
-      ]
-    );
-
     parent::setUp();
 
     // Create users.
@@ -305,7 +298,7 @@ class ControllerTest extends BrowserTestBase {
    * @return int|null
    *   The watchdog severity constant or NULL if not found.
    */
-  protected function getSeverityConstant(string $class): int {
+  protected function getSeverityConstant(string $class): ?int {
     // Class: "mongodb-watchdog__severity--(level)", prefix length = 28.
     $level = substr($class, 28);
     return static::LEVEL_TRANSLATION[$level];
@@ -494,8 +487,8 @@ class ControllerTest extends BrowserTestBase {
       [$this->bigUser, Response::HTTP_OK],
       [$this->anyUser, Response::HTTP_FORBIDDEN],
     ];
-    /** @var \Drupal\user\Entity\User $account */
     foreach ($expectations as $expectation) {
+      /** @var \Drupal\user\Entity\User $account */
       [$account, $statusCode] = $expectation;
       $this->drupalLogin($account);
       $this->verifyReports($statusCode);

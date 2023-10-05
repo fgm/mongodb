@@ -62,7 +62,7 @@ function mongodb_watchdog_requirements($phase) {
  * Drop /all/ the watchdog collections by dropping the logger database.
  */
 function mongodb_watchdog_uninstall() {
-  /** @var \MongoDB\Tests\Database\ $logger */
+  /** @var \MongoDB\Database $logger */
   $logger = \Drupal::service('mongodb.watchdog_storage');
   $logger->drop();
 }

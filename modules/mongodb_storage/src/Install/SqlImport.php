@@ -23,37 +23,37 @@ class SqlImport {
   /**
    * The database service.
    *
-   * @var \Drupal\mongodb_storage\Commands\Connection
+   * @var \Drupal\Core\Database\Connection
    */
-  protected $database;
+  protected Connection $database;
 
   /**
    * The expirable database KV factory.
    *
    * @var \Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory
    */
-  protected $expirableDbFactory;
+  protected KeyValueDatabaseExpirableFactory $expirableDbFactory;
 
   /**
    * The expirable MongoDB KV factory.
    *
-   * @var \Drupal\mongodb_storage\KeyValueExpirableFactory
+   * @var \Drupal\mongodb_storage\KeyValue\KeyValueExpirableFactory
    */
-  protected $expirableMoFactory;
+  protected KeyValueExpirableFactory $expirableMoFactory;
 
   /**
    * The database KV factory.
    *
    * @var \Drupal\Core\KeyValueStore\KeyValueDatabaseFactory
    */
-  protected $persistentDbFactory;
+  protected KeyValueDatabaseFactory $persistentDbFactory;
 
   /**
    * The MongoDB KV factory.
    *
-   * @var \Drupal\mongodb_storage\KeyValueFactory
+   * @var \Drupal\mongodb_storage\KeyValue\KeyValueFactory
    */
-  protected $persistentMoFactory;
+  protected KeyValueFactory $persistentMoFactory;
 
   /**
    * The datetime.time service.
@@ -75,9 +75,9 @@ class SqlImport {
    *   The database KV factory.
    * @param \Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory $expirableDbFactory
    *   The expirable database KV factory.
-   * @param \Drupal\mongodb_storage\KeyValueFactory $persistentMoFactory
+   * @param \Drupal\mongodb_storage\KeyValue\KeyValueFactory $persistentMoFactory
    *   The MongoDB KV factory.
-   * @param \Drupal\mongodb_storage\KeyValueExpirableFactory $expirableMoFactory
+   * @param \Drupal\mongodb_storage\KeyValue\KeyValueExpirableFactory $expirableMoFactory
    *   The expirable MongoDB KV factory.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The datetime.time service.
@@ -161,7 +161,7 @@ class SqlImport {
         ->execute();
 
       /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
-      $mgStore = $this->expirableMoFactory->get($collection, FALSE);
+      $mgStore = $this->expirableMoFactory->get($collection);
 
       $mgStore->deleteAll();
       foreach ($valueCursor as $valueRow) {

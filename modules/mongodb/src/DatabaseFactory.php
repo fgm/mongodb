@@ -6,6 +6,7 @@ namespace Drupal\mongodb;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Site\Settings;
+use MongoDB\Operation\FindOneAndUpdate;
 
 /**
  * Helper class to construct a MongoDB Database with Drupal specific config.

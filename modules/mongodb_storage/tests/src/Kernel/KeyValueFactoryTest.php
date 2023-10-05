@@ -25,7 +25,7 @@ class KeyValueFactoryTest extends KeyValueTestBase {
    * @throws \Exception
    */
   public function testGetExpirable() {
-    /** @var \Drupal\Core\KeyValueStore\KeyValue\KeyValueExpirableFactoryInterface $factory */
+    /** @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $factory */
     $factory = $this->container->get(Storage::SERVICE_KVE);
     $store = $factory->get(static::COLLECTION);
 
@@ -41,7 +41,7 @@ class KeyValueFactoryTest extends KeyValueTestBase {
    * @throws \Exception
    */
   public function testGetPersistent() {
-    /** @var \Drupal\Core\KeyValueStore\KeyValue\KeyValueExpirableFactoryInterface $factory */
+    /** @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $factory */
     $factory = $this->container->get(Storage::SERVICE_KV);
     $store = $factory->get(static::COLLECTION);
 

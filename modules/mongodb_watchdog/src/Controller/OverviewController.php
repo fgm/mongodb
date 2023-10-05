@@ -325,7 +325,7 @@ class OverviewController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request. Needed for paging.
    *
-   * @return \Drupal\mongodb_watchdog\EventTemplate
+   * @return array
    *   The data array.
    *
    * @throws \ReflectionException

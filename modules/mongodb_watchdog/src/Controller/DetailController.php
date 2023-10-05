@@ -126,7 +126,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The template for these events.
    *
-   * @return string[array|string]
+   * @return array [array|string]
    *   A render array for a table.
    *
    * @throws \Drupal\Core\Entity\EntityMalformedException
