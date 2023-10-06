@@ -72,7 +72,7 @@ class EventTemplate implements Unserializable {
   /**
    * EventTemplate constructor.
    *
-   * @param array $data
+   * @param array<mixed,mixed> $data
    *   The raw properties.
    */
   public function __construct(array $data) {
@@ -118,6 +118,9 @@ class EventTemplate implements Unserializable {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<mixed,mixed> $data
+   *   The raw data.
    */
   public function bsonUnserialize(array $data): void {
     foreach (static::keys() as $key => $info) {
@@ -145,7 +148,7 @@ class EventTemplate implements Unserializable {
    * event templates, which are known to be variable but - assuming no coding
    * errors - will always match a constant event template string found in code.
    *
-   * @param array $variables
+   * @param array<string,string|\Stringable> $variables
    *   The event variables.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup

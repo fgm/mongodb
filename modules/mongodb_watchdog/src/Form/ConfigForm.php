@@ -16,9 +16,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ConfigForm extends ConfigFormBase {
 
   /**
-   * Typed schema for the configuration.
+   * Typed schema for the configuration: a plugin definition array.
    *
-   * @var array
+   * @var array<string,mixed>
    */
   protected $typed;
 
@@ -27,8 +27,8 @@ class ConfigForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The core config.factory service.
-   * @param array $typed
-   *   The type config for the module.
+   * @param array<string,mixed> $typed
+   *   The type config for the module: a plugin definition array.
    */
   public function __construct(ConfigFactoryInterface $configFactory, array $typed) {
     parent::__construct($configFactory);
@@ -49,6 +49,14 @@ class ConfigForm extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<string,mixed> $form
+   *   The existing form array.
+   * @param \Drupal\Core\Form\FormStateInterface $formState
+   *   The form state.
+   *
+   * @return array<string,mixed>
+   *   The extended form.
    */
   public function buildForm(array $form, FormStateInterface $formState): array {
     $config = $this->config(Logger::CONFIG_NAME);
@@ -90,6 +98,11 @@ class ConfigForm extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<string,mixed> $form
+   *   The submitted form array.
+   * @param \Drupal\Core\Form\FormStateInterface $formState
+   *   The form state.
    */
   public function submitForm(array &$form, FormStateInterface $formState): void {
     $config = $this->config(Logger::CONFIG_NAME);

@@ -25,7 +25,7 @@ class FormStateValueResolverTest extends UnitTestCase {
    *
    * @covers ::supports
    */
-  public function testFormStateArgumentResolver() {
+  public function testFormStateArgumentResolver(): void {
     $resolver = new FormStateValueResolver();
     $request = new Request();
     $request->attributes->add([FormStateValueResolver::NAME_LEGACY => new FormState()]);
@@ -39,7 +39,7 @@ class FormStateValueResolverTest extends UnitTestCase {
    *
    * @covers ::supports
    */
-  public function testOptionalExtraArgumentResolver() {
+  public function testOptionalExtraArgumentResolver(): void {
     $resolver = new FormStateValueResolver();
     $request = new Request();
     $request->attributes->add([FormStateValueResolver::NAME_LEGACY => new FormState()]);

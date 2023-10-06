@@ -8,3 +8,4 @@ parameters:
     #   path: **/src/Form/SettingsForm.php
     # - '#deprecated#'
     - "#^Unsafe usage of new static#"
+  treatPhpDocTypesAsCertain: false

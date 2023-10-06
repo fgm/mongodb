@@ -71,12 +71,12 @@ abstract class ControllerBase extends CoreControllerBase {
    * Cannot be a build() method because each controller build() has a
    * different signature.
    *
-   * @param array $main
+   * @param array<string,mixed> $main
    *   A render array for the main table.
-   * @param array $top
+   * @param array<string,mixed> $top
    *   A render array for the top element present on some controllers results.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array for the whole controller.
    */
   protected function buildDefaults(array $main, array $top): array {
@@ -99,7 +99,7 @@ abstract class ControllerBase extends CoreControllerBase {
    * @param \Drupal\Core\StringTranslation\TranslatableMarkup $markup
    *   The message proper.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array for a message.
    */
   protected function buildEmpty(TranslatableMarkup $markup): array {
@@ -115,7 +115,7 @@ abstract class ControllerBase extends CoreControllerBase {
   /**
    * Return the top element: empty by default.
    *
-   * @return array
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
    *   A render array for the top filter form.
    */
   protected function getTop(): array {

@@ -91,7 +91,7 @@ class Logger extends AbstractLogger {
   /**
    * Map of PSR3 log constants to RFC 5424 log constants.
    *
-   * @var array
+   * @var array<string,int>
    *
    * @see \Drupal\Core\Logger\LoggerChannel
    * @see \Drupal\mongodb_watchdog\Logger::log()
@@ -232,9 +232,9 @@ class Logger extends AbstractLogger {
   /**
    * Fill in the log_entry function, file, and line.
    *
-   * @param array $entry
+   * @param array<string,mixed> $entry
    *   An event information to be logger.
-   * @param array $backtrace
+   * @param array<int,array<string,mixed>> $backtrace
    *   A call stack.
    *
    * @throws \ReflectionException

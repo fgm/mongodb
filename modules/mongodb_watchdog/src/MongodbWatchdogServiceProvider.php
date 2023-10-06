@@ -20,7 +20,7 @@ class MongodbWatchdogServiceProvider implements ServiceModifierInterface {
   /**
    * {@inheritdoc}
    */
-  public function alter(ContainerBuilder $container) {
+  public function alter(ContainerBuilder $container): void {
     $kernelResolverDefinition = $container
       ->getDefinition(static::KERNEL_RESOLVER);
     $resolvers = $kernelResolverDefinition->getArgument(1);

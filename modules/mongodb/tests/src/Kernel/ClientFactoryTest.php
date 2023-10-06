@@ -20,7 +20,7 @@ class ClientFactoryTest extends MongoDbTestBase {
   /**
    * Test a normal client creation attempt.
    */
-  public function testGetHappy() {
+  public function testGetHappy(): void {
     $clientFactory = new ClientFactory($this->settings);
 
     try {
@@ -45,7 +45,7 @@ class ClientFactoryTest extends MongoDbTestBase {
   /**
    * Test an existing alias pointing to an invalid server.
    */
-  public function testGetSadBadAlias() {
+  public function testGetSadBadAlias(): void {
     $clientFactory = new ClientFactory($this->settings);
 
     try {

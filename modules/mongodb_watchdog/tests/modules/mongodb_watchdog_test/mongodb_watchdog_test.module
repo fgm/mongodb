@@ -13,6 +13,9 @@ declare(strict_types=1);
  * Create a stack trace specifically formatted to trigger issue 3219325.
  *
  * @link https://www.drupal.org/project/mongodb/issues/3219325
+ *
+ * @return array<int,array<string,mixed>>
+ *   A backtrace for inline code without a source file.
  */
 function mongodb_watchdog_test_3219325(): array {
   // See \Drupal\mongodb_watchdog\Logger::log()

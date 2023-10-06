@@ -19,7 +19,7 @@ class SanityCheck {
   /**
    * The per-collection-size statistics buckets.
    *
-   * @var array
+   * @var array{0: int, 1: int, 2: int, 3: int}
    */
   protected $buckets;
 
@@ -64,6 +64,9 @@ class SanityCheck {
 
   /**
    * Build a list of the number of entries per collection in the default DB.
+   *
+   * @return array{0: int, 1: int, 2: int, 3: int}
+   *   The fill level statistics of the buckets: empty, single, max-1, max.
    */
   public function buildCollectionstats(): array {
     /** @var \MongoDB\Database $database */

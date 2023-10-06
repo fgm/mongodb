@@ -34,7 +34,7 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
   /**
    * Deletes all items from the key/value store.
    */
-  public function deleteAll() {
+  public function deleteAll(): void {
     $this->mongoDbCollection->drop();
     $this->ensureIndexes();
   }
@@ -42,7 +42,7 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
   /**
    * Ensure a TTL index for server-side expirations.
    */
-  public function ensureIndexes() {
+  public function ensureIndexes(): void {
     $name = $this->mongoDbCollection->getCollectionName();
     $indexMissing = TRUE;
     foreach ($this->mongoDbCollection->listIndexes() as $index) {
@@ -80,12 +80,12 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
   /**
    * Saves an array of values with a time to live.
    *
-   * @param array $data
+   * @param mixed[] $data
    *   An array of data to store.
    * @param int $expire
    *   The time to live for items, in seconds.
    */
-  public function setMultipleWithExpire(array $data, $expire) {
+  public function setMultipleWithExpire(array $data, $expire): void {
     foreach ($data as $key => $value) {
       $this->setWithExpire($key, $value, $expire);
     }
@@ -97,7 +97,7 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The datetime.time service.
    */
-  public function setTimeService(TimeInterface $time) {
+  public function setTimeService(TimeInterface $time): void {
     $this->time = $time;
   }
 
@@ -114,7 +114,7 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    * @param int $expire
    *   The time to live for items, in seconds.
    */
-  public function setWithExpire($key, $value, $expire) {
+  public function setWithExpire($key, $value, $expire): void {
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];
@@ -142,7 +142,7 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    * @return bool
    *   TRUE if the data was set, or FALSE if it already existed.
    */
-  public function setWithExpireIfNotExists($key, $value, $expire) {
+  public function setWithExpireIfNotExists($key, $value, $expire): bool {
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];

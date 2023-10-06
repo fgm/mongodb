@@ -19,7 +19,7 @@ class MongoDbTest extends MongoDbTestBase {
   /**
    * @covers ::libraryApiVersion
    */
-  public function testLibraryVersion() {
+  public function testLibraryVersion(): void {
     $actual = MongoDb::libraryApiVersion();
     $this->assertMatchesRegularExpression('/[\d]\.[\d]+\.[\d]+/', $actual,
       'API version matches expected format.');
@@ -50,7 +50,7 @@ class MongoDbTest extends MongoDbTestBase {
   /**
    * @covers ::countCollection
    */
-  public function testCountCollection() {
+  public function testCountCollection(): void {
     /** @var \Drupal\mongodb\DatabaseFactory $dbFactory */
     $dbFactory = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
     $database = $dbFactory->get(MongoDb::DB_DEFAULT);

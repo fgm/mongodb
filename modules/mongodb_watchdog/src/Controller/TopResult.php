@@ -25,8 +25,11 @@ final class TopResult implements Unserializable {
 
   /**
    * {@inheritDoc}
+   *
+   * @param array<mixed,mixed> $data
+   *   The raw data.
    */
-  public function bsonUnserialize(array $data) {
+  public function bsonUnserialize(array $data): void {
     $this->uri = $data['_id'];
     $this->count = $data['count'];
   }

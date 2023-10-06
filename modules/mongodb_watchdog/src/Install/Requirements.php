@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\mongodb_watchdog\Install;
 
 use Drupal\Component\Serialization\SerializationInterface;
+use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -27,42 +28,42 @@ class Requirements implements ContainerInjectionInterface {
    *
    * @var \Drupal\Core\Config\Config
    */
-  protected $config;
+  protected Config $config;
 
   /**
    * The config.factory service.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  protected $configFactory;
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * The messenger service.
    *
    * @var \Drupal\Core\Messenger\MessengerInterface
    */
-  protected $messenger;
+  protected MessengerInterface $messenger;
 
   /**
    * The request_stack service.
    *
    * @var \Symfony\Component\HttpFoundation\RequestStack
    */
-  protected $requestStack;
+  protected RequestStack $requestStack;
 
   /**
    * The serialization.yaml service.
    *
    * @var \Drupal\Component\Serialization\SerializationInterface
    */
-  protected $serialization;
+  protected SerializationInterface $serialization;
 
   /**
    * The section of Settings related to the MongoDB package.
    *
-   * @var array
+   * @var array{clients: array<string,array<string,mixed>>, databases: array<string,array{0:string,1:string}>}
    */
-  protected $settings;
+  protected array $settings;
 
   /**
    * Requirements constructor.
@@ -107,10 +108,10 @@ class Requirements implements ContainerInjectionInterface {
   /**
    * Apply database aliases consistency checks.
    *
-   * @param array $state
+   * @param array<string,array<string,mixed>> $state
    *   The current state of requirements checks.
    *
-   * @return array
+   * @return array{array<string,mixed>,bool}
    *   - array: The current state of requirements checks.
    *   - bool: true if the checks added an error, false otherwise
    */
@@ -170,10 +171,10 @@ class Requirements implements ContainerInjectionInterface {
   /**
    * Check the consistency of request tracking vs configuration and environment.
    *
-   * @param array $state
+   * @param array<string,array<string,mixed>> $state
    *   The current state of requirements.
    *
-   * @return array
+   * @return array{array<string,mixed>,bool}
    *   - array: The current state of requirements checks.
    *   - bool: true if the checks added an error, false otherwise
    */
@@ -227,6 +228,9 @@ class Requirements implements ContainerInjectionInterface {
 
   /**
    * Implements hook_requirements().
+   *
+   * @return array<string,array<string,mixed>>
+   *   The requirements array.
    */
   public function check(string $phase): array {
     $state = [

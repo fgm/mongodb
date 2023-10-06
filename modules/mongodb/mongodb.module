@@ -10,7 +10,7 @@ declare(strict_types=1);
 /**
  * Implements hook_help().
  */
-function mongodb_help($route) {
+function mongodb_help(string $route): string {
   switch ($route) {
     case 'help.page.mongodb':
       return '<p>' . t('The Drupal <a href=":project">MongoDB</a> project implements a generic interface to the <a href=":mongo">MongoDB</a> database server. Read its <a href=":docs">online documentation</a>.', [
@@ -18,5 +18,7 @@ function mongodb_help($route) {
         ':mongo' => 'https://www.mongodb.com/',
         ':docs' => 'https://fgm.github.io/mongodb',
       ]) . '</p>';
+    default:
+      return '';
   }
 }

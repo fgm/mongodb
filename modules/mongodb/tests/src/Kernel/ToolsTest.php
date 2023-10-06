@@ -19,7 +19,7 @@ class ToolsTest extends MongoDbTestBase {
   /**
    * @covers ::__construct
    */
-  public function testToolsService() {
+  public function testToolsService(): void {
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
     $this->assertInstanceOf(Tools::class, $tools, "Tools service is available");
     $this->assertTrue(method_exists($tools, 'find'));
@@ -29,7 +29,7 @@ class ToolsTest extends MongoDbTestBase {
   /**
    * @covers ::settings
    */
-  public function testToolsSettings() {
+  public function testToolsSettings(): void {
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
     $actual = $tools->settings();
     $this->assertIsArray($actual);
@@ -40,7 +40,7 @@ class ToolsTest extends MongoDbTestBase {
   /**
    * @covers ::find
    */
-  public function testFind() {
+  public function testFind(): void {
     /** @var \Drupal\mongodb\DatabaseFactory $dbFactory */
     $dbFactory = $this->container->get(MongoDb::SERVICE_DB_FACTORY);
     /** @var \MongoDB\Database $database */

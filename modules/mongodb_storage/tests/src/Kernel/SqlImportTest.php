@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
+use Drupal\Core\Database\Connection;
 use Drupal\Core\KeyValueStore\DatabaseStorage;
 use Drupal\Core\KeyValueStore\DatabaseStorageExpirable;
 use Drupal\mongodb\MongoDb;
@@ -27,7 +28,7 @@ class SqlImportTest extends KeyValueTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var string[]
    */
   protected static $modules = [
     'system',
@@ -38,16 +39,16 @@ class SqlImportTest extends KeyValueTestBase {
   /**
    * The database service.
    *
-   * @var \Drupal\Core\Database\Connection
+   * @var ?\Drupal\Core\Database\Connection
    */
-  protected $database;
+  protected ?Connection $database;
 
   /**
    * The mongodb.storage.sql_import service.
    *
-   * @var \Drupal\mongodb_storage\Install\SqlImport
+   * @var ?\Drupal\mongodb_storage\Install\SqlImport
    */
-  protected $sqlImport;
+  protected ?SqlImport $sqlImport;
 
   /**
    * Install the database keyvalue tables for import.
@@ -78,7 +79,7 @@ class SqlImportTest extends KeyValueTestBase {
   /**
    * Test helper: list the KV(E|P) collections.
    *
-   * @return array
+   * @return string[]
    *   The sorted array of the (unprefixed) KV collections names.
    *
    * @throws \Exception
@@ -104,7 +105,7 @@ class SqlImportTest extends KeyValueTestBase {
   /**
    * @covers ::__construct
    */
-  public function testImportService() {
+  public function testImportService(): void {
     $this->assertInstanceOf(SqlImport::class, $this->sqlImport,
       'SQL import service is available');
     $this->assertTrue(method_exists($this->sqlImport, 'import'));
@@ -113,7 +114,7 @@ class SqlImportTest extends KeyValueTestBase {
   /**
    * @covers ::import
    */
-  public function testImport() {
+  public function testImport(): void {
     $this->expectOutputString(self::IMPORT_OUTPUT);
     $this->sqlImport->import();
   }
@@ -121,7 +122,7 @@ class SqlImportTest extends KeyValueTestBase {
   /**
    * Data provider for testImportActual.
    *
-   * @return array
+   * @return array<int,string[]>
    *   The test data.
    */
   public function importProvider(): array {
@@ -150,7 +151,7 @@ class SqlImportTest extends KeyValueTestBase {
     string $table,
     string $service,
     string $prefix
-  ) {
+  ): void {
     $columns = [];
     switch ($table) {
       case SqlImport::KVE_TABLE:

@@ -81,17 +81,17 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
   /**
    * Deletes all items from the key/value store.
    */
-  public function deleteAll() {
+  public function deleteAll(): void {
     $this->mongoDbCollection->drop();
   }
 
   /**
    * Deletes multiple items from the key/value store.
    *
-   * @param array $keys
+   * @param mixed[] $keys
    *   A list of item names to delete.
    */
-  public function deleteMultiple(array $keys) {
+  public function deleteMultiple(array $keys): void {
     $stringKeys = array_map([$this, 'stringifyKey'], $keys);
     $selector = [
       '_id' => [
@@ -104,7 +104,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
   /**
    * Returns all stored key/value pairs in the collection.
    *
-   * @return array
+   * @return array<mixed,mixed>
    *   An associative array containing all stored items in the collection.
    */
   public function getAll() {
@@ -123,14 +123,14 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
   /**
    * Returns the stored key/value pairs for a given set of keys.
    *
-   * @param array $keys
+   * @param mixed[] $keys
    *   A list of keys to retrieve.
    *
-   * @return array
-   *   An associative array of items successfully returned, indexed by key. Core
-   *   until 8.5 does not specify what to return for non-existing keys, so this
-   *   implementation chooses not to include the non-existing keys in the result
-   *   set.
+   * @return array<mixed,mixed>
+   *   An associative array of items successfully returned, indexed by key.
+   *   Core until 10.1.4 does not specify what to return for non-existing keys,
+   *   so this implementation chooses not to include the non-existing keys in
+   *   the result set.
    *
    * @see KeyValueStoreInterface::getMultiple()
    */
@@ -163,7 +163,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * @return bool
    *   TRUE if the key exists, FALSE otherwise.
    */
-  public function has($key) {
+  public function has($key): bool {
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];
@@ -182,7 +182,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * @param string $newKey
    *   The new key name.
    */
-  public function rename($key, $newKey) {
+  public function rename($key, $newKey): void {
     $stringKey = $this->stringifyKey($key);
     $stringNew = $this->stringifyKey($newKey);
 
@@ -203,7 +203,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * @param mixed $value
    *   The data to store.
    */
-  public function set($key, $value) {
+  public function set($key, $value): void {
     $selector = [
       '_id' => $this->stringifyKey($key),
     ];
@@ -256,7 +256,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * @return string
    *   The string version of the key.
    */
-  protected function stringifyKey($key) {
+  protected function stringifyKey($key): string {
     return "$key";
   }
 

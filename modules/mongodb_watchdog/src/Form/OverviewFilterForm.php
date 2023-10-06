@@ -39,6 +39,14 @@ class OverviewFilterForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<string,mixed> $form
+   *   The existing form array.
+   * @param \Drupal\Core\Form\FormStateInterface $formState
+   *   The existing form state.
+   *
+   * @return array<string,mixed>
+   *   The extended form array.
    */
   public function buildForm(array $form, FormStateInterface $formState): array {
     $filters = $this->getFilters();
@@ -96,7 +104,7 @@ class OverviewFilterForm extends FormBase {
   /**
    * Creates a list of database log administration filters that can be applied.
    *
-   * @return array
+   * @return array<string,array<string,mixed>>
    *   Associative array of filters. The top-level keys are used as the form
    *   element names for the filters, and the values are arrays with the
    *   following elements:
@@ -140,9 +148,13 @@ class OverviewFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    *
-   * Parameter $form is needed by FormInterface, so ignore warning.
+   * @param array<string,mixed> $form
+   *   The submitted form array.
+   * @param \Drupal\Core\Form\FormStateInterface $formState
+   *   The submitted form state.
    *
    * @SuppressWarnings("PMD.UnusedFormalParameter")
+   *   Parameter $form is needed by FormInterface, so ignore warning.
    */
   public function submitForm(array &$form, FormStateInterface $formState): void {
     $filters = array_keys($this->getFilters());
@@ -162,6 +174,11 @@ class OverviewFilterForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<string,mixed> $form
+   *   The submitted form.
+   * @param \Drupal\Core\Form\FormStateInterface $formState
+   *   The form state.
    */
   public function validateForm(array &$form, FormStateInterface $formState): void {
     if ($formState->isValueEmpty('type') && $formState->isValueEmpty('severity')) {

@@ -52,7 +52,7 @@ class EventController {
   /**
    * An instance cache for user accounts, which are used in a loop.
    *
-   * @var array
+   * @var array<int,\Drupal\Core\Link|string>
    */
   protected $userCache = [];
 
@@ -95,8 +95,8 @@ class EventController {
    * @param \Drupal\mongodb_watchdog\Event $event
    *   The event occurrence to represent.
    *
-   * @return array
-   *   A render array.
+   * @return array<int,\Drupal\Core\Link|\Drupal\Core\StringTranslation\TranslatableMarkup|string|null>
+   *   A render array for a table row.
    *
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */

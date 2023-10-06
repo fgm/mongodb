@@ -9,6 +9,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
+use MongoDB\Model\BSONDocument;
 
 /**
  * Class LoggerTest tests the logging mechanism itself.
@@ -30,7 +31,7 @@ class LoggerTest extends MongoDbTestBase {
   /**
    * These modules need to be enabled.
    *
-   * @var array
+   * @var string[]
    */
   protected static $modules = [
     'system',
@@ -65,7 +66,7 @@ class LoggerTest extends MongoDbTestBase {
    * @param string $message
    *   The message is present in the collection.
    */
-  public function assertEntry($message) {
+  public function assertEntry($message): void {
     $logged = $this->find($message);
     $this->assertNotNull($logged,
       (string) $this->t('Event %message is logged', ['%message' => $message]));
@@ -79,7 +80,7 @@ class LoggerTest extends MongoDbTestBase {
    * @param string $message
    *   The message which must not be present in the collection.
    */
-  public function assertNoEntry($message) {
+  public function assertNoEntry($message): void {
     $logged = $this->find($message);
     $this->assertNull($logged,
       (string) $this->t('Event %message is not logged', ['%message' => $message]));
@@ -109,10 +110,10 @@ class LoggerTest extends MongoDbTestBase {
    * @param string $message
    *   The message to look for.
    *
-   * @return array|null
+   * @return \MongoDB\Model\BSONDocument
    *   The document containing the message, if any ; NULL otherwise.
    */
-  protected function find($message) {
+  protected function find($message): ?BSONDocument {
     $ret = $this->collection->findOne(['message' => $message]);
     return $ret;
   }
@@ -124,7 +125,7 @@ class LoggerTest extends MongoDbTestBase {
    *
    * @see https://www.drupal.org/project/mongodb/issues/3193195
    */
-  public function testLogClosure() {
+  public function testLogClosure(): void {
     $logger = $this->container->get(Logger::SERVICE_LOGGER);
     $closure = function () use ($logger) {
       $logger->notice("This fails on PHP below 7.0, and 5.6 needs to be supported for Drupal 8. The alcaeus adapter passes the version check, but does not address this.");
@@ -140,7 +141,7 @@ class LoggerTest extends MongoDbTestBase {
    *
    * @covers ::log
    */
-  public function testWatchdogLimit() {
+  public function testWatchdogLimit(): void {
     $config = $this->config(Logger::CONFIG_NAME);
     $limit = $config->get(Logger::CONFIG_LIMIT);
     $this->assertEquals(RfcLogLevel::DEBUG, $limit,

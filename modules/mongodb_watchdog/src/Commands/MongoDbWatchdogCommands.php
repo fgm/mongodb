@@ -32,10 +32,10 @@ class MongoDbWatchdogCommands extends DrushCommands {
   /**
    * Run a sanity check on the contents of the logger database in MongoDB.
    *
-   * @param array $options
+   * @param array<string,mixed> $options
    *   A Drush-magic parameter enabling Drush to choose the output format.
    *
-   * @return array
+   * @return array{0: int, 1: int, 2: int, 3: int}
    *   An array of collection by document count range. A high number of single
    *   document collections is a hint of a problem with the application code
    *   using the logger subsystem.

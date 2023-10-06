@@ -38,7 +38,7 @@ class MongodbCommands extends DrushCommands {
    * @usage drush mongodb:clean-tests
    *   Clean test results after "bash tests.bash".
    */
-  public function mongodbCleanTests() {
+  public function mongodbCleanTests(): void {
     $dbs = array_keys($this->tools->settings()['databases']);
     foreach ($dbs as $dbAlias) {
       /** @var \MongoDB\Collection[] $collections */
@@ -62,10 +62,10 @@ class MongodbCommands extends DrushCommands {
    *   The collection name in the database.
    * @param string $selector
    *   A MongoDB find() selector in JSON format. Defaults to '{}'.
-   * @param array $options
+   * @param array<string,mixed> $options
    *   A Drush-magic parameter enabling Drush to choose the output format.
    *
-   * @return array
+   * @return array<int,array<mixed,mixed>>
    *   The matching documents, in array format.
    *
    * @usage drush mongodb:find <collection> <query>...
@@ -93,6 +93,12 @@ class MongodbCommands extends DrushCommands {
   /**
    * Print MongoDB settings in Yaml format.
    *
+   * @param array<string,mixed> $options
+   *   A Drush-magic parameter enabling Drush to choose the output format.
+   *
+   * @return array{clients: array<string,array<string,mixed>>, databases: array<string,array{0:string,1:string}>}
+   *   Refer to example.settings.local.php for details.
+   *
    * @usage mongodb:settings
    *   Report on the settings as seen by the MongoDB module suite.
    *
@@ -102,7 +108,7 @@ class MongodbCommands extends DrushCommands {
    * @command mongodb:settings
    * @aliases mdbs,mo-set
    */
-  public function mongodbSettings($options = ['format' => 'yaml']) {
+  public function mongodbSettings($options = ['format' => 'yaml']): array {
     return $this->tools->settings();
   }
 

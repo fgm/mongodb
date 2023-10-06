@@ -81,7 +81,7 @@ class MongoDb {
    *
    * @param \MongoDB\Collection $collection
    *   The collection for which to count items.
-   * @param array $selector
+   * @param array<mixed,mixed> $selector
    *   The collection selector.
    *
    * @return int

@@ -11,7 +11,7 @@ use Drupal\mongodb_watchdog\Logger;
 /**
  * Implements hook_install().
  */
-function mongodb_watchdog_install() {
+function mongodb_watchdog_install(): void {
   // Autoloader naming the service is not yet available.
   $name = 'mongodb.logger';
   // Service may have been instantiated with an empty config before this hook,
@@ -30,8 +30,10 @@ function mongodb_watchdog_install() {
  * - Ensure the logger alias does not point to the same DB as another alias.
  *
  * @see http://blog.riff.org/2015_08_27_drupal_8_tip_of_the_day_autoloaded_code_in_a_module_install_file
+ *
+ * @return mixed[]|mixed[][]
  */
-function mongodb_watchdog_requirements($phase) {
+function mongodb_watchdog_requirements(string $phase): array {
   if ($phase === 'install') {
     // Dependencies may not be installed yet, and module isn't either.
     require_once __DIR__ . "/../mongodb/mongodb.module";
@@ -61,7 +63,7 @@ function mongodb_watchdog_requirements($phase) {
  *
  * Drop /all/ the watchdog collections by dropping the logger database.
  */
-function mongodb_watchdog_uninstall() {
+function mongodb_watchdog_uninstall(): void {
   /** @var \MongoDB\Database $logger */
   $logger = \Drupal::service('mongodb.watchdog_storage');
   $logger->drop();

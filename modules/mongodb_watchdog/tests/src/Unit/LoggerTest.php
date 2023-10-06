@@ -28,7 +28,7 @@ class LoggerTest extends TestCase {
    *
    * @throws \ReflectionException
    */
-  public function testEnhanceLogEntry() {
+  public function testEnhanceLogEntry(): void {
     $backtrace = mongodb_watchdog_test_3219325();
     $logger = new MockLogger();
     $entry = [];

@@ -82,7 +82,7 @@ class RequestController extends ControllerBase {
    * @param string $uniqueId
    *   The unique request id from mod_unique_id. Unsafe.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array.
    */
   public function build(Request $request, string $uniqueId): array {
@@ -109,10 +109,10 @@ class RequestController extends ControllerBase {
   /**
    * Build the main table.
    *
-   * @param array $rows
+   * @param array<int,array{0:\Drupal\mongodb_watchdog\EventTemplate,1:\Drupal\mongodb_watchdog\Event}> $rows
    *   The event data, as row entries for a "table" element.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array for the main table.
    */
   protected function buildMainTable(array $rows): array {
@@ -146,10 +146,10 @@ class RequestController extends ControllerBase {
   /**
    * Build the main table rows.
    *
-   * @param \Drupal\mongodb_watchdog\EventTemplate[]|\Drupal\mongodb_watchdog\Event[] $events
+   * @param array<int,array{0:\Drupal\mongodb_watchdog\EventTemplate, 1:\Drupal\mongodb_watchdog\Event}> $events
    *   A fully loaded array of events and their templates.
    *
-   * @return array
+   * @return array<int,mixed[]>
    *   A render array for a table.
    */
   protected function buildMainTableRows(array $events): array {

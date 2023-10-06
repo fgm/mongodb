@@ -66,7 +66,7 @@ class Tools {
    * @param string $selector
    *   The selector to apply to the query.
    *
-   * @return array
+   * @return array<int,array<scalar,mixed>>
    *   The query results.
    */
   public function find(string $alias, string $collection, string $selector = '{}'): array {
@@ -101,7 +101,7 @@ class Tools {
    * @param string $regex
    *   The pattern collection names must match.
    *
-   * @return array
+   * @return \MongoDB\Collection[]
    *   An array of collection objects.
    */
   public function listCollections(string $alias, string $regex): array {
@@ -121,8 +121,8 @@ class Tools {
   /**
    * Command callback for mongodb:mdbs.
    *
-   * @return array
-   *   The MongoDB portion of the settings.
+   * @return array{clients: array<string,array<string,mixed>>, databases: array<string,array{0:string,1:string}>}
+   *   The MongoDB portion of the settings. Refer to example.settings.local.php.
    */
   public function settings(): array {
     return $this->settings->get(MongoDb::MODULE);

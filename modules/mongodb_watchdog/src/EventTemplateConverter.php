@@ -43,8 +43,17 @@ class EventTemplateConverter implements ParamConverterInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @param mixed $value
+   *   The value to convert.
+   * @param mixed $definition
+   *   The parameter definition. Not used.
+   * @param string $name
+   *   The parameter name.
+   * @param array<string,mixed> $defaults
+   *   The route defaults array.
    */
-  public function convert($value, $definition, $name, array $defaults): ?EventTemplate {
+  public function convert(mixed $value, $definition, $name, array $defaults): ?EventTemplate {
     if (!is_string($value)) {
       $this->logger->notice('Non-string event template id: %id', [
         '%id' => var_export($value, TRUE),

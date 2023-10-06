@@ -81,6 +81,11 @@ class ClearConfirmForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<string,mixed> $form
+   *   The submitted form array.
+   * @param \Drupal\Core\Form\FormStateInterface $formState
+   *   The form state.
    */
   public function submitForm(array &$form, FormStateInterface $formState): void {
     $_SESSION['mongodb_watchdog_overview_filter'] = [];

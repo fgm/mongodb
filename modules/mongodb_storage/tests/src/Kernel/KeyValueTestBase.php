@@ -22,7 +22,7 @@ abstract class KeyValueTestBase extends MongoDbTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var string[]
    */
   protected static $modules = [
     MongoDb::MODULE,
@@ -51,6 +51,9 @@ abstract class KeyValueTestBase extends MongoDbTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @return array{clients: array<string,array<string,mixed>>, databases: array<string,array{0:string,1:string}>}
+   *   The MongoDB-related part of the settings.
    */
   protected function getSettingsArray(): array {
     $settings = parent::getSettingsArray();

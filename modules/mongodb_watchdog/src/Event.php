@@ -93,7 +93,7 @@ class Event implements Unserializable {
   /**
    * The template parameters.
    *
-   * @var ?array
+   * @var ?array<string,mixed>
    */
   public ?array $variables = [];
 
@@ -142,7 +142,7 @@ class Event implements Unserializable {
   /**
    * Constructor.
    *
-   * @param array $event
+   * @param array<mixed,mixed> $event
    *   The event in array form.
    */
   public function __construct(array $event) {
@@ -151,6 +151,9 @@ class Event implements Unserializable {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<mixed,mixed> $data
+   *   The raw data, from which we will only pick up those we want.
    */
   public function bsonUnserialize(array $data): void {
     foreach (static::KEYS as $key) {

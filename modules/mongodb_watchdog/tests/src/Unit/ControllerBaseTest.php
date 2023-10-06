@@ -25,7 +25,7 @@ class ControllerBaseTest extends UnitTestCase {
    *
    * @dataProvider pageGenerationData
    */
-  public function testPageGeneration(int $requestedPage, int $count, int $expected) {
+  public function testPageGeneration(int $requestedPage, int $count, int $expected): void {
     $actual = ControllerBase::getPage($count, $requestedPage, static::ITEMS_PER_PAGE);
     $this->assertEquals($expected, $actual);
   }
@@ -33,11 +33,14 @@ class ControllerBaseTest extends UnitTestCase {
   /**
    * Data provider for testPageGeneration().
    *
+   * @return array<int, array{0: int, 1: int, 2: int}>
+   *   An array of page, count, result.
+   *
    * @see \Drupal\Tests\mongodb_watchdog\Unit\ControllerBaseTest::testPageGeneration()
    *
    * Coding standards are ignored for the data list for the sake of readability.
    */
-  public function pageGenerationData() {
+  public function pageGenerationData(): array {
     // One partial available page.
     $one = static::ITEMS_PER_PAGE;
     // Part of one page.

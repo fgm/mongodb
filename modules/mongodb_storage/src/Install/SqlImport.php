@@ -104,7 +104,7 @@ class SqlImport {
    * @param string $tableName
    *   The name of the KV table.
    *
-   * @return \Drupal\Core\Database\StatementInterface
+   * @return \Drupal\Core\Database\StatementInterface<mixed>
    *   A cursor to the individual collection names.
    */
   protected function getCollections(string $tableName) : StatementInterface {
@@ -118,10 +118,10 @@ class SqlImport {
   /**
    * Import a database persistent KV store.
    *
-   * @param \Drupal\Core\Database\StatementInterface $cursor
+   * @param \Drupal\Core\Database\StatementInterface<mixed> $cursor
    *   A cursor enumerating collections in a database KV store.
    */
-  protected function importPersistent(StatementInterface $cursor) {
+  protected function importPersistent(StatementInterface $cursor): void {
     foreach ($cursor as $row) {
       $collection = $row->collection;
 
@@ -144,12 +144,12 @@ class SqlImport {
    * database KV store because the KeyValueExpirableStore[Interface] does not
    * provide access to the "expire" information.
    *
-   * @param \Drupal\Core\Database\StatementInterface $cursor
+   * @param \Drupal\Core\Database\StatementInterface<mixed> $cursor
    *   A cursor enumerating collections in a database KV store.
    * @param string $tableName
    *   The name of the database collection table.
    */
-  protected function importExpirable(StatementInterface $cursor, string $tableName) {
+  protected function importExpirable(StatementInterface $cursor, string $tableName): void {
     $columns = ['name', 'value', 'expire'];
     foreach ($cursor as $row) {
       $collection = $row->collection;
@@ -181,7 +181,7 @@ class SqlImport {
   /**
    * The command implementation for most-ikv: import the DB KV to MongoDB.
    */
-  public function import() {
+  public function import(): void {
     $cursor = $this->getCollections(static::KVP_TABLE);
     echo static::KVP_TABLE . PHP_EOL;
     $this->importPersistent($cursor);

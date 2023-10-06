@@ -122,7 +122,7 @@ class OverviewController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array.
    *
    * @throws \ReflectionException
@@ -145,7 +145,7 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate[] $rows
    *   The template data.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array for the main table.
    */
   protected function buildMainTable(array $rows): array {
@@ -183,8 +183,8 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate[] $templates
    *   The event template data.
    *
-   * @return array
-   *   A render array for a table.
+   * @return array<int,mixed[]>
+   *   A render array for the rows of a table.
    */
   protected function buildMainTableRows(array $templates): array {
     $rows = [];
@@ -277,7 +277,7 @@ class OverviewController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $template
    *   The template for which to find a source location.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array for the source location, possibly empty or wrong.
    */
   protected function getEventSource(EventTemplate $template): array {
@@ -325,7 +325,7 @@ class OverviewController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request. Needed for paging.
    *
-   * @return array
+   * @return array<scalar,mixed>
    *   The data array.
    *
    * @throws \ReflectionException
@@ -348,7 +348,7 @@ class OverviewController extends ControllerBase {
   /**
    * Return the top element.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array for the top filter form.
    */
   protected function getTop(): array {

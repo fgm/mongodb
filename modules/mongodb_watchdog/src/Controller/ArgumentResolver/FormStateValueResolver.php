@@ -28,6 +28,9 @@ class FormStateValueResolver implements ArgumentValueResolverInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @return \Generator
+   *   Returns the argument values.
    */
   public function resolve(Request $request, ArgumentMetadata $argument): iterable {
     $formState = $request->attributes->has(static::NAME_LEGACY)

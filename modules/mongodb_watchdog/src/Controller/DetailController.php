@@ -60,7 +60,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The event template.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array.
    */
   public function build(Request $request, EventTemplate $eventTemplate): array {
@@ -83,7 +83,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The template for which to built the detail lines.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array for the main table.
    */
   protected function buildMainTable(array $events, EventTemplate $eventTemplate): array {
@@ -126,7 +126,7 @@ class DetailController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\EventTemplate $eventTemplate
    *   The template for these events.
    *
-   * @return array [array|string]
+   * @return array<int,\Drupal\Core\Link[]|\Drupal\Core\StringTranslation\TranslatableMarkup[]|null[]|string[]>
    *   A render array for a table.
    *
    * @throws \Drupal\Core\Entity\EntityMalformedException

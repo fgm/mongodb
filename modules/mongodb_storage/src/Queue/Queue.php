@@ -55,6 +55,9 @@ class Queue implements QueueInterface {
   /**
    * {@inheritdoc}
    *
+   * @param mixed $data
+   *   The enqueued data. Can be anything but should be plain types.
+   *
    * @throws \Exception
    */
   public function createItem($data) {
@@ -81,6 +84,9 @@ class Queue implements QueueInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @param int $lease_time
+   *   The time after which the job will be considered as stuck.
    */
   public function claimItem($lease_time = 30): Item|bool {
     $now = $this->time->getCurrentTime();
@@ -104,6 +110,9 @@ class Queue implements QueueInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @param \Drupal\mongodb_storage\Queue\Item $item
+   *   An item obtained from claimItem().
    */
   public function releaseItem($item): bool {
     $res = $this->mongoDbCollection
@@ -119,15 +128,18 @@ class Queue implements QueueInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @param \Drupal\mongodb_storage\Queue\Item $item
+   *   An item obtained from claimItem().
    */
-  public function deleteItem($item) {
+  public function deleteItem($item): void {
     $this->mongoDbCollection->deleteOne(['_id' => $item->id()]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function createQueue() {
+  public function createQueue(): void {
     // Create the index.
     $this->mongoDbCollection->createIndex([
       'expires' => 1,
@@ -138,7 +150,7 @@ class Queue implements QueueInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteQueue() {
+  public function deleteQueue(): void {
     $this->mongoDbCollection->drop();
   }
 

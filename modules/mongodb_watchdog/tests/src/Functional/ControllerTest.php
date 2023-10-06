@@ -40,7 +40,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Map of PSR3 log constants to RFC 5424 log constants.
    *
-   * @var array
+   * @var array<string,int>
    */
   const LEVEL_TRANSLATION = [
     LogLevel::EMERGENCY => RfcLogLevel::EMERGENCY,
@@ -197,7 +197,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Rewrites the settings.php file of the test site.
    *
-   * @param array $settings
+   * @param array<string,mixed> $settings
    *   An array of settings to write out, in the format expected by
    *   drupal_rewrite_settings().
    *
@@ -205,7 +205,7 @@ class ControllerTest extends BrowserTestBase {
    *
    * @see \Drupal\Core\Test\FunctionalTestSetupTrait::writeSettings()
    */
-  protected function writeSettings(array $settings) {
+  protected function writeSettings(array $settings): void {
     // Taken from trait.
     include_once DRUPAL_ROOT . '/core/includes/install.inc';
     $filename = $this->siteDirectory . '/settings.php';
@@ -229,7 +229,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Prepare the Settings from a base set of MongoDB settings.
    *
-   * @return array
+   * @return array{clients: array<string,array<string,mixed>>, databases: array<string,array{0:string,1:string}>}
    *   A settings array only containing MongoDB-related settings.
    */
   protected function getSettingsArray(): array {
@@ -269,7 +269,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Get the log entry information form the page.
    *
-   * @return array
+   * @return array<int,array<string,mixed>>
    *   List of entries and their information.
    */
   protected function getLogEntries(): array {
@@ -317,10 +317,10 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Asserts that the counts for displayed entries match the expected counts.
    *
-   * @param array $types
+   * @param array<int,string[]> $types
    *   The type information to compare against.
    */
-  protected function assertTypeCount(array $types) {
+  protected function assertTypeCount(array $types): void {
     $entries = $this->getLogEntries();
     $reducer = function ($accu, $curr) {
       $accu[$curr['type'] . '-' . $curr['severity']] = [
@@ -351,7 +351,7 @@ class ControllerTest extends BrowserTestBase {
     int $count,
     string $type = 'custom',
     int $severity = RfcLogLevel::EMERGENCY
-  ) {
+  ): void {
     $ip = '::1';
     $context = [
       'channel' => $type,
@@ -382,7 +382,7 @@ class ControllerTest extends BrowserTestBase {
    * saves some test running time over having one more functional test in
    * mongodb module just for this.
    */
-  private function verifyReports($statusCode = Response::HTTP_OK) {
+  private function verifyReports($statusCode = Response::HTTP_OK): void {
     // View MongoDB help page.
     $this->drupalGet('/admin/help');
     $session = $this->assertSession();
@@ -484,7 +484,7 @@ class ControllerTest extends BrowserTestBase {
    *
    * @todo verifyRowLimit(), verifyCron(), verifyEvents() as per DbLog.
    */
-  public function testLoggerReportsAccess() {
+  public function testLoggerReportsAccess(): void {
     $expectations = [
       [$this->adminUser, Response::HTTP_OK],
       [$this->bigUser, Response::HTTP_OK],
@@ -501,7 +501,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Test the UI clearing feature.
    */
-  public function testLoggerAddAndUiClear() {
+  public function testLoggerAddAndUiClear(): void {
     // Drop the logger database to ensure no collections.
     $this->container->get(MongoDb::SERVICE_DB_FACTORY)
       ->get(Logger::DB_LOGGER)
@@ -560,7 +560,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Test the dblog filter on admin/reports/dblog.
    */
-  public function testFilter() {
+  public function testFilter(): void {
     $this->drupalLogin($this->bigUser);
 
     // Clear log to ensure that only generated entries are found.

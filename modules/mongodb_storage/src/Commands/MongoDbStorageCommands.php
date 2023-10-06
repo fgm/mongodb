@@ -38,7 +38,7 @@ class MongoDbStorageCommands extends DrushCommands {
    * @command mongodb:storage:import_keyvalue
    * @aliases mdbsikv,most-ikv
    */
-  public function import() {
+  public function import(): void {
     $this->sqlImport->import();
   }
 

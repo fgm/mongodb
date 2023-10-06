@@ -21,7 +21,7 @@ class DatabaseFactoryTest extends MongoDbTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var string[]
    */
   protected static $modules = [MongoDb::MODULE];
 
@@ -51,7 +51,7 @@ class DatabaseFactoryTest extends MongoDbTestBase {
   /**
    * Test normal case.
    */
-  public function testGetHappy() {
+  public function testGetHappy(): void {
     $drupal = $this->databaseFactory->get(static::DB_DEFAULT_ALIAS);
     $this->assertInstanceOf(Database::class, $drupal, 'get() returns a valid database instance.');
   }
@@ -59,7 +59,7 @@ class DatabaseFactoryTest extends MongoDbTestBase {
   /**
    * Test referencing an alias not present in settings.
    */
-  public function testGetSadUnsetAlias() {
+  public function testGetSadUnsetAlias(): void {
     try {
       $this->databaseFactory->get(static::DB_UNSET_ALIAS);
       $this->fail('Should not have returned a value for an unset database alias.');
@@ -77,7 +77,7 @@ class DatabaseFactoryTest extends MongoDbTestBase {
   /**
    * Test referencing an alias pointing to an ill-formed (empty) database name.
    */
-  public function testGetSadAliasForBadDatabase() {
+  public function testGetSadAliasForBadDatabase(): void {
     $database = $this->databaseFactory->get(static::DB_INVALID_ALIAS);
     $this->assertNull($database, 'Selecting an invalid alias returns a null database.');
   }

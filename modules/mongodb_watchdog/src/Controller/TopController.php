@@ -69,7 +69,7 @@ class TopController extends ControllerBase {
    * @param string $type
    *   The type of top report to produce.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array.
    */
   public function build(Request $request, string $type): array {
@@ -87,10 +87,10 @@ class TopController extends ControllerBase {
   /**
    * Build the main table.
    *
-   * @param array $rows
+   * @param \stdClass[] $rows
    *   The event data.
    *
-   * @return array
+   * @return array<string,mixed>
    *   A render array for the main table.
    */
   protected function buildMainTable(array $rows): array {
@@ -120,10 +120,10 @@ class TopController extends ControllerBase {
   /**
    * Build the main table rows.
    *
-   * @param array[] $counts
+   * @param \stdClass[] $counts
    *   The array of counts per 403/404 page.
    *
-   * @return array
+   * @return array<int,array{0:int,1:string}>
    *   A render array for a table.
    */
   protected function buildMainTableRows(array $counts): array {
@@ -170,7 +170,7 @@ class TopController extends ControllerBase {
    * @param string $type
    *   The type of top list to retrieve.
    *
-   * @return array
+   * @return \stdClass[]
    *   The data array.
    */
   protected function getRowData(Request $request, string $type): array {
@@ -201,10 +201,10 @@ class TopController extends ControllerBase {
    *   The collection on which to perform the command.
    * @param string $key
    *   The grouping key.
-   * @param array $cond
+   * @param array<mixed,mixed> $cond
    *   The condition.
    *
-   * @return array
+   * @return \stdClass[]
    *   An array of stdClass rows with the following properties:
    *   - _id: the URL
    *   - count: the number of occurrences.
@@ -236,7 +236,7 @@ class TopController extends ControllerBase {
     ];
 
     // Aggregate always returns a cursor since MongoDB 3.6.
-    /** @var \MongoDB\Driver\CursorInterface $res */
+    /** @var \MongoDB\Driver\CursorInterface<array> $res */
     $res = $collection->aggregate($pipeline);
     $res->setTypeMap(static::TYPE_MAP);
     $ret = $res->toArray();

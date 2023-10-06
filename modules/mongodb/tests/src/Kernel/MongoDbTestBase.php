@@ -34,7 +34,7 @@ abstract class MongoDbTestBase extends KernelTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var string[]
    */
   protected static $modules = [MongoDb::MODULE];
 
@@ -66,9 +66,9 @@ abstract class MongoDbTestBase extends KernelTestBase {
   }
 
   /**
-   * Prepare the Settings from a base set of MongoDB settings.
+   * Provide a sane set of default settings.
    *
-   * @return array
+   * @return array{clients: array<string, array{uri: string, uriOptions: array<string,mixed>, driverOptions: array<string,mixed>}>, databases: array<string, array<int,string>>}
    *   A settings array only containing MongoDB-related settings.
    */
   protected function getSettingsArray(): array {
