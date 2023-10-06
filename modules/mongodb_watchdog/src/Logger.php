@@ -404,7 +404,7 @@ class Logger extends AbstractLogger {
 
     foreach ($placeholders as &$placeholder) {
       if ($placeholder instanceof MarkupInterface) {
-        $placeholder = Xss::filterAdmin($placeholder);
+        $placeholder = Xss::filterAdmin((string) $placeholder);
       }
     }
     $event = [
@@ -591,11 +591,9 @@ class Logger extends AbstractLogger {
     $name = static::EVENT_COLLECTION_PREFIX . $templateId;
     if (!preg_match('/' . static::EVENT_COLLECTIONS_PATTERN . '/', $name)) {
       throw new InvalidArgumentException(
-        new FormattableMarkup(
+        (string) new FormattableMarkup(
           'Invalid watchdog template id `@id`.',
-          [
-            '@id' => $name,
-          ]
+          ['@id' => $name]
         )
       );
     }
@@ -643,7 +641,7 @@ class Logger extends AbstractLogger {
    * @param int $limit
    *   The maximum number of events to return.
    *
-   * @return \Drupal\mongodb_watchdog\EventTemplate[]|\Drupal\mongodb_watchdog\Event[]
+   * @return array<int,array{0:\Drupal\mongodb_watchdog\EventTemplate,1:\Drupal\mongodb_watchdog\Event}>
    *   An array of [template, event] arrays, ordered by occurrence order.
    */
   public function requestEvents($requestId, $skip = 0, $limit = 0): array {

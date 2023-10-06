@@ -25,21 +25,21 @@ abstract class ControllerBase extends CoreControllerBase {
    *
    * @var int
    */
-  protected $itemsPerPage;
+  protected int $itemsPerPage;
 
   /**
    * The pager.manager service.
    *
    * @var \Drupal\Core\Pager\PagerManagerInterface
    */
-  protected $pagerManager;
+  protected PagerManagerInterface $pagerManager;
 
   /**
    * The MongoDB logger, to load events.
    *
    * @var \Drupal\mongodb_watchdog\Logger
    */
-  protected $watchdog;
+  protected Logger $watchdog;
 
   /**
    * ControllerBase constructor.

@@ -165,6 +165,8 @@ class OverviewFilterForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $formState): void {
     if ($formState->isValueEmpty('type') && $formState->isValueEmpty('severity')) {
+      // Work around https://www.drupal.org/project/drupal/issues/3338439
+      // @phpstan-ignore-next-line ParameterTypeCheck
       $formState->setErrorByName('type', $this->t('You must select something to filter by.'));
     }
   }

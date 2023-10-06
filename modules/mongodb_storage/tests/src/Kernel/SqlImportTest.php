@@ -192,7 +192,10 @@ class SqlImportTest extends KeyValueTestBase {
     }
     $expectedCollections = [];
     foreach ($rows as $row) {
+      // This is a test: we want the potential issues to happen.
+      // @codingStandardsIgnoreStart
       $expectedCollections[$row[0]][$row[1]] = unserialize($row[2]);
+      // @codingStandardsIgnoreEnd
     }
     ksort($expectedCollections);
     foreach ($expectedCollections as $name => &$values) {

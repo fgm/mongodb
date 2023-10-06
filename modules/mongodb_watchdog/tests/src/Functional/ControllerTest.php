@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Drupal\Tests\mongodb_watchdog\Functional;
 
 use Drupal\Core\Logger\RfcLogLevel;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,7 +56,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * These modules need to be enabled.
    *
-   * @var array
+   * @var string[]
    */
   protected static $modules = [
     // Needed to check admin/help/mongodb.
@@ -68,28 +68,28 @@ class ControllerTest extends BrowserTestBase {
   /**
    * An administrator account.
    *
-   * @var \Drupal\user\Entity\User
+   * @var \Drupal\user\Entity\User|false
    */
-  protected $adminUser;
+  protected User|false $adminUser;
 
   /**
    * A basic authenticated user account.
    *
-   * @var \Drupal\user\Entity\User
+   * @var \Drupal\user\Entity\User|false
    */
-  protected $anyUser;
+  protected User|false $anyUser;
 
   /**
    * An administrator-type user account, but not an administrator.
    *
-   * @var \Drupal\user\Entity\User
+   * @var \Drupal\user\Entity\User|false
    */
-  protected $bigUser;
+  protected User|false $bigUser;
 
   /**
    * The event templates collection.
    *
-   * @var \MongoDB\Collection
+   * @var ?\MongoDB\Collection
    */
   protected $collection;
 
@@ -263,7 +263,7 @@ class ControllerTest extends BrowserTestBase {
    * @see \Drupal\KernelTests\KernelTestBase::getDatabasePrefix()
    */
   protected function getDatabasePrefix(): string {
-    return $this->databasePrefix ?? '';
+    return $this->databasePrefix;
   }
 
   /**
@@ -478,6 +478,9 @@ class ControllerTest extends BrowserTestBase {
 
   /**
    * The access and contents of the admin/reports/mongodb/watchdog[/*] pages.
+   *
+   * @throws \Behat\Mink\Exception\ExpectationException
+   * @throws \Behat\Mink\Exception\ResponseTextException
    *
    * @todo verifyRowLimit(), verifyCron(), verifyEvents() as per DbLog.
    */

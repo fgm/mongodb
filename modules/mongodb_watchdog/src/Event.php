@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Core\Logger\RfcLogLevel;
+use MongoDB\BSON\ObjectIdInterface;
 use MongoDB\BSON\Unserializable;
 
 /**
@@ -37,33 +38,33 @@ class Event implements Unserializable {
 
   // @codingStandardsIgnoreStart
   /**
-   * The string representation of a MongoId.
+   * A MongoId.
    *
-   * @var int
+   * @var \MongoDB\BSON\ObjectIdInterface
    */
-  public $_id;
+  public ObjectIdInterface $_id;
   // @codingStandardsIgnoreEnd
 
   /**
    * User id. Use uid() instead for type safety.
    *
-   * @var int
+   * @var ?int
    */
-  public $uid;
+  public ?int $uid = 0;
 
   /**
    * Event type, often a module name.
    *
-   * @var string
+   * @var ?string
    */
-  public $type;
+  public ?string $type;
 
   /**
    * Event template.
    *
-   * @var string
+   * @var ?string
    */
-  public $message;
+  public ?string $message;
 
   // @codingStandardsIgnoreStart
   /**
@@ -72,9 +73,9 @@ class Event implements Unserializable {
    * Coding standards are suspended for requestTracking_id which is required by
    * the MongoDB property.
    *
-   * @var string
+   * @var ?string
    */
-  public $requestTracking_id;
+  public ?string $requestTracking_id;
   // @codingStandardsIgnoreEnd
 
   // @codingStandardsIgnoreStart
@@ -84,59 +85,59 @@ class Event implements Unserializable {
    * Coding standards are suspended for requestTracking_sequence which is
    * required by the MongoDB property.
    *
-   * @var int
+   * @var ?int
    */
-  public $requestTracking_sequence = 0;
+  public ?int $requestTracking_sequence = 0;
   // @codingStandardsIgnoreEnd
 
   /**
    * The template parameters.
    *
-   * @var array
+   * @var ?array
    */
-  public $variables = [];
+  public ?array $variables = [];
 
   /**
    * A RFC5424 severity level.
    *
-   * @var int
+   * @var ?int
    */
-  public $severity = RfcLogLevel::DEBUG;
+  public ?int $severity = RfcLogLevel::DEBUG;
 
   /**
    * A link provided by the event emitter. Optional.
    *
-   * @var string
+   * @var ?string
    */
-  public $link;
+  public ?string $link;
 
   /**
    * The absolute URL for the path on which event was logged. Use location().
    *
-   * @var string
+   * @var ?string
    */
-  public $location;
+  public ?string $location;
 
   /**
    * A HTTP referrer for the path on which the event was logged. Optional.
    *
-   * @var string
+   * @var ?string
    */
-  public $referrer;
+  public ?string $referrer;
 
   /**
    * The server host.
    *
-   * @var string
+   * @var ?string
    */
-  public $hostname;
+  public ?string $hostname;
 
   /**
    * The timestamp at which the event was logged.
    *
-   * @var int
+   * @var ?int
    */
-  public $timestamp = 0;
+  public ?int $timestamp = 0;
 
   /**
    * Constructor.
@@ -166,7 +167,7 @@ class Event implements Unserializable {
    *   The location property, always as a string, never NULL.
    */
   public function location(): string {
-    return (string) $this->location ?? '';
+    return $this->location ?? '';
   }
 
   /**
@@ -176,7 +177,7 @@ class Event implements Unserializable {
    *   The uid property, always as an int, never NULL.
    */
   public function uid(): int {
-    return (int) $this->uid;
+    return $this->uid ?? 0;
   }
 
 }

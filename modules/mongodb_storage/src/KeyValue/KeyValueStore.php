@@ -47,7 +47,7 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * @param \MongoDB\Collection|null $collection
    *   The eponymous MongoDB collection.
    */
-  public function __construct($collectionName, Collection $collection = NULL) {
+  public function __construct(string $collectionName, ?Collection $collection = NULL) {
     parent::__construct($collectionName);
     $this->collectionName = $collection->getCollectionName();
     $this->mongoDbCollection = $collection;
@@ -69,8 +69,9 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * never invoked, and the container itself must not be serialized.
    */
   public function __wakeup() {
-    /** @var \Drupal\mongodb\DatabaseFactory $databaseFactory */
-    $dbFactory = \Drupal::service(MongoDb::SERVICE_DB_FACTORY); /** @phpstan-ignore-line */
+    /** @var \Drupal\mongodb\DatabaseFactory $dbFactory */
+    // @phpstan-ignore-next-line
+    $dbFactory = \Drupal::service(MongoDb::SERVICE_DB_FACTORY);
 
     /** @var \MongoDB\Database $database */
     $database = $dbFactory->get(KeyValueFactory::DB_KEYVALUE);
@@ -110,7 +111,11 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
     $cursor = $this->mongoDbCollection->find([], static::LEGACY_TYPE_MAP);
     $result = [];
     foreach ($cursor as $doc) {
+      // If someone has managed to put malicious content into our database,
+      // then it is probably already too late to defend against an attack.
+      // @codingStandardsIgnoreStart
       $result[$doc['_id']] = unserialize($doc['value']);
+      // @codingStandardsIgnoreEnd
     }
     return $result;
   }
@@ -140,7 +145,11 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
     $docs = [];
     foreach ($cursor as $doc) {
       $id = $doc['_id'];
+      // If someone has managed to put malicious content into our database,
+      // then it is probably already too late to defend against an attack.
+      // @codingStandardsIgnoreStart
       $docs[$id] = unserialize($doc['value']);
+      // @codingStandardsIgnoreEnd
     }
     return $docs;
   }

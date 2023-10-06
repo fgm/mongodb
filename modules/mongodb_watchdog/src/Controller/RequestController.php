@@ -213,7 +213,7 @@ class RequestController extends ControllerBase {
    * @param string $uniqueId
    *   The request for which to build the detail page.
    *
-   * @return \Drupal\mongodb_watchdog\Event[]
+   * @return array<int,array{0:\Drupal\mongodb_watchdog\EventTemplate,1:\Drupal\mongodb_watchdog\Event}>
    *   The data array.
    */
   protected function getRowData(Request $request, string $uniqueId): array {

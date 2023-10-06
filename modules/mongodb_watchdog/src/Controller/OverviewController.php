@@ -18,8 +18,8 @@ use Drupal\mongodb_watchdog\Event;
 use Drupal\mongodb_watchdog\EventTemplate;
 use Drupal\mongodb_watchdog\Form\OverviewFilterForm;
 use Drupal\mongodb_watchdog\Logger;
-use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 

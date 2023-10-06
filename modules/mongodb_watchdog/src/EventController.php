@@ -134,15 +134,15 @@ class EventController {
    *
    * @param \Drupal\mongodb_watchdog\EventTemplate $template
    *   The template for which to find events.
-   * @param string $skip
-   *   The string representation of the number of events to skip.
+   * @param int $skip
+   *   The number of events to skip.
    * @param int $limit
    *   The limit on the number of events to return.
    *
    * @return \MongoDB\Driver\Cursor
    *   A cursor to the event occurrences.
    */
-  public function find(EventTemplate $template, $skip, $limit): Cursor {
+  public function find(EventTemplate $template, int $skip, int $limit): Cursor {
     $collection = $this->watchdog->eventCollection($template->_id);
     $selector = [];
     $options = [

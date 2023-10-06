@@ -7,6 +7,7 @@ namespace Drupal\mongodb_storage\KeyValue;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use MongoDB\BSON\UTCDateTime;
+use MongoDB\Collection;
 
 /**
  * KeyValueStore provides a KeyValueStoreExpirable as a MongoDB collection.
@@ -25,7 +26,7 @@ class KeyValueStoreExpirable extends KeyValueStore implements KeyValueStoreExpir
    *
    * @see \Drupal\mongodb_storage\KeyValueStoreExpirable::setTimeService()
    */
-  public function __construct($collection, $storeCollection) {
+  public function __construct(string $collection, ?Collection $storeCollection) {
     parent::__construct($collection, $storeCollection);
     $this->ensureIndexes();
   }

@@ -160,13 +160,17 @@ class SqlImport {
         ->condition('kve.collection', $collection)
         ->execute();
 
-      /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $mgStore */
       $mgStore = $this->expirableMoFactory->get($collection);
 
       $mgStore->deleteAll();
       foreach ($valueCursor as $valueRow) {
         $key = $valueRow->name;
+        // If someone has managed to put malicious content into our database,
+        // then it is probably already too late to defend against an attack,
+        // especially in a single use context like this.
+        // @codingStandardsIgnoreStart
         $value = unserialize($valueRow->value);
+        // @codingStandardsIgnoreEnd
         $now = $this->time->getCurrentTime();
         $expire = $valueRow->expire;
         $mgStore->setWithExpire($key, $value, $expire - $now);

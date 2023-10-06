@@ -55,11 +55,15 @@ class Item {
    * @return static
    *   A new instance.
    */
-  public static function fromDoc(BSONDocument $doc): self {
-    $that = new self();
+  public static function fromDoc(BSONDocument $doc): static {
+    $that = new static();
     $that->created = $doc['created'] ?? time();
+    // If someone has managed to put malicious content into our database,
+    // then it is probably already too late to defend against an attack.
+    // @codingStandardsIgnoreStart
     $that->data = unserialize($doc['data'] ?? 'N;');
-    $that->expires = (int) $doc['expires'] ?? 0;
+    // @codingStandardsIgnoreEnd
+    $that->expires = (int) ($doc['expires'] ?? 0);
     $that->item_id = $doc['_id'] ?? new ObjectId();
     return $that;
   }
