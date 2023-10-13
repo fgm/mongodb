@@ -1,0 +1,9 @@
+parameters:
+
+services:
+  stream_wrapper.mongodb:
+    arguments:
+      - '@mongodb.database_factory'
+    class: 'Drupal\mongodb_files\StreamWrapper\GridFs'
+    tags:
+      - { name: stream_wrapper, scheme: 'mongodb' }
