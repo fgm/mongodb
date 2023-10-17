@@ -17,6 +17,7 @@ use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
  * @group MongoDB
  */
 abstract class KeyValueTestBase extends MongoDbTestBase {
+
   const MAGIC = 'mongodb.nonexistent';
 
   /**
@@ -52,10 +53,11 @@ abstract class KeyValueTestBase extends MongoDbTestBase {
   /**
    * {@inheritdoc}
    *
-   * @return array{clients: array<string,array<string,mixed>>, databases: array<string,array{0:string,1:string}>}
+   * @return array{clients: array<string, array{uri: string, uriOptions: array<string,mixed>, driverOptions: array<string,mixed>}>, databases: array<string,array{0:string,1:string}>}
    *   The MongoDB-related part of the settings.
    */
   protected function getSettingsArray(): array {
+    /** @var array{clients: array<string, array{uri: string, uriOptions: array<string,mixed>, driverOptions: array<string,mixed>}>, databases: array<string,array{0:string,1:string}>} $settings */
     $settings = parent::getSettingsArray();
     $settings['databases'][KeyValueFactory::DB_KEYVALUE] = [
       static::CLIENT_TEST_ALIAS,

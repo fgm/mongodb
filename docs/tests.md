@@ -140,6 +140,12 @@ These variables can also be set in the `core/phpunit.xml` custom configuration
 file to simplify the command line, as described on Drupal.org [Running PHPUnit tests]
 page.
 
+For functional tests to be more apt to catch some URL resolution issues,
+your test site should be using a subpath, i.e.:
+
+- Good `http://drupaltest.localhost/somepath`
+- Not so good: `http://drupaltest.localhost`
+
 [Running PHPUnit tests]: https://www.drupal.org/docs/automated-testing/phpunit-in-drupal/running-phpunit-tests
 
 

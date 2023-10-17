@@ -68,7 +68,7 @@ abstract class MongoDbTestBase extends KernelTestBase {
   /**
    * Provide a sane set of default settings.
    *
-   * @return array{clients: array<string, array{uri: string, uriOptions: array<string,mixed>, driverOptions: array<string,mixed>}>, databases: array<string, array<int,string>>}
+   * @return array{clients: array<string, array{uri: string, uriOptions: array<string,mixed>, driverOptions: array<string,mixed>}>, databases: array<string,array{0:string,1:string}>>}
    *   A settings array only containing MongoDB-related settings.
    */
   protected function getSettingsArray(): array {

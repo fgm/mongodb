@@ -11,7 +11,6 @@ use Drupal\mongodb_storage\Queue\Item;
 use Drupal\mongodb_storage\Queue\Queue;
 use Drupal\mongodb_storage\Queue\QueueFactory;
 use Drupal\mongodb_storage\Storage;
-use MongoDB\BSON\ObjectId;
 use MongoDB\Model\BSONDocument;
 
 /**
@@ -57,16 +56,16 @@ class QueueTest extends QueueTestBase {
    * @return \Drupal\mongodb_storage\Queue\Item
    *   An item based on $data after insertion.
    */
-  protected function createItem(QueueInterface $q, mixed $data = NULL): Item {
+  protected function createTestItem(QueueInterface $q, mixed $data = NULL): Item {
     $c1 = $q->numberOfItems();
     if (empty($data)) {
       $data = [$this->randomMachineName() => $this->randomObject()];
     }
     // Now will always be <= the actual stored item.
     $now = ($q instanceof Queue) ? $q->time->getCurrentTime() : time();
-    /** @var \MongoDB\BSON\ObjectId $id */
+    /** @var string $id */
     $id = $q->createItem($data);
-    $this->assertTrue($id instanceof ObjectId);
+    $this->assertIsString($id);
     $this->assertEquals($c1 + 1, $q->numberOfItems());
     return Item::fromDoc(
       new BSONDocument([
@@ -102,15 +101,16 @@ class QueueTest extends QueueTestBase {
    */
   public function testClaimTimeout(): void {
     $q = $this->createQueue();
-    $id = $this->createItem($q)->id();
+    $id = $this->createTestItem($q)->id();
 
     /** @var \Drupal\mongodb_storage\Queue\Item|bool $claimed */
     $claimed = $q->claimItem(0);
+    $this->assertInstanceOf(Item::class, $claimed);
     $this->assertEquals($id, $claimed->id());
 
     // Since the claim expired immediately, the item is available again.
     $c2 = $q->claimItem();
-    $this->assertTrue($c2 instanceof Item);
+    $this->assertInstanceOf(Item::class, $c2);
     $this->assertEquals($id, $c2->id());
   }
 
@@ -145,6 +145,8 @@ class QueueTest extends QueueTestBase {
 
   /**
    * Tests the Queue createItem / claimItem / deleteItem operations.
+   *
+   * @throws \ReflectionException
    */
   public function testMongoDbQueue(): void {
     // Create two queues.
@@ -160,6 +162,8 @@ class QueueTest extends QueueTestBase {
    * Reuse the core QueueTest::runQueueTest to catch regressions.
    *
    * This implementation is a workaround for 3311758 in case it is now fixed.
+   *
+   * @throws \ReflectionException
    */
   protected function runQueueTest(
     QueueInterface $queue1,
@@ -177,7 +181,7 @@ class QueueTest extends QueueTestBase {
    */
   public function testReleaseItem(): void {
     $q = $this->createQueue();
-    $id = $this->createItem($q)->id();
+    $id = $this->createTestItem($q)->id();
 
     /** @var \Drupal\mongodb_storage\Queue\Item|bool $claimed */
     $claimed = $q->claimItem();
@@ -194,6 +198,29 @@ class QueueTest extends QueueTestBase {
     $q->releaseItem($claimed);
     $c3 = $q->claimItem();
     $this->assertTrue($c3 instanceof Item);
+  }
+
+  /**
+   * Checks https://www.drupal.org/project/mongodb/issues/3323976.
+   *
+   * Also checks that different items get different claimed IDs.
+   */
+  public function testIds(): void {
+    $q = $this->createQueue();
+    $id = $this->createTestItem($q)->id();
+    /** @var \Drupal\mongodb_storage\Queue\Item|bool $claimed */
+    $claimed = $q->claimItem();
+    $this->assertInstanceOf(Item::class, $claimed);
+    $this->assertSame($id, $claimed->id());
+
+    $otherId = $this->createTestItem($q)->id();
+    /** @var \Drupal\mongodb_storage\Queue\Item|bool $otherClaimed */
+    $otherClaimed = $q->claimItem();
+    $this->assertInstanceOf(Item::class, $otherClaimed);
+    $this->assertSame($otherId, $otherClaimed->id());
+
+    // Do not just test for NotSame, but also for an actual difference.
+    $this->assertNotEquals($otherClaimed->id(), $claimed->id());
   }
 
 }
