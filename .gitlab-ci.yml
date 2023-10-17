@@ -1,0 +1,42 @@
+.with-php-extension:
+  # Install and enable MongoDB PHP extension.
+  #    - echo -e '[pcov]\npcov.directory=.' > /usr/local/etc/php/conf.d/pcov.ini
+  - pecl install mongodb && docker-php-ext-enable mongodb
+  #      command: [ "opensearch -Ediscovery.type=single-node -EDISABLE_SECURITY_PLUGIN=true" ]
+
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+.composer-base:
+  before_script:
+    - !reference [.with-php-extension]
+  # Duplicated code in order to add --ignore-platform-reqs
+  script:
+    - curl -OL https://git.drupalcode.org/$_GITLAB_TEMPLATES_REPO/-/raw/$_GITLAB_TEMPLATES_REF/scripts/expand_composer_json.php
+    - php expand_composer_json.php
+    - composer install --ignore-platform-req=ext-mongodb
+    - curl -OL https://git.drupalcode.org/$_GITLAB_TEMPLATES_REPO/-/raw/$_GITLAB_TEMPLATES_REF/scripts/symlink_project.php
+    - php symlink_project.php
+    # For Nightwatch et al.
+    - yarn --cwd $_WEB_ROOT/core install
+    - touch $_WEB_ROOT/core/.env
+
+phpunit:
+  extends: .phpunit-base
+  services:
+    - !reference [.with-database]
+    - !reference [.with-chrome]
+    - name: mongo:7.0.2
+      alias: mongodb
+  before_script:
+    - !reference [.with-php-extension]
+  variables:
+    MONGODB_URI: mongodb://mongodb:27017
+
+
+
