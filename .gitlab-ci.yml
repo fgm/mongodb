@@ -1,9 +1,3 @@
-.with-php-extension:
-  # Install and enable MongoDB PHP extension.
-  #    - echo -e '[pcov]\npcov.directory=.' > /usr/local/etc/php/conf.d/pcov.ini
-  - pecl install mongodb && docker-php-ext-enable mongodb
-  #      command: [ "opensearch -Ediscovery.type=single-node -EDISABLE_SECURITY_PLUGIN=true" ]
-
 include:
   - project: $_GITLAB_TEMPLATES_REPO
     ref: $_GITLAB_TEMPLATES_REF
@@ -13,18 +7,8 @@ include:
       - '/includes/include.drupalci.workflows.yml'
 
 .composer-base:
-  before_script:
-    - !reference [.with-php-extension]
-  # Duplicated code in order to add --ignore-platform-reqs
-  script:
-    - curl -OL https://git.drupalcode.org/$_GITLAB_TEMPLATES_REPO/-/raw/$_GITLAB_TEMPLATES_REF/scripts/expand_composer_json.php
-    - php expand_composer_json.php
-    - composer install --ignore-platform-req=ext-mongodb
-    - curl -OL https://git.drupalcode.org/$_GITLAB_TEMPLATES_REPO/-/raw/$_GITLAB_TEMPLATES_REF/scripts/symlink_project.php
-    - php symlink_project.php
-    # For Nightwatch et al.
-    - yarn --cwd $_WEB_ROOT/core install
-    - touch $_WEB_ROOT/core/.env
+  variables:
+    COMPOSER_EXTRA: --ignore-platform-req=ext-mongodb
 
 phpunit:
   extends: .phpunit-base
@@ -34,9 +18,15 @@ phpunit:
     - name: mongo:7.0.2
       alias: mongodb
   before_script:
-    - !reference [.with-php-extension]
+    # https://docs.gitlab.com/ee/ci/jobs/index.html#pre-collapse-sections
+    - echo -e "\e[0Ksection_start:`date +%s`:my_first_section[collapsed=true]\r\e[0KInstall PHP Extension"
+    - pecl install mongodb && docker-php-ext-enable mongodb
+    - echo -e "\e[0Ksection_end:`date +%s`:my_first_section\r\e[0K"
   variables:
     MONGODB_URI: mongodb://mongodb:27017
+    # Enable when needed. https://docs.gitlab.com/ee/ci/services/#capturing-service-container-logs
+    # CI_DEBUG_SERVICES: "true"
+
 
 
 

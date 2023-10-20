@@ -5,10 +5,10 @@
  * @see \Drupal\mongodb_watchdog\Controller\OverviewController::getEventSource()
  */
 .mongodb-watchdog__code-path {
-  background-clip: padding-box;
-  border-bottom: 1px dotted;
-  border-color: rgba(0, 0, 0, 0.3);
   text-decoration: none;
+  border-color: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px dotted;
+  background-clip: padding-box;
 }
 
 .mongodb-watchdog__message {

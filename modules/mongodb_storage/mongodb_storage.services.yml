@@ -1,5 +1,3 @@
-parameters:
-
 services:
   keyvalue.expirable.mongodb:
     arguments:

@@ -1,5 +1,3 @@
-parameters:
-
 services:
   argument_resolver.mongodb_watchdog.form_state:
     class: Drupal\mongodb_watchdog\Controller\ArgumentResolver\FormStateValueResolver

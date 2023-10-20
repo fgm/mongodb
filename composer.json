@@ -16,9 +16,9 @@
   ],
   "conflict": {
     "drupal/core": "< 9.4.0",
-    "drush/drush": "< 11."
+    "drush/drush": "< 11"
   },
-  "description": "Drupal 9.2 driver for MongoDB",
+  "description": "Drupal 8.2 driver and tools for MongoDB",
   "homepage": "https://www.drupal.org/project/mongodb",
   "keywords": ["drupal", "mongodb"],
   "license": "GPL-2.0-or-later",
