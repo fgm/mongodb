@@ -1,4 +1,4 @@
-core_version_requirement: ^10
+core_version_requirement: ^10 || ^11
 description: 'Integration between Drupal and MongoDB.'
 name: 'MongoDB'
 package: 'MongoDB'

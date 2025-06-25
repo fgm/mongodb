@@ -1,4 +1,4 @@
-core_version_requirement: ^10
+core_version_requirement: ^10 || ^11
 dependencies:
   - mongodb:mongodb
 description: 'A logger (watchdog) implementation using MongoDB'

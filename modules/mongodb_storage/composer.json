@@ -1,6 +1,6 @@
 {
     "conflict": {
-        "drush/drush": "< 11"
+        "drush/drush": "< 12"
     },
     "description": "Key-value and queue provides",
     "extra": {
@@ -11,9 +11,9 @@
         }
     },
     "require": {
-        "php": ">=8`.0",
+        "php": ">=8.1",
         "ext-json": "*",
         "ext-mongodb": "^1.5.1",
-        "mongodb/mongodb": "^1.5.0"
+        "mongodb/mongodb": "^1.13"
     }
 }

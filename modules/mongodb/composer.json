@@ -15,7 +15,7 @@
         }
     ],
     "conflict": {
-        "drush/drush": "< 11"
+        "drush/drush": "< 12"
     },
     "description": "Drupal 8.2 driver for MongoDB",
     "extra": {
@@ -35,10 +35,10 @@
     "name": "drupal/mongodb",
     "prefer-stable": false,
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.1",
         "ext-json": "*",
         "ext-mongodb": "^1.5.1",
-        "mongodb/mongodb": "^1.5.0"
+        "mongodb/mongodb": "^1.13"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^2.8.1"
