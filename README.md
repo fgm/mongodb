@@ -3,8 +3,6 @@ MongoDB for Drupal
 
 MongoDB integration for Drupal 10.x, version 8.x-2.1.
 
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/fgm/mongodb/badges/quality-score.png?b=8.x-2.x)](https://scrutinizer-ci.com/g/fgm/mongodb/?branch=8.x-2.x)
-
 This package is a collection of several modules, allowing Drupal sites to store
 various data in MongoDB, either using the provided modules, or writing their own
 on top of the main `mongodb` module.

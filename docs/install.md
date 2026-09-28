@@ -11,17 +11,34 @@ To summarize:
 The MongoDB module and submodules need some configuration to be useful.
 This guide assumes that :
 
-* A [MongoDB][download] 4.2 to 6.x server instance has already been installed,
-  configured and is available for connection from the Drupal instance.
-  MongoDB 5.x, AWS DocumentDB and Azure CosmosDB might work but are not tested.
-  Be sure to [report any issue][report] you could have with either.
-* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension version 1.13 or
-  later is installed and configured.
-* The site will be running [Drupal][drupal] 9.4.x, 9.5.x or 10.0.x,
-  with [Drush][drush] 11.x.
-* PHP is version 8.1.x. PHP 8.2.x should work but is not tested:
-  be sure to [report any issue][report] you could have with it.
-* We highly recommend [using Composer](#installing-using-composer)
+* A [MongoDB][download] server instance has already been installed,
+  configured and is available for connection from the Drupal instance,
+  in a version MongoDB still supports.
+  As of 2026-09-28, these are 7.0, 8.0 and 8.3: see MongoDB's [lifecycle page][lifecycle].
+  8.x-2.1 was tested against MongoDB 7.0 when it was released, and against 8.3 on 2026-09-28.
+  Which extension and library versions each server version needs
+  is listed in MongoDB's [compatibility tables][compat].
+  AWS DocumentDB and Azure CosmosDB might work but are not tested.
+  Be sure to [report any issue][report] you could have with them.
+* The [mongodb][mongodb] (not [mongo][mongo]) PHP extension is installed and configured,
+  in a 1.x version, 1.13 or later.
+  Version 2.x of the extension is not supported by 8.x-2.1.
+* The [MongoDB library for PHP][PHPMongoDBlib] is a 1.x version, 1.12 or later.
+  Composer installs it along with the module,
+  picking the library version that matches the installed extension version.
+    * These are the minimum versions 8.x-2.1 accepts, not what current setups need:
+      MongoDB 7.0 needs the extension and library 1.16 or later,
+      and PHP 8.4 needs them in 1.17 or later.
+* The site will be running [Drupal][drupal] 10.x.
+  8.x-2.1 still installs on Drupal 9.4 and 9.5,
+  but Drupal 9 is end of life and no longer supported by this module.
+* The module commands need [Drush][drush] 11 or later.
+  8.x-2.1 registers them through `drush.services.yml`,
+  which Drush 12 and 13 still load, but mark as deprecated.
+  Drush 13 itself needs PHP 8.3 and Drupal 10.4 or later.
+* PHP is the version required by the Drupal 10 release in use,
+  and the mongodb extension must support that PHP version.
+* We highly recommend [using Composer](#downloading-the-modules)
   to install and use this module, and its dependency,
   the [MongoDB extension and library for PHP][PHPMongoDBlib]
 
@@ -32,7 +49,7 @@ maintained by MongoDB Inc.:
 * [MongoDB LINUX installation][MongoDBLinux]
 * [MongoDB Windows installation][MongoDBWindows]
 
-MongoDB below 4.0 is no longer supported, which means you can no longer get
+Since MongoDB 3.6, you can no longer get
 a basic web admin interface by running `mongod` with the `–httpinterface`:
 that feature was [removed in 3.6][removedhttp].
 To some extent, this feature has been superseded by the
@@ -54,6 +71,10 @@ To some extent, this feature has been superseded by the
 
 [PHPMongoDBlib]: https://www.mongodb.com/docs/php-library/current/
 
+[compat]: https://www.mongodb.com/docs/drivers/compatibility/?driver-language=php&php-driver-framework=php-driver
+
+[lifecycle]: https://www.mongodb.com/legal/support-policy/lifecycles
+
 [MongoDBMac]: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/
 
 [MongoDBLinux]: https://docs.mongodb.com/manual/administration/install-on-linux/
@@ -71,11 +92,11 @@ dependencies, as recommended, installing is just one command:
 
 ```bash
 cd <site root path>
-# Download the tagged (stable) version:
 composer require -nvv -W --prefer-stable "drupal/mongodb:^2.1"
-# ...or the latest version:
-composer require -nvv -W "drupal/mongodb:dev-2.x"
 ```
+
+The `dev-2.x` development branch is not covered by this page:
+it requires Drupal 10.5 or later, and its Drupal 11 support is still in progress.
 
 Alternatively, download the module package by any other means,
 as per the Drupal documentation about [Installing modules][install].
@@ -152,11 +173,10 @@ Once the module is installed and enabled, you can check its requirements on
 
 ![MongoDB on status page](images/mongodb-requirements.png)
 
-You can configure it on `/admin/config/system/mongodb/watchdog`.
-
 Optionally, enable the [`mongodb_storage`](modules/mongodb_storage.md)
 and [`mongodb_watchdog`](modules/mongodb_watchdog.md) modules,
 for additional services and commands.
+Once `mongodb_watchdog` is enabled, you can configure it on `/admin/config/system/mongodb/watchdog`.
 
 [composer]: https://www.drupal.org/docs/develop/using-composer/manage-dependencies
 

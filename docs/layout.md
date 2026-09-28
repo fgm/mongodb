@@ -1,7 +1,6 @@
     .coveralls.yml             # Code coverage configuration file
     .gitignore                 # Git ignore file
-    .scrutinizer.yml           # Scrutinizer configuration file
-    .travis.yml                # Travis build configuration  file
+    .gitlab-ci.yml             # GitLab CI configuration file
     README.md                  # Current Readme file
     composer.json              # Composer configuration file
     core.phpunit.xml           # PHPUnit configuration file
@@ -14,4 +13,5 @@
         mongodb                # Driver
         mongodb_storage        # Key-value and Queue
         mongodb_watchdog       # Logger
+    mongodb.neon               # The PHPStan configuration file
     phpcs.xml                  # The PHPCodeSniffer configuration file

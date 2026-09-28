@@ -115,4 +115,4 @@ database. What it actually provides:
 A complete example of how to write a test using that base class is given on the
 [tests] page.
 
-[tests]: /tests
+[tests]: ../tests.md

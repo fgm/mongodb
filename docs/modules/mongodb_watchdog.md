@@ -2,7 +2,7 @@
 
 The `mongodb_watchdog` module stores the log entries for your Drupal site
 in MongoDB collections as mentioned in
-[Settings Configuration](../../install#settings-configuration)
+[Settings Configuration](../install.md#configuring-settings)
 
 It also exposes a logs browsing UI on `admin/reports/mongodb/watchdog/`,
 with additional features in comparison with the built-in database logging:

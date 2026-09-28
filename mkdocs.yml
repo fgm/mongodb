@@ -1,4 +1,5 @@
 site_name: MongoDB for Drupal
+site_url: https://fgm.github.io/mongodb/
 nav:
   - Home: 'index.md'
   - Installation: 'install.md'
@@ -19,6 +20,7 @@ markdown_extensions:
 
 theme:
   name: material
+  custom_dir: overrides
   palette:
     primary: light green
     #scheme: default

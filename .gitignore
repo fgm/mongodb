@@ -11,5 +11,5 @@
 ## Composer
 /vendor/
 composer.lock
-coverage.clover
+coverage*.clover
 .DS_Store
