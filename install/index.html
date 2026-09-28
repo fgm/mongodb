@@ -1,0 +1,929 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://fgm.github.io/mongodb/install/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../layout/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Installation - MongoDB for Drupal</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="light-green" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#installation-and-settings" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="MongoDB for Drupal" class="md-header__button md-logo" aria-label="MongoDB for Drupal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M272.3 108.1C236.5 72.5 202.5 38.4 192.4 0c-10 38.4-44.3 72.5-80 108.1C58.8 161.7-1.9 222.4-1.9 313.4c-2.4 107.3 82.7 196.2 190 198.6s196.2-82.8 198.5-190.1c.1-2.8.1-5.6 0-8.5 0-91.1-60.8-151.7-114.3-205.3M98 331.1c-5.9 7.5-11 15.6-15.2 24.2-.3.7-.8 1.3-1.3 1.8s-1.2.8-2 1h-1.7c-4.3 0-9.2-8.5-9.2-8.5-1.3-2-2.5-4.2-3.7-6.4l-.8-1.8c-11.2-25.7-1.5-62.3-1.5-62.3 4.8-17.8 12.7-34.7 23.2-49.9 6.4-9.6 13.5-18.9 21-27.7l9.2 9.2 43.5 44.4c.8.9 1.3 2.1 1.3 3.3s-.5 2.4-1.3 3.3l-45.4 50.6zm96.6 127.3c-12.9-.1-25.6-3.9-36.4-11s-19.4-17.1-24.6-28.9-7-24.9-5-37.7 7.6-24.7 16.2-34.4c14.2-16.9 31.5-33.5 50.3-55.3 22.3 23.8 36.9 40.1 51.2 58 1.1 1.4 2.1 2.9 3 4.4 7.8 11.1 12 24.4 12 38 0 8.8-1.7 17.4-5 25.5s-8.2 15.5-14.4 21.7-13.5 11.1-21.6 14.5-16.7 5.1-25.5 5.1h-.2zm126.1-106.8c-.4 1.4-1.2 2.6-2.3 3.6s-2.4 1.6-3.8 1.8h-1.3c-2.6-.9-4.9-2.7-6.3-5.1-11.6-17.5-24.9-33.9-39.5-49l-17.8-18.4-59.1-61.3a505 505 0 0 1-35.4-36.3c-.3-.5-.6-.9-.9-1.4-2-2.8-3.6-5.9-4.7-9.2v-1.8c-.8-5-.4-10.1 1.2-15s4.4-9.2 8-12.7c11.4-11.4 23-23 33.8-34.9 12 13.3 24.8 26 37.4 38.6 25.8 24 49.1 50.5 69.6 79.1 17.3 24.5 26.7 53.8 27 83.8-.1 12.9-2.2 25.8-6 38.2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MongoDB for Drupal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Installation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/fgm/mongodb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="MongoDB for Drupal" class="md-nav__button md-logo" aria-label="MongoDB for Drupal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M272.3 108.1C236.5 72.5 202.5 38.4 192.4 0c-10 38.4-44.3 72.5-80 108.1C58.8 161.7-1.9 222.4-1.9 313.4c-2.4 107.3 82.7 196.2 190 198.6s196.2-82.8 198.5-190.1c.1-2.8.1-5.6 0-8.5 0-91.1-60.8-151.7-114.3-205.3M98 331.1c-5.9 7.5-11 15.6-15.2 24.2-.3.7-.8 1.3-1.3 1.8s-1.2.8-2 1h-1.7c-4.3 0-9.2-8.5-9.2-8.5-1.3-2-2.5-4.2-3.7-6.4l-.8-1.8c-11.2-25.7-1.5-62.3-1.5-62.3 4.8-17.8 12.7-34.7 23.2-49.9 6.4-9.6 13.5-18.9 21-27.7l9.2 9.2 43.5 44.4c.8.9 1.3 2.1 1.3 3.3s-.5 2.4-1.3 3.3l-45.4 50.6zm96.6 127.3c-12.9-.1-25.6-3.9-36.4-11s-19.4-17.1-24.6-28.9-7-24.9-5-37.7 7.6-24.7 16.2-34.4c14.2-16.9 31.5-33.5 50.3-55.3 22.3 23.8 36.9 40.1 51.2 58 1.1 1.4 2.1 2.9 3 4.4 7.8 11.1 12 24.4 12 38 0 8.8-1.7 17.4-5 25.5s-8.2 15.5-14.4 21.7-13.5 11.1-21.6 14.5-16.7 5.1-25.5 5.1h-.2zm126.1-106.8c-.4 1.4-1.2 2.6-2.3 3.6s-2.4 1.6-3.8 1.8h-1.3c-2.6-.9-4.9-2.7-6.3-5.1-11.6-17.5-24.9-33.9-39.5-49l-17.8-18.4-59.1-61.3a505 505 0 0 1-35.4-36.3c-.3-.5-.6-.9-.9-1.4-2-2.8-3.6-5.9-4.7-9.2v-1.8c-.8-5-.4-10.1 1.2-15s4.4-9.2 8-12.7c11.4-11.4 23-23 33.8-34.9 12 13.3 24.8 26 37.4 38.6 25.8 24 49.1 50.5 69.6 79.1 17.3 24.5 26.7 53.8 27 83.8-.1 12.9-2.2 25.8-6 38.2z"/></svg>
+
+    </a>
+    MongoDB for Drupal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/fgm/mongodb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installing-the-prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installing the prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#downloading-the-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Downloading the modules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuring settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-the-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enabling the module
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File system layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Driver: mongodb
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb_storage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K/V and Queue: mongodb_storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb_watchdog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logger: mongodb_watchdog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bespoke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bespoke code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installing-the-prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installing the prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#downloading-the-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Downloading the modules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuring settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-the-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enabling the module
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="installation-and-settings">Installation and Settings</h1>
+<p>To summarize:</p>
+<ul>
+<li>Install prerequisites</li>
+<li>Download the MongoDB module suite to the site</li>
+<li>Configure settings</li>
+</ul>
+<h2 id="installing-the-prerequisites">Installing the prerequisites</h2>
+<p>The MongoDB module and submodules need some configuration to be useful.
+This guide assumes that :</p>
+<ul>
+<li>A <a href="https://www.mongodb.org/downloads">MongoDB</a> server instance has already been installed,
+  configured and is available for connection from the Drupal instance,
+  in a version MongoDB still supports.
+  As of 2026-09-28, these are 7.0, 8.0 and 8.3: see MongoDB's <a href="https://www.mongodb.com/legal/support-policy/lifecycles">lifecycle page</a>.
+  8.x-2.1 was tested against MongoDB 7.0 when it was released, and against 8.3 on 2026-09-28.
+  Which extension and library versions each server version needs
+  is listed in MongoDB's <a href="https://www.mongodb.com/docs/drivers/compatibility/?driver-language=php&amp;php-driver-framework=php-driver">compatibility tables</a>.
+  AWS DocumentDB and Azure CosmosDB might work but are not tested.
+  Be sure to <a href="https://www.drupal.org/node/add/project-issue/mongodb">report any issue</a> you could have with them.</li>
+<li>The <a href="http://php.net/mongodb">mongodb</a> (not <a href="https://pecl.php.net/package/mongo">mongo</a>) PHP extension is installed and configured,
+  in a 1.x version, 1.13 or later.
+  Version 2.x of the extension is not supported by 8.x-2.1.</li>
+<li>The <a href="https://www.mongodb.com/docs/php-library/current/">MongoDB library for PHP</a> is a 1.x version, 1.12 or later.
+  Composer installs it along with the module,
+  picking the library version that matches the installed extension version.<ul>
+<li>These are the minimum versions 8.x-2.1 accepts, not what current setups need:
+  MongoDB 7.0 needs the extension and library 1.16 or later,
+  and PHP 8.4 needs them in 1.17 or later.</li>
+</ul>
+</li>
+<li>The site will be running <a href="https://www.drupal.org/download">Drupal</a> 10.x.
+  8.x-2.1 still installs on Drupal 9.4 and 9.5,
+  but Drupal 9 is end of life and no longer supported by this module.</li>
+<li>The module commands need <a href="https://www.drush.org/">Drush</a> 11 or later.
+  8.x-2.1 registers them through <code>drush.services.yml</code>,
+  which Drush 12 and 13 still load, but mark as deprecated.
+  Drush 13 itself needs PHP 8.3 and Drupal 10.4 or later.</li>
+<li>PHP is the version required by the Drupal 10 release in use,
+  and the mongodb extension must support that PHP version.</li>
+<li>We highly recommend <a href="#downloading-the-modules">using Composer</a>
+  to install and use this module, and its dependency,
+  the <a href="https://www.mongodb.com/docs/php-library/current/">MongoDB extension and library for PHP</a></li>
+</ul>
+<p>Installing MongoDB itself is best explained in these official resources
+maintained by MongoDB Inc.:</p>
+<ul>
+<li><a href="https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/">MongoDB Mac installation</a></li>
+<li><a href="https://docs.mongodb.com/manual/administration/install-on-linux/">MongoDB LINUX installation</a></li>
+<li><a href="https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/">MongoDB Windows installation</a></li>
+</ul>
+<p>Since MongoDB 3.6, you can no longer get
+a basic web admin interface by running <code>mongod</code> with the <code>–httpinterface</code>:
+that feature was <a href="https://docs.mongodb.com/manual/release-notes/3.6-compatibility/#http-interface-and-rest-api">removed in 3.6</a>.
+To some extent, this feature has been superseded by the
+<a href="https://docs.mongodb.com/manual/administration/free-monitoring/">free cloud monitoring</a> service offered by MongoDB Inc.</p>
+<h2 id="downloading-the-modules">Downloading the modules</h2>
+<p>If you are already using <a href="https://www.drupal.org/docs/develop/using-composer/manage-dependencies">Composer</a> in your site to manage module
+dependencies, as recommended, installing is just one command:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;site<span class="w"> </span>root<span class="w"> </span>path&gt;
+composer<span class="w"> </span>require<span class="w"> </span>-nvv<span class="w"> </span>-W<span class="w"> </span>--prefer-stable<span class="w"> </span><span class="s2">"drupal/mongodb:^2.1"</span>
+</code></pre></div>
+<p>The <code>dev-2.x</code> development branch is not covered by this page:
+it requires Drupal 10.5 or later, and its Drupal 11 support is still in progress.</p>
+<p>Alternatively, download the module package by any other means,
+as per the Drupal documentation about <a href="https://www.drupal.org/docs/extending-drupal/installing-modules#s-add-a-module-with-composer">Installing modules</a>.</p>
+<h2 id="configuring-settings">Configuring settings</h2>
+<ul>
+<li>Copy the relevant section from <code>mongodb/example.settings.local.php</code> to your
+  <code>settings.local.php</code> file if you use one, or <code>settings.php</code> otherwise,
+  and adapt it to match your MongoDB settings.
+  These settings are used by the <code>mongodb</code> module to connect to your MongoDB servers,
+  with the <code>default</code> server being the one started in previous steps.</li>
+<li>The <code>clients</code> key contains an associative array of connection by
+    connection alias, with the default connection parameters being under the
+    <code>default</code> key, and additional keys allowing the use of other
+    servers/clusters.</li>
+<li>The <code>databases</code> key contains an associative array of server/database pairs
+    by database alias, with the default Drupal database being under the
+    <code>default</code> key, and additional keys allowing modules to use their own
+    database to avoid stepping on each other's toes. This is especially useful
+    for bespoke modules created for the needs of a specific site, which can thus
+    use their own databases, possibly located on other MongoDB clusters.
+    For example, consider the following settings:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?php</span>
+<span class="c1">// In sites/default/settings.local.php.</span>
+<span class="nv">$settings</span><span class="p">[</span><span class="s1">'mongodb'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s1">'clients'</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="c1">// Client alias =&gt; connection constructor parameters.</span>
+    <span class="s1">'default'</span> <span class="o">=&gt;</span> <span class="p">[</span>
+      <span class="s1">'uri'</span> <span class="o">=&gt;</span> <span class="s1">'mongodb://localhost:27017'</span><span class="p">,</span>
+      <span class="s1">'uriOptions'</span> <span class="o">=&gt;</span> <span class="p">[],</span>
+      <span class="s1">'driverOptions'</span> <span class="o">=&gt;</span> <span class="p">[],</span>
+    <span class="p">],</span>
+  <span class="p">],</span>
+  <span class="s1">'databases'</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="c1">// Database alias =&gt; [ client_alias, database_name ]</span>
+    <span class="s1">'default'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'default'</span><span class="p">,</span> <span class="s1">'drupal'</span><span class="p">],</span>
+    <span class="s1">'keyvalue'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'default'</span><span class="p">,</span> <span class="s1">'keyvalue'</span><span class="p">],</span>
+    <span class="s1">'logger'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'default'</span><span class="p">,</span> <span class="s1">'logger'</span><span class="p">],</span>
+    <span class="s1">'queue'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'default'</span><span class="p">,</span> <span class="s1">'queue'</span><span class="p">],</span>
+  <span class="p">],</span>
+<span class="p">];</span>
+</code></pre></div>
+<ul>
+<li>With these settings:</li>
+<li>The <code>default</code> database alias will handle collections in the <code>drupal</code>
+    database on the <code>default</code> MongoDB server installed in earlier steps.</li>
+<li>The <code>keyvalue</code> database alias will store key-value collections on the
+    same <code>default</code> MongoDB server, but in a separate <code>keyvalue</code> database.</li>
+<li>The <code>logger</code> database alias will store logger collections on the same
+    <code>default</code> MongoDB server, but in a separate <code>logger</code> database.</li>
+<li>The <code>queue</code> database alias will store queue collections on the same
+    <code>default</code> MongoDB server, but in a separate <code>queue</code> database.</li>
+</ul>
+<p>The module contains an example default implementation of these settings, which
+you can copy or include, in <code>mongodb/example.settings.local.php</code>.</p>
+<p>Each module should always be using one or more databases if its own,
+unless documented otherwise.
+For example, the <code>mongodb_storage</code> module needs two databases:
+one for the K/V storage, and the other one for the Queue storage,
+as configured in the example above.</p>
+<h2 id="enabling-the-module">Enabling the module</h2>
+<p>Enable the <code>mongodb</code> module, using <code>drush en mongodb</code> or the Drupal UI.</p>
+<p>You now have access to the MongoDB services and Drush commands
+for the <code>mongodb</code> module.</p>
+<p>Once the module is installed and enabled, you can check its requirements on
+<code>/admin/reports/status</code>:</p>
+<p><img alt="MongoDB on status page" src="../images/mongodb-requirements.png" /></p>
+<p>Optionally, enable the <a href="../modules/mongodb_storage/"><code>mongodb_storage</code></a>
+and <a href="../modules/mongodb_watchdog/"><code>mongodb_watchdog</code></a> modules,
+for additional services and commands.
+Once <code>mongodb_watchdog</code> is enabled, you can configure it on <code>/admin/config/system/mongodb/watchdog</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  <div class="md-copyright__highlight">
+    Generated on 2026-09-28
+  </div>
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

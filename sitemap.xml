@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://fgm.github.io/mongodb/</loc>
+         <lastmod>2026-09-28</lastmod>
+    </url>
+    <url>
+         <loc>https://fgm.github.io/mongodb/bespoke/</loc>
+         <lastmod>2026-09-28</lastmod>
+    </url>
+    <url>
+         <loc>https://fgm.github.io/mongodb/install/</loc>
+         <lastmod>2026-09-28</lastmod>
+    </url>
+    <url>
+         <loc>https://fgm.github.io/mongodb/layout/</loc>
+         <lastmod>2026-09-28</lastmod>
+    </url>
+    <url>
+         <loc>https://fgm.github.io/mongodb/tests/</loc>
+         <lastmod>2026-09-28</lastmod>
+    </url>
+    <url>
+         <loc>https://fgm.github.io/mongodb/modules/mongodb/</loc>
+         <lastmod>2026-09-28</lastmod>
+    </url>
+    <url>
+         <loc>https://fgm.github.io/mongodb/modules/mongodb_storage/</loc>
+         <lastmod>2026-09-28</lastmod>
+    </url>
+    <url>
+         <loc>https://fgm.github.io/mongodb/modules/mongodb_watchdog/</loc>
+         <lastmod>2026-09-28</lastmod>
+    </url>
+</urlset>

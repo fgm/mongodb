@@ -1,7 +1,0 @@
-services:
-  mongodb_watchdog.commands:
-    class: \Drupal\mongodb_watchdog\Commands\MongoDbWatchdogCommands
-    arguments:
-      - '@mongodb.watchdog.sanity_check'
-    tags:
-      - { name: drush.command }

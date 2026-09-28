@@ -1,3 +1,0 @@
-# Coverage is reported to Coveralls from local runs: see docs/tests.md.
-# The repository token comes from the COVERALLS_REPO_TOKEN environment variable, never from this file.
-service_name: local

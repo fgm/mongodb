@@ -1,7 +1,0 @@
-services:
-  mongodb.commands:
-    arguments:
-      - '@mongodb.tools'
-    class: \Drupal\mongodb\Commands\MongodbCommands
-    tags:
-      - { name: drush.command }

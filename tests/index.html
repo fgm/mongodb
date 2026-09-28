@@ -1,0 +1,1017 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://fgm.github.io/mongodb/tests/">
+      
+      
+        <link rel="prev" href="../bespoke/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Tests - MongoDB for Drupal</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="light-green" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#phpunit" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="MongoDB for Drupal" class="md-header__button md-logo" aria-label="MongoDB for Drupal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M272.3 108.1C236.5 72.5 202.5 38.4 192.4 0c-10 38.4-44.3 72.5-80 108.1C58.8 161.7-1.9 222.4-1.9 313.4c-2.4 107.3 82.7 196.2 190 198.6s196.2-82.8 198.5-190.1c.1-2.8.1-5.6 0-8.5 0-91.1-60.8-151.7-114.3-205.3M98 331.1c-5.9 7.5-11 15.6-15.2 24.2-.3.7-.8 1.3-1.3 1.8s-1.2.8-2 1h-1.7c-4.3 0-9.2-8.5-9.2-8.5-1.3-2-2.5-4.2-3.7-6.4l-.8-1.8c-11.2-25.7-1.5-62.3-1.5-62.3 4.8-17.8 12.7-34.7 23.2-49.9 6.4-9.6 13.5-18.9 21-27.7l9.2 9.2 43.5 44.4c.8.9 1.3 2.1 1.3 3.3s-.5 2.4-1.3 3.3l-45.4 50.6zm96.6 127.3c-12.9-.1-25.6-3.9-36.4-11s-19.4-17.1-24.6-28.9-7-24.9-5-37.7 7.6-24.7 16.2-34.4c14.2-16.9 31.5-33.5 50.3-55.3 22.3 23.8 36.9 40.1 51.2 58 1.1 1.4 2.1 2.9 3 4.4 7.8 11.1 12 24.4 12 38 0 8.8-1.7 17.4-5 25.5s-8.2 15.5-14.4 21.7-13.5 11.1-21.6 14.5-16.7 5.1-25.5 5.1h-.2zm126.1-106.8c-.4 1.4-1.2 2.6-2.3 3.6s-2.4 1.6-3.8 1.8h-1.3c-2.6-.9-4.9-2.7-6.3-5.1-11.6-17.5-24.9-33.9-39.5-49l-17.8-18.4-59.1-61.3a505 505 0 0 1-35.4-36.3c-.3-.5-.6-.9-.9-1.4-2-2.8-3.6-5.9-4.7-9.2v-1.8c-.8-5-.4-10.1 1.2-15s4.4-9.2 8-12.7c11.4-11.4 23-23 33.8-34.9 12 13.3 24.8 26 37.4 38.6 25.8 24 49.1 50.5 69.6 79.1 17.3 24.5 26.7 53.8 27 83.8-.1 12.9-2.2 25.8-6 38.2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MongoDB for Drupal
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Tests
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/fgm/mongodb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="MongoDB for Drupal" class="md-nav__button md-logo" aria-label="MongoDB for Drupal" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M272.3 108.1C236.5 72.5 202.5 38.4 192.4 0c-10 38.4-44.3 72.5-80 108.1C58.8 161.7-1.9 222.4-1.9 313.4c-2.4 107.3 82.7 196.2 190 198.6s196.2-82.8 198.5-190.1c.1-2.8.1-5.6 0-8.5 0-91.1-60.8-151.7-114.3-205.3M98 331.1c-5.9 7.5-11 15.6-15.2 24.2-.3.7-.8 1.3-1.3 1.8s-1.2.8-2 1h-1.7c-4.3 0-9.2-8.5-9.2-8.5-1.3-2-2.5-4.2-3.7-6.4l-.8-1.8c-11.2-25.7-1.5-62.3-1.5-62.3 4.8-17.8 12.7-34.7 23.2-49.9 6.4-9.6 13.5-18.9 21-27.7l9.2 9.2 43.5 44.4c.8.9 1.3 2.1 1.3 3.3s-.5 2.4-1.3 3.3l-45.4 50.6zm96.6 127.3c-12.9-.1-25.6-3.9-36.4-11s-19.4-17.1-24.6-28.9-7-24.9-5-37.7 7.6-24.7 16.2-34.4c14.2-16.9 31.5-33.5 50.3-55.3 22.3 23.8 36.9 40.1 51.2 58 1.1 1.4 2.1 2.9 3 4.4 7.8 11.1 12 24.4 12 38 0 8.8-1.7 17.4-5 25.5s-8.2 15.5-14.4 21.7-13.5 11.1-21.6 14.5-16.7 5.1-25.5 5.1h-.2zm126.1-106.8c-.4 1.4-1.2 2.6-2.3 3.6s-2.4 1.6-3.8 1.8h-1.3c-2.6-.9-4.9-2.7-6.3-5.1-11.6-17.5-24.9-33.9-39.5-49l-17.8-18.4-59.1-61.3a505 505 0 0 1-35.4-36.3c-.3-.5-.6-.9-.9-1.4-2-2.8-3.6-5.9-4.7-9.2v-1.8c-.8-5-.4-10.1 1.2-15s4.4-9.2 8-12.7c11.4-11.4 23-23 33.8-34.9 12 13.3 24.8 26 37.4 38.6 25.8 24 49.1 50.5 69.6 79.1 17.3 24.5 26.7 53.8 27 83.8-.1 12.9-2.2 25.8-6 38.2z"/></svg>
+
+    </a>
+    MongoDB for Drupal
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/fgm/mongodb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File system layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Driver: mongodb
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb_storage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    K/V and Queue: mongodb_storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/mongodb_watchdog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logger: mongodb_watchdog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bespoke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bespoke code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tests
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#writing-custom-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing custom tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-test-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete test example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running directly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-a-phpunitxml-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using a phpunit.xml configuration file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reporting-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reporting coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#writing-custom-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing custom tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-test-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete test example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running directly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-a-phpunitxml-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using a phpunit.xml configuration file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reporting-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reporting coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="phpunit">PHPUnit</h1>
+<p>The newly ported modules have some test coverage, which can be checked with
+PHPUnit.</p>
+<p><a href="https://coveralls.io/github/fgm/mongodb?branch=8.x-2.x"><img alt="Coverage Status" src="https://coveralls.io/repos/github/fgm/mongodb/badge.svg?branch=8.x-2.x" /></a></p>
+<h2 id="writing-custom-tests">Writing custom tests</h2>
+<p>The <code>mongodb</code> module provides a <code>Drupal\Tests\mongodb\Kernel\MongoDbTestBase</code>
+base class on which to build custom kernel tests for <a href="../bespoke/">bespoke</a> modules, as it
+provides a per-test database created during test <code>setUp()</code>, and
+dropped during <code>tearDown()</code>.</p>
+<p>The base class is documented on the <a href="../modules/mongodb/">mongodb</a> documentation page.</p>
+<h2 id="complete-test-example">Complete test example</h2>
+<p>This example show how to write a test using a custom <code>foo</code> database for the
+eponymous module <code>foo</code>, assuming individual tests do not drop the database
+instance themselves.</p>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?php</span>
+
+<span class="k">namespace</span> <span class="nx">Drupal\Tests\foo\Kernel</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">Drupal\mongodb\ClientFactory</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Drupal\mongodb\DatabaseFactory</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Drupal\mongodb\MongoDb</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Drupal\Tests\mongodb\Kernel\MongoDbTestBase</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">MongoDB\Database</span><span class="p">;</span>
+
+<span class="sd">/**</span>
+<span class="sd"> * @coversDefaultClass \Drupal\foo\Foo</span>
+<span class="sd"> *</span>
+<span class="sd"> * @group foo</span>
+<span class="sd"> */</span>
+<span class="k">class</span> <span class="nc">FooTest</span> <span class="k">extends</span> <span class="nx">MongoDbTestBase</span> <span class="p">{</span>
+
+  <span class="k">const</span> <span class="no">DB_FOO_ALIAS</span> <span class="o">=</span> <span class="s1">'foo'</span><span class="p">;</span>
+
+  <span class="k">protected</span> <span class="k">static</span> <span class="nv">$modules</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="nx">MongoDb</span><span class="o">::</span><span class="na">MODULE</span><span class="p">,</span>
+    <span class="s1">'foo'</span><span class="p">,</span>
+  <span class="p">];</span>
+
+  <span class="sd">/**</span>
+<span class="sd">   * The test database.</span>
+<span class="sd">   */</span>
+  <span class="k">protected</span> <span class="o">?</span><span class="nx">Database</span> <span class="nv">$database</span> <span class="o">=</span> <span class="k">NULL</span><span class="p">;</span>
+
+  <span class="sd">/**</span>
+<span class="sd">   * Add the custom test database alias to the base class settings.</span>
+<span class="sd">   */</span>
+  <span class="k">protected</span> <span class="k">function</span> <span class="nf">getSettingsArray</span><span class="p">()</span><span class="o">:</span> <span class="k">array</span> <span class="p">{</span>
+    <span class="nv">$settings</span> <span class="o">=</span> <span class="k">parent</span><span class="o">::</span><span class="na">getSettingsArray</span><span class="p">();</span>
+    <span class="nv">$settings</span><span class="p">[</span><span class="s1">'databases'</span><span class="p">][</span><span class="k">static</span><span class="o">::</span><span class="na">DB_FOO_ALIAS</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="k">static</span><span class="o">::</span><span class="na">CLIENT_TEST_ALIAS</span><span class="p">,</span>
+      <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getTestDatabaseName</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">),</span>
+    <span class="p">];</span>
+
+    <span class="k">return</span> <span class="nv">$settings</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="sd">/**</span>
+<span class="sd">   * Instantiate the custom database.</span>
+<span class="sd">   *</span>
+<span class="sd">   * If the tests do not need a specific database, no setUp()/tearDown() is</span>
+<span class="sd">   * even needed.</span>
+<span class="sd">   */</span>
+  <span class="k">public</span> <span class="k">function</span> <span class="nf">setUp</span><span class="p">()</span><span class="o">:</span> <span class="nx">void</span> <span class="p">{</span>
+    <span class="k">parent</span><span class="o">::</span><span class="na">setUp</span><span class="p">();</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">database</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nx">DatabaseFactory</span><span class="p">(</span>
+      <span class="k">new</span> <span class="nx">ClientFactory</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">settings</span><span class="p">),</span>
+      <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">settings</span>
+    <span class="p">))</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="k">static</span><span class="o">::</span><span class="na">DB_FOO_ALIAS</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="sd">/**</span>
+<span class="sd">   * Drop the custom database.</span>
+<span class="sd">   *</span>
+<span class="sd">   * The base class only drops the default test database.</span>
+<span class="sd">   */</span>
+  <span class="k">public</span> <span class="k">function</span> <span class="nf">tearDown</span><span class="p">()</span><span class="o">:</span> <span class="nx">void</span> <span class="p">{</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">database</span><span class="o">?-&gt;</span><span class="na">drop</span><span class="p">();</span>
+    <span class="k">parent</span><span class="o">::</span><span class="na">tearDown</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="sd">/**</span>
+<span class="sd">   * @covers ::whatever</span>
+<span class="sd">   */</span>
+  <span class="k">public</span> <span class="k">function</span> <span class="nf">testWhatever</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// ... custom test logic...</span>
+  <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div>
+<p>In most cases, modules implementing will implement multiple classes, hence have
+multiple tests, in which case having a per-module base test class will be
+recommended. See <code>mongodb_storage</code> or <code>mongodb_watchdog</code> tests for examples.</p>
+<h2 id="running-tests">Running tests</h2>
+<p>Tests are run from the PHPUnit command line.</p>
+<p>Known issue in 8.x-2.1: on Drupal 10.2 and later,
+the functional test <code>ControllerTest::testLoggerReportsAccess</code> fails with a 403 on <code>/admin/help</code>,
+because Drupal 10.2 added the <code>access help pages</code> permission, which its test user lacks.
+This only affects the test, not sites: Drupal grants the new permission
+to existing roles having <code>access administration pages</code> when updating to 10.2.
+The fix is planned for 8.x-2.2 in <a href="https://www.drupal.org/project/mongodb/issues/3625939">#3625939</a>.</p>
+<h3 id="running-directly">Running directly</h3>
+<p>The typical full command to run tests looks like the next example (<code>\</code> is to
+avoid too long a line). Assuming a <code>composer-project</code> deployment with Drupal in
+the <code>web/</code> directory, you'll need to run phpunit from the Drupal root, not the
+project root:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>web
+<span class="nv">SIMPLETEST_BASE_URL</span><span class="o">=</span>http://localhost<span class="w">                </span><span class="se">\</span>
+<span class="nv">BROWSERTEST_OUTPUT_DIRECTORY</span><span class="o">=</span>/some/writable/pre-existing/path<span class="w"> </span><span class="se">\</span>
+<span class="nv">SIMPLETEST_DB</span><span class="o">=</span>mysql://user:pass@localhost/drupal10<span class="w">  </span><span class="se">\</span>
+<span class="nv">MONGODB_URI</span><span class="o">=</span>mongodb://somemongohost:27017<span class="w">           </span><span class="se">\</span>
+../vendor/bin/phpunit<span class="w"> </span>-c<span class="w"> </span><span class="nv">$PWD</span>/core/phpunit.xml.dist<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-v<span class="w"> </span>--debug<span class="w"> </span>--coverage-clover<span class="o">=</span>/tmp/cover.xml<span class="w">     </span><span class="se">\</span>
+<span class="w">    </span>modules/contrib/mongodb
+</code></pre></div>
+<ul>
+<li>Functional tests: the <code>SIMPLETEST_BASE_URL</code> and <code>BROWSERTEST_OUTPUT_DIRECTORY</code>
+  variables are needed. Kernel and Unit tests do not need them.</li>
+<li>Optional: <code>MONGODB_URI</code> points to a working MongoDB instance. If it is not
+  provided, the tests will default to <code>mongodb://localhost:27017</code>.</li>
+</ul>
+<p>These variables can also be set in the <code>core/phpunit.xml</code> custom configuration
+file to simplify the command line, as described on Drupal.org <a href="https://www.drupal.org/docs/automated-testing/phpunit-in-drupal/running-phpunit-tests">Running PHPUnit tests</a>
+page.</p>
+<p>For functional tests to be more apt to catch some URL resolution issues,
+your test site should be using a subpath, i.e.:</p>
+<ul>
+<li>Good <code>http://drupaltest.localhost/somepath</code></li>
+<li>Not so good: <code>http://drupaltest.localhost</code></li>
+</ul>
+<h3 id="using-a-phpunitxml-configuration-file">Using a <code>phpunit.xml</code> configuration file</h3>
+<p>The test command can also be simplified using a <code>phpunit.xml</code> configuration file:</p>
+<div class="highlight"><pre><span></span><code>phpunit<span class="w"> </span>-c<span class="w"> </span>core/phpunit.xml
+</code></pre></div>
+<p>Or to generate a coverage report:</p>
+<div class="highlight"><pre><span></span><code>phpunit<span class="w"> </span>-c<span class="w"> </span>core/phpunit.xml<span class="w"> </span>--coverage-html<span class="o">=</span>/some/coverage/path<span class="w"> </span>modules/contrib/mongodb
+</code></pre></div>
+<p>In this syntax, <code>core/phpunit.xml</code> is a local copy of the default
+<code>mongodb/core.phpunit.xml</code> configuration file, tweaked for the local
+environment.</p>
+<h3 id="reporting-coverage">Reporting coverage</h3>
+<p>Coverage is reported to <a href="https://coveralls.io/github/fgm/mongodb">Coveralls</a> from local runs,
+using the <a href="https://github.com/coverallsapp/coverage-reporter">Coveralls coverage reporter</a>, e.g. <code>brew install coverallsapp/coveralls/coveralls</code>.</p>
+<ol>
+<li>From the Drupal root, run the tests with a Clover coverage report
+   written into the module checkout:
+   <div class="highlight"><pre><span></span><code><span class="nv">XDEBUG_MODE</span><span class="o">=</span>coverage<span class="w"> </span>phpunit<span class="w"> </span>-c<span class="w"> </span>core/phpunit.xml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--coverage-clover<span class="o">=</span>modules/contrib/mongodb/coverage.clover<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>modules/contrib/mongodb
+</code></pre></div></li>
+<li>From the module checkout, make the file paths relative to it,
+   so that Coveralls can match them with the repository:
+   <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>modules/contrib/mongodb
+sed<span class="w"> </span><span class="s2">"s#</span><span class="k">$(</span><span class="nb">pwd</span><span class="w"> </span>-P<span class="k">)</span><span class="s2">/##g"</span><span class="w"> </span>coverage.clover<span class="w"> </span>&gt;<span class="w"> </span>coverage.rel.clover
+</code></pre></div></li>
+<li>Send the report, with the repository token in <code>COVERALLS_REPO_TOKEN</code>:
+   <div class="highlight"><pre><span></span><code>coveralls<span class="w"> </span>report<span class="w"> </span>coverage.rel.clover<span class="w"> </span>--format<span class="o">=</span>clover<span class="w"> </span>--branch<span class="o">=</span><span class="m">8</span>.x-2.x
+</code></pre></div>
+   The reporter reads the commit from the checkout, and the branch too,
+   so <code>--branch</code> is only needed when the checkout is on a tag or a detached commit.</li>
+</ol>
+<p>When the module is symlinked into the site, PHPUnit records its files under their real path,
+not under <code>modules/contrib/mongodb</code>:
+the <code>&lt;coverage&gt;</code> filter in <code>core/phpunit.xml</code> must name that real path,
+or the report comes out empty.
+<code>pwd -P</code> in step 2 already resolves it.</p>
+<p>Both Clover files are ignored by Git.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  <div class="md-copyright__highlight">
+    Generated on 2026-09-28
+  </div>
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

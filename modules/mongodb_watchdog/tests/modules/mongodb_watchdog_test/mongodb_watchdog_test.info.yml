@@ -1,9 +1,0 @@
-core_version_requirement: ^10 || ^11
-dependencies:
-  - mongodb:mongodb
-description: 'Module to test the MongoDB Watchdog Logger.'
-hidden: true
-name: 'MongoDB Watchdog test support'
-package: 'MongoDB'
-php: '8.x'
-type: 'module'
