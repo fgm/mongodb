@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\mongodb_watchdog\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\mongodb_watchdog\Logger;
@@ -27,11 +28,17 @@ class ConfigForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The core config.factory service.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The core config.typed service.
    * @param array<string,mixed> $typed
    *   The type config for the module: a plugin definition array.
    */
-  public function __construct(ConfigFactoryInterface $configFactory, array $typed) {
-    parent::__construct($configFactory);
+  public function __construct(
+    ConfigFactoryInterface $configFactory,
+    TypedConfigManagerInterface $typedConfigManager,
+    array $typed,
+  ) {
+    parent::__construct($configFactory, $typedConfigManager);
     $this->typed = $typed;
   }
 
@@ -39,11 +46,12 @@ class ConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): self {
+    /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager */
+    $typedConfigManager = $container->get('config.typed');
     return new static(
       $container->get('config.factory'),
-      $container
-        ->get('config.typed')
-        ->getDefinition('mongodb_watchdog.settings')
+      $typedConfigManager,
+      $typedConfigManager->getDefinition('mongodb_watchdog.settings')
     );
   }
 

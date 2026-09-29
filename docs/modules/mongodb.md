@@ -110,7 +110,7 @@ database. What it actually provides:
         * They can use `$this->getTestDatabaseName($postfix)` method to build a
           per-test database name that will not collide with the default
           database.
-        * There are examples for this in the `mongodb_watchdoig` tests.
+        * There are examples for this in the `mongodb_watchdog` tests.
 
 A complete example of how to write a test using that base class is given on the
 [tests] page.

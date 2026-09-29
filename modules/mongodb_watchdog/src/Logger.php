@@ -606,6 +606,10 @@ class Logger extends AbstractLogger {
    *
    * @return \MongoDB\Model\CollectionInfoIterator
    *   The collections with a name matching the event pattern.
+   *
+   * @todo Change the return type to \Iterator in #3542043.
+   *
+   * @phpstan-ignore return.deprecatedInterface
    */
   public function eventCollections(): CollectionInfoIterator {
     $options = [

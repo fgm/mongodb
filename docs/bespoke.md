@@ -1,7 +1,7 @@
 # Bespoke code
 
 Beyond the simple use cases covered by this standard package, most uses of
-MongoDB in Drupal projects appear in enteprise-class bespoke developments. Until
+MongoDB in Drupal projects appear in enterprise-class bespoke developments. Until
 this version, this usually meant totally custom code, built either straight from
 the legacy `mongo` extension, the current `mongodb` extension, or on top of the
 PHP Library or the Doctrine ODM for MongoDB, suffering from a total lack of

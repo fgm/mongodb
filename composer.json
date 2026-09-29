@@ -15,7 +15,7 @@
     }
   ],
   "conflict": {
-    "drupal/core": "< 10.5.0",
+    "drupal/core": "<10.6.0 || >=11.0 <11.3.0",
     "drush/drush": "< 12"
   },
   "description": "Drupal 8.2 driver and tools for MongoDB",
@@ -28,12 +28,13 @@
   "require": {
     "php": ">=8.1",
     "ext-json": "*",
-    "ext-mongodb": "^1.5.1",
-    "mongodb/mongodb": "^1.13"
+    "ext-mongodb": "^1.21",
+    "mongodb/mongodb": "^1.21"
   },
   "require-dev": {
-    "phpunit/phpunit": "^11.5",
-    "phpspec/prophecy-phpunit": "^v2.2",
+    "drush/drush": "^12 || ^13",
+    "phpunit/phpunit": "^9.6.34 || ^11.5.50",
+    "phpspec/prophecy-phpunit": "^2.5.0",
     "squizlabs/php_codesniffer": "^3.6"
   },
   "support": {

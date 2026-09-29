@@ -169,7 +169,8 @@ class QueueTest extends QueueTestBase {
     QueueInterface $queue1,
     QueueInterface $queue2
   ): void {
-    $coreTest = new coreQueueTest();
+    // PHPUnit 10+ requires a test name; this instance is never run itself.
+    $coreTest = new coreQueueTest('testSystemQueue');
     $rc = new \ReflectionClass($coreTest);
     $rm = $rc->getMethod('runQueueTest');
     $rm->setAccessible(TRUE);

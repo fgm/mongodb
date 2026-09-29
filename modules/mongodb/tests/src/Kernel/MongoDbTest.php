@@ -58,7 +58,8 @@ class MongoDbTest extends MongoDbTestBase {
     $collection = $database->selectCollection($collectionName);
     $collection->drop();
 
-    $expected = mt_rand(0, 100);
+    // At least one document: insertMany() rejects an empty array.
+    $expected = mt_rand(1, 100);
     $docs = [];
     for ($i = 0; $i < $expected; $i++) {
       $docs[] = [

@@ -6,7 +6,7 @@
  */
 .mongodb-watchdog__code-path {
   text-decoration: none;
-  border-color: rgba(0, 0, 0, 0.3);
+  border-color: rgb(0, 0, 0, 0.3);
   border-bottom: 1px dotted;
   background-clip: padding-box;
 }

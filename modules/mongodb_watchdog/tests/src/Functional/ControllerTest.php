@@ -7,6 +7,7 @@ namespace Drupal\Tests\mongodb_watchdog\Functional;
 use Behat\Mink\Exception\ExpectationException;
 use Behat\Mink\Exception\ResponseTextException;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Site\SettingsEditor;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
@@ -155,6 +156,8 @@ class ControllerTest extends BrowserTestBase {
         'access administration pages',
         'access site reports',
         'administer users',
+        // Needed to view admin/help and admin/help/mongodb.
+        'access help pages',
       ],
       'test_honcho'
     );
@@ -201,7 +204,7 @@ class ControllerTest extends BrowserTestBase {
    *
    * @param array<string,mixed> $settings
    *   An array of settings to write out, in the format expected by
-   *   drupal_rewrite_settings().
+   *   \Drupal\Core\Site\SettingsEditor::rewrite().
    *
    * @throws \Exception
    *
@@ -225,7 +228,7 @@ class ControllerTest extends BrowserTestBase {
     // whenever it is invoked.
     // Not using File API; a potential error must trigger a PHP warning.
     chmod($filename, 0666);
-    drupal_rewrite_settings($settings, $filename);
+    SettingsEditor::rewrite($filename, $settings);
   }
 
   /**

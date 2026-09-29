@@ -6,6 +6,21 @@ include:
       - '/includes/include.drupalci.variables.yml'
       - '/includes/include.drupalci.workflows.yml'
 
+variables:
+  OPT_IN_TEST_PREVIOUS_MAJOR: '1'
+  OPT_IN_TEST_PREVIOUS_MINOR: '1'
+  OPT_IN_TEST_NEXT_MAJOR: '1'
+  # Run the opted-in variants on push and MR pipelines, instead of as manual jobs.
+  _AUTORUN_PREVIOUS_MAJOR: 'push-and-mr'
+  _AUTORUN_PREVIOUS_MINOR: 'push-and-mr'
+  _AUTORUN_NEXT_MAJOR: 'push-and-mr'
+  # Project-specific words for the cspell job: Drush command aliases, method
+  # and variable names, mkdocs extensions, and names used in docs/examples.
+  _CSPELL_WORDS: 'accu,autoindexid,behaviour,behaviours,collectionstats,colour,coveralls,coverallsapp,daffie,databasename,debrace,fontawesome,foodb,httpinterface,inlinehilite,jmikola,kernighan,kvef,kvpf,mdbf,mdbs,mdbsikv,mdbwsc,mdct,mkdocs,mowd,oneplus,phplib,pymdownx,ritchie,sanitycheck,simpletests,somemongohost,superfences,twoplus,xyzzy'
+
+composer (next major):
+  allow_failure: true
+
 .composer-base:
   variables:
     COMPOSER_EXTRA: --ignore-platform-req=ext-mongodb
@@ -20,13 +35,19 @@ phpunit:
   before_script:
     # https://docs.gitlab.com/ee/ci/jobs/index.html#pre-collapse-sections
     - echo -e "\e[0Ksection_start:`date +%s`:my_first_section[collapsed=true]\r\e[0KInstall PHP Extension"
-    - pecl install mongodb && docker-php-ext-enable mongodb
+    # The PHP 8.1 image runs Debian 11 (bullseye), whose security packages were
+    # removed from the Debian mirrors in September 2026 while the index still
+    # lists them. Use the last snapshot that has them. The snapshot's Release
+    # file has expired, so skip apt's expiry check for it.
+    - if grep -q 'VERSION_CODENAME=bullseye' /etc/os-release; then grep -rl 'deb.debian.org/debian-security' /etc/apt/ | xargs -r sed -i 's|http://deb.debian.org/debian-security|http://snapshot.debian.org/archive/debian-security/20260901T000000Z|'; echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot; fi
+    # The image has no autoconf, which phpize needs to build the extension.
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends autoconf build-essential pkg-config
+    # -f: the image already has a newer 2.x build, which pecl won't downgrade.
+    - pecl install -f mongodb-1.21.10 && docker-php-ext-enable mongodb
+    # pecl exits 0 even when the build fails, so check the extension loaded.
+    - php -r 'exit((int) !extension_loaded("mongodb"));'
     - echo -e "\e[0Ksection_end:`date +%s`:my_first_section\r\e[0K"
   variables:
     MONGODB_URI: mongodb://mongodb:27017
     # Enable when needed. https://docs.gitlab.com/ee/ci/services/#capturing-service-container-logs
     # CI_DEBUG_SERVICES: "true"
-
-
-
-

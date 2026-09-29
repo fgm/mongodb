@@ -242,7 +242,7 @@ class OverviewController extends ControllerBase {
    * Build the link to the event or top report for the event template.
    *
    * @param \Drupal\mongodb_watchdog\EventTemplate $template
-   *   The event template for which to buildl the link.
+   *   The event template for which to build the link.
    *
    * @return \Drupal\Core\Render\RenderableInterface
    *   An internal link in renderable form.

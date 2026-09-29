@@ -38,6 +38,10 @@ class LoggerTest extends TestCase {
     catch (\ReflectionException $e) {
       $this->fail($e->getMessage());
     }
+
+    // The missing file must have been recovered using reflection.
+    $this->assertSame('mongodb_watchdog_test_3219325', $entry['%function']);
+    $this->assertStringEndsWith('mongodb_watchdog_test.module', $entry['%file']);
   }
 
 }

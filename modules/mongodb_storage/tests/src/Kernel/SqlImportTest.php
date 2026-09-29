@@ -125,7 +125,7 @@ class SqlImportTest extends KeyValueTestBase {
    * @return array<int,string[]>
    *   The test data.
    */
-  public function importProvider(): array {
+  public static function importProvider(): array {
     return [
       [
         SqlImport::KVP_TABLE,

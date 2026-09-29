@@ -40,7 +40,7 @@ class ControllerBaseTest extends UnitTestCase {
    *
    * Coding standards are ignored for the data list for the sake of readability.
    */
-  public function pageGenerationData(): array {
+  public static function pageGenerationData(): array {
     // One partial available page.
     $one = static::ITEMS_PER_PAGE;
     // Part of one page.

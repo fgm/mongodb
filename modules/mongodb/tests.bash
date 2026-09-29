@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This script makes it easy to run the Simpletests for the modules in the
-# MongoDB package. Use it in just three steps if you havec Drush in your path:
+# MongoDB package. Use it in just three steps if you have Drush in your path:
 #
 # 1 enable Simpletest: "drush en -y simpletest"
 # 2 edit your your settings*.php to configure MongoDB connection and cache plugin.

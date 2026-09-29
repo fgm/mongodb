@@ -16,7 +16,7 @@ use MongoDB\Exception\InvalidArgumentException;
 class Tools {
 
   /**
-   * The mongobb.database_factory service.
+   * The mongodb.database_factory service.
    *
    * @var \Drupal\mongodb\DatabaseFactory
    */
@@ -40,7 +40,7 @@ class Tools {
    * MongoDbCommands constructor.
    *
    * @param \Drupal\mongodb\DatabaseFactory $databaseFactory
-   *   The mongobb.database_factory service.
+   *   The mongodb.database_factory service.
    * @param \Drupal\Core\Site\Settings $settings
    *   The settings service.
    * @param \Drupal\Component\Serialization\SerializationInterface $yaml
