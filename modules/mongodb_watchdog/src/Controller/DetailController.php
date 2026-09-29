@@ -211,7 +211,7 @@ class DetailController extends ControllerBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
    *   A render array for a table.
    */
-  protected function getTop(EventTemplate $eventTemplate = NULL): array {
+  protected function getTop(?EventTemplate $eventTemplate = NULL): array {
     $rows = [];
     foreach ($eventTemplate->keys() as $key => $info) {
       $value = $eventTemplate->{$key};
