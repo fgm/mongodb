@@ -19,7 +19,6 @@ use MongoDB\Driver\Cursor;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
 use MongoDB\Driver\WriteConcern;
-use MongoDB\Model\CollectionInfoIterator;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -604,14 +603,10 @@ class Logger extends AbstractLogger {
   /**
    * List the event collections.
    *
-   * @return \MongoDB\Model\CollectionInfoIterator
+   * @return \Iterator<int,\MongoDB\Model\CollectionInfo>
    *   The collections with a name matching the event pattern.
-   *
-   * @todo Change the return type to \Iterator in #3542043.
-   *
-   * @phpstan-ignore return.deprecatedInterface
    */
-  public function eventCollections(): CollectionInfoIterator {
+  public function eventCollections(): \Iterator {
     $options = [
       'filter' => [
         'name' => ['$regex' => static::EVENT_COLLECTIONS_PATTERN],

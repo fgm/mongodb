@@ -10,10 +10,13 @@ variables:
   OPT_IN_TEST_PREVIOUS_MAJOR: '1'
   OPT_IN_TEST_PREVIOUS_MINOR: '1'
   OPT_IN_TEST_NEXT_MAJOR: '1'
+  # Current core on its highest PHP, the one variant testing the 2.x driver in a job that can block a merge.
+  OPT_IN_TEST_MAX_PHP: '1'
   # Run the opted-in variants on push and MR pipelines, instead of as manual jobs.
   _AUTORUN_PREVIOUS_MAJOR: 'push-and-mr'
   _AUTORUN_PREVIOUS_MINOR: 'push-and-mr'
   _AUTORUN_NEXT_MAJOR: 'push-and-mr'
+  _AUTORUN_MAX_PHP: 'push-and-mr'
   # Project-specific words for the cspell job: Drush command aliases, method
   # and variable names, mkdocs extensions, and names used in docs/examples.
   _CSPELL_WORDS: 'accu,autoindexid,behaviour,behaviours,collectionstats,colour,coveralls,coverallsapp,daffie,databasename,debrace,fontawesome,foodb,httpinterface,inlinehilite,jmikola,kernighan,kvef,kvpf,mdbf,mdbs,mdbsikv,mdbwsc,mdct,mkdocs,mowd,oneplus,phplib,pymdownx,ritchie,sanitycheck,simpletests,somemongohost,superfences,twoplus,xyzzy'
@@ -21,9 +24,25 @@ variables:
 composer (next major):
   allow_failure: true
 
+# The templates let this job fail, but it is where the 2.x driver runs on a supported core.
+phpunit (max PHP version):
+  allow_failure: false
+
+# Each job picks the driver from the PHP version of its image:
+# extension 1.x does not build on PHP 8.5, so PHP 8.5 and later run 2.x, and earlier versions run 1.x.
+# The composer and phpunit jobs of a variant share that image, so they pick the same driver.
+.select-mongodb-driver:
+  script:
+    - |
+      export MONGODB_EXT_VERSION=$(php -r 'echo PHP_VERSION_ID >= 80500 ? "2.5.3" : "1.21.10";')
+    - echo "PHP $(php -r 'echo PHP_VERSION;') uses ext-mongodb $MONGODB_EXT_VERSION"
+
 .composer-base:
-  variables:
-    COMPOSER_EXTRA: --ignore-platform-req=ext-mongodb
+  before_script:
+    - !reference [.select-mongodb-driver, script]
+    # The composer job runs without the extension:
+    # declare the one phpunit will install, so Composer picks the library that matches it.
+    - composer config platform.ext-mongodb "$MONGODB_EXT_VERSION"
 
 phpunit:
   extends: .phpunit-base
@@ -35,6 +54,7 @@ phpunit:
   before_script:
     # https://docs.gitlab.com/ee/ci/jobs/index.html#pre-collapse-sections
     - echo -e "\e[0Ksection_start:`date +%s`:my_first_section[collapsed=true]\r\e[0KInstall PHP Extension"
+    - !reference [.select-mongodb-driver, script]
     # The PHP 8.1 image runs Debian 11 (bullseye), whose security packages were
     # removed from the Debian mirrors in September 2026 while the index still
     # lists them. Use the last snapshot that has them. The snapshot's Release
@@ -42,10 +62,11 @@ phpunit:
     - if grep -q 'VERSION_CODENAME=bullseye' /etc/os-release; then grep -rl 'deb.debian.org/debian-security' /etc/apt/ | xargs -r sed -i 's|http://deb.debian.org/debian-security|http://snapshot.debian.org/archive/debian-security/20260901T000000Z|'; echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot; fi
     # The image has no autoconf, which phpize needs to build the extension.
     - apt-get update -qq && apt-get install -y -qq --no-install-recommends autoconf build-essential pkg-config
-    # -f: the image already has a newer 2.x build, which pecl won't downgrade.
-    - pecl install -f mongodb-1.21.10 && docker-php-ext-enable mongodb
-    # pecl exits 0 even when the build fails, so check the extension loaded.
-    - php -r 'exit((int) !extension_loaded("mongodb"));'
+    # -f: the image already has a 2.x build, which pecl won't replace without it.
+    - pecl install -f "mongodb-$MONGODB_EXT_VERSION" && docker-php-ext-enable mongodb
+    - php -r 'echo "ext-mongodb ", phpversion("mongodb"), PHP_EOL;'
+    # pecl exits 0 even when the build fails, so check the expected version loaded.
+    - php -r 'exit((int) (phpversion("mongodb") !== getenv("MONGODB_EXT_VERSION")));'
     - echo -e "\e[0Ksection_end:`date +%s`:my_first_section\r\e[0K"
   variables:
     MONGODB_URI: mongodb://mongodb:27017

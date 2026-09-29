@@ -1,6 +1,6 @@
 # MongoDB suite for Drupal
 
-The MongoDB suite for Drupal 10 is a set of modules enabling the storage of
+The MongoDB suite for Drupal 11/10 is a set of modules enabling the storage of
 various types of data on a Drupal&reg; site in MongoDB&reg;. This comes in
 addition to the standard SQL storage used by Drupal.
 
@@ -18,11 +18,11 @@ by Drupal core for the SQL database drivers.
 
 ## Release series
 
-- **[8.x-2.x]** is this suite: extra MongoDB services for stable production projects
+- **[2.x][8.x-2.x]** is this suite: extra MongoDB services for stable production projects
   running on a SQL-based Drupal, which keeps its SQL database for everything else.
-    - The current release is **[8.x-2.1]**, for Drupal 10.
+    - The current release is **[2.1][8.x-2.1]**, for Drupal 10.
       It remains supported until Drupal 10 reaches its end of life.
-    - The next release, 8.x-2.2, will support Drupal 10 and 11.
+    - The next release, 2.2, will support Drupal 10 and 11.
 - **[3.x]** is a separate product sharing the same drupal.org project:
   the "No SQL" database driver, to install Drupal itself on MongoDB, maintained by daffie.
 
@@ -50,7 +50,7 @@ by Drupal core for the SQL database drivers.
 
 ### Planned
 
-- **8.x-2.2**: support for Drupal 10 and 11, dropping Drupal 9.
+- **2.2**: support for Drupal 10 and 11, dropping Drupal 9.
   The main work is [#3625939] (Drupal 11 / Symfony 7 compatibility).
 - **Drupal 12** support is expected after that.
 
@@ -61,7 +61,7 @@ Other candidate work open in the [issue queue], not yet assigned to a release:
 - PHP 8.4 implicitly nullable type declarations: [#3458044].
 
 Core services known to benefit from a switch outside SQL,
-expected to be ported to 8.x-2.x in some release after 2.2:
+expected to be ported to the 2.x series in some release after 2.2:
 
 | Module              | In a word | Information                                | Issue       |
 |---------------------|-----------|--------------------------------------------|-------------|

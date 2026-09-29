@@ -111,12 +111,12 @@ recommended. See `mongodb_storage` or `mongodb_watchdog` tests for examples.
 
 Tests are run from the PHPUnit command line.
 
-Known issue in 8.x-2.1: on Drupal 10.2 and later,
+Known issue in the 2.1 release: on Drupal 10.2 and later,
 the functional test `ControllerTest::testLoggerReportsAccess` fails with a 403 on `/admin/help`,
 because Drupal 10.2 added the `access help pages` permission, which its test user lacks.
 This only affects the test, not sites: Drupal grants the new permission
 to existing roles having `access administration pages` when updating to 10.2.
-The fix is planned for 8.x-2.2 in [#3625939].
+The fix is included in dev releases since [#3625939].
 
 [#3625939]: https://www.drupal.org/project/mongodb/issues/3625939
 

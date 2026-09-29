@@ -10,9 +10,9 @@ integration with the underlying core Drupal CMS.
 This module provides a degree of version independence for the API changes in
 [PHP library]. Refer to the `Drupal\mongodb\MongoDb` class for an example.
 
-Starting with 8.x-2.0 versions,
+Starting with the 2.0 release,
 such a one-off code can be developed on top of the base `mongodb` module:
-unlike earlier releases, 8.x-2.x uses the PHP-standard connection methods and options,
+unlike earlier releases, the 2.x series uses the PHP-standard connection methods and options,
 without deviation, adding only a thin layer of Drupal adaptation on top of the standard
 `mongodb` [extension] and [PHP library].
 
@@ -133,7 +133,7 @@ public function baz() {
 Having the code only receive standard services (like a PSR-3 logger) or
 [PHP library] classes allows it to be written as an agnostic component,
 that can be brought in using Composer and shared with non-Drupal code.
-This is often  useful in bespoke projects, which tend to combine Drupal 10
+This is often  useful in bespoke projects, which tend to combine Drupal 11/10
 with other parts of the application written in Laravel &ge; 5 or Symfony &ge; 4,
 since the code has no Drupal-specific dependency in that case,
 only exposing a PSR-3 standard API.

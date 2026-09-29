@@ -15,28 +15,28 @@ This guide assumes that :
   configured and is available for connection from the Drupal instance,
   in a version MongoDB still supports.
   As of 2026-09-28, these are 7.0, 8.0 and 8.3: see MongoDB's [lifecycle page][lifecycle].
-  8.x-2.1 was tested against MongoDB 7.0 when it was released, and against 8.3 on 2026-09-28.
+  The 2.1 release was tested against MongoDB 7.0 when it was released, and against 8.3 on 2026-09-28.
   Which extension and library versions each server version needs
   is listed in MongoDB's [compatibility tables][compat].
   AWS DocumentDB and Azure CosmosDB might work but are not tested.
   Be sure to [report any issue][report] you could have with them.
 * The [mongodb][mongodb] (not [mongo][mongo]) PHP extension is installed and configured,
   in a 1.x version, 1.13 or later.
-  Version 2.x of the extension is not supported by 8.x-2.1.
+  Version 2.x of the extension is not supported by the 2.1 release.
 * The [MongoDB library for PHP][PHPMongoDBlib] is a 1.x version, 1.12 or later.
   Composer installs it along with the module,
   picking the library version that matches the installed extension version.
-    * These are the minimum versions 8.x-2.1 accepts, not what current setups need:
+    * These are the minimum versions the 2.1 release accepts, not what current setups need:
       MongoDB 7.0 needs the extension and library 1.16 or later,
       and PHP 8.4 needs them in 1.17 or later.
-* The site will be running [Drupal][drupal] 10.x.
-  8.x-2.1 still installs on Drupal 9.4 and 9.5,
+* The site will be running [Drupal][drupal] 11.x/10.x.
+  The 2.1 release still installs on Drupal 9.4 and 9.5,
   but Drupal 9 is end of life and no longer supported by this module.
 * The module commands need [Drush][drush] 11 or later.
-  8.x-2.1 registers them through `drush.services.yml`,
+  The 2.1 release registers them through `drush.services.yml`,
   which Drush 12 and 13 still load, but mark as deprecated.
   Drush 13 itself needs PHP 8.3 and Drupal 10.4 or later.
-* PHP is the version required by the Drupal 10 release in use,
+* PHP is the version required by the Drupal 11/10 release in use,
   and the mongodb extension must support that PHP version.
 * We highly recommend [using Composer](#downloading-the-modules)
   to install and use this module, and its dependency,
@@ -96,7 +96,7 @@ composer require -nvv -W --prefer-stable "drupal/mongodb:^2.1"
 ```
 
 The `dev-2.x` development branch is not covered by this page:
-it requires Drupal 10.5 or later, and its Drupal 11 support is still in progress.
+it requires Drupal 10.5 or later, and its Drupal 12 support is still in progress.
 
 Alternatively, download the module package by any other means,
 as per the Drupal documentation about [Installing modules][install].
