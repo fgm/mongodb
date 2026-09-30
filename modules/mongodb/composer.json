@@ -31,9 +31,7 @@
         "mongodb"
     ],
     "license": "GPL-2.0-or-later",
-    "minimum-stability": "dev",
     "name": "drupal/mongodb",
-    "prefer-stable": false,
     "require": {
         "php": ">=8.1",
         "composer-runtime-api": "^2.2.2",

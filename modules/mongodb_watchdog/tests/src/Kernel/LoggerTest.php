@@ -135,6 +135,35 @@ class LoggerTest extends MongoDbTestBase {
   }
 
   /**
+   * Ensure PSR-3 placeholders are stored like core loggers store them.
+   *
+   * Core LogMessageParser rewrites every {x} as @x, even without an x key in
+   * the context, so literal braces in a message are not preserved.
+   *
+   * @covers ::log
+   *
+   * @see https://www.drupal.org/project/drupal/issues/2909805
+   */
+  public function testPlaceholderRewrite(): void {
+    $logger = $this->container->get(Logger::SERVICE_LOGGER);
+    $this->collection = $this->container->get(MongoDb::SERVICE_DB_FACTORY)
+      ->get(Logger::DB_LOGGER)
+      ->selectCollection(Logger::TEMPLATE_COLLECTION);
+
+    $cases = [
+      'matched placeholder' => ['User {name} created', ['name' => 'admin'], 'User @name created'],
+      'unmatched placeholder' => ['Literal {braces} lost', ['with' => 'context'], 'Literal @braces lost'],
+      'nested braces' => ['Nested {{name}} kept', ['name' => 'admin'], 'Nested {@name} kept'],
+    ];
+    foreach ($cases as [$message, $context, $expected]) {
+      $this->collection->drop();
+      $logger->notice($message, $context);
+      $this->assertNoEntry($message);
+      $this->assertEntry($expected);
+    }
+  }
+
+  /**
    * Test the default and non-default mongodb_watchdog insertion behaviours.
    *
    * Make sure the module applies the watchdog_limit variable,

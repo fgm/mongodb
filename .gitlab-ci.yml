@@ -37,6 +37,26 @@ phpunit (max PHP version):
       export MONGODB_EXT_VERSION=$(php -r 'echo PHP_VERSION_ID >= 80500 ? "2.5.3" : "1.21.10";')
     - echo "PHP $(php -r 'echo PHP_VERSION;') uses ext-mongodb $MONGODB_EXT_VERSION"
 
+# Neither the templates nor the runner wait for service containers to accept connections,
+# so a slow database start fails the job before any test runs.
+# The 120s timeout is an arbitrary safety margin, not derived from a measurement.
+.wait-for-services:
+  script:
+    - |
+      WAIT4X_ARCHIVE="wait4x-linux-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/').tar.gz"
+      cd /tmp
+      curl -fsSLO "https://github.com/wait4x/wait4x/releases/download/$WAIT4X_VERSION/$WAIT4X_ARCHIVE"
+      curl -fsSLO "https://github.com/wait4x/wait4x/releases/download/$WAIT4X_VERSION/$WAIT4X_ARCHIVE.sha256sum"
+      sha256sum -c "$WAIT4X_ARCHIVE.sha256sum"
+      tar -xzf "$WAIT4X_ARCHIVE" -C /usr/local/bin wait4x
+      cd "$CI_PROJECT_DIR"
+    - |
+      case "$_TARGET_DB_TYPE" in
+        mysql|mariadb) wait4x mysql "$MYSQL_USER:$MYSQL_PASSWORD@tcp(database:3306)/$MYSQL_DATABASE" --timeout 120s --backoff-policy exponential ;;
+        pgsql) wait4x postgresql "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@database:5432/$POSTGRES_DB?sslmode=disable" --timeout 120s --backoff-policy exponential ;;
+      esac
+    - wait4x mongodb "$MONGODB_URI" --timeout 120s --backoff-policy exponential
+
 .composer-base:
   before_script:
     - !reference [.select-mongodb-driver, script]
@@ -68,7 +88,9 @@ phpunit:
     # pecl exits 0 even when the build fails, so check the expected version loaded.
     - php -r 'exit((int) (phpversion("mongodb") !== getenv("MONGODB_EXT_VERSION")));'
     - echo -e "\e[0Ksection_end:`date +%s`:my_first_section\r\e[0K"
+    - !reference [.wait-for-services, script]
   variables:
     MONGODB_URI: mongodb://mongodb:27017
+    WAIT4X_VERSION: v3.7.2
     # Enable when needed. https://docs.gitlab.com/ee/ci/services/#capturing-service-container-logs
     # CI_DEBUG_SERVICES: "true"

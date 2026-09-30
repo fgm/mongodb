@@ -436,16 +436,22 @@ class ControllerTest extends BrowserTestBase {
 
     // Create an event to ensure an event page exists, using the standard PSR-3
     // service instead of the Drupal logger channel to ensure getting this
-    // logger with its specific features.
-    $expectedMessage = $this->randomString(32);
+    // logger with its specific features. Like core loggers, it stores "{x}" as
+    // "@x", so derive the stored form with the same parser.
+    $message = $this->randomString(32);
+    $context = ['with' => 'context'];
+    $expectedMessage = $message;
+    $parsedContext = $context;
+    $this->container->get('logger.log_message_parser')
+      ->parseMessagePlaceholders($expectedMessage, $parsedContext);
     /** @var \Drupal\mongodb_watchdog\Logger $logger */
     $logger = $this->container->get(Logger::SERVICE_LOGGER);
-    $logger->info($expectedMessage, ['with' => 'context']);
+    $logger->info($message, $context);
 
     $selector = ['message' => $expectedMessage];
     $event = $logger->templateCollection()
       ->findOne($selector, MongoDb::ID_PROJECTION);
-    $this->assertNotNull($event);
+    $this->assertNotNull($event, "Logged message was found: [$expectedMessage]");
     $eventId = $event['_id'];
 
     // View MongoDB Watchdog event page.
