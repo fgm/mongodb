@@ -14,14 +14,12 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests building queue items from claimed documents.
  *
- * The annotations serve PHPUnit 9 on Drupal 10, the attributes later versions.
- *
  * @covers \Drupal\mongodb_storage\Queue\Item
  *
- * @group MongoDB
+ * @group mongodb
  */
 #[CoversClass(Item::class)]
-#[Group('MongoDB')]
+#[Group('mongodb')]
 class ItemTest extends TestCase {
 
   const FOREIGN_ID = 'foreign-id';

@@ -1,6 +1,13 @@
 parameters:
   excludePaths:
-    - '*/node_modules/*'
+    analyseAndScan:
+      - '*/node_modules/*'
+    # These classes implement InstallRequirementsInterface, which Drupal 10
+    # lacks, and PHPStan cannot ignore an unknown interface. They only delegate.
+    # @todo Remove when dropping Drupal 10 support.
+    #   https://www.drupal.org/project/mongodb/issues/3626729
+    analyse:
+      - '*/src/Install/Requirements/*'
   fileExtensions:
     - php
     - module
@@ -12,13 +19,29 @@ parameters:
     #   path: **/src/Form/SettingsForm.php
     # - '#deprecated#'
     - "#^Unsafe usage of new static#"
-    # Tests carry PHPUnit attributes beside their annotations, and PHPUnit 9,
-    # used by Drupal 10, has no attribute classes. PHP ignores them there, but
-    # PHPStan reports them. Matches nothing with PHPUnit 10 or later.
-    # @todo Remove when dropping Drupal 10 support, in the Drupal 12 release.
+    # Code for newer versions carries attributes that older ones lack: PHPUnit
+    # attributes beside the annotations PHPUnit 9 reads on Drupal 10, and hook
+    # attributes from Drupal 11. PHP ignores them there, but PHPStan reports
+    # them. Matches nothing on Drupal 11.3 or later.
+    # @todo Remove the rules below when dropping Drupal 10 support.
     #   https://www.drupal.org/project/mongodb/issues/3626729
-    - message: '#^Attribute class PHPUnit\\Framework\\Attributes\\\w+ does not exist\.$#'
+    - message: '#^Attribute class (PHPUnit\\Framework\\Attributes|Drupal\\Core\\Hook\\Attribute)\\\w+ does not exist\.$#'
       identifier: attribute.notFound
+      reportUnmatched: false
+    # The requirements API of Drupal 11.3, which Drupal 10 lacks, is only used
+    # by classes Drupal 10 never loads, and by Severity. Matches nothing on
+    # Drupal 11.3 or later.
+    - message: '#Drupal\\Core\\Extension\\(Requirement\\RequirementSeverity|InstallRequirementsInterface)\b#'
+      reportUnmatched: false
+    # Severity keeps the REQUIREMENT_* constants for Drupal 10, and Drupal 12
+    # removes them. Matches nothing on Drupal 11.
+    - message: '#^Constant REQUIREMENT_\w+ not found\.$#'
+      identifier: constant.notFound
+      path: modules/mongodb/src/Install/Severity.php
+      reportUnmatched: false
+    # Consequence of either missing type above.
+    - message: '#^Unable to resolve the template type (Current|Deprecated) in call to (method )?static method Drupal\\Component\\Utility\\DeprecationHelper::backwardsCompatibleCall\(\)$#'
+      path: modules/mongodb/src/Install/Severity.php
       reportUnmatched: false
   level: 6
   treatPhpDocTypesAsCertain: false

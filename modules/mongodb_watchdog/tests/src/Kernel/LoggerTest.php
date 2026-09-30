@@ -10,14 +10,20 @@ use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
 use MongoDB\Model\BSONDocument;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Class LoggerTest tests the logging mechanism itself.
  *
- * @coversDefaultClass \Drupal\mongodb_watchdog\Logger
+ * @covers \Drupal\mongodb_watchdog\Logger
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[CoversClass(Logger::class)]
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class LoggerTest extends MongoDbTestBase {
   use StringTranslationTrait;
 
@@ -121,8 +127,6 @@ class LoggerTest extends MongoDbTestBase {
   /**
    * Ensure logging from a closure does not fail.
    *
-   * @covers ::enhanceLogEntry
-   *
    * @see https://www.drupal.org/project/mongodb/issues/3193195
    */
   public function testLogClosure(): void {
@@ -139,8 +143,6 @@ class LoggerTest extends MongoDbTestBase {
    *
    * Core LogMessageParser rewrites every {x} as @x, even without an x key in
    * the context, so literal braces in a message are not preserved.
-   *
-   * @covers ::log
    *
    * @see https://www.drupal.org/project/drupal/issues/2909805
    */
@@ -167,8 +169,6 @@ class LoggerTest extends MongoDbTestBase {
    * Test the default and non-default mongodb_watchdog insertion behaviours.
    *
    * Make sure the module applies the watchdog_limit variable,
-   *
-   * @covers ::log
    */
   public function testWatchdogLimit(): void {
     $config = $this->config(Logger::CONFIG_NAME);

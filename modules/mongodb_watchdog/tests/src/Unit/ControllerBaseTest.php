@@ -6,14 +6,19 @@ namespace Drupal\Tests\mongodb_watchdog\Unit;
 
 use Drupal\mongodb_watchdog\Controller\ControllerBase;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Test the ControllerBase mechanisms.
  *
- * @coversDefaultClass \Drupal\mongodb_watchdog\Controller\ControllerBase
+ * @covers \Drupal\mongodb_watchdog\Controller\ControllerBase
  *
  * @group mongodb
  */
+#[CoversClass(ControllerBase::class)]
+#[Group('mongodb')]
 class ControllerBaseTest extends UnitTestCase {
 
   const ITEMS_PER_PAGE = 50;
@@ -21,10 +26,9 @@ class ControllerBaseTest extends UnitTestCase {
   /**
    * Test page generation for various data set shapes.
    *
-   * @covers ::getPage
-   *
    * @dataProvider pageGenerationData
    */
+  #[DataProvider('pageGenerationData')]
   public function testPageGeneration(int $requestedPage, int $count, int $expected): void {
     $actual = ControllerBase::getPage($count, $requestedPage, static::ITEMS_PER_PAGE);
     $this->assertEquals($expected, $actual);

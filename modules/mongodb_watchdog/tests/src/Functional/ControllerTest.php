@@ -14,6 +14,8 @@ use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\UserInterface;
 use MongoDB\Collection;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,8 +23,10 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Test the MongoDB report controllers.
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class ControllerTest extends BrowserTestBase {
 
   use StringTranslationTrait;
@@ -307,7 +311,7 @@ class ControllerTest extends BrowserTestBase {
    *   The return value of a xpath search.
    */
   protected function getLogsEntriesTable(): array {
-    return $this->xpath('.//table/tbody/tr');
+    return $this->getSession()->getPage()->findAll('xpath', './/table/tbody/tr');
   }
 
   /**

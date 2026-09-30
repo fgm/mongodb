@@ -8,14 +8,16 @@ use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_storage\Queue\QueueFactory;
 use Drupal\mongodb_storage\Storage;
 use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Class QueueTestBase provides a base for Queue kernel tests.
  *
  * As such, it initializes the MongoDB database setting for queue.
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[Group('mongodb')]
 abstract class QueueTestBase extends MongoDbTestBase {
 
   const MAGIC = 'mongodb.nonexistent';

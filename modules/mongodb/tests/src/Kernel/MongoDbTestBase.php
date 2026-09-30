@@ -9,12 +9,14 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\mongodb\ClientFactory;
 use Drupal\mongodb\DatabaseFactory;
 use Drupal\mongodb\MongoDb;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Class MongoDbTestBase provides basic setUp()/tearDown() for MongoDB.
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[Group('mongodb')]
 abstract class MongoDbTestBase extends KernelTestBase {
 
   const DEFAULT_URI = 'mongodb://localhost:27017';

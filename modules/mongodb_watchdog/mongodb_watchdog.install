@@ -7,8 +7,8 @@
 
 declare(strict_types=1);
 
-use Drupal\mongodb_watchdog\Install\Requirements;
-use Drupal\mongodb_watchdog\Logger;
+use Drupal\Core\Hook\Attribute\LegacyRequirementsHook;
+use Drupal\mongodb_watchdog\Hook\MongodbWatchdogRequirements;
 
 /**
  * Implements hook_install().
@@ -28,36 +28,21 @@ function mongodb_watchdog_install(): void {
 /**
  * Implements hook_requirements().
  *
- * - Ensure a logger alias
- * - Ensure the logger alias does not point to the same DB as another alias.
+ * Drupal 11.3 and later skip it, running MongodbWatchdogRequirements instead.
  *
- * @see http://blog.riff.org/2015_08_27_drupal_8_tip_of_the_day_autoloaded_code_in_a_module_install_file
+ * @return array<string,array<string,mixed>>
+ *   The requirements.
  *
- * @return mixed[]|mixed[][]
+ * @todo Remove when dropping Drupal 10 support.
+ *   https://www.drupal.org/project/mongodb/issues/3626729
  */
+#[LegacyRequirementsHook]
 function mongodb_watchdog_requirements(string $phase): array {
   if ($phase === 'install') {
-    // Dependencies may not be installed yet, and module isn't either.
-    require_once __DIR__ . "/../mongodb/mongodb.module";
-    require_once __DIR__ . "/../mongodb/src/MongoDb.php";
-    require_once __DIR__ . "/src/Logger.php";
-    require_once __DIR__ . "/src/Install/Requirements.php";
-
-    // Module is not yet available so its services aren't either.
-    $requirements = \Drupal::classResolver()
-      ->getInstanceFromDefinition(Requirements::class);
+    // The module is not installed yet, so its classes are not autoloadable.
+    require_once __DIR__ . '/src/Hook/MongodbWatchdogRequirements.php';
   }
-  else {
-    // Outside install phase, the whole module is available.
-    /** @var \Drupal\mongodb_watchdog\Install\Requirements $requirements */
-    $requirements = \Drupal::service(Logger::SERVICE_REQUIREMENTS);
-
-    /** @var \Drupal\mongodb_watchdog\Logger $logger */
-    $logger = \Drupal::service(Logger::SERVICE_LOGGER);
-    $logger->ensureSchema();
-  }
-
-  return $requirements->check($phase);
+  return MongodbWatchdogRequirements::check($phase);
 }
 
 /**

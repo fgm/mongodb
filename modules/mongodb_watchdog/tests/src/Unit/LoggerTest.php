@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_watchdog\Unit;
 
+use Drupal\mongodb_watchdog\Logger;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Test the ControllerBase mechanisms.
  *
- * @coversDefaultClass \Drupal\mongodb_watchdog\Logger
+ * @covers \Drupal\mongodb_watchdog\Logger
  *
  * @group mongodb
  */
+#[CoversClass(Logger::class)]
+#[Group('mongodb')]
 class LoggerTest extends TestCase {
 
   /**
@@ -26,7 +31,6 @@ class LoggerTest extends TestCase {
    * Test for issue #3219325 about closures stack.
    *
    * @link https://www.drupal.org/project/mongodb/issues/3219325
-   * @covers ::enhanceLogEntry
    *
    * @throws \ReflectionException
    */

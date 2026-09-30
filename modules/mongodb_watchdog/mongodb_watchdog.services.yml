@@ -39,7 +39,7 @@ services:
       - '@mongodb.logger'
 
   mongodb.watchdog_requirements:
-    class: '\Drupal\mongodb_watchdog\Install\Requirements'
+    class: '\Drupal\mongodb_watchdog\Install\RequirementsChecker'
     arguments:
       - '@settings'
       - '@config.factory'

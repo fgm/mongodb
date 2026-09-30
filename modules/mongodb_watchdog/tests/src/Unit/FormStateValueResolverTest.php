@@ -8,22 +8,24 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\mongodb_watchdog\Controller\ArgumentResolver\FormStateValueResolver;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 
 /**
  * Test the FormStateValueResolver mechanisms.
  *
- * @coversDefaultClass \Drupal\mongodb_watchdog\Controller\ArgumentResolver\FormStateValueResolver
+ * @covers \Drupal\mongodb_watchdog\Controller\ArgumentResolver\FormStateValueResolver
  *
  * @group mongodb
  */
+#[CoversClass(FormStateValueResolver::class)]
+#[Group('mongodb')]
 class FormStateValueResolverTest extends UnitTestCase {
 
   /**
    * Test formState argument resolution.
-   *
-   * @covers ::supports
    */
   public function testFormStateArgumentResolver(): void {
     $resolver = new FormStateValueResolver();
@@ -36,8 +38,6 @@ class FormStateValueResolverTest extends UnitTestCase {
 
   /**
    * Test extra optional argument resolution.
-   *
-   * @covers ::supports
    */
   public function testOptionalExtraArgumentResolver(): void {
     $resolver = new FormStateValueResolver();

@@ -8,14 +8,20 @@ use Drupal\mongodb\ClientFactory;
 use Drupal\mongodb\DatabaseFactory;
 use Drupal\mongodb\MongoDb;
 use MongoDB\Database;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the DatabaseFactory.
  *
- * @coversDefaultClass \Drupal\mongodb\DatabaseFactory
+ * @covers \Drupal\mongodb\DatabaseFactory
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[CoversClass(DatabaseFactory::class)]
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class DatabaseFactoryTest extends MongoDbTestBase {
 
   /**

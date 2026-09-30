@@ -4,17 +4,24 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb_storage\Kernel;
 
+use Drupal\mongodb_storage\KeyValue\KeyValueFactory;
 use Drupal\mongodb_storage\KeyValue\KeyValueStore;
 use Drupal\mongodb_storage\KeyValue\KeyValueStoreExpirable;
 use Drupal\mongodb_storage\Storage;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the KeyValueFactory.
  *
- * @coversDefaultClass \Drupal\mongodb_storage\KeyValue\KeyValueFactory
+ * @covers \Drupal\mongodb_storage\KeyValue\KeyValueFactory
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[CoversClass(KeyValueFactory::class)]
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class KeyValueFactoryTest extends KeyValueTestBase {
 
   const COLLECTION = 'xyzzy';

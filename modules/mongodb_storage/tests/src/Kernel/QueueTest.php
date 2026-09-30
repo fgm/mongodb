@@ -8,18 +8,25 @@ use Drupal\Core\Queue\QueueInterface;
 use Drupal\KernelTests\Core\Queue\QueueTest as coreQueueTest;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_storage\Queue\Item;
+use Drupal\mongodb_storage\Queue\Queue;
 use Drupal\mongodb_storage\Queue\QueueFactory;
 use Drupal\mongodb_storage\Storage;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Model\BSONDocument;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Queues and dequeues a set of items to check the basic queue functionality.
  *
- * @coversDefaultClass \Drupal\mongodb_storage\Queue\Queue
+ * @covers \Drupal\mongodb_storage\Queue\Queue
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[CoversClass(Queue::class)]
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class QueueTest extends QueueTestBase {
 
   /**

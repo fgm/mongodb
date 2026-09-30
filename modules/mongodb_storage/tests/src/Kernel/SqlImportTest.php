@@ -12,14 +12,21 @@ use Drupal\mongodb_storage\Install\SqlImport;
 use Drupal\mongodb_storage\KeyValue\KeyValueExpirableFactory;
 use Drupal\mongodb_storage\KeyValue\KeyValueFactory;
 use Drupal\mongodb_storage\Storage;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the import for the commands.mongodb.storage.import_keyvalue command.
  *
- * @coversDefaultClass \Drupal\mongodb_storage\Install\SqlImport
+ * @covers \Drupal\mongodb_storage\Install\SqlImport
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[CoversClass(SqlImport::class)]
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class SqlImportTest extends KeyValueTestBase {
 
   const IMPORT_OUTPUT = SqlImport::KVP_TABLE . PHP_EOL
@@ -99,7 +106,7 @@ class SqlImportTest extends KeyValueTestBase {
   }
 
   /**
-   * @covers ::__construct
+   * Tests the availability of the SQL import service.
    */
   public function testImportService(): void {
     $this->assertInstanceOf(SqlImport::class, $this->sqlImport,
@@ -107,7 +114,7 @@ class SqlImportTest extends KeyValueTestBase {
   }
 
   /**
-   * @covers ::import
+   * Tests the list of tables reported by the import.
    */
   public function testImport(): void {
     $this->expectOutputString(self::IMPORT_OUTPUT);
@@ -136,12 +143,11 @@ class SqlImportTest extends KeyValueTestBase {
   }
 
   /**
-   * @covers ::getCollections
-   * @covers ::importPersistent
-   * @covers ::importExpirable
+   * Tests importing key-value rows from SQL tables to MongoDB collections.
    *
    * @dataProvider importProvider
    */
+  #[DataProvider('importProvider')]
   public function testImportActual(
     string $table,
     string $service,

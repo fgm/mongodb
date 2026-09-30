@@ -12,15 +12,16 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\mongodb\Install\Severity;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Class Requirements implements hook_requirements().
+ * Checks the requirements of mongodb_watchdog, in every phase.
  */
-class Requirements implements ContainerInjectionInterface {
+class RequirementsChecker implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
@@ -51,12 +52,12 @@ class Requirements implements ContainerInjectionInterface {
   /**
    * The section of Settings related to the MongoDB package.
    *
-   * @var array{clients: array<string,array<string,mixed>>, databases: array<string,array{0:string,1:string}>}
+   * @var array{clients?: array<string,array<string,mixed>>, databases?: array<string,array{0:string,1:string}>}
    */
   protected array $settings;
 
   /**
-   * Requirements constructor.
+   * RequirementsChecker constructor.
    *
    * @param \Drupal\Core\Site\Settings $settings
    *   The settings service.
@@ -79,7 +80,7 @@ class Requirements implements ContainerInjectionInterface {
     $this->serialization = $serialization;
     $this->configFactory = $configFactory;
     $this->requestStack = $requestStack;
-    $this->settings = $settings->get(MongoDb::MODULE);
+    $this->settings = $settings->get(MongoDb::MODULE) ?? [];
     $this->messenger = $messenger;
   }
 
@@ -106,10 +107,10 @@ class Requirements implements ContainerInjectionInterface {
    *   - bool: true if the checks added an error, false otherwise
    */
   protected function checkDatabaseAliasConsistency(array $state) : array {
-    $databases = $this->settings['databases'];
+    $databases = $this->settings['databases'] ?? [];
     if (!isset($databases[Logger::DB_LOGGER])) {
       $state[Logger::MODULE] += [
-        'severity' => REQUIREMENT_ERROR,
+        'severity' => Severity::error(),
         'value' => $this->t('Missing `@alias` database alias in settings.',
           ['@alias' => Logger::DB_LOGGER]),
       ];
@@ -127,7 +128,7 @@ class Requirements implements ContainerInjectionInterface {
     }
     if (!empty($duplicates)) {
       $state[Logger::MODULE] += [
-        'severity' => REQUIREMENT_ERROR,
+        'severity' => Severity::error(),
         'value' => $this->t('The `@alias` alias points to the same database as @others.', [
           '@alias' => Logger::DB_LOGGER,
           '@others' => implode(', ', $duplicates),
@@ -163,24 +164,32 @@ class Requirements implements ContainerInjectionInterface {
    *
    * @param array<string,array<string,mixed>> $state
    *   The current state of requirements.
+   * @param string $phase
+   *   The requirements phase: install, update, or runtime.
    *
    * @return array{array<string,mixed>,bool}
    *   - array: The current state of requirements checks.
    *   - bool: true if the checks added an error, false otherwise
    */
-  protected function checkRequestTracking(array $state) : array {
+  protected function checkRequestTracking(array $state, string $phase) : array {
     $requestTracking = $this->config->get('request_tracking');
     if ($this->hasUniqueId()) {
+      // Only the runtime phase has the module routes.
+      $unusedDescription = $phase === 'runtime'
+        ? $this->t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or <a href=":settings">enable request tracking</a> for a better logging experience.', [
+          ':settings' => Url::fromRoute('mongodb_watchdog.config')->toString(),
+        ])
+        : $this->t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or enable request tracking for a better logging experience.');
       $state[Logger::MODULE] += $requestTracking
         ? [
           'value' => $this->t('Mod_unique_id available and used'),
-          'severity' => REQUIREMENT_OK,
+          'severity' => Severity::ok(),
           'description' => $this->t('Request tracking is available and active.'),
         ]
         : [
           'value' => $this->t('Unused mod_unique_id'),
-          'severity' => REQUIREMENT_INFO,
-          'description' => $this->t('The site could track requests, but request tracking is not enabled. You could disable mod_unique_id to save resources, or enable request tracking</a> for a better logging experience.'),
+          'severity' => Severity::info(),
+          'description' => $unusedDescription,
         ];
 
       return [$state, FALSE];
@@ -195,7 +204,7 @@ class Requirements implements ContainerInjectionInterface {
           ':report' => Url::fromRoute('system.status')->toString(),
         ]);
         $state[Logger::MODULE] += [
-          'severity' => REQUIREMENT_WARNING,
+          'severity' => Severity::warning(),
           'description' => $message,
         ];
         $this->messenger->addWarning($message);
@@ -203,21 +212,24 @@ class Requirements implements ContainerInjectionInterface {
       }
 
       $state[Logger::MODULE] += [
-        'severity' => REQUIREMENT_ERROR,
+        'severity' => Severity::error(),
         'description' => $this->t('Request tracking is configured, but the site is not served by Apache with a working mod_unique_id.'),
       ];
       return [$state, TRUE];
     }
 
     $state[Logger::MODULE] += [
-      'severity' => REQUIREMENT_OK,
+      'severity' => Severity::ok(),
       'description' => $this->t('Request tracking is not configured.'),
     ];
     return [$state, FALSE];
   }
 
   /**
-   * Implements hook_requirements().
+   * Checks the requirements for a phase.
+   *
+   * @param string $phase
+   *   The requirements phase: install, update, or runtime.
    *
    * @return array<string,array<string,mixed>>
    *   The requirements array.
@@ -236,7 +248,7 @@ class Requirements implements ContainerInjectionInterface {
 
     $this->loadConfig($phase !== 'runtime');
 
-    [$state, $err] = $this->checkRequestTracking($state);
+    [$state, $err] = $this->checkRequestTracking($state, $phase);
     if ($err) {
       return $state;
     }

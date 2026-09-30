@@ -6,18 +6,24 @@ namespace Drupal\Tests\mongodb\Kernel;
 
 use Drupal\mongodb\Install\Tools;
 use Drupal\mongodb\MongoDb;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Class CommandsTest.
  *
- * @coversDefaultClass \Drupal\mongodb\Install\Tools
+ * @covers \Drupal\mongodb\Install\Tools
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[CoversClass(Tools::class)]
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class ToolsTest extends MongoDbTestBase {
 
   /**
-   * @covers ::__construct
+   * Tests the availability of the tools service.
    */
   public function testToolsService(): void {
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
@@ -25,7 +31,7 @@ class ToolsTest extends MongoDbTestBase {
   }
 
   /**
-   * @covers ::settings
+   * Tests the settings returned by the tools service.
    */
   public function testToolsSettings(): void {
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
@@ -36,7 +42,7 @@ class ToolsTest extends MongoDbTestBase {
   }
 
   /**
-   * @covers ::find
+   * Tests finding documents with the tools service.
    */
   public function testFind(): void {
     /** @var \Drupal\mongodb\DatabaseFactory $dbFactory */

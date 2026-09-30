@@ -7,18 +7,24 @@ namespace Drupal\Tests\mongodb\Kernel;
 use Composer\InstalledVersions;
 use Composer\Semver\VersionParser;
 use Drupal\mongodb\MongoDb;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the MongoDB main class.
  *
- * @coversDefaultClass \Drupal\mongodb\MongoDb
+ * @covers \Drupal\mongodb\MongoDb
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[CoversClass(MongoDb::class)]
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class MongoDbTest extends MongoDbTestBase {
 
   /**
-   * @covers ::libraryApiVersion
+   * Tests the reported MongoDB library version.
    */
   public function testLibraryVersion(): void {
     $actual = MongoDb::libraryApiVersion();
@@ -30,7 +36,7 @@ class MongoDbTest extends MongoDbTestBase {
   }
 
   /**
-   * @covers ::countCollection
+   * Tests the deprecated countCollection().
    */
   public function testCountCollection(): void {
     /** @var \Drupal\mongodb\DatabaseFactory $dbFactory */

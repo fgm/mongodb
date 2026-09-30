@@ -7,14 +7,20 @@ namespace Drupal\Tests\mongodb\Kernel;
 use Drupal\mongodb\ClientFactory;
 use Drupal\mongodb\MongoDb;
 use MongoDB\Driver\Exception\ConnectionTimeoutException;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the ClientFactory.
  *
- * @coversDefaultClass \Drupal\mongodb\ClientFactory
+ * @covers \Drupal\mongodb\ClientFactory
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[CoversClass(ClientFactory::class)]
+#[Group('mongodb')]
+#[RunTestsInSeparateProcesses]
 class ClientFactoryTest extends MongoDbTestBase {
 
   /**

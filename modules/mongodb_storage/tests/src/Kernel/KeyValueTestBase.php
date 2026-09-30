@@ -8,14 +8,16 @@ use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_storage\KeyValue\KeyValueFactory;
 use Drupal\mongodb_storage\Storage;
 use Drupal\Tests\mongodb\Kernel\MongoDbTestBase;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Class KeyValueTestBase provides a base for Key-Value kernel tests.
  *
  * As such, it initializes the MongoDB database setting for keyvalue.
  *
- * @group MongoDB
+ * @group mongodb
  */
+#[Group('mongodb')]
 abstract class KeyValueTestBase extends MongoDbTestBase {
 
   const MAGIC = 'mongodb.nonexistent';
