@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\mongodb_watchdog;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;

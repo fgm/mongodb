@@ -54,7 +54,7 @@ class SanityCheck {
    */
   public function __construct(
     DatabaseFactory $dbFactory,
-    ConfigFactoryInterface $configFactory
+    ConfigFactoryInterface $configFactory,
   ) {
     $this->dbFactory = $dbFactory;
 

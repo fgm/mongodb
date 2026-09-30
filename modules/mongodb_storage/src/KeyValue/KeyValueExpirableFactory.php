@@ -33,7 +33,7 @@ class KeyValueExpirableFactory extends KeyValueFactory implements KeyValueExpira
    */
   public function __construct(
     DatabaseFactory $databaseFactory,
-    TimeInterface $time
+    TimeInterface $time,
   ) {
     parent::__construct($databaseFactory);
     $this->time = $time;

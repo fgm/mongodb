@@ -27,15 +27,13 @@
   "prefer-stable": false,
   "require": {
     "php": ">=8.1",
+    "composer-runtime-api": "^2.2.2",
     "ext-json": "*",
     "ext-mongodb": "^2.5 || ^1.21",
     "mongodb/mongodb": "^2.4 || ^1.21"
   },
   "require-dev": {
-    "drush/drush": "^13 || ^12",
-    "phpunit/phpunit": "^11.5.50 || ^9.6.34",
-    "phpspec/prophecy-phpunit": "^2.5.0",
-    "squizlabs/php_codesniffer": "^3.6"
+    "drush/drush": "^14 || ^13.8.0 || ^12.5.3"
   },
   "support": {
     "docs": "https://project.pages.drupalcode.org/mongodb/",

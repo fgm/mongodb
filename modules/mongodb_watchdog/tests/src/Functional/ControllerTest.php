@@ -12,7 +12,8 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\mongodb\MongoDb;
 use Drupal\mongodb_watchdog\Logger;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
+use MongoDB\Collection;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Response;
@@ -70,31 +71,23 @@ class ControllerTest extends BrowserTestBase {
 
   /**
    * An administrator account.
-   *
-   * @var \Drupal\user\Entity\User|false
    */
-  protected User|false $adminUser;
+  protected UserInterface|false $adminUser;
 
   /**
    * A basic authenticated user account.
-   *
-   * @var \Drupal\user\Entity\User|false
    */
-  protected User|false $anyUser;
+  protected UserInterface|false $anyUser;
 
   /**
    * An administrator-type user account, but not an administrator.
-   *
-   * @var \Drupal\user\Entity\User|false
    */
-  protected User|false $bigUser;
+  protected UserInterface|false $bigUser;
 
   /**
    * The event templates collection.
-   *
-   * @var ?\MongoDB\Collection
    */
-  protected $collection;
+  protected ?Collection $collection;
 
   /**
    * The default theme, needed after 8.8.0.
@@ -107,17 +100,15 @@ class ControllerTest extends BrowserTestBase {
 
   /**
    * The time the test started, simulating a request time.
-   *
-   * @var int
    */
-  protected $requestTime;
+  protected int $requestTime;
 
   /**
    * The site base URI.
    *
    * @var string
    */
-  protected $uri;
+  protected mixed $uri;
 
   /**
    * Remove all Drupal markup placeholders.
@@ -274,7 +265,7 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Get the log entry information form the page.
    *
-   * @return array<int,array<string,mixed>>
+   * @return array<int,array{severity: int|null, type: string, message: string}>
    *   List of entries and their information.
    */
   protected function getLogEntries(): array {
@@ -322,8 +313,8 @@ class ControllerTest extends BrowserTestBase {
   /**
    * Asserts that the counts for displayed entries match the expected counts.
    *
-   * @param array<int,string[]> $types
-   *   The type information to compare against.
+   * @param array<int,array{type: string, severity: int}> $types
+   *   The type information to compare against: other keys are ignored.
    */
   protected function assertTypeCount(array $types): void {
     $entries = $this->getLogEntries();
@@ -355,7 +346,7 @@ class ControllerTest extends BrowserTestBase {
     LoggerInterface $logger,
     int $count,
     string $type = 'custom',
-    int $severity = RfcLogLevel::EMERGENCY
+    int $severity = RfcLogLevel::EMERGENCY,
   ): void {
     $ip = '::1';
     $context = [

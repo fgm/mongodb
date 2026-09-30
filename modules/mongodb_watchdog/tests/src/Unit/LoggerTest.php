@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\mongodb_watchdog\Unit;
 
 use PHPUnit\Framework\TestCase;

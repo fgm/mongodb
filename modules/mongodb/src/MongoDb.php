@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\mongodb;
 
+use Composer\InstalledVersions;
 use MongoDB\Collection;
 use MongoDB\Exception\UnexpectedValueException;
 
@@ -17,67 +18,48 @@ class MongoDb {
   const DB_DEFAULT = 'default';
 
   const EXTENSION = 'mongodb';
+
+  // A frequent projection to just request the document ID.
+  const ID_PROJECTION = ['projection' => ['_id' => 1]];
+
+  // The library versions this module supports: keep in sync with the
+  // mongodb/mongodb constraint in composer.json.
+  const LIBRARY_CONSTRAINT = '^2.4 || ^1.21';
+
+  // The Composer package of the MongoDB PHP library.
+  const LIBRARY_PACKAGE = 'mongodb/mongodb';
+
   const MODULE = 'mongodb';
 
   const SERVICE_CLIENT_FACTORY = 'mongodb.client_factory';
   const SERVICE_DB_FACTORY = 'mongodb.database_factory';
   const SERVICE_TOOLS = 'mongodb.tools';
 
-  // A frequent projection to just request the document ID.
-  const ID_PROJECTION = ['projection' => ['_id' => 1]];
-
   /**
-   * The MongoDB library "API version", a reduced version of the actual version.
+   * Report the installed version of the MongoDB library.
    *
-   * @var string
-   */
-  protected static string $libraryVersion;
-
-  /**
-   * Guess an approximation of the library version, to handle API changes.
-   *
-   * - 1.2.0 is the minimum version required from composer.json.
-   * - 1.3.0 adds Collection::watch().
-   * - 1.4.0 deprecates Collection::count() and adds countDocuments().
+   * This helps troubleshoot problems coming from the environment, by checking
+   * the version against LIBRARY_CONSTRAINT.
    *
    * @return string
-   *   A semantic versioning version string.
+   *   The version installed by Composer, like "2.4.2", or an empty string if
+   *   the library was not installed by Composer.
    *
    * @internal
-   *
-   * Thanks to jmikola for simplifications to this method.
    *
    * @see https://github.com/mongodb/mongo-php-library/issues/558
    */
   public static function libraryApiVersion() : string {
-    if (!empty(static::$libraryVersion)) {
-      return static::$libraryVersion;
+    try {
+      return InstalledVersions::getPrettyVersion(static::LIBRARY_PACKAGE) ?? '';
     }
-
-    if (method_exists(Collection::class, 'countDocuments')) {
-      return (static::$libraryVersion = '1.4.0');
+    catch (\OutOfBoundsException) {
+      return '';
     }
-
-    if (method_exists(Collection::class, 'watch')) {
-      return (static::$libraryVersion = '1.3.0');
-    }
-
-    return (static::$libraryVersion = '1.2.0');
   }
 
   /**
    * Count items matching a selector in a collection.
-   *
-   * This function used to be needed when:
-   * - library versions below and above 1.4.0 were supported, as in 8.x-2.0.
-   *   With the minimum version now being 1.5.0, the Collection::count() method
-   *   is no longer needed and is deprecated.
-   * - MongoDB PHPLIB-376 was not yet fixed and needed the try/catch around
-   *   Collection::countDocuments().
-   *
-   * Since both issues have been resolved, this method is only used for
-   * compatibility and will be deprecated after the Drupal 9.0 release. It is
-   * not marked as deprecated to avoid a Drupal 9 compatibility check.
    *
    * @param \MongoDB\Collection $collection
    *   The collection for which to count items.
@@ -87,9 +69,14 @@ class MongoDb {
    * @return int
    *   The number of elements matching the selector in the collection.
    *
-   * @see https://jira.mongodb.org/browse/PHPLIB-376
+   * @deprecated in mongodb:8.x-2.2 and is removed from mongodb:8.x-2.3. Use
+   *   \MongoDB\Collection::countDocuments() instead.
+   *
+   * @see https://www.drupal.org/node/3626883
    */
   public static function countCollection(Collection $collection, array $selector = []) : int {
+    @trigger_error(__METHOD__ . '() is deprecated in mongodb:8.x-2.2 and is removed from mongodb:8.x-2.3. Use \MongoDB\Collection::countDocuments() instead. See https://www.drupal.org/node/3626883', E_USER_DEPRECATED);
+    // The catch works around https://jira.mongodb.org/browse/PHPLIB-376.
     try {
       $count = $collection->countDocuments($selector);
     }

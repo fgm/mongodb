@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb\Kernel;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\mongodb\ClientFactory;
+use Drupal\mongodb\MongoDb;
 use MongoDB\Driver\Exception\ConnectionTimeoutException;
 
 /**
@@ -22,44 +22,36 @@ class ClientFactoryTest extends MongoDbTestBase {
    */
   public function testGetHappy(): void {
     $clientFactory = new ClientFactory($this->settings);
+    $alias = static::CLIENT_TEST_ALIAS;
 
     try {
-      $client = $clientFactory->get(static::CLIENT_TEST_ALIAS);
+      $client = $clientFactory->get($alias);
       // Force connection attempt by executing a command.
-      $client->listDatabases();
+      $result = $client->selectDatabase('admin')->command(['ping' => 1])->toArray();
     }
     catch (ConnectionTimeoutException $e) {
-      $fail = new FormattableMarkup('Could not connect to server on @uri. Enable one on @default or specify one in MONGODB_URI.', [
-        '@default' => static::DEFAULT_URI,
-        '@uri' => $this->uri,
-      ]);
-      $this->fail("$fail");
+      $uri = $this->settings->get(MongoDb::MODULE)['clients'][$alias]['uri'] ?? '';
+      $this->fail(sprintf(
+        'Could not connect to server on %s: %s. Enable one on %s or specify one in MONGODB_URI.',
+        $uri, $e->getMessage(), static::DEFAULT_URI,
+      ));
     }
     catch (\Exception $e) {
       $this->fail($e->getMessage());
     }
-    $this->assertNotNull($clientFactory, "clientFactory must not be null");
-    $this->assertEquals(ClientFactory::class, get_class($clientFactory));
+    $this->assertEquals(1, $result[0]['ok'] ?? NULL, 'The server answers ping.');
   }
 
   /**
    * Test an existing alias pointing to an invalid server.
    */
   public function testGetSadBadAlias(): void {
+    // Cannot create a client to a non-server.
+    $this->expectException(ConnectionTimeoutException::class);
     $clientFactory = new ClientFactory($this->settings);
-
-    try {
-      $client = $clientFactory->get(static::CLIENT_BAD_ALIAS);
-      // Force connection attempt by executing a command.
-      $client->listDatabases();
-      $this->fail('Should not have been able to connect to a non-server.');
-    }
-    catch (ConnectionTimeoutException $e) {
-      $this->assertTrue(TRUE, 'Cannot create a client to a non-server.');
-    }
-    catch (\Exception $e) {
-      $this->fail($e->getMessage());
-    }
+    $client = $clientFactory->get(static::CLIENT_BAD_ALIAS);
+    // Force connection attempt by executing a command.
+    $client->listDatabases();
   }
 
 }

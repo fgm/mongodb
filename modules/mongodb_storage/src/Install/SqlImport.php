@@ -22,36 +22,26 @@ class SqlImport {
 
   /**
    * The database service.
-   *
-   * @var \Drupal\Core\Database\Connection
    */
   protected Connection $database;
 
   /**
    * The expirable database KV factory.
-   *
-   * @var \Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory
    */
   protected KeyValueDatabaseExpirableFactory $expirableDbFactory;
 
   /**
    * The expirable MongoDB KV factory.
-   *
-   * @var \Drupal\mongodb_storage\KeyValue\KeyValueExpirableFactory
    */
   protected KeyValueExpirableFactory $expirableMoFactory;
 
   /**
    * The database KV factory.
-   *
-   * @var \Drupal\Core\KeyValueStore\KeyValueDatabaseFactory
    */
   protected KeyValueDatabaseFactory $persistentDbFactory;
 
   /**
    * The MongoDB KV factory.
-   *
-   * @var \Drupal\mongodb_storage\KeyValue\KeyValueFactory
    */
   protected KeyValueFactory $persistentMoFactory;
 
@@ -88,7 +78,7 @@ class SqlImport {
     KeyValueDatabaseExpirableFactory $expirableDbFactory,
     KeyValueFactory $persistentMoFactory,
     KeyValueExpirableFactory $expirableMoFactory,
-    TimeInterface $time
+    TimeInterface $time,
   ) {
     $this->database = $database;
     $this->persistentDbFactory = $persistentDbFactory;

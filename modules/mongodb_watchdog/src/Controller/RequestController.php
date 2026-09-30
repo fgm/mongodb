@@ -26,19 +26,17 @@ class RequestController extends ControllerBase {
    *
    * @var \Drupal\Core\Datetime\DateFormatterInterface
    */
-  protected $dateFormatter;
+  protected DateFormatterInterface $dateFormatter;
 
   /**
    * A RfcLogLevel instance, to avoid static access.
    *
    * @var \Drupal\Core\Logger\RfcLogLevel
    */
-  protected $rfcLogLevel;
+  protected RfcLogLevel $rfcLogLevel;
 
   /**
    * The length of the absolute path to the site root, in runes.
-   *
-   * @var int
    */
   protected int $rootLength;
 
@@ -64,7 +62,8 @@ class RequestController extends ControllerBase {
     ImmutableConfig $config,
     DateFormatterInterface $dateFormatter,
     PagerManagerInterface $pagerManager,
-    RfcLogLevel $rfcLogLevel) {
+    RfcLogLevel $rfcLogLevel,
+  ) {
     parent::__construct($logger, $watchdog, $pagerManager, $config);
 
     $this->dateFormatter = $dateFormatter;
@@ -234,7 +233,7 @@ class RequestController extends ControllerBase {
    * @param \Drupal\mongodb_watchdog\Event|null $first
    *   A fully loaded array of events and their templates.
    *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   * @return array{"#caption": \Drupal\Core\StringTranslation\TranslatableMarkup, "#rows": list<list<mixed>>, "#type": "table"}
    *   A render array for a table.
    */
   protected function getTop(string $uniqueId = "", ?Event $first = NULL): array {

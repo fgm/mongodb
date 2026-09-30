@@ -20,8 +20,6 @@ class KeyValueFactory implements KeyValueFactoryInterface {
 
   /**
    * The database in which the stores are created.
-   *
-   * @var \MongoDB\Database
    */
   protected Database $database;
 

@@ -38,15 +38,11 @@ class SqlImportTest extends KeyValueTestBase {
 
   /**
    * The database service.
-   *
-   * @var ?\Drupal\Core\Database\Connection
    */
   protected ?Connection $database;
 
   /**
    * The mongodb.storage.sql_import service.
-   *
-   * @var ?\Drupal\mongodb_storage\Install\SqlImport
    */
   protected ?SqlImport $sqlImport;
 
@@ -108,7 +104,6 @@ class SqlImportTest extends KeyValueTestBase {
   public function testImportService(): void {
     $this->assertInstanceOf(SqlImport::class, $this->sqlImport,
       'SQL import service is available');
-    $this->assertTrue(method_exists($this->sqlImport, 'import'));
   }
 
   /**
@@ -150,7 +145,7 @@ class SqlImportTest extends KeyValueTestBase {
   public function testImportActual(
     string $table,
     string $service,
-    string $prefix
+    string $prefix,
   ): void {
     $columns = [];
     switch ($table) {

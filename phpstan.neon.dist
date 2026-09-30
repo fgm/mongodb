@@ -1,0 +1,24 @@
+parameters:
+  excludePaths:
+    - '*/node_modules/*'
+  fileExtensions:
+    - php
+    - module
+    - install
+  ignoreErrors:
+    # - message: "#Cannot access offset .* on mixed.#"
+    #   path: **/src/Form/SettingsForm.php
+    # - message: "#Cannot cast mixed to string#"
+    #   path: **/src/Form/SettingsForm.php
+    # - '#deprecated#'
+    - "#^Unsafe usage of new static#"
+    # Tests carry PHPUnit attributes beside their annotations, and PHPUnit 9,
+    # used by Drupal 10, has no attribute classes. PHP ignores them there, but
+    # PHPStan reports them. Matches nothing with PHPUnit 10 or later.
+    # @todo Remove when dropping Drupal 10 support, in the Drupal 12 release.
+    #   https://www.drupal.org/project/mongodb/issues/3626729
+    - message: '#^Attribute class PHPUnit\\Framework\\Attributes\\\w+ does not exist\.$#'
+      identifier: attribute.notFound
+      reportUnmatched: false
+  level: 6
+  treatPhpDocTypesAsCertain: false

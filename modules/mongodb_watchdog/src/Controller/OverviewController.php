@@ -25,10 +25,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * The controller for the logger overview page.
- *
- * D8 has no session API, so use of $_SESSION is required, so ignore warnings.
- *
- * @SuppressWarnings("PHPMD.Superglobals")
  */
 class OverviewController extends ControllerBase {
   const EVENT_TYPE_MAP = [
@@ -105,7 +101,8 @@ class OverviewController extends ControllerBase {
     ModuleHandlerInterface $moduleHandler,
     FormBuilderInterface $formBuilder,
     DateFormatterInterface $dateFormatter,
-    PagerManagerInterface $pagerManager) {
+    PagerManagerInterface $pagerManager,
+  ) {
     parent::__construct($logger, $watchdog, $pagerManager, $config);
 
     $this->dateFormatter = $dateFormatter;
@@ -336,7 +333,7 @@ class OverviewController extends ControllerBase {
     $skip = $page * $this->itemsPerPage;
     $limit = $this->itemsPerPage;
 
-    $filters = $_SESSION[OverviewFilterForm::SESSION_KEY] ?? NULL;
+    $filters = $request->getSession()->get(OverviewFilterForm::SESSION_KEY, []);
 
     $rows = $this->watchdog
       ->templates($filters['type'] ?? [], $filters['severity'] ?? [], $skip, $limit)

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\mongodb_watchdog\Controller\ArgumentResolver;
 
 use Drupal\Core\Form\FormStateInterface;

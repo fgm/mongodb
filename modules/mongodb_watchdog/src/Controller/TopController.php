@@ -55,7 +55,8 @@ class TopController extends ControllerBase {
     Logger $watchdog,
     ImmutableConfig $config,
     Database $database,
-    PagerManagerInterface $pagerManager) {
+    PagerManagerInterface $pagerManager,
+  ) {
     parent::__construct($logger, $watchdog, $pagerManager, $config);
 
     $this->database = $database;

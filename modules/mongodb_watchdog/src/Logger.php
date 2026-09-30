@@ -15,7 +15,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use MongoDB\Collection;
 use MongoDB\Database;
-use MongoDB\Driver\Cursor;
+use MongoDB\Driver\CursorInterface;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use MongoDB\Driver\Exception\RuntimeException;
 use MongoDB\Driver\WriteConcern;
@@ -209,7 +209,7 @@ class Logger extends AbstractLogger {
     ConfigFactoryInterface $configFactory,
     RequestStack $stack,
     MessengerInterface $messenger,
-    TimeInterface $time
+    TimeInterface $time,
   ) {
     $this->database = $database;
     $this->messenger = $messenger;
@@ -303,7 +303,7 @@ class Logger extends AbstractLogger {
    *
    * @see https://httpd.apache.org/docs/2.4/en/mod/mod_unique_id.html
    */
-  public function log($level, $template, array $context = []): void {
+  public function log($level, string|\Stringable $template, array $context = []): void {
     // PSR-3 LoggerInterface documents level as "mixed", while the RFC itself
     // in §1.1 implies implementations may know about non-standard levels. In
     // the case of Drupal implementations, this includes the 8 RFC5424 levels.
@@ -737,9 +737,6 @@ class Logger extends AbstractLogger {
    *
    * @return \Drupal\mongodb_watchdog\EventTemplate[]
    *   An array of EventTemplate instances.
-   *
-   * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-   * @see https://github.com/phpmd/phpmd/issues/561
    */
   public function requestTemplates($unsafeRequestId): array {
     $selector = [
@@ -813,15 +810,15 @@ class Logger extends AbstractLogger {
    * @param int $limit
    *   The maximum number of templates to return.
    *
-   * @return \MongoDB\Driver\Cursor
+   * @return \MongoDB\Driver\CursorInterface<\Drupal\mongodb_watchdog\EventTemplate>
    *   A query result for the templates.
    */
   public function templates(
     array $types = [],
     array $levels = [],
-    $skip = 0,
-    $limit = 0
-  ): Cursor {
+    int $skip = 0,
+    int $limit = 0,
+  ): CursorInterface {
     $selector = [];
     if (!empty($types)) {
       $selector['type'] = ['$in' => array_values($types)];

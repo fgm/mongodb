@@ -25,36 +25,26 @@ class Requirements implements ContainerInjectionInterface {
 
   /**
    * The module configuration.
-   *
-   * @var \Drupal\Core\Config\Config
    */
   protected Config $config;
 
   /**
    * The config.factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected ConfigFactoryInterface $configFactory;
 
   /**
    * The messenger service.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
    */
   protected MessengerInterface $messenger;
 
   /**
    * The request_stack service.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
    */
   protected RequestStack $requestStack;
 
   /**
    * The serialization.yaml service.
-   *
-   * @var \Drupal\Component\Serialization\SerializationInterface
    */
   protected SerializationInterface $serialization;
 
@@ -84,7 +74,7 @@ class Requirements implements ContainerInjectionInterface {
     ConfigFactoryInterface $configFactory,
     RequestStack $requestStack,
     SerializationInterface $serialization,
-    MessengerInterface $messenger
+    MessengerInterface $messenger,
   ) {
     $this->serialization = $serialization;
     $this->configFactory = $configFactory;

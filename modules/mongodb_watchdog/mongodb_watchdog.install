@@ -5,6 +5,8 @@
  * MongoDB watchdog install file.
  */
 
+declare(strict_types=1);
+
 use Drupal\mongodb_watchdog\Install\Requirements;
 use Drupal\mongodb_watchdog\Logger;
 

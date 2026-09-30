@@ -34,8 +34,6 @@ class KeyValueStore extends StorageBase implements KeyValueStoreInterface {
    * The collection making up the store.
    *
    * The parent class already defines $collection as the KV collection name.
-   *
-   * @var \MongoDB\Collection
    */
   protected Collection $mongoDbCollection;
 

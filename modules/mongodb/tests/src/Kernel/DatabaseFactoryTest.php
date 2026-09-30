@@ -60,18 +60,9 @@ class DatabaseFactoryTest extends MongoDbTestBase {
    * Test referencing an alias not present in settings.
    */
   public function testGetSadUnsetAlias(): void {
-    try {
-      $this->databaseFactory->get(static::DB_UNSET_ALIAS);
-      $this->fail('Should not have returned a value for an unset database alias.');
-    }
-    catch (\InvalidArgumentException $e) {
-      $this->assertTrue(TRUE, 'Throws expected exception for unset database alias.');
-    }
-    catch (\Exception $e) {
-      $this->fail(strtr('Unexpected exception thrown for unset alias: @exception', [
-        '@exception' => $e->getMessage(),
-      ]));
-    }
+    // Throws expected exception for unset database alias.
+    $this->expectException(\InvalidArgumentException::class);
+    $this->databaseFactory->get(static::DB_UNSET_ALIAS);
   }
 
   /**

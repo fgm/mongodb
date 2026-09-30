@@ -46,7 +46,8 @@ class DetailController extends ControllerBase {
     Logger $watchdog,
     ImmutableConfig $config,
     EventController $eventController,
-    PagerManagerInterface $pagerManager) {
+    PagerManagerInterface $pagerManager,
+  ) {
     parent::__construct($logger, $watchdog, $pagerManager, $config);
 
     $this->eventController = $eventController;
@@ -166,7 +167,8 @@ class DetailController extends ControllerBase {
     $watchdog = $container->get(Logger::SERVICE_LOGGER);
 
     /** @var \Drupal\Core\Config\ImmutableConfig $config */
-    $config = $container->get('config.factory')->get('mongodb_watchdog.settings');
+    $config = $container->get('config.factory')
+      ->get('mongodb_watchdog.settings');
 
     /** @var \Drupal\mongodb_watchdog\EventController $eventController */
     $eventController = $container->get('mongodb.watchdog_event_controller');
@@ -208,7 +210,7 @@ class DetailController extends ControllerBase {
    *   The template for which to provide details. Not actually expected to be
    *   NULL, but this is needed to remain compatible with parent class.
    *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   * @return array{"#caption": \Drupal\Core\StringTranslation\TranslatableMarkup, "#rows": list<list<mixed>>, "#type": "table"}
    *   A render array for a table.
    */
   protected function getTop(?EventTemplate $eventTemplate = NULL): array {

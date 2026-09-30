@@ -15,9 +15,6 @@ use MongoDB\BSON\Unserializable;
  *
  * Since this is essentially a value object, naming is constrained by the
  * property names in MongoDB, so ignore variable naming rules for fields.
- *
- * @SuppressWarnings(PHPMD.CamelCasePropertyName)
- * @SuppressWarnings(Variable)
  */
 class Event implements Unserializable {
   const KEYS = [
@@ -39,30 +36,22 @@ class Event implements Unserializable {
   // @codingStandardsIgnoreStart
   /**
    * A MongoId.
-   *
-   * @var \MongoDB\BSON\ObjectIdInterface
    */
   public ObjectIdInterface $_id;
   // @codingStandardsIgnoreEnd
 
   /**
    * User id. Use uid() instead for type safety.
-   *
-   * @var ?int
    */
   public ?int $uid = 0;
 
   /**
    * Event type, often a module name.
-   *
-   * @var ?string
    */
   public ?string $type;
 
   /**
    * Event template.
-   *
-   * @var ?string
    */
   public ?string $message;
 
@@ -72,8 +61,6 @@ class Event implements Unserializable {
    *
    * Coding standards are suspended for requestTracking_id which is required by
    * the MongoDB property.
-   *
-   * @var ?string
    */
   public ?string $requestTracking_id;
   // @codingStandardsIgnoreEnd
@@ -84,8 +71,6 @@ class Event implements Unserializable {
    *
    * Coding standards are suspended for requestTracking_sequence which is
    * required by the MongoDB property.
-   *
-   * @var ?int
    */
   public ?int $requestTracking_sequence = 0;
   // @codingStandardsIgnoreEnd
@@ -99,43 +84,31 @@ class Event implements Unserializable {
 
   /**
    * A RFC5424 severity level.
-   *
-   * @var ?int
    */
   public ?int $severity = RfcLogLevel::DEBUG;
 
   /**
    * A link provided by the event emitter. Optional.
-   *
-   * @var ?string
    */
   public ?string $link;
 
   /**
    * The absolute URL for the path on which event was logged. Use location().
-   *
-   * @var ?string
    */
   public ?string $location;
 
   /**
    * A HTTP referrer for the path on which the event was logged. Optional.
-   *
-   * @var ?string
    */
   public ?string $referrer;
 
   /**
    * The server host.
-   *
-   * @var ?string
    */
   public ?string $hostname;
 
   /**
    * The timestamp at which the event was logged.
-   *
-   * @var ?int
    */
   public ?int $timestamp = 0;
 

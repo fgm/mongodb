@@ -57,3 +57,44 @@ This module provides a MongoDB Queue API implementation.
   by adding this line to the `settings.php` file
 
         $settings['queue_default'] = 'queue.mongodb';
+
+### Items from other producers
+
+Other applications can feed Drupal queues by inserting documents
+directly into the queue collection,
+making Drupal one piece of an enterprise integration landscape.
+
+* The collection for queue `foo` is `q_foo`, in the database of the `queue` alias.
+* Documents use these fields:
+    * `data`: the item payload, as a PHP-serialized string.
+      Libraries producing that format exist for most languages,
+      like [go-phpserialize] for Go.
+      Without it, the item data is `NULL`.
+    * `created`: optional, as an integer Unix timestamp in seconds.
+      Without it, the first claim sets it:
+      from the `_id` when it is an ObjectId, which embeds its creation time,
+      or to the claim time otherwise.
+      Releasing and claiming the item again does not change it.
+    * `expires`: optional; leave it out or set it to `0`, and claims manage it.
+    * `_id`: any type, but the ObjectId most drivers generate by default
+      is the one which provides the creation time.
+* Items are claimed by ascending `created`.
+  Items without it come first, since a missing field sorts before any value.
+* Claims use an update pipeline, which needs MongoDB 4.2 or later.
+
+### Releasing items
+
+`releaseItem()` returns `TRUE` only when it releases a claimed item,
+and `FALSE` for an unclaimed, deleted or unknown item.
+The Queue API leaves this open, and backends differ.
+As compared on 2026-09-30 in [#3626967], releasing an unclaimed item returns:
+
+* `TRUE`: core `DatabaseQueue` and `Batch`, and queues built on them
+  like queue_unique and mongodb 3.x; redis 2.x; kafka.
+* `FALSE`: this module, core `Memory` and `BatchMemory`, openstack_queues.
+* Anything else: no return value (redis 8.x-1.x, aws_sqs_api, beanstalkd),
+  an `Error` (rabbitmq 4.x), the AWS response (aws_sqs),
+  or not applicable (advancedqueue, which does not implement the Queue API).
+
+[go-phpserialize]: https://github.com/trim21/go-phpserialize
+[#3626967]: https://www.drupal.org/project/mongodb/issues/3626967

@@ -16,8 +16,6 @@ use MongoDB\BSON\Unserializable;
  *
  * Since this is essentially a value object, naming is constrained by the
  * property names in MongoDB, so ignore variable naming rules for fields.
- *
- * @SuppressWarnings(PHPMD.CamelCasePropertyName)
  */
 class EventTemplate implements Unserializable {
   use StringTranslationTrait;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\mongodb_watchdog\Controller;
 
 use MongoDB\BSON\Unserializable;

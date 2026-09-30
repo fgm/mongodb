@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\mongodb\Kernel;
 
+use Composer\InstalledVersions;
+use Composer\Semver\VersionParser;
 use Drupal\mongodb\MongoDb;
-use MongoDB\Collection;
 
 /**
  * Tests the MongoDB main class.
@@ -21,30 +22,11 @@ class MongoDbTest extends MongoDbTestBase {
    */
   public function testLibraryVersion(): void {
     $actual = MongoDb::libraryApiVersion();
-    $this->assertMatchesRegularExpression('/[\d]\.[\d]+\.[\d]+/', $actual,
-      'API version matches expected format.');
-    [, $minor] = sscanf($actual, "%d.%d.%d");
-    $hasWatch = method_exists(Collection::class, 'watch');
-    $hasCountDocuments = method_exists(Collection::class, 'countDocuments');
-    switch ($minor) {
-      case 2:
-        $this->assertFalse($hasWatch);
-        $this->assertFalse($hasCountDocuments);
-        break;
-
-      case 3:
-        $this->assertTrue($hasWatch);
-        $this->assertFalse($hasCountDocuments);
-        break;
-
-      case 4:
-        $this->assertTrue($hasWatch);
-        $this->assertTrue($hasCountDocuments);
-        break;
-
-      default:
-        $this->fail("Unexpected API version: $actual");
-    }
+    $this->assertNotSame('', $actual, 'The library version is known to Composer.');
+    $this->assertTrue(
+      InstalledVersions::satisfies(new VersionParser(), MongoDb::LIBRARY_PACKAGE, MongoDb::LIBRARY_CONSTRAINT),
+      sprintf('Library version %s must satisfy %s.', $actual, MongoDb::LIBRARY_CONSTRAINT)
+    );
   }
 
   /**
@@ -67,9 +49,25 @@ class MongoDbTest extends MongoDbTestBase {
       ];
     }
     $collection->insertMany($docs);
-    $actual = MongoDb::countCollection($collection);
+
+    // Capture the deprecation directly: PHPUnit 9 and 11 expect deprecations
+    // through different, incompatible APIs.
+    $deprecations = [];
+    set_error_handler(function (int $errno, string $message) use (&$deprecations): bool {
+      $deprecations[] = $message;
+      return TRUE;
+    }, E_USER_DEPRECATED);
+    try {
+      // @phpstan-ignore staticMethod.deprecated
+      $actual = MongoDb::countCollection($collection);
+    }
+    finally {
+      restore_error_handler();
+    }
     $this->assertEquals($expected, $actual,
       "countCollection finds the correct number of documents");
+    $this->assertCount(1, $deprecations);
+    $this->assertStringContainsString('countCollection() is deprecated in mongodb:8.x-2.2', $deprecations[0]);
   }
 
 }

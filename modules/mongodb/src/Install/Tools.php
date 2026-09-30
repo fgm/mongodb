@@ -49,7 +49,7 @@ class Tools {
   public function __construct(
     DatabaseFactory $databaseFactory,
     Settings $settings,
-    SerializationInterface $yaml
+    SerializationInterface $yaml,
   ) {
     $this->dbFactory = $databaseFactory;
     $this->settings = $settings;

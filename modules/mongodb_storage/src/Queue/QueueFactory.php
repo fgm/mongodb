@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\mongodb_storage\Queue;
 
-use Drupal\Component\Datetime\Time;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\mongodb\DatabaseFactory;
 use MongoDB\Database;
@@ -20,27 +20,23 @@ class QueueFactory {
 
   /**
    * The database in which the queues are created.
-   *
-   * @var \MongoDB\Database
    */
   protected Database $database;
 
   /**
    * The datetime.time service.
-   *
-   * @var \Drupal\Component\Datetime\Time
    */
-  protected Time $time;
+  protected TimeInterface $time;
 
   /**
    * QueueFactory constructor.
    *
    * @param \Drupal\mongodb\DatabaseFactory $databaseFactory
    *   The mongodb.database_factory service.
-   * @param \Drupal\Component\Datetime\Time $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The datetime.time service.
    */
-  public function __construct(DatabaseFactory $databaseFactory, Time $time) {
+  public function __construct(DatabaseFactory $databaseFactory, TimeInterface $time) {
     $this->database = $databaseFactory->get(static::DB_QUEUE);
     $this->time = $time;
   }

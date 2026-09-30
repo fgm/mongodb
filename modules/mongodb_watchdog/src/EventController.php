@@ -10,7 +10,7 @@ use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\user\Entity\User;
-use MongoDB\Driver\Cursor;
+use MongoDB\Driver\CursorInterface;
 
 /**
  * Class EventController provides query and render logic for Event occurrences.
@@ -19,6 +19,7 @@ use MongoDB\Driver\Cursor;
  * Controller namespace.
  */
 class EventController {
+
   use StringTranslationTrait;
 
   /**
@@ -76,7 +77,8 @@ class EventController {
   public function __construct(
     ConfigFactoryInterface $config,
     DateFormatterInterface $dateFormatter,
-    Logger $watchdog) {
+    Logger $watchdog,
+  ) {
     // Needed for other values so build it first.
     $this->front = Url::fromRoute('<front>', [], ['absolute' => TRUE])
       ->toString();
@@ -103,7 +105,8 @@ class EventController {
   public function asTableRow(EventTemplate $template, Event $event): array {
     $uid = $event->uid();
     if (!isset($this->userCache[$uid])) {
-      $this->userCache[$uid] = $uid ? User::load($uid)->toLink() : $this->anonymous;
+      $this->userCache[$uid] = $uid ? User::load($uid)
+        ->toLink() : $this->anonymous;
     }
 
     $location = $event->location();
@@ -121,8 +124,8 @@ class EventController {
       $event->hostname,
       (isset($event->requestTracking_id) && $event->requestTracking_id !== Logger::INVALID_REQUEST)
         ? Link::createFromRoute($this->t('Request'),
-          'mongodb_watchdog.reports.request',
-          ['uniqueId' => $event->requestTracking_id])
+        'mongodb_watchdog.reports.request',
+        ['uniqueId' => $event->requestTracking_id])
         : '',
     ];
 
@@ -139,10 +142,10 @@ class EventController {
    * @param int $limit
    *   The limit on the number of events to return.
    *
-   * @return \MongoDB\Driver\Cursor
+   * @return \MongoDB\Driver\CursorInterface<\Drupal\mongodb_watchdog\Event>
    *   A cursor to the event occurrences.
    */
-  public function find(EventTemplate $template, int $skip, int $limit): Cursor {
+  public function find(EventTemplate $template, int $skip, int $limit): CursorInterface {
     $collection = $this->watchdog->eventCollection($template->_id);
     $selector = [];
     $options = [

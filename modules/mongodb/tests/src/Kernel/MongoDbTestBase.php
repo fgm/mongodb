@@ -40,15 +40,11 @@ abstract class MongoDbTestBase extends KernelTestBase {
 
   /**
    * A test-specific instance of Settings.
-   *
-   * @var \Drupal\Core\Site\Settings
    */
   protected Settings $settings;
 
   /**
    * The MongoDB URI for a test server.
-   *
-   * @var string
    */
   protected string $uri;
 
@@ -68,7 +64,7 @@ abstract class MongoDbTestBase extends KernelTestBase {
   /**
    * Provide a sane set of default settings.
    *
-   * @return array{clients: array<string, array{uri: string, uriOptions: array<string,mixed>, driverOptions: array<string,mixed>}>, databases: array<string,array{0:string,1:string}>>}
+   * @return array{clients: array<string, array{uri: string, uriOptions: array<string,mixed>, driverOptions: array<string,mixed>}>, databases: array<string,array{0:string,1:string}>}
    *   A settings array only containing MongoDB-related settings.
    */
   protected function getSettingsArray(): array {

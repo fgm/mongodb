@@ -12,10 +12,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the MongoDB Watchdog overview filter form.
- *
- * D8 has no session API, so use of $_SESSION is required, so ignore warnings.
- *
- * @SuppressWarnings("PHPMD.Superglobals")
  */
 class OverviewFilterForm extends FormBase {
   const SESSION_KEY = 'mongodb_watchdog_overview_filter';
@@ -57,7 +53,7 @@ class OverviewFilterForm extends FormBase {
       '#open' => TRUE,
     ];
 
-    $sessionFilter = $_SESSION[static::SESSION_KEY] ?? [];
+    $sessionFilter = $this->getRequest()->getSession()->get(static::SESSION_KEY, []);
     foreach ($filters as $key => $filter) {
       $form['filters']['status'][$key] = [
         '#title' => $filter['title'],
@@ -152,24 +148,24 @@ class OverviewFilterForm extends FormBase {
    *   The submitted form array.
    * @param \Drupal\Core\Form\FormStateInterface $formState
    *   The submitted form state.
-   *
-   * @SuppressWarnings("PMD.UnusedFormalParameter")
-   *   Parameter $form is needed by FormInterface, so ignore warning.
    */
   public function submitForm(array &$form, FormStateInterface $formState): void {
+    $session = $this->getRequest()->getSession();
+    $sessionFilter = $session->get(static::SESSION_KEY, []);
     $filters = array_keys($this->getFilters());
     foreach ($filters as $name) {
       if ($formState->hasValue($name)) {
-        $_SESSION[static::SESSION_KEY][$name] = $formState->getValue($name);
+        $sessionFilter[$name] = $formState->getValue($name);
       }
     }
+    $session->set(static::SESSION_KEY, $sessionFilter);
   }
 
   /**
    * Resets the filter form.
    */
   public function resetForm(): void {
-    $_SESSION[static::SESSION_KEY] = [];
+    $this->getRequest()->getSession()->remove(static::SESSION_KEY);
   }
 
   /**
@@ -182,8 +178,6 @@ class OverviewFilterForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $formState): void {
     if ($formState->isValueEmpty('type') && $formState->isValueEmpty('severity')) {
-      // Work around https://www.drupal.org/project/drupal/issues/3338439
-      // @phpstan-ignore-next-line ParameterTypeCheck
       $formState->setErrorByName('type', $this->t('You must select something to filter by.'));
     }
   }

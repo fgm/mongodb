@@ -22,22 +22,16 @@ abstract class ControllerBase extends CoreControllerBase {
 
   /**
    * The items_per_page configuration value.
-   *
-   * @var int
    */
   protected int $itemsPerPage;
 
   /**
    * The pager.manager service.
-   *
-   * @var \Drupal\Core\Pager\PagerManagerInterface
    */
   protected PagerManagerInterface $pagerManager;
 
   /**
    * The MongoDB logger, to load events.
-   *
-   * @var \Drupal\mongodb_watchdog\Logger
    */
   protected Logger $watchdog;
 
@@ -57,7 +51,8 @@ abstract class ControllerBase extends CoreControllerBase {
     LoggerInterface $logger,
     Logger $watchdog,
     PagerManagerInterface $pagerManager,
-    ImmutableConfig $config) {
+    ImmutableConfig $config,
+  ) {
     $this->setLogger($logger);
 
     $this->itemsPerPage = $config->get('items_per_page');
@@ -115,7 +110,7 @@ abstract class ControllerBase extends CoreControllerBase {
   /**
    * Return the top element: empty by default.
    *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+   * @return array<string,mixed>
    *   A render array for the top filter form.
    */
   protected function getTop(): array {

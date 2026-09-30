@@ -85,7 +85,7 @@ class MongodbCommands extends DrushCommands {
     string $alias,
     string $collection,
     string $selector = '{}',
-    array $options = ['format' => 'yaml']
+    array $options = ['format' => 'yaml'],
   ) {
     return $this->tools->find($alias, $collection, $selector);
   }

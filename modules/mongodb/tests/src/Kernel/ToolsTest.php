@@ -22,8 +22,6 @@ class ToolsTest extends MongoDbTestBase {
   public function testToolsService(): void {
     $tools = $this->container->get(MongoDb::SERVICE_TOOLS);
     $this->assertInstanceOf(Tools::class, $tools, "Tools service is available");
-    $this->assertTrue(method_exists($tools, 'find'));
-    $this->assertTrue(method_exists($tools, 'settings'));
   }
 
   /**

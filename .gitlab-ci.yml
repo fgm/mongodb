@@ -19,7 +19,7 @@ variables:
   _AUTORUN_MAX_PHP: 'push-and-mr'
   # Project-specific words for the cspell job: Drush command aliases, method
   # and variable names, mkdocs extensions, and names used in docs/examples.
-  _CSPELL_WORDS: 'accu,autoindexid,behaviour,behaviours,collectionstats,colour,coveralls,coverallsapp,daffie,databasename,debrace,fontawesome,foodb,httpinterface,inlinehilite,jmikola,kernighan,kvef,kvpf,mdbf,mdbs,mdbsikv,mdbwsc,mdct,mkdocs,mowd,oneplus,phplib,pymdownx,ritchie,sanitycheck,simpletests,somemongohost,superfences,twoplus,xyzzy'
+  _CSPELL_WORDS: 'accu,advancedqueue,autoindexid,beanstalkd,behaviour,behaviours,collectionstats,colour,coveralls,coverallsapp,daffie,databasename,debrace,fontawesome,foodb,httpinterface,inlinehilite,jmikola,kernighan,kvef,kvpf,mdbf,mdbs,mdbsikv,mdbwsc,mdct,mkdocs,mowd,oneplus,phplib,phpserialize,pymdownx,ritchie,sanitycheck,simpletests,somemongohost,superfences,twoplus,xyzzy'
 
 composer (next major):
   allow_failure: true
